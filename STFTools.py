@@ -4,7 +4,7 @@
 #########################################################################################################################################################################
 
 #*** Preamble ***
-
+import os
 import numpy as np
 import h5py
 import pickle
@@ -14,39 +14,112 @@ from astropy.cosmology import FlatLambdaCDM,z_at_value
 # VELOCIraptor python tools 
 from VRPythonTools import *
 
-
 ########################### CREATE HALO DATA ###########################
 
-def gen_halo_data_all(snaps=[],tf_treefile="listtreefiles.txt",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
-    # reads velociraptor and treefrog outputs with desired data fields (always includes ['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','M_gas','Xc','Yc','Zc','R_200crit'])
+def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
+    
+    """
 
-    ##### inputs
-    # vr_directory: STRING for directory of VELOCIRAPTOR outputs
-    # snap_no: INTEGER number of snapshots in simulation (needs ALL to create merger trees etc)
-    # datafields: LIST of halo data fields from VR STF output (on top of the defaults)
-    # snaps: LIST of INTEGER SNAPS
-    # halo_TEMPORALHALOIDVAL: from VR (default halo_TEMPORALHALOIDVAL=1000000)
+    gen_halo_data_all : function
+	----------
 
-    ##### returns
-    # list (for each snap) of dictionaries (each field) containing field data for each halo (AND concatenated particle lists for each halo)
+    Generate halo data from velociraptor property and particle files.
+
+	Parameters
+	----------
+	snaps : list or int
+		The snapshots to load halo data from. 
+            If this is an empty list, we find all snap data.
+            If this is a non-empty list, we use these snaps.
+            If this is an integer, we find data for all snaps up to this integer.
+
+    tf_treefile : string
+        The full path to the text file in which the tree data files are listed.
+    
+    vr_directory : string
+        The path to the directory in which the VELOCIraptor data is found.
+    
+    vr_prefix : string
+        The prefix to the VELOCIraptor files.
+
+    vr_files_type : int
+        The filetype of the VELOCIraptor inputs: (2 = hdf5)
+
+    vr_files_nested : bool
+        Boolean flag as to whether the VELOCIraptor files are nested in a file structure.
+
+    vr_files_lz : int
+        The number of digits defining the snapshot in the VELOCIraptor file names.
+
+    extra_halo_fields : list of strings
+        List of any extra halo fields we may desire. 
+
+    halo_TEMPORALHALOIDVAL : int
+        The multiplier used by VELOCIraptor to create unique temporal halo IDs. 
+
+    verbose : bool
+        Flag indicating how verbose we want the code to be when we run.
+
+    Returns
+	-------
+	halo_data_all : list
+
+        A list (for each snap desired) of dictionaries which contain halo data with the following fields:
+        'ID'
+        'hostHaloID'
+        'numSubStruct'
+        'Mass_tot'
+        'Mass_200crit'
+        'Mass_200mean'
+        'M_gas'
+        'M_gas_500c'
+        'Xc'
+        'Yc'
+        'Zc'
+        'R_200crit'
+    
+        (any extra halo fields)
+        'Snap'
+        'SimulationInfo'
+            'h_val'
+            'Hubble_unit'
+            'Omega_Lambda'
+            'ScaleFactor'
+            'z'
+            'LookbackTime'
+        
+        'UnitInfo'
+        'FilePath'
+        'FileType'
+	
+	"""
 
     halo_data_all=[]
-    halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit']#default halo fields
-    halo_fields.extend(extra_halo_fields)
+
+    ### input processing
     
-    if snaps==[]:#if no snaps specified, find them all!
+    # extra halo fields
+    try:
+        halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit']#default halo fields
+        halo_fields.extend(extra_halo_fields)
+    except:
+        print('Please enter valid extra halo fields (should be a list of strings')
+    
+    # snapshots
+    if snaps==[]: #if no snaps specified, find them all
         sim_snaps=list(range(1000))
         if verbose:
             print("Looking for snaps up to 1000")
-    elif type(snaps)==list:
+    elif type(snaps)==list: #if we're given a non-empty list
         sim_snaps=snaps
-    elif type(snaps)==int:
+    elif type(snaps)==int: #if we're given an integer
         sim_snaps=list(range(snaps))
 
     print('Reading halo data using VR python tools')
 
     err=0
     found=0
+    #for each snap specified, we will generate halo data
     for isnap,snap in enumerate(sim_snaps):
         if verbose:
             print('Searching for halo data at snap = ',snap)
@@ -54,45 +127,55 @@ def gen_halo_data_all(snaps=[],tf_treefile="listtreefiles.txt",vr_directory="",v
                 print('File: '+vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)+"/"+vr_prefix+str(snap).zfill(vr_files_lz))
             else:
                 print('File: '+vr_directory+vr_prefix+str(snap).zfill(vr_files_lz))
+
+        #use VR python tools to load in halo data for this snap
         if vr_files_nested:
             halo_data_snap=ReadPropertyFile(vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)+"/"+vr_prefix+str(snap).zfill(vr_files_lz),ibinary=vr_files_type,iseparatesubfiles=0,iverbose=0, desiredfields=halo_fields, isiminfo=True, iunitinfo=True)
         else:
             halo_data_snap=ReadPropertyFile(vr_directory+vr_prefix+str(snap).zfill(vr_files_lz),ibinary=vr_files_type,iseparatesubfiles=0,iverbose=0, desiredfields=halo_fields, isiminfo=True, iunitinfo=True)
 
+        #if data is found
         if not halo_data_snap==[]:
             halo_data_all.append(halo_data_snap)
             halo_data_all[isnap][0]['Snap']=snap
             found=found+1
+
+        #if data is not found
         else:
             err=err+1
             if verbose:
                 print("Couldn't find velociraptor files for snap = ",snap)
         
             if err>2 and found<2:#not finding files -- don't bother continuing
-                print("Failed to find file on multiple occasions - terminating.")
-                print("Check file pointer inputs.")
+                print("Failed to find file on multiple occasions, terminating")
                 return []
 
             if err>2 and found>1:#reached end of snaps
                 print("Reached end of snapshots, total number of snaps found = ",len(halo_data_all))
                 break
 
-    # List of number of halos detected for each snap, List isolated data dictionary for each snap (in dictionaries)
+    # List of number of halos detected for each snap and list isolated data dictionary for each snap (in dictionaries)
     halo_data_counts=[item[1] for item in halo_data_all]
     halo_data_all=[item[0] for item in halo_data_all]
+
     snap_no=len(halo_data_all)
     sim_snaps=[halo_data_all[isnap]['Snap'] for isnap in range(snap_no)]
+
+    # Add halo count to halo data at each snap
+    for isnap,snap in enumerate(sim_snaps):
+        halo_data_all[isnap]['Count']=halo_data_counts[isnap]
 
     # List sim info and unit info for each snap (in dictionaries)
     halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for snap in sim_snaps]
     halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for snap in sim_snaps]
     
-    # import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
-
+    # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
 
+    # Read in tree data
     halo_tree=ReadHaloMergerTreeDescendant(tf_treefile,ibinary=vr_files_type,iverbose=verbose+1,imerit=True,inpart=False)
 
+    # Now build trees and add onto halo data array
     if halo_TEMPORALHALOIDVAL==[]:#if not given halo TEMPORALHALOIVAL, use the vr default
         BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose)
     else:
@@ -103,7 +186,7 @@ def gen_halo_data_all(snaps=[],tf_treefile="listtreefiles.txt",vr_directory="",v
     if verbose==1:
         print('Adding timesteps & filepath information')
     
-
+    # Adding timesteps and final bits of information 
     H0=halo_data_all[0]['SimulationInfo']['h_val']*halo_data_all[0]['SimulationInfo']['Hubble_unit']
     Om0=halo_data_all[0]['SimulationInfo']['Omega_Lambda']
     cosmo=FlatLambdaCDM(H0=H0,Om0=Om0)
@@ -123,6 +206,11 @@ def gen_halo_data_all(snaps=[],tf_treefile="listtreefiles.txt",vr_directory="",v
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)
             halo_data_all[isnap]['FileType']=vr_files_type
 
+    with open('halo_data_base.dat', 'wb') as halo_data_file:
+        pickle.dump(halo_data_all, halo_data_file)
+        halo_data_file.close()
+
+    print('Done generating base halo data')
 
     return halo_data_all
 
@@ -130,9 +218,49 @@ def gen_halo_data_all(snaps=[],tf_treefile="listtreefiles.txt",vr_directory="",v
 
 def get_particle_lists(snap,halo_data_snap,add_subparts_to_fofs=False,verbose=1):
     
+    """
+
+    gen_particle_history : function
+	----------
+
+    Retrieve the particle lists for each halo from velociraptor particle files at a given snapshot.
+
+	Parameters
+	----------
+    snap : int
+        The snapshot for which we want the particle lists.
+    
+    halo_data_snap : dictionary
+        The halo data dictoinary for the relevant snapshot.
+
+    add_subparts_to_fof : bool
+        Flag as to whether to add subhalo particles to their fof halos.
+
+    verbose : bool
+        Flag indicating how verbose we want the code to be when we run.
+
+    Returns
+    ----------
+    part_data_temp : dictionary 
+        The particle IDs, Types, and counts for the given snapshot in a dictionary
+        Keys: 
+            "Particle_IDs" - list (for each halo) of lists of particle IDs
+            "Particle_Types" - list (for each halo) of lists of particle Types
+            "Npart" - list (for each halo) of the number of particles belonging to the object
+
+	"""
+
+    ### input checking
+    # snapshot
+    try:
+        snap=int(snap)
+    except:
+        print('Snapshot not a valid integer')
+
     if verbose:
         print('Reading particle lists for snap = ',snap)
 
+    # particle data
     try:
         part_data_temp=ReadParticleDataFile(halo_data_snap['FilePath'],ibinary=halo_data_snap['FileType'],iverbose=0,iparttypes=1)
         
@@ -141,7 +269,6 @@ def get_particle_lists(snap,halo_data_snap,add_subparts_to_fofs=False,verbose=1)
             print('Particle data not found for snap = ',snap)
             print('Used directory: ',vr_directory+vr_prefix+str(snap).zfill(vr_files_lz))
             return part_data_temp
-
 
     except: #if we can't load particle data
         if verbose:
@@ -178,42 +305,66 @@ def get_particle_lists(snap,halo_data_snap,add_subparts_to_fofs=False,verbose=1)
 
     return part_data_temp
 
-
 ########################### CREATE PARTICLE HISTORIES ###########################
 
-def gen_particle_history(halo_data,uptosnap=[],verbose=0):
+def gen_particle_history(halo_data_all,verbose=1):
 
-    ##### inputs
-    # halo_data (from above)
+    """
 
-    ##### returns
-    # list (for each snap) of dictionaries (sub/field ids and types) of lists (for each bound particle) of:
-    # (1) unique particle IDs of particles bound in field halos
-    # (2) unique particle IDs of particles bound in subhalos
+    gen_particle_history : function
+	----------
 
-    if uptosnap==[]:
-        uptosnap=len(halo_data)
+    Generate and save particle history data from velociraptor property and particle files.
 
-    snap=uptosnap
+	Parameters
+	----------
+    halo_data_all : list of dictionaries
+        The halo data list of dictionaries previously generated.
+
+	Returns
+	----------
+    {'all_ids':running_list_all,'sub_ids':running_list_sub} : dict
+        Dictionary of particle lists which have ever been part of any halo and those which 
+        have been part of a subhalo at any point up to the last snap in the halo_data_all array.
+
+        This data is saved for each snapshot on the way in a np.pickle file in the directory "part_histories"
+
+	"""
+    ### input checks
+    #snaps
+    try:
+        no_snaps=len(halo_data_all)
+    except:
+        print("Invalid halo data")
+        return []
+
+    # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
+    if not os.path.isdir("part_histories"):
+        os.mkdir("part_histories")
+
+    print('Generating particle histories up to snap = ',no_snaps)
+
+    running_list_all=[]
+    running_list_sub=[]
     sub_part_ids=[]
     all_part_ids=[]
 
-    print('Generating particle histories up to snap = ',snap)
-    running_list_all=[]
-    running_list_sub=[]
+    # for each snapshot get the particle data and add to the running list
 
-    for isnap in range(snap):
+    for isnap in range(no_snaps):
 
-        new_particle_data=get_particle_lists(snap=isnap,halo_data_snap=halo_data[isnap],add_subparts_to_fofs=False,verbose=verbose)
+        new_particle_data=get_particle_lists(snap=isnap,halo_data_snap=halo_data_all[isnap],add_subparts_to_fofs=False,verbose=verbose)
         
-        if len(new_particle_data['Particle_IDs'])==0 or len(halo_data[isnap]['hostHaloID'])<2:#if no halos or no new particle data
+        if len(new_particle_data['Particle_IDs'])==0 or len(halo_data_all[isnap]['hostHaloID'])<2:#if no halos or no new particle data
+            if verbose:
+                print('Either no particle data or no halos for snap = ',isnap)
             continue
 
         else:
-            if verbose==True:
+            if verbose:
                 print('Have particle lists for snap = ',isnap)
                         
-            sub_halos_temp=(np.where(halo_data[isnap]['hostHaloID']>0)[0])#find the indices all subhalos
+            sub_halos_temp=(np.where(halo_data_all[isnap]['hostHaloID']>0)[0])#find the indices all subhalos
 
             if len(sub_halos_temp)>1:
                 all_halos_plist=np.concatenate(new_particle_data['Particle_IDs'])
@@ -227,7 +378,9 @@ def gen_particle_history(halo_data,uptosnap=[],verbose=0):
 
                 parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all.dat"
                 parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub.dat"
-                print('Saving histories for snap = ',str(isnap),'to .dat file.')
+
+                if verbose:
+                    print('Saving histories for snap = ',str(isnap),'to .dat file.')
 
                 with open(parthist_filename_all, 'wb') as parthist_file:
                     pickle.dump(running_list_all, parthist_file)
@@ -241,25 +394,84 @@ def gen_particle_history(halo_data,uptosnap=[],verbose=0):
 
 ########################### GENERATE ACCRETION RATES ###########################
 
-def gen_accretion_rate(halo_data,snap,mass_table,particle_histories=[],halo_cap=[],halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
-    print('Ready to accretion rates for snap = ',snap)
+def gen_accretion_rate(halo_data_all,snap,mass_table,halo_cap=[],halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
+    
+    """
 
-    ##### inputs
-    # halo_data (from above - needs particle lists)
-    # snaps: list of snaps to consider
-    # trim_particles: get rid of particles which have been part of structure before when calculating accretion rate?
+    gen_accretion_rate : function
+	----------
 
-    ##### returns
-    #list of accretion rates for each halo with key 'DM_Acc' and 'Gas_Acc'
-    sim_unit_to_Msun=halo_data[0]['UnitInfo']['Mass_unit_to_solarmass']
+    Generate and save accretion rates for each particle type by comparing particle lists and (maybe) trimming particles.
+    note: if trimming particles, part_histories must have been generated
+
+	Parameters
+	----------
+    halo_data_all : list of dictionaries
+        The halo data list of dictionaries previously generated.
+
+    snap : int
+        The snapshot for which to calculate accretion rates
+
+    mass_table : list
+        List of the particle masses in order (directly from simulation, unconverted)
+    
+    halo_index_list : list
+        List of the halo indices for which to calculate accretion rates.
+
+    depth : int
+        How many snaps to skip back to when comparing particle lists. 
+    
+    trim_particles: bool
+        Boolean flag as to indicating whether or not to remove the particles which have previously been 
+        part of structure or substructure in our accretion rate calculation. 
+
+	Returns
+	----------
+    delta_m : dictionary
+        Dictionary of accretion rates for each particle type to each halo at the desired snap.
+        Keys: 
+            "DM_Acc"
+            "Gas_Acc"
+            "dt"
+        This data is saved for each snapshot on the way in a np.pickle file in the directory "/acc_rates"
+
+	"""
+    
+    ###input checks
+    #snap
+    try:
+        snap=int(snap)
+    except:
+        print('Invalid snap')
+        return []
+    
+    #if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
+    if not os.path.isdir("acc_rates"):
+        os.mkdir("acc_rates")
+
+    #converting mass table to msun
+    sim_unit_to_Msun=halo_data_all[0]['UnitInfo']['Mass_unit_to_solarmass']
     m_0=mass_table[0]*sim_unit_to_Msun #MSol
     m_1=mass_table[1]*sim_unit_to_Msun #MSol
 
     if trim_particles:#load particle histories if we need to
-        if particle_histories==[]:
-            snap_reqd=snap-depth-1
-            try:##check if the files have already been generated
-                print('Trying to find particle histories at snap = ',snap_reqd)
+        snap_reqd=snap-depth-1
+        try:##check if the files have already been generated
+            print('Trying to find particle histories at snap = ',snap_reqd)
+            parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
+            parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
+            with open(parthist_filename_all, 'rb') as parthist_file:
+                allstructure_history=pickle.load(parthist_file)
+                parthist_file.close()
+            with open(parthist_filename_sub, 'rb') as parthist_file:
+                substructure_history=pickle.load(parthist_file)
+                parthist_file.close()
+            print('Found them!')
+
+        except:#if they haven't, generate them and load the required snap
+            try:
+                print('Did not find particle histories -- generating them now')       
+                gen_particle_history(halo_data_all=halo_data_all,verbose=0)#generate particles which have been part of structure for all snaps (saved to file)
                 parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
                 parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
                 with open(parthist_filename_all, 'rb') as parthist_file:
@@ -267,36 +479,19 @@ def gen_accretion_rate(halo_data,snap,mass_table,particle_histories=[],halo_cap=
                     parthist_file.close()
                 with open(parthist_filename_sub, 'rb') as parthist_file:
                     substructure_history=pickle.load(parthist_file)
-                    parthist_file.close()
-                print('Found them!')       
-            except:#if they haven't, generate them and load the required snap
-                try:
-                    print('Did not find particle histories -- generating them now')       
-                    gen_particle_history(halo_data=halo_data,verbose=0)#generate particles which have been part of structure for all snaps (saved to file)
-                    parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
-                    parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
-                    with open(parthist_filename_all, 'rb') as parthist_file:
-                        allstructure_history=pickle.load(parthist_file)
-                        parthist_file.close()
-                    with open(parthist_filename_sub, 'rb') as parthist_file:
-                        substructure_history=pickle.load(parthist_file)
-                        parthist_file.close()             
-                except:
-                    print('Failed to find particle histories for trimming at snap = ',snap-depth-1,'. Terminating.')
-                    return []
-        else:
-            print('Loading supplied particle histories...')
-            substructure_history=particle_histories['sub_ids']
-            allstructure_history=particle_histories['all_ids']
+                    parthist_file.close()             
+            except:
+                print('Failed to find particle histories for trimming at snap = ',snap-depth-1,'. Terminating.')
+                return []
 
     def find_progen_index(index_0,snap,depth):
-        id_0=halo_data[snap]['ID'][index_0]#the original id
-        tail_id=halo_data[snap]['Tail'][index_0]#the tail id
+        id_0=halo_data_all[snap]['ID'][index_0]#the original id
+        tail_id=halo_data_all[snap]['Tail'][index_0]#the tail id
         for idepth in range(1,depth+1,1):
             new_id=tail_id #the new id from tail in last snap
-            if new_id in halo_data[snap-idepth]['ID']:
-                new_index=np.where(halo_data[snap-idepth]['ID']==new_id)[0][0] #what index in the previous snap does the new_id correspond to
-                tail_id=halo_data[snap-idepth]['Tail'][new_index] #the new id for next loop
+            if new_id in halo_data_all[snap-idepth]['ID']:
+                new_index=np.where(halo_data_all[snap-idepth]['ID']==new_id)[0][0] #what index in the previous snap does the new_id correspond to
+                tail_id=halo_data_all[snap-idepth]['Tail'][new_index] #the new id for next loop
             else:
                 new_index=np.nan
                 return new_index
@@ -310,7 +505,7 @@ def gen_accretion_rate(halo_data,snap,mass_table,particle_histories=[],halo_cap=
         print('Now generating accretion rates for snap = ',snap,' at depth = ',depth,' trimming = ',trim_particles)
 
     #find final snap particle data
-    part_data_2=get_particle_lists(snap,halo_data_snap=halo_data[snap],add_subparts_to_fofs=True,verbose=0)
+    part_data_2=get_particle_lists(snap,halo_data_snap=halo_data_all[snap],add_subparts_to_fofs=True,verbose=0)
     if not halo_index_list==[]:
         halo_index_list=halo_index_list
         n_halos_2=len(halo_index_list)
@@ -327,7 +522,7 @@ def gen_accretion_rate(halo_data,snap,mass_table,particle_histories=[],halo_cap=
         return []
 
     #find initial snap particle data
-    part_data_1=get_particle_lists(snap-depth,halo_data_snap=halo_data[snap-depth],add_subparts_to_fofs=True,verbose=0)
+    part_data_1=get_particle_lists(snap-depth,halo_data_snap=halo_data_all[snap-depth],add_subparts_to_fofs=True,verbose=0)
     if snap-depth<0 or part_data_1["Npart"]==[]:# if we can't find initial particles
         print('Initial particle lists not found at required depth (snap = ',snap-depth,')')
         return []
@@ -354,7 +549,9 @@ def gen_accretion_rate(halo_data,snap,mass_table,particle_histories=[],halo_cap=
         new_particle_IDs=np.array(np.compress(np.logical_not(np.in1d(part_IDs_final,part_IDs_init)),part_IDs_final))#list of particles new to halo
         new_particle_Types=np.array(np.compress(np.logical_not(np.in1d(part_IDs_final,part_IDs_init)),part_Types_final))#list of particle types new to halo
 
-        print('Number of new particles to halo: ',len(new_particle_IDs))
+        if verbose:
+            print('Number of new particles to halo: ',len(new_particle_IDs))
+            
         ################# TRIMMING PARTICLES #################
         #get particle histories for the snap depth (minus 1)
         if trim_particles:
@@ -362,14 +559,16 @@ def gen_accretion_rate(halo_data,snap,mass_table,particle_histories=[],halo_cap=
                 print('Failed to find particle histories for trimming at snap = ',snap-depth-1)
 
             t1=time.time()
-            if halo_data[snap]['hostHaloID'][ihalo]==-1:#if a field halo
+            if halo_data_all[snap]['hostHaloID'][ihalo]==-1:#if a field halo
                 field_mask_good=np.in1d(new_particle_IDs,allstructure_history,invert=True)
-                print('Done cross checking, now compressing')
+                if verbose:
+                    print('Done cross checking, now compressing')
                 new_particle_Types=np.compress(field_mask_good,new_particle_Types)
 
             else:#if a subhalo
                 sub_mask_good=np.in1d(new_particle_IDs,substructure_history,invert=True)
-                print('Done cross checking, now compressing')
+                if verbose:
+                    print('Done cross checking, now compressing')
                 new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
             t2=time.time()
 
@@ -380,8 +579,8 @@ def gen_accretion_rate(halo_data,snap,mass_table,particle_histories=[],halo_cap=
         delta_m1.append(delta_m1_temp)
         ####################################################################################
 
-    lt2=halo_data[snap]['SimulationInfo']['LookbackTime']
-    lt1=halo_data[snap-depth]['SimulationInfo']['LookbackTime']
+    lt2=halo_data_all[snap]['SimulationInfo']['LookbackTime']
+    lt1=halo_data_all[snap-depth]['SimulationInfo']['LookbackTime']
     delta_t=abs(lt1-lt2)#Gyr
 
     if mass_table[0]>mass_table[1]:#make sure m_dm is more massive (the more massive particle should be the dm particle)
