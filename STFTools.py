@@ -551,7 +551,7 @@ def gen_accretion_rate(halo_data_all,snap,mass_table,halo_cap=[],halo_index_list
 
         if verbose:
             print('Number of new particles to halo: ',len(new_particle_IDs))
-            
+
         ################# TRIMMING PARTICLES #################
         #get particle histories for the snap depth (minus 1)
         if trim_particles:
