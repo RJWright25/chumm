@@ -604,7 +604,7 @@ def gen_accretion_rate(halo_data_all,snap,mass_table,halo_cap=[],halo_index_list
 
 
 ########################### CREATE PARTICLE HISTORIES NEW ###########################
-def gen_particle_history_2(halo_data_all,npart=2*512**2,verbose=1):
+def gen_particle_history_2(halo_data_all,npart,verbose=1):
 
     """
 
@@ -665,8 +665,8 @@ def gen_particle_history_2(halo_data_all,npart=2*512**2,verbose=1):
             if len(sub_halos_temp)>1:
                 all_halos_plist=np.concatenate(new_particle_data['Particle_IDs'])
                 sub_halos_plist=np.concatenate([new_particle_data['Particle_IDs'][isub] for isub in sub_halos_temp])#list all particles IDs in substructure
-                new_structure_indices=np.array(np.compress(np.logical_not(np.in1d(all_halos_plist,running_list_all)),all_halos_plist))
-                new_substructure_indices=np.array(np.compress(np.logical_not(np.in1d(sub_halos_plist,running_list_sub)),sub_halos_plist))
+                new_structure_indices=np.array(np.compress(np.logical_not(np.in1d(all_halos_plist,running_list_all)),all_halos_plist)).astype(str)
+                new_substructure_indices=np.array(np.compress(np.logical_not(np.in1d(sub_halos_plist,running_list_sub)),sub_halos_plist)).astype(str)
 
                 running_list_all=np.concatenate([running_list_all,all_halos_plist])
                 running_list_sub=np.concatenate([running_list_sub,sub_halos_plist])
@@ -700,7 +700,7 @@ def gen_particle_history_2(halo_data_all,npart=2*512**2,verbose=1):
 
 ########################### GENERATE ACCRETION RATES 2 ###########################
 
-def gen_accretion_rate_2(halo_data_all,snap,mass_table,halo_cap=[],halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
+def gen_accretion_rate_2(halo_data_all,snap,npart,mass_table,halo_cap=[],halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
     
     """
 
@@ -777,7 +777,7 @@ def gen_accretion_rate_2(halo_data_all,snap,mass_table,halo_cap=[],halo_index_li
         except:#if they haven't, generate them and load the required snap
             #try:
             print('Did not find particle histories -- generating them now')       
-            gen_particle_history_2(halo_data_all=halo_data_all,verbose=0)#generate particles which have been part of structure for all snaps (saved to file)
+            gen_particle_history_2(halo_data_all=halo_data_all,npart=npart,verbose=1)#generate particles which have been part of structure for all snaps (saved to file)
             parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all_2.dat"
             parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub_2.dat"
             with open(parthist_filename_all, 'rb') as parthist_file:
