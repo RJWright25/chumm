@@ -31,7 +31,7 @@ def read_n_part(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4):
         
     Returns
 	-------
-    int(n_0+n_1) : int
+    npart : int
         Total number of particles found in the simulation. 
 	
 	"""
@@ -46,12 +46,12 @@ def read_n_part(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4):
     if sim_type=='SWIFT':
         n_0=len(temp_file['PartType0']['Masses'])
         n_1=len(temp_file['PartType1']['Masses'])
-        return int(n_0+n_1)
+        npart=n_0+n_1
+        return int(npart)
 
     elif sim_type=='GADGET':
-        n_0=len(temp_file['PartType0']['ParticleIDs'])
-        n_1=len(temp_file['PartType1']['ParticleIDs'])
-        return int(n_0+n_1)
+        npart=int(np.sum(temp_file['Header'].attrs['NumPart_Total']))
+        return int(npart)
     else:
         print('Please enter valid simulation string.')
         return []
