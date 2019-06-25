@@ -604,7 +604,7 @@ def gen_accretion_rate(halo_data_all,snap,mass_table,halo_cap=[],halo_index_list
 
 
 ########################### CREATE PARTICLE HISTORIES NEW ###########################
-def gen_particle_history_2(halo_data_all,npart,verbose=1):
+def gen_particle_history_2(halo_data_all,npart,snap_list=[],verbose=1):
 
     """
 
@@ -633,6 +633,11 @@ def gen_particle_history_2(halo_data_all,npart,verbose=1):
     except:
         print("Invalid halo data")
         return []
+    
+    if snap_list==[]:
+        snap_list=list(range(len(halo_data_all)-50,len(halo_data_all)))
+    else:
+        snap_list=snap_list.astype(int)
 
     # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
     if not os.path.isdir("part_histories"):
@@ -679,23 +684,26 @@ def gen_particle_history_2(halo_data_all,npart,verbose=1):
                 for new_part_substructure in new_substructure_indices:
                     sub_part_hist[int(new_part_substructure)]=1
 
-                parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all_2.dat"
-                parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub_2.dat"
+                if isnap in snap_list:
 
-                if verbose:
-                    print('Saving histories for snap = ',str(isnap),'to .dat file.')
+                    parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all_2.dat"
+                    parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub_2.dat"
 
-                with open(parthist_filename_all, 'wb') as parthist_file:
-                    pickle.dump(all_part_hist, parthist_file)
-                    parthist_file.close()
-                with open(parthist_filename_sub, 'wb') as parthist_file:
-                    pickle.dump(sub_part_hist, parthist_file)
-                    parthist_file.close()                    
-                
+                    if verbose:
+                        print('Saving histories for snap = ',str(isnap),'to .dat file')
+
+                    with open(parthist_filename_all, 'wb') as parthist_file:
+                        pickle.dump(all_part_hist, parthist_file)
+                        parthist_file.close()
+                    with open(parthist_filename_sub, 'wb') as parthist_file:
+                        pickle.dump(sub_part_hist, parthist_file)
+                        parthist_file.close()
+
+                    if verbose:                    
+                        print('Done saving histories for snap = ',str(isnap),'to .dat file')
+
     print('Unique particle histories created')
     return {'all_ids':all_part_hist,'sub_part_ids':sub_part_hist}
-
-
 
 
 ########################### GENERATE ACCRETION RATES 2 ###########################
@@ -775,20 +783,20 @@ def gen_accretion_rate_2(halo_data_all,snap,npart,mass_table,halo_cap=[],halo_in
             print('Found them!')
 
         except:#if they haven't, generate them and load the required snap
-            #try:
-            print('Did not find particle histories -- generating them now')       
-            gen_particle_history_2(halo_data_all=halo_data_all,npart=npart,verbose=1)#generate particles which have been part of structure for all snaps (saved to file)
-            parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all_2.dat"
-            parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub_2.dat"
-            with open(parthist_filename_all, 'rb') as parthist_file:
-                allstructure_history=pickle.load(parthist_file)
-                parthist_file.close()
-            with open(parthist_filename_sub, 'rb') as parthist_file:
-                substructure_history=pickle.load(parthist_file)
-                parthist_file.close()             
-            # except:
-            #     print('Failed to find particle histories for trimming at snap = ',snap-depth-1,'. Terminating.')
-            #     return []
+            try:
+                print('Did not find particle histories -- generating them now')       
+                gen_particle_history_2(halo_data_all=halo_data_all,npart=npart,snap_list=list(range(snap_reqd,len(halo_data_all))),verbose=1)#generate particles which have been part of structure for all snaps (saved to file)
+                parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all_2.dat"
+                parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub_2.dat"
+                with open(parthist_filename_all, 'rb') as parthist_file:
+                    allstructure_history=pickle.load(parthist_file)
+                    parthist_file.close()
+                with open(parthist_filename_sub, 'rb') as parthist_file:
+                    substructure_history=pickle.load(parthist_file)
+                    parthist_file.close()             
+            except:
+                print('Failed to find particle histories for trimming at snap = ',snap-depth-1,', terminating')
+                return []
 
     def find_progen_index(index_0,snap,depth):
         id_0=halo_data_all[snap]['ID'][index_0]#the original id
