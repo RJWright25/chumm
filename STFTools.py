@@ -775,20 +775,20 @@ def gen_accretion_rate_2(halo_data_all,snap,mass_table,halo_cap=[],halo_index_li
             print('Found them!')
 
         except:#if they haven't, generate them and load the required snap
-            try:
-                print('Did not find particle histories -- generating them now')       
-                gen_particle_history_2(halo_data_all=halo_data_all,verbose=0)#generate particles which have been part of structure for all snaps (saved to file)
-                parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all_2.dat"
-                parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub_2.dat"
-                with open(parthist_filename_all, 'rb') as parthist_file:
-                    allstructure_history=pickle.load(parthist_file)
-                    parthist_file.close()
-                with open(parthist_filename_sub, 'rb') as parthist_file:
-                    substructure_history=pickle.load(parthist_file)
-                    parthist_file.close()             
-            except:
-                print('Failed to find particle histories for trimming at snap = ',snap-depth-1,'. Terminating.')
-                return []
+            #try:
+            print('Did not find particle histories -- generating them now')       
+            gen_particle_history_2(halo_data_all=halo_data_all,verbose=0)#generate particles which have been part of structure for all snaps (saved to file)
+            parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all_2.dat"
+            parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub_2.dat"
+            with open(parthist_filename_all, 'rb') as parthist_file:
+                allstructure_history=pickle.load(parthist_file)
+                parthist_file.close()
+            with open(parthist_filename_sub, 'rb') as parthist_file:
+                substructure_history=pickle.load(parthist_file)
+                parthist_file.close()             
+            # except:
+            #     print('Failed to find particle histories for trimming at snap = ',snap-depth-1,'. Terminating.')
+            #     return []
 
     def find_progen_index(index_0,snap,depth):
         id_0=halo_data_all[snap]['ID'][index_0]#the original id
