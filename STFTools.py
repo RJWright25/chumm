@@ -565,6 +565,7 @@ def gen_accretion_rate(halo_data_all,snap,mass_table,halo_cap=[],halo_index_list
 
         ################# TRIMMING PARTICLES #################
         #get particle histories for the snap depth (minus 1)
+        t1=time.time()
         if trim_particles:
             if len(substructure_history)<100:
                 print('Failed to find particle histories for trimming at snap = ',snap-depth-1)
@@ -581,8 +582,10 @@ def gen_accretion_rate(halo_data_all,snap,mass_table,halo_cap=[],halo_index_list
                 if verbose:
                     print('Done cross checking, now compressing')
                 new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
-            t2=time.time()
-
+        
+        t2=time.time()
+        if verbose:
+            print(f'Trimmed accretion rate to halo {ihalo} in {t2-t1} sec')
         ########### NOW WE HAVE THE DESIRED NEW (UNIQUE) PARTICLES FOR EACH HALO ###########
         delta_m0_temp=np.sum(new_particle_Types==0)*m_0
         delta_m1_temp=np.sum(new_particle_Types==1)*m_1
@@ -622,6 +625,7 @@ def gen_accretion_rate(halo_data_all,snap,mass_table,halo_cap=[],halo_index_list
 
 
 ########################### CREATE PARTICLE HISTORIES NEW ###########################
+
 def gen_particle_history_2(halo_data_all,npart,snap_list=[],verbose=1):
 
     """
@@ -886,7 +890,7 @@ def gen_accretion_rate_2(halo_data_all,snap,npart,mass_table,halo_cap=[],halo_in
 
         ################# TRIMMING PARTICLES #################
         #get particle histories for the snap depth (minus 1)
-
+        t1=time.time()
         if trim_particles:
             if len(substructure_history)<100:
                 print('Failed to find particle histories for trimming at snap = ',snap-depth-1)
@@ -914,8 +918,9 @@ def gen_accretion_rate_2(halo_data_all,snap,npart,mass_table,halo_cap=[],halo_in
                 if verbose:
                     print('Done cross checking particles for sub halo, now compressing - keeping ',np.sum(sub_mask_good),' of ',len(new_particle_IDs),' particles')
                 new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
-            t2=time.time()
-
+        t2=time.time()
+        if verbose:
+            print(f'Trimmed accretion rate to halo {ihalo} in {t2-t1} sec')
         ########### NOW WE HAVE THE DESIRED NEW (UNIQUE) PARTICLES FOR EACH HALO ###########
         delta_m0_temp=np.sum(new_particle_Types==0)*m_0
         delta_m1_temp=np.sum(new_particle_Types==1)*m_1
@@ -1117,7 +1122,7 @@ def gen_accretion_rate_3(halo_data_all,snap,npart,mass_table,halo_cap=[],halo_in
 
         ################# TRIMMING PARTICLES #################
         #get particle histories for the snap depth (minus 1)
-
+        t1=time.time()
         if trim_particles:
             if len(substructure_history)<100:
                 print('Failed to find particle histories for trimming at snap = ',snap-depth-1)
@@ -1145,7 +1150,9 @@ def gen_accretion_rate_3(halo_data_all,snap,npart,mass_table,halo_cap=[],halo_in
                 if verbose:
                     print('Done cross checking particles for sub halo, now compressing - keeping ',np.sum(sub_mask_good),' of ',len(new_particle_IDs),' particles')
                 new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
-            t2=time.time()
+        t2=time.time()
+        if verbose:
+            print(f'Trimmed accretion rate to halo {ihalo} in {t2-t1} sec')
 
         ########### NOW WE HAVE THE DESIRED NEW (UNIQUE) PARTICLES FOR EACH HALO ###########
         delta_m0_temp=np.sum(new_particle_Types==0)*m_0
