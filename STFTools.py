@@ -637,7 +637,7 @@ def gen_particle_history_2(halo_data_all,npart,snap_list=[],verbose=1):
     if snap_list==[]:
         snap_list=list(range(len(halo_data_all)-50,len(halo_data_all)))
     else:
-        snap_list=snap_list.astype(int)
+        snap_list=np.array(snap_list).astype(int)
 
     # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
     if not os.path.isdir("part_histories"):
@@ -670,8 +670,8 @@ def gen_particle_history_2(halo_data_all,npart,snap_list=[],verbose=1):
             if len(sub_halos_temp)>1:
                 all_halos_plist=np.concatenate(new_particle_data['Particle_IDs'])
                 sub_halos_plist=np.concatenate([new_particle_data['Particle_IDs'][isub] for isub in sub_halos_temp])#list all particles IDs in substructure
-                new_structure_indices=np.array(np.compress(np.logical_not(np.in1d(all_halos_plist,running_list_all)),all_halos_plist)).astype(str)
-                new_substructure_indices=np.array(np.compress(np.logical_not(np.in1d(sub_halos_plist,running_list_sub)),sub_halos_plist)).astype(str)
+                new_structure_indices=np.array(np.compress(np.logical_not(np.in1d(all_halos_plist,running_list_all)),all_halos_plist))
+                new_substructure_indices=np.array(np.compress(np.logical_not(np.in1d(sub_halos_plist,running_list_sub)),sub_halos_plist))
 
                 running_list_all=np.concatenate([running_list_all,all_halos_plist])
                 running_list_sub=np.concatenate([running_list_sub,sub_halos_plist])
