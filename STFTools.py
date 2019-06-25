@@ -629,7 +629,7 @@ def gen_particle_history_2(halo_data_all,npart=2*512**2,verbose=1):
     ### input checks
     #snaps
     try:
-        no_snaps=len(halo_data_all)
+        no_snaps=int(halo_data_all[-1]['Snap'])
     except:
         print("Invalid halo data")
         return []
