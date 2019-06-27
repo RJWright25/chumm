@@ -799,19 +799,22 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
         # Start the calc_accretion_rate worker function for this process and append results to accretion_results
         accretion_results.append(halo_pool.apply_async(calc_accretion_rate, (halo_index_list_temp,field_bools_temp,part_data_1_ordered_IDs_temp,part_data_2_ordered_IDs_temp,part_data_2_ordered_Types_temp,particle_history)))
     
-    #(all processes have been started)
+    #ensure all processes have finished
+    halo_pool.join()
 
     temp_accretion_result_array=[]#initialise results grabber
     for iprocess in range(n_processes):#get the results from each process
         temp_accretion_result_array.append(accretion_results[iprocess].get())
-    
-    print(temp_accretion_result_array[1])
-    time.sleep(100)
+
+    temp_accretion_result_array=np.row_stack(temp_accretion_result_array)
 
     delta_n0=temp_accretion_result_array[:,1]
     delta_n1=temp_accretion_result_array[:,2]
+
     print(len(delta_n0))
     print(len(delta_n1))
+    time.sleep(100)
+
     
 
     ############################# Post-processing accretion calc results #############################
