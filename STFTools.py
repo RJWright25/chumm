@@ -207,7 +207,7 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)
             halo_data_all[isnap]['FileType']=vr_files_type
 
-    with open('halo_data_base.dat', 'wb') as halo_data_file:
+    with open('halo_data_all.dat', 'wb') as halo_data_file:
         pickle.dump(halo_data_all, halo_data_file)
         halo_data_file.close()
 
