@@ -659,7 +659,7 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
 	"""
     
     ################## Input Checks ##################
-    
+
     n_halos_tot=len(halo_data_all[snap]['hostHaloID'])
 
     # Snap
