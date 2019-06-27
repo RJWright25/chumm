@@ -502,12 +502,11 @@ def calc_accretion_rate(halo_index_list,field_bools,part_IDs_1,part_IDs_2,part_T
             [2]: delta_n1 (number of new type 1 particles)
     
     """
-
     #### Input checks
     # Ensure that the arrays fed are all of the correct dimension
     if len(part_IDs_1)==len(part_IDs_2):
         try:
-            test=part_IDs_1[0][0]
+            test=part_IDs_1[0]
             n_halos_parsed=len(halo_index_list)
         except:
             print('Particle data is not a list of lists, terminating')
@@ -660,6 +659,7 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
 	"""
     
     ################## Input Checks ##################
+    
     n_halos_tot=len(halo_data_all[snap]['hostHaloID'])
 
     # Snap
@@ -748,8 +748,6 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     t1=time.time()
 
     part_data_1_ordered_IDs=[]#initialise empty initial particle lists
-
-
     # Iterate through each final halo and find its progenitor particle lists at the desired depth
     for ihalo_abs in halo_index_list:
         progen_index=find_progen_index(ihalo_abs,snap=snap,depth=depth)#finds progenitor index at desired snap
@@ -771,7 +769,7 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     n_halos_tot=len(halo_data_all[snap]['hostHaloID'])#number of total halos at the final snapshot in the halo_data_all dictionary
     n_halos_desired=len(halo_index_list)#number of halos for calculation desired
     field_bools=(halo_data_all[snap]['hostHaloID']==-1)#boolean mask of halos which are field
-    n_processes=int(cpu_count())#number of processes to spawn equal to cpu count
+    n_processes=cpu_count()#number of processes to spawn equal to cpu count
     
     if verbose:
         print(f'Splitting halos into {n_processes} processes')
@@ -797,9 +795,10 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
         part_data_2_ordered_Types_temp=[part_data_2_ordered_IDs[ihalo] for ihalo in halo_index_list_temp]
 
         # Start the calc_accretion_rate worker function for this process and append results to accretion_results
-        accretion_results.append(halo_pool.apply_async(calc_accretion_rate, (halo_index_list_temp,field_bools_temp,part_data_1_ordered_IDs_temp,part_data_2_ordered_IDs_temp,part_data_2_ordered_Types_temp,particle_history)))
-    
+        accretion_results.append(halo_pool.apply_async(calc_accretion_rate, (halo_index_list_temp,field_bools_temp,part_data_1_ordered_IDs_temp,part_data_2_ordered_IDs_temp,part_data_2_ordered_Types_temp,particle_history,0)))
+
     #ensure all processes have finished
+    halo_pool.close()
     halo_pool.join()
 
     temp_accretion_result_array=[]#initialise results grabber
@@ -810,12 +809,6 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
 
     delta_n0=temp_accretion_result_array[:,1]
     delta_n1=temp_accretion_result_array[:,2]
-
-    print(len(delta_n0))
-    print(len(delta_n1))
-    time.sleep(100)
-
-    
 
     ############################# Post-processing accretion calc results #############################
 
