@@ -334,7 +334,106 @@ def calc_particle_history(halo_index_list,sub_bools,particle_IDs_subset,verbose=
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
-def gen_particle_history(halo_data_all,npart,min_snap=0,verbose=1):
+def gen_particle_history_serial(halo_data_all,npart,min_snap=0,verbose=1):
+
+    """
+
+    gen_particle_history : function
+	----------
+
+    Generate and save particle history data from velociraptor property and particle files.
+
+	Parameters
+	----------
+    halo_data_all : list of dictionaries
+        The halo data list of dictionaries previously generated.
+
+	Returns
+	----------
+    {'all_ids':running_list_all,'sub_ids':running_list_sub} : dict
+        Dictionary of particle lists which have ever been part of any halo and those which 
+        have been part of a subhalo at any point up to the last snap in the halo_data_all array.
+
+        This data is saved for each snapshot on the way in a np.pickle file in the directory "part_histories"
+
+	"""
+    ### input checks
+    #snaps
+    try:
+        no_snaps=len(halo_data_all)
+    except:
+        print("Invalid halo data")
+
+    # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
+    if not os.path.isdir("part_histories"):
+        os.mkdir("part_histories")
+
+    print('Generating particle histories up to snap = ',no_snaps)
+
+    running_list_all=[]
+    running_list_sub=[]
+    sub_part_hist=np.zeros(npart)
+    all_part_hist=np.zeros(npart)
+
+    # for each snapshot get the particle data and add to the running list
+
+    for isnap in range(no_snaps):
+
+        new_particle_data=get_particle_lists(snap=isnap,halo_data_snap=halo_data_all[isnap],add_subparts_to_fofs=False,verbose=verbose)
+        
+        if len(new_particle_data['Particle_IDs'])==0 or len(halo_data_all[isnap]['hostHaloID'])<2:#if no halos or no new particle data
+            if verbose:
+                print('Either no particle data or no halos for snap = ',isnap)
+            continue
+
+        else:
+            if verbose:
+                print('Have particle lists for snap = ',isnap)
+
+            n_halos_snap=len(halo_data_all[isnap]['hostHaloID'])
+            sub_halos_snap=halo_data_all[isnap]['hostHaloID']>0 #bool of subhalos
+            
+            temp_result_array=calc_particle_history(halo_index_list=list(range(n_halos_snap)),sub_bools=sub_halos_snap,particle_IDs_subset=new_particle_data["Particle_IDs"])
+            all_halos_plist=temp_result_array[0]
+            sub_halos_plist=temp_result_array[1]
+
+            new_structure_indices=np.array(np.compress(np.logical_not(np.in1d(all_halos_plist,running_list_all)),all_halos_plist))
+            new_substructure_indices=np.array(np.compress(np.logical_not(np.in1d(sub_halos_plist,running_list_sub)),sub_halos_plist))
+
+            running_list_all=np.concatenate([running_list_all,all_halos_plist])
+            running_list_sub=np.concatenate([running_list_sub,sub_halos_plist])
+
+            running_list_all=np.unique(running_list_all)
+            running_list_sub=np.unique(running_list_sub)
+
+            for new_part_structure in new_structure_indices:
+                all_part_hist[int(new_part_structure)]=1
+
+            for new_part_substructure in new_substructure_indices:
+                sub_part_hist[int(new_part_substructure)]=1
+
+            if isnap in range(no_snaps):
+                if isnap>min_snap:
+                    parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all.dat"
+                    parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub.dat"
+
+                    if verbose:
+                        print('Saving histories for snap = ',str(isnap),'to .dat file')
+
+                    with open(parthist_filename_all, 'wb') as parthist_file:
+                        pickle.dump(all_part_hist, parthist_file)
+                        parthist_file.close()
+                    with open(parthist_filename_sub, 'wb') as parthist_file:
+                        pickle.dump(sub_part_hist, parthist_file)
+                        parthist_file.close()
+
+                    if verbose:                    
+                        print('Done saving histories for snap = ',str(isnap),'to .dat file')
+
+    print('Unique particle histories created')
+    return {'all_ids':all_part_hist,'sub_part_ids':sub_part_hist}
+
+def gen_particle_history_parallel(halo_data_all,npart,min_snap=0,verbose=1):
 
     """
 
