@@ -816,6 +816,7 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     #     temp_accretion_result_array.append(accretion_results[iprocess].get())
 
     # temp_accretion_result_array=np.row_stack(temp_accretion_result_array)
+    
     t1=time.time()
     temp_accretion_result_array=calc_accretion_rate(halo_index_list,field_bools,part_data_1_ordered_IDs,part_data_2_ordered_IDs,part_data_2_ordered_Types,particle_history,1)
     t2=time.time()
@@ -848,11 +849,11 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     print('Saving accretion rates to .dat file.')
 
     if trim_particles:
-        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_'+str(depth)+'_'+str(halo_index_list[0])+'_'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
     else:
-        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_'+str(depth)+'_'+str(halo_index_list[0])+'_'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
 
