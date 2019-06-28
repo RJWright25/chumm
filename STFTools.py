@@ -816,8 +816,12 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     #     temp_accretion_result_array.append(accretion_results[iprocess].get())
 
     # temp_accretion_result_array=np.row_stack(temp_accretion_result_array)
-
+    t1=time.time()
     temp_accretion_result_array=calc_accretion_rate(halo_index_list,field_bools,part_data_1_ordered_IDs,part_data_2_ordered_IDs,part_data_2_ordered_Types,particle_history,1)
+    t2=time.time()
+
+    if verbose:
+        print(f'Calculated accretion rate to {n_halos_desired} halos in {t2-t1} sec')
 
     delta_n0=temp_accretion_result_array[:,1]
     delta_n1=temp_accretion_result_array[:,2]
