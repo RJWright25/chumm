@@ -769,7 +769,7 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     n_halos_tot=len(halo_data_all[snap]['hostHaloID'])#number of total halos at the final snapshot in the halo_data_all dictionary
     n_halos_desired=len(halo_index_list)#number of halos for calculation desired
     field_bools=(halo_data_all[snap]['hostHaloID']==-1)#boolean mask of halos which are field
-    n_processes=8#number of processes to spawn equal to cpu count
+    n_processes=2#number of processes to spawn equal to cpu count
     accretion_results = []
 
     if verbose:
@@ -807,8 +807,8 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
         accretion_results.append(halo_pool.apply_async(calc_accretion_rate, (halo_index_list_temp,field_bools_temp,part_data_1_ordered_IDs_temp,part_data_2_ordered_IDs_temp,part_data_2_ordered_Types_temp,particle_history,0)))
 
     #ensure all processes have finished
-    halo_pool.close()
-    halo_pool.join()
+    #halo_pool.close()
+    #halo_pool.join()
 
     temp_accretion_result_array=[]#initialise results grabber
     for iprocess in range(n_processes):#get the results from each process
