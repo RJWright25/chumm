@@ -783,32 +783,37 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
 
     # Start each process with dedicated halos calculated (distribute halo indices as described)
     last_index=0
+    index_lists=[]
+    halo_index_lists=[]
+
     for iprocess in range(n_processes):
         if halo_rem==0: #if there's an exact multiple of halos as cpu cores then distribute evenly
             indices_temp=list(range(iprocess*n_halos_per_process,(iprocess+1)*n_halos_per_process))
+            index_lists.append(indices_temp)
             halo_index_list_temp=[halo_index_list[index_temp] for index_temp in indices_temp]
+            halo_index_lists.append(halo_index_list_temp)
 
         else: #otherwise split halos evenly except last process
             if iprocess<halo_rem:
                 indices_temp=list(range(last_index,last_index+n_halos_per_process+1))
-                halo_index_list_temp=[halo_index_list[index_temp] for index_temp in indices_temp]
+                index_lists.append(indices_temp)
                 last_index=indices_temp[-1]+1
+                halo_index_list_temp=[halo_index_list[index_temp] for index_temp in indices_temp]
+                halo_index_lists.append(halo_index_list_temp)
+
             else:
                 indices_temp=list(range(last_index,last_index+n_halos_per_process))
-                halo_index_list_temp=[halo_index_list[index_temp] for index_temp in indices_temp]
+                index_lists.append(indices_temp)
                 last_index=indices_temp[-1]+1
-
-        field_bools_temp=field_bools[halo_index_list_temp]#select the subset of field_bools based on the process's halo_index_list
-        part_data_1_ordered_IDs_temp=[part_data_1_ordered_IDs[ihalo] for ihalo in halo_index_list_temp]
-        part_data_2_ordered_IDs_temp=[part_data_2_ordered_IDs[ihalo] for ihalo in halo_index_list_temp]
-        part_data_2_ordered_Types_temp=[part_data_2_ordered_IDs[ihalo] for ihalo in halo_index_list_temp]
+                halo_index_list_temp=[halo_index_list[index_temp] for index_temp in indices_temp]
+                halo_index_lists.append(halo_index_list_temp)
 
         # Start the calc_accretion_rate worker function for this process and append results to accretion_results
-        accretion_results.append(halo_pool.apply_async(calc_accretion_rate, (halo_index_list_temp,field_bools_temp,part_data_1_ordered_IDs_temp,part_data_2_ordered_IDs_temp,part_data_2_ordered_Types_temp,particle_history,0)))
+        accretion_results.append(halo_pool.apply_async(calc_accretion_rate, (halo_index_list_temp,field_bools[halo_index_list_temp],[part_data_1_ordered_IDs[ihalo] for ihalo in indices_temp],[part_data_2_ordered_IDs[ihalo] for ihalo in indices_temp],[part_data_2_ordered_Types[ihalo] for ihalo in indices_temp],particle_history,0)))
 
     #ensure all processes have finished
-    #halo_pool.close()
-    #halo_pool.join()
+    halo_pool.close()
+    halo_pool.join()
 
     temp_accretion_result_array=[]#initialise results grabber
     for iprocess in range(n_processes):#get the results from each process
