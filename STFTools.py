@@ -770,24 +770,33 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     n_halos_desired=len(halo_index_list)#number of halos for calculation desired
     field_bools=(halo_data_all[snap]['hostHaloID']==-1)#boolean mask of halos which are field
     n_processes=cpu_count()#number of processes to spawn equal to cpu count
-    
+    accretion_results = []
+
     if verbose:
         print(f'Splitting halos into {n_processes} processes')
 
-    if n_halos_desired%n_processes==0: #if there's an exact multiple of halos as cpu cores then distribute evenly
-        n_halos_per_process=int(n_halos_desired/n_processes)
-    else: #otherwise split halos evenly except last process
-        n_halos_per_process=int(n_halos_desired/n_processes)+1
-
+    
     halo_pool = Pool(processes=n_processes) #initialise pool of n_processes
-    accretion_results = []
+    halo_rem=n_halos_desired%n_processes
+    n_halos_per_process=int(n_halos_desired/n_processes)
+
 
     # Start each process with dedicated halos calculated (distribute halo indices as described)
+    last_index=0
     for iprocess in range(n_processes):
-        if iprocess<n_processes-1:
-            halo_index_list_temp=[halo_index_list[i] for i in range(iprocess*n_halos_per_process,n_halos_per_process*(iprocess+1))]#For the first n-1 processes
-        else:
-            halo_index_list_temp=[halo_index_list[i] for i in range(iprocess*n_halos_per_process,n_halos_desired)]#For the last process
+        if halo_rem==0: #if there's an exact multiple of halos as cpu cores then distribute evenly
+            indices_temp=list(range(iprocess*n_halos_per_process,(iprocess+1)*n_halos_per_process))
+            halo_index_list_temp=[halo_index_list[index_temp] for index_temp in indices_temp]
+
+        else: #otherwise split halos evenly except last process
+            if iprocess<halo_rem:
+                indices_temp=list(range(last_index,last_index+n_halos_per_process+1))
+                halo_index_list_temp=[halo_index_list[index_temp] for index_temp in indices_temp]
+                last_index=indices_temp[-1]+1
+            else:
+                indices_temp=list(range(last_index,last_index+n_halos_per_process))
+                halo_index_list_temp=[halo_index_list[index_temp] for index_temp in indices_temp]
+                last_index=indices_temp[-1]+1
 
         field_bools_temp=field_bools[halo_index_list_temp]#select the subset of field_bools based on the process's halo_index_list
         part_data_1_ordered_IDs_temp=[part_data_1_ordered_IDs[ihalo] for ihalo in halo_index_list_temp]
