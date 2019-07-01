@@ -967,6 +967,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
             dataframe_temp=pickle.load(acc_rate_file)
             dataframe_temp=df(dataframe_temp)
             dataframe_temp['ihalo']=halo_indices
+            dataframe_temp['fb']=np.array(dataframe_temp['Gas_Acc'])/(np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc']))
             acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
             acc_rate_file.close()
 
