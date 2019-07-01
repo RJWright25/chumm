@@ -967,8 +967,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
             dataframe_temp=pickle.load(acc_rate_file)
             dataframe_temp=df(dataframe_temp)
             dataframe_temp['ihalo']=halo_indices
-            print(dataframe_temp)
-            acc_rate_dataframe.append(dataframe_temp)
+            acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
             acc_rate_file.close()
 
     return acc_rate_dataframe
