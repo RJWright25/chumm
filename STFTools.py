@@ -816,7 +816,29 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
 ########################### HALO INDEX LISTS GENERATOR ###########################
 
 def gen_halo_indices_mp(all_halo_indices,n_processes):
+    """
 
+    gen_halo_indices_mp : function
+	----------
+
+    Generate list of lists of halo indices divided amongst a given amount of processes.
+
+	Parameters
+	----------
+    all_halo_indices : list or int
+        If list, a list of integer halo indices to divide.
+        If int, a list of integer halo indices up to the int is generated.
+
+    n_processes : int
+        Number of processes (likely number of cores) to distribute halo indices across. 
+
+    Returns
+	----------
+    halo_index_lists : list of lists
+        The resulting halo index lists for each process. 
+
+    """
+    # Create halo index list from integer or provided list
     if type(all_halo_indices)==int:
         all_halo_indices=list(range(all_halo_indices))
     else:
@@ -826,11 +848,12 @@ def gen_halo_indices_mp(all_halo_indices,n_processes):
     halo_rem=n_halos%n_processes
     n_halos_per_process=int(n_halos/n_processes)
 
-    # Start each process with dedicated halos calculated (distribute halo indices as described)
+    #initialising loop variables
     last_index=0
     index_lists=[]
     halo_index_lists=[]
 
+    #loop for each process to generate halo index lists
     for iprocess in range(n_processes):
         if halo_rem==0: #if there's an exact multiple of halos as cpu cores then distribute evenly
             indices_temp=list(range(iprocess*n_halos_per_process,(iprocess+1)*n_halos_per_process))
