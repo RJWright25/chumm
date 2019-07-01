@@ -946,7 +946,7 @@ def gen_filename_dataframe(directory):
     return filename_dataframe
 
 ########################### ACCRETION RATE LOADER ###########################
-def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
+def load_accretion_rate(directory,calc_type,snap,depth,span,halo_data_snap=[],verbose=1):
 
     filename_dataframe=gen_filename_dataframe(directory)
     relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['filename'])
@@ -960,11 +960,15 @@ def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
 
     for ifile,ifilename in enumerate(relevant_files):
         halo_indices=list(range(index1[ifile],index2[ifile]+1))
+    
         with open(directory+ifilename,'rb') as acc_rate_file:
             dataframe_temp=pickle.load(acc_rate_file)
             dataframe_temp=df(dataframe_temp)
             dataframe_temp['ihalo']=halo_indices
             dataframe_temp['fb']=np.array(dataframe_temp['Gas_Acc'])/(np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc']))
+            if not halo_data_all=[]:
+                dataframe_temp['M200']=halo_data_snap['Mass_200crit'][halo_indices[0]:halo_indices[-1]]*halo_data_snap['UnitInfo']['Mass_unit_to_solarmass']
+                dataframe_temp['hostID']=halo_data_snap['hostHaloID'][halo_indices[0]:halo_indices[-1]]
             acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
             acc_rate_file.close()
 
