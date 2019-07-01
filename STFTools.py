@@ -7,7 +7,7 @@ import os
 import numpy as np
 import h5py
 import pickle
-import pandas.DataFrame as df
+from pandas import DataFrame as df
 import astropy.units as u
 from multiprocessing import Pool,cpu_count
 from astropy.cosmology import FlatLambdaCDM,z_at_value
