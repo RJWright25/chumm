@@ -803,11 +803,11 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     print('Saving accretion rates to .dat file.')
 
     if trim_particles:
-        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'w') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
     else:
-        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'w') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
 
@@ -882,6 +882,8 @@ def gen_halo_indices_mp(all_halo_indices,n_processes):
 ########################### ACCRETION RATE FILE HANDLER ###########################
 
 def gen_filename_dataframe(directory):
+
+
     """
 
     gen_filename_dataframe : function
@@ -942,3 +944,29 @@ def gen_filename_dataframe(directory):
     filename_dataframe=filename_dataframe.sort_values(by=['type','depth','snap','span','index1'])
 
     return filename_dataframe
+
+########################### ACCRETION RATE LOADER ###########################
+def load_accretion_rate(directory,calc_type,snap,depth,span):
+
+    filename_dataframe=gen_filename_dataframe(directory)
+    relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['filename'])
+    index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index1'])
+    index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index2'])
+    
+    if verbose:
+        print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span})')
+
+    acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[]})
+
+    for ifilename in relevant_files:
+        halo_indices=range(index1,index2)
+        with open(directory+ifilename) as acc_rate_file:
+            dataframe_temp=df(pickle.load(acc_rate_file))
+            dataframe_temp['ihalo']=halo_indices
+            acc_rate_file.close()
+        acc_rate_dataframe.append(dataframe_temp)
+
+    return acc_rate_dataframe
+        
+
+
