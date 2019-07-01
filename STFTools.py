@@ -966,7 +966,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span,halo_data_snap=[],ve
             dataframe_temp=df(dataframe_temp)
             dataframe_temp['ihalo']=halo_indices
             dataframe_temp['fb']=np.array(dataframe_temp['Gas_Acc'])/(np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc']))
-            if not halo_data_all=[]:
+            if not halo_data_all==[]:
                 dataframe_temp['M200']=halo_data_snap['Mass_200crit'][halo_indices[0]:halo_indices[-1]]*halo_data_snap['UnitInfo']['Mass_unit_to_solarmass']
                 dataframe_temp['hostID']=halo_data_snap['hostHaloID'][halo_indices[0]:halo_indices[-1]]
             acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
