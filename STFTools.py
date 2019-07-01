@@ -949,6 +949,7 @@ def gen_filename_dataframe(directory):
 def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[],verbose=1):
 
     filename_dataframe=gen_filename_dataframe(directory)
+    print(filename_dataframe)
     if span==[]:
         relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth))]['filename'])
         index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth))]['index1'])
@@ -963,7 +964,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
     if verbose:
         print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span})')
 
-    acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[]})
+    acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[],'hostID':[],'M200':[],'fb':[]})
 
     for ifile,ifilename in enumerate(relevant_files):
         halo_indices=list(range(index1[ifile],index2[ifile]+1))
