@@ -878,3 +878,65 @@ def gen_halo_indices_mp(all_halo_indices,n_processes):
 
     return halo_index_lists
 
+
+def gen_filename_dataframe(directory):
+    """
+
+    gen_filename_dataframe : function
+	----------
+
+    Generates a pandas dataframe of the filenames and associated characteristics of saved accretion rate files. 
+
+	Parameters
+	----------
+    directory : str
+        Where to search for accretion rate files. 
+
+    Returns
+	----------
+    filename_dataframe : pd.DataFrame
+        DataFrame containing the keys listed below.
+
+        Keys
+
+            'filename': filename string
+            'type': 0 (base), 1 (trimmed)
+            'depth': snap gap
+            'span': n_halos per process in generation
+            'index1': first halo index
+            'index2': final halo index
+
+    """
+    
+    desired_file_list=os.listdir(directory)
+    is_data_file=[]
+
+    for filename in desired_file_list:
+        is_data_file.append(filename.endswith('.dat'))
+    desired_file_list=np.compress(is_data_file,desired_file_list) #the data files
+
+    #initialise results
+    snaps=[]
+    base_or_trim=[]
+    depths=[]
+    halo_range_1=[]
+    halo_range_2=[]
+    spans=[]
+
+    #iterate through each of the data files
+    for filename in desired_file_list:
+        file_split=filename.split('_')
+        snaps.append(int(file_split[1]))
+        base_or_trim.append(int(file_split[3][0]=="t"))
+        depths.append(int(file_split[4][-1]))
+        halo_range_temp=np.array(file_split[5][:-4].split('-')).astype(int)
+        halo_range_1.append(halo_range_temp[0])
+        halo_range_2.append(halo_range_temp[1])
+        spans.append(halo_range_temp[1]-halo_range_temp[0]+1)
+
+    #create data frame and order according to type, depth, then snap
+    filename_dataframe={'filename':desired_file_list,'snap':snaps,'type':base_or_trim,'depth':depths,'index1':halo_range_1,'index2':halo_range_2,'span':spans}
+    filename_dataframe=df(filename_dataframe)
+    filename_dataframe=filename_dataframe.sort_values(by=['type','depth','snap','span','index1'])
+
+    return filename_dataframe
