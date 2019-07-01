@@ -962,7 +962,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
     acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[]})
 
     for ifile,ifilename in enumerate(relevant_files):
-        halo_indices=list(range(index1[ifile],index2[ifile]+1))
+        halo_indices=list(np.array(range(index1[ifile],index2[ifile]+1)).astype(int))
         with open(directory+ifilename,'rb') as acc_rate_file:
             dataframe_temp=pickle.load(acc_rate_file)
             dataframe_temp=df(dataframe_temp)
