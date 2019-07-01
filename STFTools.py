@@ -823,7 +823,7 @@ def gen_halo_indices_mp(all_halo_indices,n_processes):
         all_halo_indices=list(all_halo_indices)
 
     n_halos=len(all_halo_indices)
-    halo_rem=n_halos_desired%n_processes
+    halo_rem=n_halos%n_processes
     n_halos_per_process=int(n_halos/n_processes)
 
     # Start each process with dedicated halos calculated (distribute halo indices as described)
