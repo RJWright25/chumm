@@ -962,7 +962,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
     if verbose:
         print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span})')
 
-    acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[]})
+    acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[],'hostID':[],'fb':[],'M200':[]})
 
     for ifile,ifilename in enumerate(relevant_files):
         halo_indices=list(range(index1[ifile],index2[ifile]+1))
