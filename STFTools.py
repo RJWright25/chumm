@@ -946,7 +946,7 @@ def gen_filename_dataframe(directory):
     return filename_dataframe
 
 ########################### ACCRETION RATE LOADER ###########################
-def load_accretion_rate(directory,calc_type,snap,depth,span):
+def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
 
     filename_dataframe=gen_filename_dataframe(directory)
     relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['filename'])
