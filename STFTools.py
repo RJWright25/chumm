@@ -813,3 +813,45 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     #return the delta_m dictionary. 
     return delta_m
 
+########################### HALO INDEX LISTS GENERATOR ###########################
+
+def gen_halo_indices_mp(all_halo_indices,n_processes):
+
+    if type(all_halo_indices)==int:
+        all_halo_indices=list(range(all_halo_indices))
+    else:
+        all_halo_indices=list(all_halo_indices)
+
+    n_halos=len(all_halo_indices)
+    halo_rem=n_halos_desired%n_processes
+    n_halos_per_process=int(n_halos/n_processes)
+
+    # Start each process with dedicated halos calculated (distribute halo indices as described)
+    last_index=0
+    index_lists=[]
+    halo_index_lists=[]
+
+    for iprocess in range(n_processes):
+        if halo_rem==0: #if there's an exact multiple of halos as cpu cores then distribute evenly
+            indices_temp=list(range(iprocess*n_halos_per_process,(iprocess+1)*n_halos_per_process))
+            index_lists.append(indices_temp)
+            halo_index_list_temp=[all_halo_indices[index_temp] for index_temp in indices_temp]
+            halo_index_lists.append(halo_index_list_temp)
+
+        else: #otherwise split halos evenly except last process
+            if iprocess<halo_rem:
+                indices_temp=list(range(last_index,last_index+n_halos_per_process+1))
+                index_lists.append(indices_temp)
+                last_index=indices_temp[-1]+1
+                halo_index_list_temp=[all_halo_indices[index_temp] for index_temp in indices_temp]
+                halo_index_lists.append(halo_index_list_temp)
+
+            else:
+                indices_temp=list(range(last_index,last_index+n_halos_per_process))
+                index_lists.append(indices_temp)
+                last_index=indices_temp[-1]+1
+                halo_index_list_temp=[all_halo_indices[index_temp] for index_temp in indices_temp]
+                halo_index_lists.append(halo_index_list_temp)
+
+    return halo_index_lists
+
