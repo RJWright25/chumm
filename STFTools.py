@@ -951,13 +951,14 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
     filename_dataframe=gen_filename_dataframe(directory)
     if span==[]:
         span_new=np.nanmax(np.array(filename_dataframe['span']))
+        print(span_new)
         correct_span=np.absolute(filename_dataframe['span']-span_new)<10
     else:
         span_new==span
         correct_span=filename_dataframe['span']==span
 
     relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,correct_span))]['filename'])
-    print(span,relevant_files)
+    print(span_new,relevant_files)
     index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,correct_span))]['index1'])
     index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,correct_span))]['index2'])
     
