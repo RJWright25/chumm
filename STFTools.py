@@ -950,8 +950,11 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
 
     filename_dataframe=gen_filename_dataframe(directory)
     if span==[]:
-        span=np.nanmax(np.array(filename_dataframe['span']))
-        correct_span=np.absolute(filename_dataframe['span']-span)<10
+        span_new=np.nanmax(np.array(filename_dataframe['span']))
+        correct_span=np.absolute(filename_dataframe['span']-span_new)<10
+    else:
+        span_new==span
+        correct_span=filename_dataframe['span']==span
 
     relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,correct_span))]['filename'])
     print(span,relevant_files)
@@ -959,7 +962,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
     index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,correct_span))]['index2'])
     
     if verbose:
-        print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span})')
+        print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span_new})')
 
     acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[],'hostID':[],'fb':[],'M200':[]})
 
