@@ -7,6 +7,7 @@ import os
 import numpy as np
 import h5py
 import pickle
+import pandas.DataFrame as df
 import astropy.units as u
 from multiprocessing import Pool,cpu_count
 from astropy.cosmology import FlatLambdaCDM,z_at_value
@@ -878,6 +879,7 @@ def gen_halo_indices_mp(all_halo_indices,n_processes):
 
     return halo_index_lists
 
+########################### ACCRETION RATE FILE HANDLER ###########################
 
 def gen_filename_dataframe(directory):
     """
