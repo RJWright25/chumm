@@ -949,9 +949,9 @@ def gen_filename_dataframe(directory):
 def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
 
     filename_dataframe=gen_filename_dataframe(directory)
-    relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['filename'])
-    index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index1'])
-    index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index2'])
+    relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['filename'])
+    index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index1'])
+    index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index2'])
     
     print(filename_dataframe)
     print(relevant_files)
