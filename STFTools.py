@@ -953,9 +953,6 @@ def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
     index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index1'])
     index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index2'])
     
-    print(filename_dataframe)
-    print(relevant_files)
-
     if verbose:
         print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span})')
 
