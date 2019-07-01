@@ -953,15 +953,18 @@ def load_accretion_rate(directory,calc_type,snap,depth,span,verbose=1):
     index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index1'])
     index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,filename_dataframe['span']==span))]['index2'])
     
+    print(filename_dataframe)
+    print(relevant_files)
+
     if verbose:
         print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span})')
 
     acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[]})
 
-    for ifilename in relevant_files:
+    for ifile,ifilename in enumerate(relevant_files):
 
         print(directory+ifilename)
-        halo_indices=range(index1,index2)
+        halo_indices=range(index1[ifile],index2[ifile])
         with open(directory+ifilename) as acc_rate_file:
             dataframe_temp=df(pickle.load(acc_rate_file))
             dataframe_temp['ihalo']=halo_indices
