@@ -19,7 +19,7 @@ from VRPythonTools import *
 
 ########################### CREATE HALO DATA ###########################
 
-def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
+def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
     
     """
 
@@ -35,6 +35,10 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
             If this is an empty list, we find all snap data.
             If this is a non-empty list, we use these snaps.
             If this is an integer, we find data for all snaps up to this integer.
+
+    detailed : bool
+        Specifies whether we are creating minimal halo data (0) or extensive halo data (1).
+        Minimal data used for accretion calculations. 
 
     tf_treefile : string
         The full path to the text file in which the tree data files are listed.
@@ -105,11 +109,18 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
     ### input processing
     
     # extra halo fields
-    try:
-        halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit','Lx','Ly','Lz','Lx_gas','Ly_gas','Lz_gas','q','q_gas','s','s_gas','cNFW','lambda_B','veldisp_xx','veldisp_xx_gas','veldisp_yy','veldisp_yy_gas','veldisp_zz','veldisp_zz_gas','sigV']#default halo fields
-        halo_fields.extend(extra_halo_fields)
-    except:
-        print('Please enter valid extra halo fields (should be a list of strings')
+    if detailed:
+        try:
+            halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit','Lx','Ly','Lz','Lx_gas','Ly_gas','Lz_gas','q','q_gas','s','s_gas','cNFW','lambda_B','veldisp_xx','veldisp_xx_gas','veldisp_yy','veldisp_yy_gas','veldisp_zz','veldisp_zz_gas','sigV']#default halo fields
+            halo_fields.extend(extra_halo_fields)
+        except:
+            print('Please enter valid extra halo fields (should be a list of strings')
+    else:
+        try:
+            halo_fields=['ID','hostHaloID']#default halo fields
+            halo_fields.extend(extra_halo_fields)
+        except:
+            print('Please enter valid extra halo fields (should be a list of strings')
     
     # snapshots
     if snaps==[]: #if no snaps specified, find them all
@@ -172,8 +183,9 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]
 
     # List sim info and unit info for each snap (in dictionaries)
-    halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for snap in sim_snaps]
-    halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for snap in sim_snaps]
+    if detailed:
+        halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for snap in sim_snaps]
+        halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for snap in sim_snaps]
     
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
@@ -193,17 +205,19 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
         print('Adding timesteps & filepath information')
     
     # Adding timesteps and final bits of information 
-    H0=halo_data_all[0]['SimulationInfo']['h_val']*halo_data_all[0]['SimulationInfo']['Hubble_unit']
-    Om0=halo_data_all[0]['SimulationInfo']['Omega_Lambda']
-    cosmo=FlatLambdaCDM(H0=H0,Om0=Om0)
+    if detailed:
+        H0=halo_data_all[0]['SimulationInfo']['h_val']*halo_data_all[0]['SimulationInfo']['Hubble_unit']
+        Om0=halo_data_all[0]['SimulationInfo']['Omega_Lambda']
+        cosmo=FlatLambdaCDM(H0=H0,Om0=Om0)
 
     for isnap,snap in enumerate(sim_snaps):
-        scale_factor=halo_data_all[isnap]['SimulationInfo']['ScaleFactor']
-        redshift=z_at_value(cosmo.scale_factor,scale_factor,zmin=-0.5)
-        lookback_time=cosmo.lookback_time(redshift).value
+        if detailed:
+            scale_factor=halo_data_all[isnap]['SimulationInfo']['ScaleFactor']
+            redshift=z_at_value(cosmo.scale_factor,scale_factor,zmin=-0.5)
+            lookback_time=cosmo.lookback_time(redshift).value
 
-        halo_data_all[isnap]['SimulationInfo']['z']=redshift
-        halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
+            halo_data_all[isnap]['SimulationInfo']['z']=redshift
+            halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
 
         if vr_files_nested:
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)+"/"+vr_prefix+str(snap).zfill(vr_files_lz)
@@ -212,14 +226,24 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)
             halo_data_all[isnap]['FileType']=vr_files_type
 
-    if path.exists('halo_data_all.dat'):
-        if verbose:
-            print('Overwriting existing halo data ...')
-        os.remove('halo_data_all.dat')
+    if detailed:
+        if path.exists('halo_data_all.dat'):
+            if verbose:
+                print('Overwriting existing detailed halo data ...')
+            os.remove('halo_data_all.dat')
 
-    with open('halo_data_all.dat', 'wb') as halo_data_file:
-        pickle.dump(halo_data_all, halo_data_file)
-        halo_data_file.close()
+        with open('halo_data_all.dat', 'wb') as halo_data_file:
+            pickle.dump(halo_data_all, halo_data_file)
+            halo_data_file.close()
+    else:
+        if path.exists('halo_data_base.dat'):
+            if verbose:
+                print('Overwriting existing base halo data ...')
+            os.remove('halo_data_base.dat')
+
+        with open('halo_data_base.dat', 'wb') as halo_data_file:
+            pickle.dump(halo_data_all, halo_data_file)
+            halo_data_file.close()
 
     print('Done generating base halo data')
 
@@ -1045,7 +1069,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
             dataframe_temp=df(dataframe_temp)
             dataframe_temp['fb']=np.array(dataframe_temp['Gas_Acc'])/(np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc']))
             for halo_field in append_fields:
-                dataframe_temp[halo_field]=[halo_data_snap[halo_field][halo_index_list[i] for i in range(len(halo_index_list))]
+                dataframe_temp[halo_field]=[halo_data_snap[halo_field][halo_index_list[i]] for i in range(len(halo_index_list))]
                 if ('ass' in halo_field) or ('M_' in halo_field):
                     dataframe_temp[halo_field]=dataframe_temp[halo_field]*halo_data_snap['UnitInfo']['Mass_unit_to_solarmass']            
             acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
