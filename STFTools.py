@@ -1053,12 +1053,6 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
 
     if halo_data_snap==[]:
         append_fields=[]
-    else:
-        base_fields=['ID','Mass_200crit']
-        append_fields.extend(base_fields)
-
-    for halo_field in append_fields:
-        acc_rate_dataframe[halo_field]=[]
 
     acc_rate_dataframe=df(acc_rate_dataframe)
 
@@ -1068,10 +1062,6 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
             dataframe_temp=pickle.load(acc_rate_file)
             dataframe_temp=df(dataframe_temp)
             dataframe_temp['fb']=np.array(dataframe_temp['Gas_Acc'])/(np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc']))
-            for halo_field in append_fields:
-                dataframe_temp[halo_field]=[halo_data_snap[halo_field][halo_index_list[i]] for i in range(len(halo_index_list))]
-                if ('ass' in halo_field) or ('M_' in halo_field):
-                    dataframe_temp[halo_field]=dataframe_temp[halo_field]*halo_data_snap['UnitInfo']['Mass_unit_to_solarmass']            
             acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
             acc_rate_file.close()
 
