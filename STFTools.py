@@ -4,6 +4,7 @@
 
 #*** Preamble ***
 import os
+from os import path
 import numpy as np
 import h5py
 import pickle
@@ -71,6 +72,7 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
         'hostHaloID'
         'numSubStruct'
         'Mass_tot'
+        'Mass_FOF'
         'Mass_200crit'
         'Mass_200mean'
         'M_gas'
@@ -104,7 +106,7 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
     
     # extra halo fields
     try:
-        halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit']#default halo fields
+        halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit','Lx','Ly','Lz','Lx_gas','Ly_gas','Lz_gas','q','q_gas','s','s_gas','cNFW','lambda_B','veldisp_xx','veldisp_xx_gas','veldisp_yy','veldisp_yy_gas','veldisp_zz','veldisp_zz_gas','sigV']#default halo fields
         halo_fields.extend(extra_halo_fields)
     except:
         print('Please enter valid extra halo fields (should be a list of strings')
@@ -209,6 +211,11 @@ def gen_halo_data_all(snaps=[],tf_treefile="",vr_directory="",vr_prefix="snap_",
         else:
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)
             halo_data_all[isnap]['FileType']=vr_files_type
+
+    if path.exists('halo_data_all.dat'):
+        if verbose:
+            print('Overwriting existing halo data ...')
+        os.remove('halo_data_all.dat')
 
     with open('halo_data_all.dat', 'wb') as halo_data_file:
         pickle.dump(halo_data_all, halo_data_file)
@@ -536,7 +543,7 @@ def calc_accretion_rate(halo_index_list,field_bools,part_IDs_1,part_IDs_2,part_T
         part_count_1=len(part_IDs_init)
         part_count_2=len(part_IDs_final)
         # Verifying particle counts are adequate
-        if part_count_2<2 or part_count_1<2:
+        if part_count_2<5 or part_count_1<5:
             if verbose:
                 print(f'Particle count in halo {ihalo_abs} is less than 2 - not processing')
             # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
@@ -655,6 +662,7 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
             "DM_Acc"
             "Gas_Acc"
             "dt"
+            "halo_index_list"
         This data is saved for each snapshot on the way in a np.pickle file in the directory "/acc_rates"
 
 	"""
@@ -795,16 +803,27 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     else:
         delta_m={'DM_Acc':np.array(delta_n1)*m_1/delta_t,'Gas_Acc':np.array(delta_n0)*m_0/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
 
-    # Now save all these accretion rates to file (in directory where run /acc_rates) 
+    # Now save all these accretion rates to file (in directory where run /acc_rates)
     # (with filename depending on exact calculation parameters)
+    # will overwrite existing file (first deletes)
 
     print('Saving accretion rates to .dat file.')
 
     if trim_particles:
+        if path.exists('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+            if verbose:
+                print('Overwriting existing accretion data ...')
+            os.remove('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+
         with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
     else:
+        if path.exists('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+            if verbose:
+                print('Overwriting existing accretion data ...')
+            os.remove('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+
         with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
@@ -1011,7 +1030,9 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
     if halo_data_snap==[]:
         append_fields=[]
     else:
-        append_fields=['ID','Mass_200crit','Mass_200mean','Mass_FOF',]
+        base_fields=['ID','Mass_200crit']
+        append_fields.extend(base_fields)
+
     for halo_field in append_fields:
         acc_rate_dataframe[halo_field]=[]
 
