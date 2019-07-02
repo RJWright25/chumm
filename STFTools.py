@@ -536,10 +536,10 @@ def calc_accretion_rate(halo_index_list,field_bools,part_IDs_1,part_IDs_2,part_T
         part_count_1=len(part_IDs_init)
         part_count_2=len(part_IDs_final)
         # Verifying particle counts are adequate
-        if part_count_2<100 or part_count_1<100:
+        if part_count_2<2 or part_count_1<2:
             if verbose:
-                print(f'Particle count in halo {ihalo_abs} is less than 100 - not processing')
-            # if <100 particles at initial or final snap, then don't calculate accretion rate to this halo
+                print(f'Particle count in halo {ihalo_abs} is less than 2 - not processing')
+            # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
             delta_n0.append(np.nan)
             delta_n1.append(np.nan)
 
@@ -765,8 +765,6 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
 
     print(f'Organised initial particle lists in {t2-t1} sec')
 
-    ############################# Distributing halos to multiprocessing pool #############################
-
     n_halos_tot=len(halo_data_all[snap]['hostHaloID'])#number of total halos at the final snapshot in the halo_data_all dictionary
     n_halos_desired=len(halo_index_list)#number of halos for calculation desired
     field_bools=(halo_data_all[snap]['hostHaloID']==-1)#boolean mask of halos which are field
@@ -793,9 +791,9 @@ def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],de
     # Find which particle type is more massive (i.e. DM) and save accretion rates in dictionary
     # 'DM_Acc', 'Gas_Acc' and 'dt' as Msun/Gyr and dt accordingly
     if mass_table[0]>mass_table[1]:
-        delta_m={'DM_Acc':np.array(delta_n0)*m_0/delta_t,'Gas_Acc':np.array(delta_n1)*m_1/delta_t,'dt':delta_t}
+        delta_m={'DM_Acc':np.array(delta_n0)*m_0/delta_t,'Gas_Acc':np.array(delta_n1)*m_1/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
     else:
-        delta_m={'DM_Acc':np.array(delta_n1)*m_1/delta_t,'Gas_Acc':np.array(delta_n0)*m_0/delta_t,'dt':delta_t}
+        delta_m={'DM_Acc':np.array(delta_n1)*m_1/delta_t,'Gas_Acc':np.array(delta_n0)*m_0/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
 
     # Now save all these accretion rates to file (in directory where run /acc_rates) 
     # (with filename depending on exact calculation parameters)
@@ -946,7 +944,51 @@ def gen_filename_dataframe(directory):
     return filename_dataframe
 
 ########################### ACCRETION RATE LOADER ###########################
-def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[],verbose=1):
+
+def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[],append_fields=[],verbose=1):
+    """
+
+    load_accretion_rate : function
+	----------
+
+    Generates a pandas dataframe of accretion rates from file with given calculation parameters. 
+
+	Parameters
+	----------
+    directory : str
+        Where to search for accretion rate files.
+
+    calc_type : int or bool
+        0: base
+        1: trimmed
+    
+    snap : int
+        Snapshot of accretion rate calculation.
+
+    span : int
+        The span in halo_indices of the calculation (normally n_halos/n_processes).
+
+    halo_data_snap : dict
+        Halo data dictionary at this snapshot (to add relevant fields).
+    
+    append_fields : list of str
+        List of halo data fields to append to accretion dataframe. 
+    
+    Returns
+	----------
+    filename_dataframe : pd.DataFrame
+        DataFrame containing the keys listed below.
+
+        Keys
+
+            'filename': filename string
+            'type': 0 (base), 1 (trimmed)
+            'depth': snap gap
+            'span': n_halos per process in generation
+            'index1': first halo index
+            'index2': final halo index
+
+    """
 
     filename_dataframe=gen_filename_dataframe(directory)
     if span==[]:
@@ -963,19 +1005,28 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
     
     if verbose:
         print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span_new})')
+    
+    acc_rate_dataframe={'DM_Acc':[],'Gas_Acc':[],'fb':[],'dt':[],'halo_index_list':[]}
 
-    acc_rate_dataframe=df({'ihalo':[],'DM_Acc':[],'Gas_Acc':[],'dt':[],'hostID':[],'fb':[],'M200':[]})
+    if halo_data_snap==[]:
+        append_fields=[]
+    else:
+        append_fields=['ID','Mass_200crit','Mass_200mean','Mass_FOF',]
+    for halo_field in append_fields:
+        acc_rate_dataframe[halo_field]=[]
+
+    acc_rate_dataframe=df(acc_rate_dataframe)
 
     for ifile,ifilename in enumerate(relevant_files):
         halo_indices=list(range(index1[ifile],index2[ifile]+1))
         with open(directory+ifilename,'rb') as acc_rate_file:
             dataframe_temp=pickle.load(acc_rate_file)
             dataframe_temp=df(dataframe_temp)
-            dataframe_temp['ihalo']=halo_indices
             dataframe_temp['fb']=np.array(dataframe_temp['Gas_Acc'])/(np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc']))
-            if not halo_data_snap==[]:
-                dataframe_temp['M200']=halo_data_snap['Mass_200crit'][halo_indices[0]:halo_indices[-1]+1]*halo_data_snap['UnitInfo']['Mass_unit_to_solarmass']
-                dataframe_temp['hostID']=halo_data_snap['hostHaloID'][halo_indices[0]:halo_indices[-1]+1]
+            for halo_field in append_fields:
+                dataframe_temp[halo_field]=[halo_data_snap[halo_field][halo_index_list[i] for i in range(len(halo_index_list))]
+                if ('ass' in halo_field) or ('M_' in halo_field):
+                    dataframe_temp[halo_field]=dataframe_temp[halo_field]*halo_data_snap['UnitInfo']['Mass_unit_to_solarmass']            
             acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
             acc_rate_file.close()
 
