@@ -1064,6 +1064,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
             dataframe_temp['fb']=np.array(dataframe_temp['Gas_Acc'])/(np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc']))
             acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
             acc_rate_file.close()
+    acc_rate_dataframe=acc_rate_dataframe.sort_values(by=['halo_index_list'])
 
     return acc_rate_dataframe
         
