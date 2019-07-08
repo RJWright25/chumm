@@ -267,7 +267,7 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
                 if np.sum(fieldhalos_snap)>5:
                     field_halos_xyz=np.compress(fieldhalos_snap,all_halos_xyz,axis=0)
                     field_tree=KDTree(field_halos_xyz)
-                    field_tree_neighbors=field_tree.query_ball_point(field_halos_xyz,2)
+                    field_tree_neighbors=field_tree.query_ball_tree(field_tree,r=2)
                     field_tree_neighbors_n=[len(field_tree_neighbors[i]) for i in range(len(field_tree_neighbors))]
                     for i,ihalo_field in enumerate(fieldhalos_snap_indices):
                         halo_data_all[isnap]['N_2Mpc'][ihalo_field]=field_tree_neighbors_n[i]
@@ -275,12 +275,12 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
                 if np.sum(subhalos_snap)>5:
                     sub_halos_xyz=np.compress(subhalos_snap,all_halos_xyz,axis=0)
                     sub_tree=KDTree(sub_halos_xyz)
-                    sub_tree_neighbors=field_tree.query_ball_point(sub_halos_xyz,2)
+                    sub_tree_neighbors=sub_tree.query_ball_tree(sub_tree,r=2)
                     sub_tree_neighbors_n=[len(sub_tree_neighbors[i]) for i in range(len(sub_tree_neighbors))]
                     for i,ihalo_sub in enumerate(subhalos_snap_indices):
                         halo_data_all[isnap]['N_2Mpc'][ihalo_sub]=sub_tree_neighbors_n[i]
 
-        
+
     if detailed:
         if path.exists('halo_data_all.dat'):
             if verbose:
