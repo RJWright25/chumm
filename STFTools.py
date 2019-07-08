@@ -12,6 +12,7 @@ from pandas import DataFrame as df
 import astropy.units as u
 from multiprocessing import Pool,cpu_count
 from astropy.cosmology import FlatLambdaCDM,z_at_value
+from scipy.spatial import KDTree
 
 # VELOCIraptor python tools 
 from VRPythonTools import *
@@ -19,7 +20,7 @@ from VRPythonTools import *
 
 ########################### CREATE HALO DATA ###########################
 
-def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
+def gen_halo_data_all(snaps=[],box_size=25,detailed=True,tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
     
     """
 
@@ -186,7 +187,7 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
     if detailed:
         halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for snap in sim_snaps]
         halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for snap in sim_snaps]
-    
+
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
 
@@ -204,7 +205,7 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
     if verbose==1:
         print('Adding timesteps & filepath information')
     
-    # Adding timesteps and final bits of information 
+    # Adding timesteps and filepath information 
     if detailed:
         H0=halo_data_all[0]['SimulationInfo']['h_val']*halo_data_all[0]['SimulationInfo']['Hubble_unit']
         Om0=halo_data_all[0]['SimulationInfo']['Omega_Lambda']
@@ -218,6 +219,8 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
 
             halo_data_all[isnap]['SimulationInfo']['z']=redshift
             halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
+            halo_data_all[isnap]['SimulationInfo']['BoxSize_comoving']=box_size#Mpc/h
+            halo_data_all[isnap]['SimulationInfo']['BoxSize_physical']=box_size*scale_factor#Mpc
 
         if vr_files_nested:
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)+"/"+vr_prefix+str(snap).zfill(vr_files_lz)
@@ -226,6 +229,59 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)
             halo_data_all[isnap]['FileType']=vr_files_type
 
+    ## add r/rvir and halo density
+
+    if detailed:
+        if verbose:
+            print('Adding R_rel and number density information for subhalos')
+        #r/rvir info
+
+        for isnap,snap in enumerate(sim_snaps):
+            n_halos_snap=len(halo_data_all[isnap]['ID'])
+            halo_data_all[isnap]['R_rel']=np.zeros(len(halo_data_all[isnap]['ID']))+np.nan
+            halo_data_all[isnap]['N_peers']=np.zeros(len(halo_data_all[isnap]['ID']))+np.nan
+            if n_halos_snap>0:
+                for ihalo in range(n_halos_snap):
+                    hostID_temp=halo_data_all[isnap]['hostHaloID'][ihalo]
+                    if not hostID_temp==-1:
+                        #if we have a subhalo
+                        N_peers=np.sum(halo_data_all[isnap]['hostHaloID']==hostID_temp)-1
+                        halo_data_all[isnap]['N_peers'][ihalo]=N_peers   
+                                            
+                        hostindex_temp=np.where(halo_data_all[isnap]['ID']==hostID_temp)[0][0]
+                        host_radius=halo_data_all[isnap]['R_200crit'][hostindex_temp]
+                        host_xyz=np.array([halo_data_all[isnap]['Xc'][hostindex_temp],halo_data_all[isnap]['Yc'][hostindex_temp],halo_data_all[isnap]['Zc'][hostindex_temp]])
+                        sub_xy=np.array([halo_data_all[isnap]['Xc'][ihalo],halo_data_all[isnap]['Yc'][ihalo],halo_data_all[isnap]['Zc'][ihalo]])
+                        group_centric_r=np.sqrt(np.sum((host_xyz-sub_xy)**2))
+                        r_rel_temp=group_centric_r/host_radius
+                        halo_data_all[isnap]['R_rel'][ihalo]=r_rel_temp
+
+
+                halo_data_all[isnap]['N_2Mpc']=np.zeros(n_halos_snap)+np.nan
+                fieldhalos_snap=halo_data_all[isnap]['hostHaloID']==-1
+                fieldhalos_snap_indices=np.where(fieldhalos_snap)[0]
+                subhalos_snap=np.logical_not(fieldhalos_snap)
+                subhalos_snap_indices=np.where(subhalos_snap)[0]
+
+                all_halos_xyz=np.column_stack([halo_data_all[isnap]['Xc'],halo_data_all[isnap]['Yc'],halo_data_all[isnap]['Zc']])
+
+                if np.sum(fieldhalos_snap)>5:
+                    field_halos_xyz=np.compress(fieldhalos_snap,all_halos_xyz,axis=0)
+                    field_tree=KDTree(field_halos_xyz)
+                    field_tree_neighbors=field_tree.query_ball_point(field_halos_xyz,2)
+                    field_tree_neighbors_n=[len(field_tree_neighbors[i]) for i in range(len(field_tree_neighbors))]
+                    for i,ihalo_field in enumerate(fieldhalos_snap_indices):
+                        halo_data_all[isnap]['N_2Mpc'][ihalo_field]=field_tree_neighbors_n[i]
+
+                if np.sum(subhalos_snap)>5:
+                    sub_halos_xyz=np.compress(subhalos_snap,all_halos_xyz,axis=0)
+                    sub_tree=KDTree(sub_halos_xyz)
+                    sub_tree_neighbors=field_tree.query_ball_point(sub_halos_xyz,2)
+                    sub_tree_neighbors_n=[len(sub_tree_neighbors[i]) for i in range(len(sub_tree_neighbors))]
+                    for i,ihalo_sub in enumerate(subhalos_snap_indices):
+                        halo_data_all[isnap]['N_2Mpc'][ihalo_sub]=sub_tree_neighbors_n[i]
+
+        
     if detailed:
         if path.exists('halo_data_all.dat'):
             if verbose:
@@ -245,7 +301,7 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
             pickle.dump(halo_data_all, halo_data_file)
             halo_data_file.close()
 
-    print('Done generating base halo data')
+    print('Done generating halo data')
 
     return halo_data_all
 
@@ -569,7 +625,7 @@ def calc_accretion_rate(halo_index_list,field_bools,part_IDs_1,part_IDs_2,part_T
         # Verifying particle counts are adequate
         if part_count_2<5 or part_count_1<5:
             if verbose:
-                print(f'Particle count in halo {ihalo_abs} is less than 2 - not processing')
+                print(f'Particle count in halo {ihalo_abs} is less than 5 - not processing')
             # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
             delta_n0.append(np.nan)
             delta_n1.append(np.nan)
