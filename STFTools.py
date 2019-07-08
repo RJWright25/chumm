@@ -20,7 +20,7 @@ from VRPythonTools import *
 
 ########################### CREATE HALO DATA ###########################
 
-def gen_halo_data_all(snaps=[],box_size=25,detailed=True,tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
+def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
     
     """
 
@@ -112,7 +112,7 @@ def gen_halo_data_all(snaps=[],box_size=25,detailed=True,tf_treefile="",vr_direc
     # extra halo fields
     if detailed:
         try:
-            halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit','Lx','Ly','Lz','Lx_gas','Ly_gas','Lz_gas','q','q_gas','s','s_gas','cNFW','lambda_B','veldisp_xx','veldisp_xx_gas','veldisp_yy','veldisp_yy_gas','veldisp_zz','veldisp_zz_gas','sigV']#default halo fields
+            halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit']#default halo fields
             halo_fields.extend(extra_halo_fields)
         except:
             print('Please enter valid extra halo fields (should be a list of strings')
@@ -219,8 +219,7 @@ def gen_halo_data_all(snaps=[],box_size=25,detailed=True,tf_treefile="",vr_direc
 
             halo_data_all[isnap]['SimulationInfo']['z']=redshift
             halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
-            halo_data_all[isnap]['SimulationInfo']['BoxSize_comoving']=box_size#Mpc/h
-            halo_data_all[isnap]['SimulationInfo']['BoxSize_physical']=box_size*scale_factor#Mpc
+
 
         if vr_files_nested:
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)+"/"+vr_prefix+str(snap).zfill(vr_files_lz)
