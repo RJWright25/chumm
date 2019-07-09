@@ -17,14 +17,13 @@ from scipy.spatial import KDTree
 # VELOCIraptor python tools 
 from VRPythonTools import *
 
-
 ########################### CREATE HALO DATA ###########################
 
-def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,extra_halo_fields=[],halo_TEMPORALHALOIDVAL=[],verbose=1):
+def gen_base_halo_data(snaps=[],outname='',tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,halo_TEMPORALHALOIDVAL=[],verbose=1):
     
     """
 
-    gen_halo_data_all : function
+    gen_base_halo_data : function
 	----------
 
     Generate halo data from velociraptor property and particle files.
@@ -37,9 +36,8 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
             If this is a non-empty list, we use these snaps.
             If this is an integer, we find data for all snaps up to this integer.
 
-    detailed : bool
-        Specifies whether we are creating minimal halo data (0) or extensive halo data (1).
-        Minimal data used for accretion calculations. 
+    outname : str
+        Suffix for output file. 
 
     tf_treefile : string
         The full path to the text file in which the tree data files are listed.
@@ -57,10 +55,7 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
         Boolean flag as to whether the VELOCIraptor files are nested in a file structure.
 
     vr_files_lz : int
-        The number of digits defining the snapshot in the VELOCIraptor file names.
-
-    extra_halo_fields : list of strings
-        List of any extra halo fields we may desire. 
+        The number of digits defining the snapshot in the VELOCIraptor file names. 
 
     halo_TEMPORALHALOIDVAL : int
         The multiplier used by VELOCIraptor to create unique temporal halo IDs. 
@@ -70,25 +65,24 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
 
     Returns
 	-------
-	halo_data_all : list
+	base1_vrhalodata_outname : list
+	base2_vrhalodata_outname : list
 
         A list (for each snap desired) of dictionaries which contain halo data with the following fields:
         'ID'
         'hostHaloID'
-        'numSubStruct'
-        'Mass_tot'
-        'Mass_FOF'
-        'Mass_200crit'
-        'Mass_200mean'
-        'M_gas'
-        'M_gas_500c'
-        'Xc'
-        'Yc'
-        'Zc'
-        'R_200crit'
-    
-        (any extra halo fields)
         'Snap'
+        'Head'*
+        'Tail'
+        'HeadSnap'*
+        'TailSnap'*
+        'RootHead'*
+        'RootTail'*
+        'RootHeadSnap'*
+        'RootTailSnap'*
+        'HeadRank'*
+        'Num_descen'*
+        'Num_progen'*
         'SimulationInfo'
             'h_val'
             'Hubble_unit'
@@ -96,11 +90,12 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
             'ScaleFactor'
             'z'
             'LookbackTime'
-        
         'UnitInfo'
         'FilePath'
         'FileType'
-	
+
+    * items will be removed from base1 file.
+
 	"""
 
     ###### WILL SAVE TO FILE THE HALO DATA WITH FORM: halo_data_all.dat
@@ -108,21 +103,9 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
     halo_data_all=[]
 
     ### input processing
-    
-    # extra halo fields
-    if detailed:
-        try:
-            halo_fields=['ID','hostHaloID','numSubStruct','Mass_tot','Mass_200crit','Mass_200mean','M_gas','M_gas_500c','Xc','Yc','Zc','R_200crit']#default halo fields
-            halo_fields.extend(extra_halo_fields)
-        except:
-            print('Please enter valid extra halo fields (should be a list of strings')
-    else:
-        try:
-            halo_fields=['ID','hostHaloID']#default halo fields
-            halo_fields.extend(extra_halo_fields)
-        except:
-            print('Please enter valid extra halo fields (should be a list of strings')
-    
+
+    halo_fields=['ID','hostHaloID']#default halo fields
+
     # snapshots
     if snaps==[]: #if no snaps specified, find them all
         sim_snaps=list(range(1000))
@@ -184,9 +167,8 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]
 
     # List sim info and unit info for each snap (in dictionaries)
-    if detailed:
-        halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for snap in sim_snaps]
-        halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for snap in sim_snaps]
+    halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for snap in sim_snaps]
+    halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for snap in sim_snaps]
 
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
@@ -206,19 +188,17 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
         print('Adding timesteps & filepath information')
     
     # Adding timesteps and filepath information 
-    if detailed:
-        H0=halo_data_all[0]['SimulationInfo']['h_val']*halo_data_all[0]['SimulationInfo']['Hubble_unit']
-        Om0=halo_data_all[0]['SimulationInfo']['Omega_Lambda']
-        cosmo=FlatLambdaCDM(H0=H0,Om0=Om0)
+    H0=halo_data_all[0]['SimulationInfo']['h_val']*halo_data_all[0]['SimulationInfo']['Hubble_unit']
+    Om0=halo_data_all[0]['SimulationInfo']['Omega_Lambda']
+    cosmo=FlatLambdaCDM(H0=H0,Om0=Om0)
 
     for isnap,snap in enumerate(sim_snaps):
-        if detailed:
-            scale_factor=halo_data_all[isnap]['SimulationInfo']['ScaleFactor']
-            redshift=z_at_value(cosmo.scale_factor,scale_factor,zmin=-0.5)
-            lookback_time=cosmo.lookback_time(redshift).value
+        scale_factor=halo_data_all[isnap]['SimulationInfo']['ScaleFactor']
+        redshift=z_at_value(cosmo.scale_factor,scale_factor,zmin=-0.5)
+        lookback_time=cosmo.lookback_time(redshift).value
 
-            halo_data_all[isnap]['SimulationInfo']['z']=redshift
-            halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
+        halo_data_all[isnap]['SimulationInfo']['z']=redshift
+        halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
 
 
         if vr_files_nested:
@@ -228,86 +208,159 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
             halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)
             halo_data_all[isnap]['FileType']=vr_files_type
 
-    ## add r/rvir and halo density
+    print('Saving base2 halo data to file (contains detailed TreeFrog data)')
 
-    if detailed:
+    ###### SAVE all data (with detailed TF) to file
+    if path.exists('base2_vrhalodata_'+outname+'.dat'):
         if verbose:
-            print('Adding R_rel and number density information for subhalos')
-        #r/rvir info
+            print('Overwriting existing base2 halo data ...')
+        os.remove('base2_vrhalodata_'+outname+'.dat')
 
-        for isnap,snap in enumerate(sim_snaps):
-            n_halos_snap=len(halo_data_all[isnap]['ID'])
-            halo_data_all[isnap]['R_rel']=np.zeros(len(halo_data_all[isnap]['ID']))+np.nan
-            halo_data_all[isnap]['N_peers']=np.zeros(len(halo_data_all[isnap]['ID']))+np.nan
-            if n_halos_snap>0:
-                for ihalo in range(n_halos_snap):
-                    hostID_temp=halo_data_all[isnap]['hostHaloID'][ihalo]
-                    if not hostID_temp==-1:
-                        #if we have a subhalo
-                        N_peers=np.sum(halo_data_all[isnap]['hostHaloID']==hostID_temp)-1
-                        halo_data_all[isnap]['N_peers'][ihalo]=N_peers   
-                                            
-                        hostindex_temp=np.where(halo_data_all[isnap]['ID']==hostID_temp)[0][0]
-                        host_radius=halo_data_all[isnap]['R_200crit'][hostindex_temp]
-                        host_xyz=np.array([halo_data_all[isnap]['Xc'][hostindex_temp],halo_data_all[isnap]['Yc'][hostindex_temp],halo_data_all[isnap]['Zc'][hostindex_temp]])
-                        sub_xy=np.array([halo_data_all[isnap]['Xc'][ihalo],halo_data_all[isnap]['Yc'][ihalo],halo_data_all[isnap]['Zc'][ihalo]])
-                        group_centric_r=np.sqrt(np.sum((host_xyz-sub_xy)**2))
-                        r_rel_temp=group_centric_r/host_radius
-                        halo_data_all[isnap]['R_rel'][ihalo]=r_rel_temp
+    with open('base2_vrhalodata_'+outname+'.dat', 'wb') as halo_data_file:
+        pickle.dump(halo_data_all, halo_data_file)
+        halo_data_file.close()
 
+    print('Saving base1 halo data to file (removing detailed TreeFrog data)')
 
-                halo_data_all[isnap]['N_2Mpc']=np.zeros(n_halos_snap)+np.nan
-                fieldhalos_snap=halo_data_all[isnap]['hostHaloID']==-1
-                fieldhalos_snap_indices=np.where(fieldhalos_snap)[0]
-                subhalos_snap=np.logical_not(fieldhalos_snap)
-                subhalos_snap_indices=np.where(subhalos_snap)[0]
+    ###### Remove superfluous data for acc_rate calcss
 
-                all_halos_xyz=np.column_stack([halo_data_all[isnap]['Xc'],halo_data_all[isnap]['Yc'],halo_data_all[isnap]['Zc']])
-                field_halos_xyz=np.compress(fieldhalos_snap,all_halos_xyz,axis=0)
-                sub_halos_xyz=np.compress(subhalos_snap,all_halos_xyz,axis=0)
+    fields_to_keep=['Count','ID','hostHaloID','Tail','FilePath','FileType']
+    halo_data_all_truncated=[]
+    for isnap,halo_data_snap in enumerate(halo_data_all):
+        halo_data_all_truncated_snap={}
+        for field in fields_to_keep:
+            halo_data_all_truncated_snap[field]=halo_data_snap[field]
+        halo_data_all_truncated.append(halo_data_all_truncated_snap)
 
-                if verbose:
-                    print(f"Adding number densities to field halos for snap = {snap}")
+    ###### SAVE trimmed data to file
+    if path.exists('base1_vrhalodata_'+outname+'.dat'):
+        if verbose:
+            print('Overwriting existing base1 halo data ...')
+        os.remove('base1_vrhalodata_'+outname+'.dat')
 
-                for i_field_halo,field_halo_xyz_temp in enumerate(field_halos_xyz):
-                    field_halo_index_temp=fieldhalos_snap_indices[i_field_halo]
-                    field_halos_xyz_rel_squared=(field_halos_xyz-field_halo_xyz_temp)**2
-                    field_halos_xyz_rel_dist=np.sqrt(np.sum(field_halos_xyz_rel_squared,axis=1))
-                    field_halos_xyz_rel_dist_2mpc_count=np.sum(field_halos_xyz_rel_dist<2)
-                    halo_data_all[isnap]['N_2Mpc'][field_halo_index_temp]=field_halos_xyz_rel_dist_2mpc_count
+    with open('base1_vrhalodata_'+outname+'.dat', 'wb') as halo_data_file:
+        pickle.dump(halo_data_all_truncated, halo_data_file)
+        halo_data_file.close()
 
-                if verbose:
-                    print(f"Adding number densities to subhalos for snap = {snap}")
-
-                for i_sub_halo,sub_halo_xyz_temp in enumerate(sub_halos_xyz):
-                    sub_halo_index_temp=subhalos_snap_indices[i_sub_halo]
-                    sub_halos_xyz_rel_squared=(sub_halos_xyz-sub_halo_xyz_temp)**2
-                    sub_halos_xyz_rel_dist=np.sqrt(np.sum(sub_halos_xyz_rel_squared,axis=1))
-                    sub_halos_xyz_rel_dist_2mpc_count=np.sum(sub_halos_xyz_rel_dist<2)
-                    halo_data_all[isnap]['N_2Mpc'][sub_halo_index_temp]=sub_halos_xyz_rel_dist_2mpc_count
-
-    if detailed:
-        if path.exists('halo_data_all.dat'):
-            if verbose:
-                print('Overwriting existing detailed halo data ...')
-            os.remove('halo_data_all.dat')
-
-        with open('halo_data_all.dat', 'wb') as halo_data_file:
-            pickle.dump(halo_data_all, halo_data_file)
-            halo_data_file.close()
-    else:
-        if path.exists('halo_data_base.dat'):
-            if verbose:
-                print('Overwriting existing base halo data ...')
-            os.remove('halo_data_base.dat')
-
-        with open('halo_data_base.dat', 'wb') as halo_data_file:
-            pickle.dump(halo_data_all, halo_data_file)
-            halo_data_file.close()
-
-    print('Done generating halo data')
+    print('Done generating base halo data')
 
     return halo_data_all
+
+
+# def gen_detailed_halo_data(base_halo_data,extra_halo_fields,outname=''):
+    
+#     """
+    
+#     gen_detailed_halo_data : function
+# 	----------
+
+#     Add detailed halo data to base halo data from property files.
+
+#     Parameters
+#     ----------
+
+#     base_halo_data : list of dicts
+
+#         List (for each snap) of dictionaries containing basic halo data generated from gen_base_halo_data. 
+
+#     extra_halo_fields : list of str
+
+#         List of dictionary keys for halo properties to be added to the base halo data. 
+
+#     outname : str
+
+#         Suffix for halo data to be saved as. 
+
+#     Returns
+#     --------
+
+#     detailed_vrhalodata_outname : list of dict
+
+#     A list (for each snap desired) of dictionaries which contain halo data with the following fields:
+#         'ID'
+#         'hostHaloID'
+#         'Snap'
+#         'Head'
+#         'Tail'
+
+#         'SimulationInfo'
+#             'h_val'
+#             'Hubble_unit'
+#             'Omega_Lambda'
+#             'ScaleFactor'
+#             'z'
+#             'LookbackTime'
+#         'UnitInfo'
+#         'FilePath'
+#         'FileType'
+
+#         AND ANY EXTRAS from extra_halo_fields
+# 	"""
+
+#     #loop through each sna
+#     for isnap,base_halo_data_snap in enumerate(base_halo_data):
+
+
+
+
+
+# ## add r/rvir and halo density
+
+#     if detailed:
+#         if verbose:
+#             print('Adding R_rel and number density information for subhalos')
+#         #r/rvir info
+
+#         for isnap,snap in enumerate(sim_snaps):
+#             n_halos_snap=len(halo_data_all[isnap]['ID'])
+#             halo_data_all[isnap]['R_rel']=np.zeros(len(halo_data_all[isnap]['ID']))+np.nan
+#             halo_data_all[isnap]['N_peers']=np.zeros(len(halo_data_all[isnap]['ID']))+np.nan
+#             if n_halos_snap>0:
+#                 for ihalo in range(n_halos_snap):
+#                     hostID_temp=halo_data_all[isnap]['hostHaloID'][ihalo]
+#                     if not hostID_temp==-1:
+#                         #if we have a subhalo
+#                         N_peers=np.sum(halo_data_all[isnap]['hostHaloID']==hostID_temp)-1
+#                         halo_data_all[isnap]['N_peers'][ihalo]=N_peers   
+                                            
+#                         hostindex_temp=np.where(halo_data_all[isnap]['ID']==hostID_temp)[0][0]
+#                         host_radius=halo_data_all[isnap]['R_200crit'][hostindex_temp]
+#                         host_xyz=np.array([halo_data_all[isnap]['Xc'][hostindex_temp],halo_data_all[isnap]['Yc'][hostindex_temp],halo_data_all[isnap]['Zc'][hostindex_temp]])
+#                         sub_xy=np.array([halo_data_all[isnap]['Xc'][ihalo],halo_data_all[isnap]['Yc'][ihalo],halo_data_all[isnap]['Zc'][ihalo]])
+#                         group_centric_r=np.sqrt(np.sum((host_xyz-sub_xy)**2))
+#                         r_rel_temp=group_centric_r/host_radius
+#                         halo_data_all[isnap]['R_rel'][ihalo]=r_rel_temp
+
+
+#                 halo_data_all[isnap]['N_2Mpc']=np.zeros(n_halos_snap)+np.nan
+#                 fieldhalos_snap=halo_data_all[isnap]['hostHaloID']==-1
+#                 fieldhalos_snap_indices=np.where(fieldhalos_snap)[0]
+#                 subhalos_snap=np.logical_not(fieldhalos_snap)
+#                 subhalos_snap_indices=np.where(subhalos_snap)[0]
+
+#                 all_halos_xyz=np.column_stack([halo_data_all[isnap]['Xc'],halo_data_all[isnap]['Yc'],halo_data_all[isnap]['Zc']])
+#                 field_halos_xyz=np.compress(fieldhalos_snap,all_halos_xyz,axis=0)
+#                 sub_halos_xyz=np.compress(subhalos_snap,all_halos_xyz,axis=0)
+
+#                 if verbose:
+#                     print(f"Adding number densities to field halos for snap = {snap}")
+
+#                 for i_field_halo,field_halo_xyz_temp in enumerate(field_halos_xyz):
+#                     field_halo_index_temp=fieldhalos_snap_indices[i_field_halo]
+#                     field_halos_xyz_rel_squared=(field_halos_xyz-field_halo_xyz_temp)**2
+#                     field_halos_xyz_rel_dist=np.sqrt(np.sum(field_halos_xyz_rel_squared,axis=1))
+#                     field_halos_xyz_rel_dist_2mpc_count=np.sum(field_halos_xyz_rel_dist<2)
+#                     halo_data_all[isnap]['N_2Mpc'][field_halo_index_temp]=field_halos_xyz_rel_dist_2mpc_count
+
+#                 if verbose:
+#                     print(f"Adding number densities to subhalos for snap = {snap}")
+
+#                 for i_sub_halo,sub_halo_xyz_temp in enumerate(sub_halos_xyz):
+#                     sub_halo_index_temp=subhalos_snap_indices[i_sub_halo]
+#                     sub_halos_xyz_rel_squared=(sub_halos_xyz-sub_halo_xyz_temp)**2
+#                     sub_halos_xyz_rel_dist=np.sqrt(np.sum(sub_halos_xyz_rel_squared,axis=1))
+#                     sub_halos_xyz_rel_dist_2mpc_count=np.sum(sub_halos_xyz_rel_dist<2)
+#                     halo_data_all[isnap]['N_2Mpc'][sub_halo_index_temp]=sub_halos_xyz_rel_dist_2mpc_count
 
 ########################### RETRIEVE PARTICLE LISTS ###########################
 
