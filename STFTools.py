@@ -263,23 +263,28 @@ def gen_halo_data_all(snaps=[],detailed=True,tf_treefile="",vr_directory="",vr_p
                 subhalos_snap_indices=np.where(subhalos_snap)[0]
 
                 all_halos_xyz=np.column_stack([halo_data_all[isnap]['Xc'],halo_data_all[isnap]['Yc'],halo_data_all[isnap]['Zc']])
+                field_halos_xyz=np.compress(fieldhalos_snap,all_halos_xyz,axis=0)
+                sub_halos_xyz=np.compress(subhalos_snap,all_halos_xyz,axis=0)
 
-                if np.sum(fieldhalos_snap)>5:
-                    field_halos_xyz=np.compress(fieldhalos_snap,all_halos_xyz,axis=0)
-                    field_tree=KDTree(field_halos_xyz)
-                    field_tree_neighbors=field_tree.query_ball_tree(field_tree,r=2)
-                    field_tree_neighbors_n=[len(field_tree_neighbors[i]) for i in range(len(field_tree_neighbors))]
-                    for i,ihalo_field in enumerate(fieldhalos_snap_indices):
-                        halo_data_all[isnap]['N_2Mpc'][ihalo_field]=field_tree_neighbors_n[i]
+                if verbose:
+                    print(f"Adding number densities to field halos for snap = {snap}")
 
-                if np.sum(subhalos_snap)>5:
-                    sub_halos_xyz=np.compress(subhalos_snap,all_halos_xyz,axis=0)
-                    sub_tree=KDTree(sub_halos_xyz)
-                    sub_tree_neighbors=sub_tree.query_ball_tree(sub_tree,r=2)
-                    sub_tree_neighbors_n=[len(sub_tree_neighbors[i]) for i in range(len(sub_tree_neighbors))]
-                    for i,ihalo_sub in enumerate(subhalos_snap_indices):
-                        halo_data_all[isnap]['N_2Mpc'][ihalo_sub]=sub_tree_neighbors_n[i]
+                for i_field_halo,field_halo_xyz_temp in enumerate(field_halos_xyz):
+                    field_halo_index_temp=fieldhalos_snap_indices[i_field_halo]
+                    field_halos_xyz_rel_squared=(field_halos_xyz-field_halo_xyz_temp)**2
+                    field_halos_xyz_rel_dist=np.sqrt(np.sum(field_halos_xyz_rel_squared,axis=1))
+                    field_halos_xyz_rel_dist_2mpc_count=np.sum(field_halos_xyz_rel_dist<2)
+                    halo_data_all[isnap]['N_2Mpc'][field_halo_index_temp]=field_halos_xyz_rel_dist_2mpc_count
 
+                if verbose:
+                    print(f"Adding number densities to subhalos for snap = {snap}")
+
+                for i_sub_halo,sub_halo_xyz_temp in enumerate(sub_halos_xyz):
+                    sub_halo_index_temp=subhalos_snap_indices[i_sub_halo]
+                    sub_halos_xyz_rel_squared=(sub_halos_xyz-sub_halo_xyz_temp)**2
+                    sub_halos_xyz_rel_dist=np.sqrt(np.sum(sub_halos_xyz_rel_squared,axis=1))
+                    sub_halos_xyz_rel_dist_2mpc_count=np.sum(sub_halos_xyz_rel_dist<2)
+                    halo_data_all[isnap]['N_2Mpc'][sub_halo_index_temp]=sub_halos_xyz_rel_dist_2mpc_count
 
     if detailed:
         if path.exists('halo_data_all.dat'):
