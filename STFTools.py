@@ -92,12 +92,12 @@ def gen_base_halo_data(snaps=[],outname='',vr_filelist="",tf_filelist="",vr_file
 
     # velociraptor lists
     with open(vr_filelist,'rb') as vr_file:
-        vr_list=np.loadtxt(vr_filelist)
+        vr_list=np.loadtxt(vr_filelist,dtype=str)
         vr_file.close()
 
     # treefrog lsits
     with open(tf_filelist,'rb') as vr_file:
-        tf_list=np.loadtxt(tf_filelist)
+        tf_list=np.loadtxt(tf_filelist,dtype=str)
         tf_list.close()
 
     # check whether we have the same amount of TF files as VR files
