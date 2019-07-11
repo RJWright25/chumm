@@ -147,8 +147,8 @@ def gen_base_halo_data(snaps=[],outname='',vr_filelist="",tf_filelist="",vr_file
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]
 
     # List sim info and unit info for each snap (in dictionaries)
-    halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for isnap in range(snap_no)]
-    halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for isnap in range(snap_no)]
+    halo_siminfo=[halo_data_all[isnap]['SimulationInfo'] for isnap in range(snap_no)]
+    halo_unitinfo=[halo_data_all[isnap]['UnitInfo'] for isnap in range(snap_no)]
 
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
