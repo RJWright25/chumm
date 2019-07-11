@@ -5,7 +5,6 @@ import sys,os,os.path,string,time,re,struct
 import math,operator
 import numpy as np
 import h5py #import hdf5 interface
-import tables as pytb #import pytables
 import pandas as pd
 from copy import deepcopy
 from collections import deque
@@ -13,7 +12,6 @@ import itertools
 import scipy.interpolate as scipyinterp
 import scipy.spatial as spatial
 import multiprocessing as mp
-from collections import deque
 
 import cython
 from cython.parallel import prange, parallel

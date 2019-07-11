@@ -56,7 +56,6 @@ def read_n_part(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4):
         print('Please enter valid simulation string.')
         return []
 
-
 ########################### READ MASS DATA ###########################
 
 def read_mass_table(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4):
@@ -107,4 +106,3 @@ def read_mass_table(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4
     else:
         print('Please enter valid simulation string.')
         return []
-

@@ -17,7 +17,7 @@ from scipy.spatial import KDTree
 # VELOCIraptor python tools 
 from VRPythonTools import *
 
-########################### CREATE HALO DATA ###########################
+########################### CREATE BASE HALO DATA ###########################
 
 def gen_base_halo_data(snaps=[],outname='',tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,halo_TEMPORALHALOIDVAL=[],verbose=1):
     
@@ -246,121 +246,161 @@ def gen_base_halo_data(snaps=[],outname='',tf_treefile="",vr_directory="",vr_pre
 
     return halo_data_all
 
+########################### ADD DETAILED HALO DATA ###########################
 
-# def gen_detailed_halo_data(base_halo_data,extra_halo_fields,outname=''):
+def gen_detailed_halo_data(base_halo_data,extra_halo_fields=[],outname='',verbose=True):
     
-#     """
+    """
     
-#     gen_detailed_halo_data : function
-# 	----------
+    gen_detailed_halo_data : function
+	----------
 
-#     Add detailed halo data to base halo data from property files.
+    Add detailed halo data to base halo data from property files.
 
-#     Parameters
-#     ----------
+    Parameters
+    ----------
 
-#     base_halo_data : list of dicts
+    base_halo_data : list of dicts
 
-#         List (for each snap) of dictionaries containing basic halo data generated from gen_base_halo_data. 
+        List (for each snap) of dictionaries containing basic halo data generated from gen_base_halo_data. 
 
-#     extra_halo_fields : list of str
+    extra_halo_fields : list of str
 
-#         List of dictionary keys for halo properties to be added to the base halo data. 
+        List of dictionary keys for halo properties to be added to the base halo data. 
 
-#     outname : str
+    outname : str
 
-#         Suffix for halo data to be saved as. 
+        Suffix for halo data to be saved as. 
 
-#     Returns
-#     --------
+    Returns
+    --------
 
-#     detailed_vrhalodata_outname : list of dict
+    detailed_vrhalodata_outname : list of dict
 
-#     A list (for each snap desired) of dictionaries which contain halo data with the following fields:
-#         'ID'
-#         'hostHaloID'
-#         'Snap'
-#         'Head'
-#         'Tail'
+    A list (for each snap desired) of dictionaries which contain halo data with the following fields:
+        'ID'
+        'hostHaloID'
+        'Snap'
+        'Head'
+        'Tail'
 
-#         'SimulationInfo'
-#             'h_val'
-#             'Hubble_unit'
-#             'Omega_Lambda'
-#             'ScaleFactor'
-#             'z'
-#             'LookbackTime'
-#         'UnitInfo'
-#         'FilePath'
-#         'FileType'
+        'SimulationInfo'
+            'h_val'
+            'Hubble_unit'
+            'Omega_Lambda'
+            'ScaleFactor'
+            'z'
+            'LookbackTime'
 
-#         AND ANY EXTRAS from extra_halo_fields
-# 	"""
+        'UnitInfo'
+        'FilePath'
+        'FileType'
 
-#     #loop through each sna
-#     for isnap,base_halo_data_snap in enumerate(base_halo_data):
+        AND ANY EXTRAS from extra_halo_fields
 
+	"""
 
+    if extra_halo_fields==[]:
+        property_filename=base_halo_data[-1]['FilePath']+".properties.0"
+        property_file=h5py.File(property_filename)
+        all_props=list(property_file.keys())
+        all_props.remove('ID')
+        all_props.remove('hostHaloID')
+        extra_halo_fields=all_props
 
+    new_halo_data=[]
 
+    #loop through each snap and add the extra fields
+    for isnap,base_halo_data_snap in enumerate(base_halo_data):
 
-# ## add r/rvir and halo density
+        if verbose:
+            print(f'Adding detailed halo data for snap = ',isnap)
 
-#     if detailed:
-#         if verbose:
-#             print('Adding R_rel and number density information for subhalos')
-#         #r/rvir info
+        new_halo_data_snap={}
+        halo_data_snap=ReadPropertyFile(base_halo_data_snap['FilePath'],ibinary=base_halo_data_snap["FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=extra_halo_fields, isiminfo=True, iunitinfo=True)[0]
 
-#         for isnap,snap in enumerate(sim_snaps):
-#             n_halos_snap=len(halo_data_all[isnap]['ID'])
-#             halo_data_all[isnap]['R_rel']=np.zeros(len(halo_data_all[isnap]['ID']))+np.nan
-#             halo_data_all[isnap]['N_peers']=np.zeros(len(halo_data_all[isnap]['ID']))+np.nan
-#             if n_halos_snap>0:
-#                 for ihalo in range(n_halos_snap):
-#                     hostID_temp=halo_data_all[isnap]['hostHaloID'][ihalo]
-#                     if not hostID_temp==-1:
-#                         #if we have a subhalo
-#                         N_peers=np.sum(halo_data_all[isnap]['hostHaloID']==hostID_temp)-1
-#                         halo_data_all[isnap]['N_peers'][ihalo]=N_peers   
-                                            
-#                         hostindex_temp=np.where(halo_data_all[isnap]['ID']==hostID_temp)[0][0]
-#                         host_radius=halo_data_all[isnap]['R_200crit'][hostindex_temp]
-#                         host_xyz=np.array([halo_data_all[isnap]['Xc'][hostindex_temp],halo_data_all[isnap]['Yc'][hostindex_temp],halo_data_all[isnap]['Zc'][hostindex_temp]])
-#                         sub_xy=np.array([halo_data_all[isnap]['Xc'][ihalo],halo_data_all[isnap]['Yc'][ihalo],halo_data_all[isnap]['Zc'][ihalo]])
-#                         group_centric_r=np.sqrt(np.sum((host_xyz-sub_xy)**2))
-#                         r_rel_temp=group_centric_r/host_radius
-#                         halo_data_all[isnap]['R_rel'][ihalo]=r_rel_temp
+        for halo_field in extra_halo_fields:
+            new_halo_data_snap[halo_field]=halo_data_snap[halo_field]
+        
+        for halo_field in list(base_halo_data_snap.keys()):
+            new_halo_data_snap[halo_field]=base_halo_data_snap[halo_field]
 
+        if verbose:
+            print('Adding R_rel information for subhalos and number densities')
 
-#                 halo_data_all[isnap]['N_2Mpc']=np.zeros(n_halos_snap)+np.nan
-#                 fieldhalos_snap=halo_data_all[isnap]['hostHaloID']==-1
-#                 fieldhalos_snap_indices=np.where(fieldhalos_snap)[0]
-#                 subhalos_snap=np.logical_not(fieldhalos_snap)
-#                 subhalos_snap_indices=np.where(subhalos_snap)[0]
+        n_halos_snap=len(new_halo_data_snap['ID'])
+        new_halo_data_snap['R_rel']=np.zeros(len(new_halo_data_snap['ID']))+np.nan
+        new_halo_data_snap['N_peers']=np.zeros(len(new_halo_data_snap['ID']))+np.nan
 
-#                 all_halos_xyz=np.column_stack([halo_data_all[isnap]['Xc'],halo_data_all[isnap]['Yc'],halo_data_all[isnap]['Zc']])
-#                 field_halos_xyz=np.compress(fieldhalos_snap,all_halos_xyz,axis=0)
-#                 sub_halos_xyz=np.compress(subhalos_snap,all_halos_xyz,axis=0)
+        if n_halos_snap>2:
+            for ihalo in range(n_halos_snap):
+                hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
+                if not hostID_temp==-1:
+                    #if we have a subhalo
+                    N_peers=np.sum(new_halo_data_snap['hostHaloID']==hostID_temp)-1
+                    new_halo_data_snap['N_peers'][ihalo]=N_peers   
+            
+                    hostindex_temp=np.where(new_halo_data_snap['ID']==hostID_temp)[0][0]
+                    host_radius=new_halo_data_snap['R_200crit'][hostindex_temp]
+                    host_xyz=np.array([new_halo_data_snap['Xc'][hostindex_temp],new_halo_data_snap['Yc'][hostindex_temp],new_halo_data_snap['Zc'][hostindex_temp]])
+                    sub_xy=np.array([new_halo_data_snap['Xc'][ihalo],new_halo_data_snap['Yc'][ihalo],new_halo_data_snap['Zc'][ihalo]])
+                    group_centric_r=np.sqrt(np.sum((host_xyz-sub_xy)**2))
+                    r_rel_temp=group_centric_r/host_radius
+                    new_halo_data_snap['R_rel'][ihalo]=r_rel_temp
 
-#                 if verbose:
-#                     print(f"Adding number densities to field halos for snap = {snap}")
+            if verbose:
+                print('Done with R_rel')
 
-#                 for i_field_halo,field_halo_xyz_temp in enumerate(field_halos_xyz):
-#                     field_halo_index_temp=fieldhalos_snap_indices[i_field_halo]
-#                     field_halos_xyz_rel_squared=(field_halos_xyz-field_halo_xyz_temp)**2
-#                     field_halos_xyz_rel_dist=np.sqrt(np.sum(field_halos_xyz_rel_squared,axis=1))
-#                     field_halos_xyz_rel_dist_2mpc_count=np.sum(field_halos_xyz_rel_dist<2)
-#                     halo_data_all[isnap]['N_2Mpc'][field_halo_index_temp]=field_halos_xyz_rel_dist_2mpc_count
+            new_halo_data_snap['N_2Mpc']=np.zeros(n_halos_snap)+np.nan
+            fieldhalos_snap=new_halo_data_snap['hostHaloID']==-1
+            fieldhalos_snap_indices=np.where(fieldhalos_snap)[0]
+            subhalos_snap=np.logical_not(fieldhalos_snap)
+            subhalos_snap_indices=np.where(subhalos_snap)[0]
 
-#                 if verbose:
-#                     print(f"Adding number densities to subhalos for snap = {snap}")
+            all_halos_xyz=np.column_stack([new_halo_data_snap['Xc'],new_halo_data_snap['Yc'],new_halo_data_snap['Zc']])
+            field_halos_xyz=np.compress(fieldhalos_snap,all_halos_xyz,axis=0)
+            sub_halos_xyz=np.compress(subhalos_snap,all_halos_xyz,axis=0)
 
-#                 for i_sub_halo,sub_halo_xyz_temp in enumerate(sub_halos_xyz):
-#                     sub_halo_index_temp=subhalos_snap_indices[i_sub_halo]
-#                     sub_halos_xyz_rel_squared=(sub_halos_xyz-sub_halo_xyz_temp)**2
-#                     sub_halos_xyz_rel_dist=np.sqrt(np.sum(sub_halos_xyz_rel_squared,axis=1))
-#                     sub_halos_xyz_rel_dist_2mpc_count=np.sum(sub_halos_xyz_rel_dist<2)
-#                     halo_data_all[isnap]['N_2Mpc'][sub_halo_index_temp]=sub_halos_xyz_rel_dist_2mpc_count
+            if verbose:
+                print(f"Adding number densities to field halos for snap = {isnap}")
+
+            for i_field_halo,field_halo_xyz_temp in enumerate(field_halos_xyz):
+                field_halo_index_temp=fieldhalos_snap_indices[i_field_halo]
+                field_halos_xyz_rel_squared=(field_halos_xyz-field_halo_xyz_temp)**2
+                field_halos_xyz_rel_dist=np.sqrt(np.sum(field_halos_xyz_rel_squared,axis=1))
+                field_halos_xyz_rel_dist_2mpc_count=np.sum(field_halos_xyz_rel_dist<2)
+                new_halo_data_snap['N_2Mpc'][field_halo_index_temp]=field_halos_xyz_rel_dist_2mpc_count
+
+            if verbose:
+                print(f"Adding number densities to subhalos for snap = {isnap}")
+
+            for i_sub_halo,sub_halo_xyz_temp in enumerate(sub_halos_xyz):
+                sub_halo_index_temp=subhalos_snap_indices[i_sub_halo]
+                sub_halos_xyz_rel_squared=(sub_halos_xyz-sub_halo_xyz_temp)**2
+                sub_halos_xyz_rel_dist=np.sqrt(np.sum(sub_halos_xyz_rel_squared,axis=1))
+                sub_halos_xyz_rel_dist_2mpc_count=np.sum(sub_halos_xyz_rel_dist<2)
+                new_halo_data_snap['N_2Mpc'][sub_halo_index_temp]=sub_halos_xyz_rel_dist_2mpc_count
+
+            print(f"Done with number densities for snap = {isnap}")
+
+        new_halo_data.append(new_halo_data_snap)
+
+    if verbose:
+        print('Saving full halo data to file')
+
+    outfilename='base3_vrhalodata_'+outname+'.dat'
+
+    ###### SAVE trimmed data to file
+    if path.exists(outfilename):
+        if verbose:
+            print('Overwriting existing base1 halo data ...')
+        os.remove(outfilename)
+
+    with open(outfilename, 'wb') as halo_data_file:
+        pickle.dump(new_halo_data, halo_data_file)
+        halo_data_file.close()
+
+    return new_halo_data
 
 ########################### RETRIEVE PARTICLE LISTS ###########################
 
@@ -1162,7 +1202,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
     if verbose:
         print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span_new})')
     
-    acc_rate_dataframe={'DM_Acc':[],'Gas_Acc':[],'fb':[],'dt':[],'halo_index_list':[]}
+    acc_rate_dataframe={'DM_Acc':[],'Gas_Acc':[],'Tot_Acc':[],'fb':[],'dt':[],'halo_index_list':[]}
 
     if halo_data_snap==[]:
         append_fields=[]
@@ -1174,6 +1214,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
         with open(directory+ifilename,'rb') as acc_rate_file:
             dataframe_temp=pickle.load(acc_rate_file)
             dataframe_temp=df(dataframe_temp)
+            dataframe_temp['Tot_Acc']=np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc'])
             dataframe_temp['fb']=np.array(dataframe_temp['Gas_Acc'])/(np.array(dataframe_temp['DM_Acc'])+np.array(dataframe_temp['Gas_Acc']))
             acc_rate_dataframe=acc_rate_dataframe.append(dataframe_temp)
             acc_rate_file.close()
