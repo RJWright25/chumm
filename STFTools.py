@@ -96,9 +96,9 @@ def gen_base_halo_data(snaps=[],outname='',vr_filelist="",tf_filelist="",vr_file
         vr_file.close()
 
     # treefrog lsits
-    with open(tf_filelist,'rb') as vr_file:
+    with open(tf_filelist,'rb') as tf_file:
         tf_list=np.loadtxt(tf_filelist,dtype=str)
-        tf_list.close()
+        tf_file.close()
 
     # check whether we have the same amount of TF files as VR files
     if len(vr_list)==len(tf_list):
