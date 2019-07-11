@@ -19,7 +19,7 @@ from VRPythonTools import *
 
 ########################### CREATE BASE HALO DATA ###########################
 
-def gen_base_halo_data(snaps=[],outname='',tf_treefile="",vr_directory="",vr_prefix="snap_",vr_files_type=2,vr_files_nested=False,vr_files_lz=4,halo_TEMPORALHALOIDVAL=[],verbose=1):
+def gen_base_halo_data(snaps=[],outname='',vr_filelist="",tf_filelist="",vr_files_type=2,halo_TEMPORALHALOIDVAL=[],verbose=1):
     
     """
 
@@ -30,32 +30,18 @@ def gen_base_halo_data(snaps=[],outname='',tf_treefile="",vr_directory="",vr_pre
 
 	Parameters
 	----------
-	snaps : list or int
-		The snapshots to load halo data from. 
-            If this is an empty list, we find all snap data.
-            If this is a non-empty list, we use these snaps.
-            If this is an integer, we find data for all snaps up to this integer.
 
     outname : str
         Suffix for output file. 
 
-    tf_treefile : string
+    vr_filelist : string
+        The full path to the text file in which the velociraptor data files are listed.
+
+    tf_filelist : string
         The full path to the text file in which the tree data files are listed.
     
-    vr_directory : string
-        The path to the directory in which the VELOCIraptor data is found.
-    
-    vr_prefix : string
-        The prefix to the VELOCIraptor files.
-
     vr_files_type : int
         The filetype of the VELOCIraptor inputs: (2 = hdf5)
-
-    vr_files_nested : bool
-        Boolean flag as to whether the VELOCIraptor files are nested in a file structure.
-
-    vr_files_lz : int
-        The number of digits defining the snapshot in the VELOCIraptor file names. 
 
     halo_TEMPORALHALOIDVAL : int
         The multiplier used by VELOCIraptor to create unique temporal halo IDs. 
@@ -102,79 +88,73 @@ def gen_base_halo_data(snaps=[],outname='',tf_treefile="",vr_directory="",vr_pre
 
     halo_data_all=[]
 
-    ### input processing
-
     halo_fields=['ID','hostHaloID']#default halo fields
 
-    # snapshots
-    if snaps==[]: #if no snaps specified, find them all
-        sim_snaps=list(range(1000))
+    # velociraptor lists
+    with open(vr_filelist,'rb') as vr_file:
+        vr_list=np.loadtxt(vr_filelist)
+        vr_file.close()
+
+    # treefrog lsits
+    with open(tf_filelist,'rb') as vr_file:
+        tf_list=np.loadtxt(tf_filelist)
+        tf_list.close()
+
+    # check whether we have the same amount of TF files as VR files
+    if len(vr_list)==len(tf_list):
+        pass
+    else:
+        print("VELOCIraptor files and TreeFrog files don't match in length")
+        print(f"VR: {vr_list}")
+        print(f"TF: {tf_list}")
+        return([])
+    
+    if snaps==[]: #if no snaps specified, just use th length of the VR/TF catalogue 
+        sim_snaps=list(range(len(vr_list)))
         if verbose:
             print("Looking for snaps up to 1000")
     elif type(snaps)==list: #if we're given a non-empty list
         sim_snaps=snaps
-    elif type(snaps)==int: #if we're given an integer
-        sim_snaps=list(range(snaps))
+
+    snap_no=len(sim_snaps)
 
     print('Reading halo data using VR python tools')
-
-    err=0
-    found=0
     #for each snap specified, we will generate halo data
     for isnap,snap in enumerate(sim_snaps):
         if verbose:
             print('Searching for halo data at snap = ',snap)
-            if vr_files_nested:
-                print('File: '+vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)+"/"+vr_prefix+str(snap).zfill(vr_files_lz))
-            else:
-                print('File: '+vr_directory+vr_prefix+str(snap).zfill(vr_files_lz))
-
+            print('File: '+vr_list[isnap])
+           
         #use VR python tools to load in halo data for this snap
-        if vr_files_nested:
-            halo_data_snap=ReadPropertyFile(vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)+"/"+vr_prefix+str(snap).zfill(vr_files_lz),ibinary=vr_files_type,iseparatesubfiles=0,iverbose=0, desiredfields=halo_fields, isiminfo=True, iunitinfo=True)
-        else:
-            halo_data_snap=ReadPropertyFile(vr_directory+vr_prefix+str(snap).zfill(vr_files_lz),ibinary=vr_files_type,iseparatesubfiles=0,iverbose=0, desiredfields=halo_fields, isiminfo=True, iunitinfo=True)
-
+        halo_data_snap=ReadPropertyFile(vr_list[isnap],ibinary=vr_files_type,iseparatesubfiles=0,iverbose=0, desiredfields=halo_fields, isiminfo=True, iunitinfo=True)
+        
         #if data is found
         if not halo_data_snap==[]:
             halo_data_all.append(halo_data_snap)
             halo_data_all[isnap][0]['Snap']=snap
-            found=found+1
 
         #if data is not found
         else:
-            err=err+1
             if verbose:
                 print("Couldn't find velociraptor files for snap = ",snap)
-        
-            if err>2 and found<2:#not finding files -- don't bother continuing
-                print("Failed to find file on multiple occasions, terminating")
-                return []
-
-            if err>2 and found>1:#reached end of snaps
-                print("Reached end of snapshots, total number of snaps found = ",len(halo_data_all))
-                break
 
     # List of number of halos detected for each snap and list isolated data dictionary for each snap (in dictionaries)
     halo_data_counts=[item[1] for item in halo_data_all]
     halo_data_all=[item[0] for item in halo_data_all]
-
-    snap_no=len(halo_data_all)
-    sim_snaps=[halo_data_all[isnap]['Snap'] for isnap in range(snap_no)]
 
     # Add halo count to halo data at each snap
     for isnap,snap in enumerate(sim_snaps):
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]
 
     # List sim info and unit info for each snap (in dictionaries)
-    halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for snap in sim_snaps]
-    halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for snap in sim_snaps]
+    halo_siminfo=[halo_data_all[snap]['SimulationInfo'] for isnap in range(snap_no)]
+    halo_unitinfo=[halo_data_all[snap]['UnitInfo'] for isnap in range(snap_no)]
 
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
 
     # Read in tree data
-    halo_tree=ReadHaloMergerTreeDescendant(tf_treefile,ibinary=vr_files_type,iverbose=verbose+1,imerit=True,inpart=False)
+    halo_tree=ReadHaloMergerTreeDescendant(tf_filelist,ibinary=vr_files_type,iverbose=verbose+1,imerit=True,inpart=False)
 
     # Now build trees and add onto halo data array
     if halo_TEMPORALHALOIDVAL==[]:#if not given halo TEMPORALHALOIVAL, use the vr default
