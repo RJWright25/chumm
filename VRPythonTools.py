@@ -1309,7 +1309,7 @@ def BuildTemporalHeadTailDescendant(numsnaps,tree,numhalos,halodata,TEMPORALHALO
 	#for each snapshot identify halos that have not had their tail set
 	#for these halos, the main branch must be walked
 	#allocate python manager to wrapper the tree and halo catalog so they can be altered in parallel
-	manager=mp.Manager()
+	# manager=mp.Manager()
 	chunksize=5000000 #have each thread handle this many halos at once
 	#init to that at this point snapshots should be run in parallel
 	if (numhalos[0]>2*chunksize): iparallel=1
@@ -1323,12 +1323,12 @@ def BuildTemporalHeadTailDescendant(numsnaps,tree,numhalos,halodata,TEMPORALHALO
 	else:
 		snaplist=range(numsnaps)
 
-	if (iparallel==1):
-		#need to copy halodata as this will be altered
-		if (iverbose>0): print("copying halo")
-		start=time.clock()
-		mphalodata=manager.list([manager.dict(halodata[k]) for k in range(numsnaps)])
-		if (iverbose>0): print("done",time.clock()-start)
+	# if (iparallel==1):
+	# 	#need to copy halodata as this will be altered
+	# 	if (iverbose>0): print("copying halo")
+	# 	start=time.clock()
+	# 	mphalodata=manager.list([manager.dict(halodata[k]) for k in range(numsnaps)])
+	# 	if (iverbose>0): print("done",time.clock()-start)
 
 	for istart in snaplist:
 		if (iverbose>0): print("Starting from halos at ",istart,"with",numhalos[istart])
