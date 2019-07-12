@@ -598,7 +598,7 @@ def gen_particle_history_serial(halo_data_all,min_snap=0,verbose=1):
             # Now if our snapshot is above the minimum snap set at the outset
             # we save the boolean lists (of length npart) for this snapshot and move on
             if isnap in range(no_snaps):
-                if isnap>min_snap:
+                if isnap>=min_snap:
                     parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all.dat"
                     parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub.dat"
 
