@@ -470,7 +470,7 @@ def get_particle_lists(snap,halo_data_snap,add_subparts_to_fofs=False,verbose=1)
 
 #################### PARTICLE HISTORIES WORKER FUNCTION ###########################
 
-def calc_particle_history(halo_index_list,sub_bools,particle_IDs_subset,verbose=1):
+def calc_particle_history(sub_bools,particle_IDs,verbose=1):
     """
     calc_particle_history : function
 	----------
@@ -480,12 +480,8 @@ def calc_particle_history(halo_index_list,sub_bools,particle_IDs_subset,verbose=
 
 
     """
-    if len(halo_index_list)==len(particle_IDs_subset):
-        pass
-    else:
-        return []
 
-    n_halos_parsed=len(halo_index_list)
+    n_halos_parsed=len(particle_IDs)
     
     if np.sum(sub_bools)<2:
         sub_halos_plist=[]
@@ -501,10 +497,9 @@ def calc_particle_history(halo_index_list,sub_bools,particle_IDs_subset,verbose=
 
     return [all_halos_plist,sub_halos_plist]
 
-
 ########################### CREATE PARTICLE HISTORIES ###########################
 
-def gen_particle_history_serial(halo_data_all,min_snap=0,verbose=1):
+def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
 
     """
 
@@ -515,18 +510,18 @@ def gen_particle_history_serial(halo_data_all,min_snap=0,verbose=1):
 
 	Parameters
 	----------
-    halo_data_all : list of dictionaries
-        The halo data list of dictionaries previously generated.
+    base_halo_data : list of dictionaries
+        The halo data list of dictionaries previously generated. The particle histories 
+        are created as per the snaps contained in this list. 
 
     min_snap : int
-        The snap after which to save particle histories.
+        The snap after which to save particle histories (here to save memory).
 
 	Returns
 	----------
-    {'all_ids':running_list_all,'sub_ids':running_list_sub} : dict
+    {'all_ids':running_list_all,'sub_ids':running_list_sub} : dict (of dict)
         Dictionary of particle lists which have ever been part of any halo and those which 
-        have been part of a subhalo at any point up to the last snap in the halo_data_all array.
-
+        have been part of a subhalo at any point up to the last snap in the base_halo_data array.
         This data is saved for each snapshot on the way in a np.pickle file in the directory "part_histories"
 
 	"""
@@ -536,7 +531,7 @@ def gen_particle_history_serial(halo_data_all,min_snap=0,verbose=1):
     ### Input checks
     # Snaps
     try:
-        no_snaps=1
+        no_snaps=len(base_halo_data)
     except:
         print("Invalid halo data")
 
@@ -551,15 +546,15 @@ def gen_particle_history_serial(halo_data_all,min_snap=0,verbose=1):
     sub_part_hist={}
     all_part_hist={}
 
-    # for each snapshot get the particle data and add to the running list
+    # for each snapshot which is included in base_halo_data get the particle data and add to the running list
 
     for isnap in range(no_snaps):
 
         #Load particle data for this snapshot
-        new_particle_data=get_particle_lists(snap=isnap,halo_data_snap=halo_data_all[isnap],add_subparts_to_fofs=False,verbose=verbose)
+        new_particle_data=get_particle_lists(snap=isnap,halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=False,verbose=verbose)
 
         #if no halos or no new particle data
-        if len(new_particle_data['Particle_IDs'])==0 or len(halo_data_all[isnap]['hostHaloID'])<2:
+        if len(new_particle_data['Particle_IDs'])==0 or len(base_halo_data[isnap]['hostHaloID'])<2:
             if verbose:
                 print('Either no particle data or no halos for snap = ',isnap)
             continue
@@ -568,13 +563,19 @@ def gen_particle_history_serial(halo_data_all,min_snap=0,verbose=1):
             if verbose:
                 print('Have particle lists for snap = ',isnap)
 
-            n_halos_snap=len(halo_data_all[isnap]['hostHaloID'])# Number of halos at this snap
-            sub_halos_snap=halo_data_all[isnap]['hostHaloID']>0 #Boolean mask indicating which halos are subhalos
+            n_halos_snap=len(base_halo_data[isnap]['hostHaloID'])# Number of halos at this snap
+            sub_halos_snap=base_halo_data[isnap]['hostHaloID']>0 #Boolean mask indicating which halos are subhalos
 
-            # Implement the worker function to grab the particle lists of particles in all structure and substructure
-            temp_result_array=calc_particle_history(halo_index_list=list(range(n_halos_snap)),sub_bools=sub_halos_snap,particle_IDs_subset=new_particle_data["Particle_IDs"])
-            all_halos_plist=temp_result_array[0]
-            sub_halos_plist=temp_result_array[1]
+            if np.sum(sub_halos_snap)<2:
+                sub_halos_plist=[]
+            else:
+                sub_halos_plist=[]
+                for ihalo,plist in enumerate(particle_IDs_subset):
+                    if sub_bools[ihalo]:
+                        sub_halos_plist.append(plist)
+                sub_halos_plist=np.concatenate(sub_halos_plist)
+
+            all_halos_plist=np.concatenate(particle_IDs_subset)
 
             # Find the particles new to structure or substructure
             new_structure_indices=np.array(np.compress(np.logical_not(np.in1d(all_halos_plist,running_list_all)),all_halos_plist))
@@ -616,7 +617,7 @@ def gen_particle_history_serial(halo_data_all,min_snap=0,verbose=1):
                         print('Done saving histories for snap = ',str(isnap),'to .dat file')
 
     print('Unique particle histories created')
-    return {'all_ids':all_part_hist,'sub_part_ids':sub_part_hist}
+    return [all_part_hist,sub_part_hist]
 
 ########################### ACCRETION WORKER FUNCTION ###########################
 
@@ -745,9 +746,11 @@ def calc_accretion_rate(halo_index_list,field_bools,part_IDs_1,part_IDs_2,part_T
 
                     if field_bools[ihalo]==True:#if a field halo then we check whether each particle has been part of ANY structure
                         for ipart in new_particle_IDs:#iterate through each new particle to the halo
-                            if allstructure_history[ipart]==1:#if the particle has been part of structure, note this by invalidating
+                            try:
+                                allstructure_history[str(ipart)]==1#if the particle has been part of structure, note this by invalidating
                                 field_mask_good.append(False)
-                            else:#if the particle is genuinely new to being in any structure, not its index as valid
+                                print('Found the particle what a hoe')
+                            except:#if the particle is genuinely new to being in any structure, not its index as valid
                                 field_mask_good.append(True)
                         if verbose:
                             print('Done cross checking particles for field halo, now compressing - keeping ',np.sum(field_mask_good),' of ',len(new_particle_IDs),' particles')
@@ -757,9 +760,11 @@ def calc_accretion_rate(halo_index_list,field_bools,part_IDs_1,part_IDs_2,part_T
 
                     else:#if a subhalo
                         for ipart in new_particle_IDs:
-                            if substructure_history[ipart]==1:
+                            try:
+                                substructure_history[str(ipart)]==1
                                 sub_mask_good.append(False)
-                            else:
+                                print('Found the particle what a hoe')
+                            except:
                                 sub_mask_good.append(True)
                         if verbose:
                             print('Done cross checking particles for sub halo, now compressing - keeping ',np.sum(sub_mask_good),' of ',len(new_particle_IDs),' particles')
@@ -778,7 +783,7 @@ def calc_accretion_rate(halo_index_list,field_bools,part_IDs_1,part_IDs_2,part_T
 
 ########################### GENERATE ACCRETION RATES ###########################
 
-def gen_accretion_rate(halo_data_all,snap,npart,mass_table,halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
+def gen_accretion_rate(halo_data_all,snap,mass_table,halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
     
     """
 
