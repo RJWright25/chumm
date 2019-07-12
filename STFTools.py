@@ -383,7 +383,7 @@ def get_particle_lists(snap,halo_data_snap,add_subparts_to_fofs=False,verbose=1)
     
     """
 
-    gen_particle_history : function
+    get_particle_lists : function
 	----------
 
     Retrieve the particle lists for each halo from velociraptor particle files at a given snapshot.
@@ -471,7 +471,15 @@ def get_particle_lists(snap,halo_data_snap,add_subparts_to_fofs=False,verbose=1)
 #################### PARTICLE HISTORIES WORKER FUNCTION ###########################
 
 def calc_particle_history(halo_index_list,sub_bools,particle_IDs_subset,verbose=1):
+    """
+    calc_particle_history : function
+	----------
 
+    Retrieve the list of particle IDs for particles in structure and substructure
+    at a given snapshot. 
+
+
+    """
     if len(halo_index_list)==len(particle_IDs_subset):
         pass
     else:
@@ -492,6 +500,7 @@ def calc_particle_history(halo_index_list,sub_bools,particle_IDs_subset,verbose=
     all_halos_plist=np.concatenate(particle_IDs_subset)
 
     return [all_halos_plist,sub_halos_plist]
+
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
@@ -542,8 +551,8 @@ def gen_particle_history_serial(halo_data_all,npart,min_snap=0,verbose=1):
 
     running_list_all=[]
     running_list_sub=[]
-    sub_part_hist=np.zeros(npart)
-    all_part_hist=np.zeros(npart)
+    # sub_part_hist=np.zeros(npart)
+    # all_part_hist=np.zeros(npart)
 
     # for each snapshot get the particle data and add to the running list
 
@@ -581,6 +590,9 @@ def gen_particle_history_serial(halo_data_all,npart,min_snap=0,verbose=1):
             # Make sure we're not repeating particles in the running list
             running_list_all=np.unique(running_list_all)
             running_list_sub=np.unique(running_list_sub)
+
+            print(running_list_all[0:25])
+            print(running_list_sub[0:25])
 
             #Iterate through the newly identified particles and set their index to True
             for new_part_structure in new_structure_indices:
