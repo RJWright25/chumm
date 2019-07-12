@@ -504,7 +504,7 @@ def calc_particle_history(halo_index_list,sub_bools,particle_IDs_subset,verbose=
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
-def gen_particle_history_serial(halo_data_all,npart,min_snap=0,verbose=1):
+def gen_particle_history_serial(halo_data_all,min_snap=0,verbose=1):
 
     """
 
@@ -517,9 +517,6 @@ def gen_particle_history_serial(halo_data_all,npart,min_snap=0,verbose=1):
 	----------
     halo_data_all : list of dictionaries
         The halo data list of dictionaries previously generated.
-
-    npart : int
-        The integer total number of particles in the simulation.
 
     min_snap : int
         The snap after which to save particle histories.
@@ -539,7 +536,7 @@ def gen_particle_history_serial(halo_data_all,npart,min_snap=0,verbose=1):
     ### Input checks
     # Snaps
     try:
-        no_snaps=len(halo_data_all)
+        no_snaps=1
     except:
         print("Invalid halo data")
 
@@ -551,8 +548,8 @@ def gen_particle_history_serial(halo_data_all,npart,min_snap=0,verbose=1):
 
     running_list_all=[]
     running_list_sub=[]
-    # sub_part_hist=np.zeros(npart)
-    # all_part_hist=np.zeros(npart)
+    sub_part_hist={}
+    all_part_hist={}
 
     # for each snapshot get the particle data and add to the running list
 
@@ -591,15 +588,12 @@ def gen_particle_history_serial(halo_data_all,npart,min_snap=0,verbose=1):
             running_list_all=np.unique(running_list_all)
             running_list_sub=np.unique(running_list_sub)
 
-            print(running_list_all[0:25])
-            print(running_list_sub[0:25])
-
             #Iterate through the newly identified particles and set their index to True
             for new_part_structure in new_structure_indices:
-                all_part_hist[int(new_part_structure)]=1
+                all_part_hist[str(int(new_part_structure))]=1
 
             for new_part_substructure in new_substructure_indices:
-                sub_part_hist[int(new_part_substructure)]=1
+                sub_part_hist[str(int(new_part_substructure))]=1
 
             # Now if our snapshot is above the minimum snap set at the outset
             # we save the boolean lists (of length npart) for this snapshot and move on
