@@ -180,13 +180,8 @@ def gen_base_halo_data(snaps=[],outname='',vr_filelist="",tf_filelist="",vr_file
         halo_data_all[isnap]['SimulationInfo']['z']=redshift
         halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
 
-
-        if vr_files_nested:
-            halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)+"/"+vr_prefix+str(snap).zfill(vr_files_lz)
-            halo_data_all[isnap]['FileType']=vr_files_type
-        else:
-            halo_data_all[isnap]['FilePath']=vr_directory+vr_prefix+str(snap).zfill(vr_files_lz)
-            halo_data_all[isnap]['FileType']=vr_files_type
+        halo_data_all[isnap]['FilePath']=vr_list[isnap]
+        halo_data_all[isnap]['FileType']=vr_files_type
 
     print('Saving base2 halo data to file (contains detailed TreeFrog data)')
 
