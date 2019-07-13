@@ -199,7 +199,7 @@ def gen_base_halo_data(snaps=[],outname='',vr_filelist="",tf_filelist="",vr_file
 
     ###### Remove superfluous data for acc_rate calcss
 
-    fields_to_keep=['Count','ID','hostHaloID','Tail','FilePath','FileType']
+    fields_to_keep=['Count','ID','hostHaloID','Tail','FilePath','FileType','Snap','UnitInfo','SimulationInfo']
     halo_data_all_truncated=[]
     for isnap,halo_data_snap in enumerate(halo_data_all):
         halo_data_all_truncated_snap={}
@@ -414,10 +414,7 @@ def get_particle_lists(base_halo_data_snap,add_subparts_to_fofs=False,verbose=1)
 
     ### input checking
     # snapshot
-    try:
-        snap=int(base_halo_data_snap["Snap"])
-    except:
-        print('Snapshot not a valid integer')
+    snap=int(base_halo_data_snap["Snap"])
 
     if verbose:
         print('Reading particle lists for snap = ',snap)
@@ -587,168 +584,6 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
 
     print('Unique particle histories created')
     return [all_part_hist,sub_part_hist]
-
-########################### ACCRETION WORKER FUNCTION ###########################
-
-def calc_accretion_rate(halo_index_list,field_bools,part_IDs_1,part_IDs_2,part_Types_2,particle_history=[],verbose=1):
-    """
-
-    calc_accretion_rate : function
-	----------
-
-    Worker function of gen_accretion_rate.
-    Used to generate the number of new particles to halos from initial and final particle lists.
-
-	Parameters
-	----------
-	halo_index_list : list of int
-		The list of halo indices corresponding to the particle lists. 
-        Non-essential for functionality, but should be of length part_IDs_1 and part_IDs_2.
-
-    field_bools : list of bool
-        List of length part_IDs_1 (and part_IDs_2, part_Types_2, halo_index_list)
-        containing boolean flags (True/False) indicating whether the halo at its index is a field halo.
-    
-    part_IDs_1 : list of lists
-        A list of length part_IDs_2, part_Types_2, field_bools, halo_index_list which at each index
-        contains the list of particle IDs in the halo at that index at the initial snapshot to be
-        considered for accretion calculations.
-
-    part_IDs_2 : list of lists
-        A list of length part_IDs_1, part_Types_2, field_bools, halo_index_list which at each index
-        contains the list of particle IDs in the halo at that index at the final snapshot to be
-        considered for accretion calculations.
-
-    part_Types_2 : list of lists
-        A list of length part_IDs_1, part_IDs_2, field_bools, halo_index_list which at each index
-        contains the list of particle types in the halo at that index at the final snapshot to be
-        considered for accretion calculations.
-
-    verbose : bool
-        Flag indicating how verbose we want the code to be when we run.
-
-    Returns
-	-------
-
-    np.column_stack((halo_index_list,delta_n0,delta_n1)) : np.ndarray
-        N_halo x 3 array
-        Each row contains 
-            [0]: halo_index from halo_index_list
-            [1]: delta_n0 (number of new type 0 particles)
-            [2]: delta_n1 (number of new type 1 particles)
-    
-    """
-    #### Input checks
-    # Ensure that the arrays fed are all of the correct dimension
-    if len(part_IDs_1)==len(part_IDs_2):
-        try:
-            test=part_IDs_1[0]
-            n_halos_parsed=len(halo_index_list)
-        except:
-            print('Particle data is not a list of lists, terminating')
-            return []
-        if verbose:
-            print(f'Accretion rate calculator parsed {n_halos_parsed} halos')
-    else:
-        print('An unequal number of particle lists and/or halo indices were parsed, terminating')
-        return []
-    
-    # Initialise outputs
-    delta_n0=[]
-    delta_n1=[]
-    halo_indices_abs=[]
-
-    #### Main halo loop
-    for ihalo,ihalo_abs in enumerate(halo_index_list):
-        #ihalo is counter, ihalo_abs is absolute halo index (at final snap)
-        if verbose:
-            print(f'Finding particles new to halo {ihalo_abs}')
-
-        part_IDs_init=part_IDs_1[ihalo]
-        part_IDs_final=part_IDs_2[ihalo]
-        part_Types_final=part_Types_2[ihalo]
-        
-        part_count_1=len(part_IDs_init)
-        part_count_2=len(part_IDs_final)
-        # Verifying particle counts are adequate
-        if part_count_2<5 or part_count_1<5:
-            if verbose:
-                print(f'Particle count in halo {ihalo_abs} is less than 5 - not processing')
-            # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
-            delta_n0.append(np.nan)
-            delta_n1.append(np.nan)
-
-        # If particle counts are adequate, then continue with calculation. 
-        else:
-            if verbose:
-                print(f'Particle count in halo {ihalo_abs} is adequate for accretion rate calculation')
-
-            #Finding list of particles new to the halo 
-            new_particle_IDs=np.array(np.compress(np.logical_not(np.in1d(part_IDs_final,part_IDs_init)),part_IDs_final))#list of particles new to halo
-            new_particle_Types=np.array(np.compress(np.logical_not(np.in1d(part_IDs_final,part_IDs_init)),part_Types_final))#list of particle types new to halo
-
-            if verbose:
-                print('Number of new particles to halo: ',len(new_particle_IDs))
-
-            #Trimming particles which have been part of structure in the past (i.e. those which are already in halos)    
-            
-            if particle_history==[]:#if the particle history argument is empty then we are not trimming particles
-                trim_particles=False
-            else: #if we are given particle history, then we are trimming particles
-                trim_particles=True
-                allstructure_history=particle_history[0]
-                substructure_history=particle_history[1]
-
-            if trim_particles:#if we have the particle histories
-                
-                if len(substructure_history)<100:#if the particle history is of insufficient length then skip
-                    print('Failed to find particle histories for trimming at snap = ',snap-depth-1)
-                    delta_n0.append(np.nan)
-                    delta_n1.append(np.nan)
-                
-                else:#if our particle history is valid
-                    t1=time.time()
-
-                    #reset lists which count whether a particle is valid or not (based on what its history is)
-                    field_mask_good=[]
-                    sub_mask_good=[]
-
-                    if field_bools[ihalo]==True:#if a field halo then we check whether each particle has been part of ANY structure
-                        for ipart in new_particle_IDs:#iterate through each new particle to the halo
-                            try:
-                                allstructure_history[str(ipart)]==1#if the particle has been part of structure, note this by invalidating
-                                field_mask_good.append(False)
-                                print('Found the particle what a hoe')
-                            except:#if the particle is genuinely new to being in any structure, not its index as valid
-                                field_mask_good.append(True)
-                        if verbose:
-                            print('Done cross checking particles for field halo, now compressing - keeping ',np.sum(field_mask_good),' of ',len(new_particle_IDs),' particles')
-                        
-                        #reduce list to the genuinely unprocessed particles
-                        new_particle_Types=np.compress(field_mask_good,new_particle_Types)
-
-                    else:#if a subhalo
-                        for ipart in new_particle_IDs:
-                            try:
-                                substructure_history[str(ipart)]==1
-                                sub_mask_good.append(False)
-                                print('Found the particle what a hoe')
-                            except:
-                                sub_mask_good.append(True)
-                        if verbose:
-                            print('Done cross checking particles for sub halo, now compressing - keeping ',np.sum(sub_mask_good),' of ',len(new_particle_IDs),' particles')
-                        
-                        #reduce list to unprocessed particles
-                        new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
-
-            #### Now we simply count the number of new particles of each type
-
-            delta_n0_temp=np.sum(new_particle_Types==0)
-            delta_n1_temp=np.sum(new_particle_Types==1)
-            delta_n0.append(delta_n0_temp) #append the result to our final array
-            delta_n1.append(delta_n1_temp) #append the result to our final array 
-
-    return np.column_stack((halo_index_list,delta_n0,delta_n1))
 
 ########################### GENERATE ACCRETION RATES ###########################
 
