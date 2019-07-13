@@ -520,16 +520,17 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
 
         #Load particle data for this snapshot
         new_particle_data=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=False,verbose=verbose)
-
+        
+        snap_abs=base_halo_data[isnap]["Snap"]
         #if no halos or no new particle data
         if len(new_particle_data['Particle_IDs'])==0 or len(base_halo_data[isnap]['hostHaloID'])<2:
             if verbose:
-                print('Either no particle data or no halos for snap = ',isnap)
+                print('Either no particle data or no halos for snap = ',snap_abs)
             continue
         #if particle data is valid, continue
         else:
             if verbose:
-                print('Have particle lists for snap = ',isnap)
+                print('Have particle lists for snap = ',snap_abs)
 
             n_halos_snap=len(base_halo_data[isnap]['hostHaloID'])# Number of halos at this snap
             sub_bools=base_halo_data[isnap]['hostHaloID']>0 #Boolean mask indicating which halos are subhalos
