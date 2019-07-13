@@ -367,10 +367,10 @@ def gen_detailed_halo_data(base_halo_data,extra_halo_fields=[],outname='',verbos
 
     outfilename='base3_vrhalodata_'+outname+'.dat'
 
-    ###### SAVE trimmed data to file
+    ###### SAVE data to file
     if path.exists(outfilename):
         if verbose:
-            print('Overwriting existing base1 halo data ...')
+            print('Overwriting existing base3 halo data ...')
         os.remove(outfilename)
 
     with open(outfilename, 'wb') as halo_data_file:
