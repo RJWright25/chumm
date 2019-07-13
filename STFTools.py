@@ -30,6 +30,8 @@ def gen_base_halo_data(snaps=[],outname='',vr_filelist="",tf_filelist="",vr_file
 
 	Parameters
 	----------
+    snaps: list of str
+        The list of (absolute) snaps we are creating halo data for (same length/order as vr_filelist, tf_filelist)
 
     outname : str
         Suffix for output file. 
@@ -517,7 +519,7 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
     for isnap in range(no_snaps):
 
         #Load particle data for this snapshot
-        new_particle_data=get_particle_lists(snap=isnap,halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=False,verbose=verbose)
+        new_particle_data=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=False,verbose=verbose)
 
         #if no halos or no new particle data
         if len(new_particle_data['Particle_IDs'])==0 or len(base_halo_data[isnap]['hostHaloID'])<2:
