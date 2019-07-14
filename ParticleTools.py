@@ -152,7 +152,7 @@ def read_mass_data_eagle(fname,outname=[],extra_gas_props=[],verbose=True):
     if verbose:
         print('Saving data with pickle...')
     with open(fname_out,'wb') as mass_data_file:
-        pickle.dump(mass_table,mass_data_file)
+        pickle.dump([Gas_Tuples,DM_Mass],mass_data_file)
         mass_data_file.close()
 
     return mass_table
