@@ -122,7 +122,7 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
     Masses=snap.read_dataset(0,"Mass")
 
     for ipart_id,part_id in enumerate(IDs):
-        print(ipart_id," done out of ",snap.numpart_total[0])
+        print(ipart_id/snap.numpart_total[0]*100," % done")
         Gas_Mass[str(part_id)]=Masses[ipart_id]
             
     fh5py=h5py.File(fname)
@@ -137,7 +137,7 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
     DM_Mass=dm_mass*cgs*a**aexp*h**hexp/Msun_cgs
 
     mass_table=[Gas_Mass,DM_Mass]
-
+    print(fname[:-5]+"_mass_data.dat")
     return mass_table
 
 
