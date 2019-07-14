@@ -13,6 +13,7 @@ import astropy.units as u
 from astropy.cosmology import FlatLambdaCDM,z_at_value
 from scipy.spatial import KDTree
 import read_eagle
+from astropy import units
 
 # VELOCIraptor python tools 
 from VRPythonTools import *
