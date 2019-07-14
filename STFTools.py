@@ -918,7 +918,9 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
 
     n_halos_tot=len(base_halo_data[isnap]['hostHaloID'])
     print('Pre-processing mass data ...')
-    gas_mass_data=dict(zip(mass_data[0][0],mass_data[0][1]))
+    gas_mass_data=zip(mass_data[0][0],mass_data[0][1])
+    print('Creating dictionary ...')
+    {str(x):y for x,y in gas_mass_data}
 
     # Snap
     try:
