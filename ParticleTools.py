@@ -130,11 +130,15 @@ def read_mass_data_eagle(fname,outname=[],extra_gas_props=[],verbose=True):
     Msun_cgs=np.float(units.M_sun.cgs.scale)
     DM_Mass=dm_mass*cgs*a**aexp*h**hexp/Msun_cgs
 
+    if verbose:
+        print('Reading datasets ...')
     Gas_IDs=snap.read_dataset(0,"ParticleIDs").astype(str)
     Gas_Masses=snap.read_dataset(0,"Mass")
+
+    if verbose:
+        print('Making dataframe ...')
     Gas_Tuples=df(dict(zip(Gas_IDs,Gas_Masses)))
-    
-    mass_table=[Gas_Tuples,DM_Mass]
+
 
     if outname==[]:
         fname_out='eagle_mass_data.dat'
@@ -142,8 +146,11 @@ def read_mass_data_eagle(fname,outname=[],extra_gas_props=[],verbose=True):
         fname_out='eagle_mass_data_'+str(outname)+'.dat'
 
     if os.path.exists(fname_out):
+        print('removing existing mass data ...')
         os.remove(fname_out)
     
+    if verbose:
+        print('Saving data with pickle...')
     with open(fname_out,'wb') as mass_data_file:
         pickle.dump(mass_table,mass_data_file)
         mass_data_file.close()
