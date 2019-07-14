@@ -132,8 +132,8 @@ def read_mass_data_eagle(fname,outname=[],extra_gas_props=[],verbose=True):
 
     Gas_IDs=snap.read_dataset(0,"ParticleIDs").astype(str)
     Gas_Masses=snap.read_dataset(0,"Mass")
-    Gas_Tuples=dict(zip(Gas_IDs,Gas_Masses))
-
+    Gas_Tuples=df(dict(zip(Gas_IDs,Gas_Masses)))
+    
     mass_table=[Gas_Tuples,DM_Mass]
 
     if outname==[]:
