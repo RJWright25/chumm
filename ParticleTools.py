@@ -9,6 +9,7 @@ import numpy as np
 import h5py
 import read_eagle
 from pandas import DataFrame as df
+from astropy import units
 
 def read_n_part(fname,sim_type):
 
