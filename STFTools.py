@@ -917,6 +917,8 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
 	"""
 
     n_halos_tot=len(base_halo_data[isnap]['hostHaloID'])
+    print('Pre-processing mass data ...')
+    gas_mass_data=dict(zip(mass_data[0][0],mass_data[0][1]))
 
     # Snap
     try:
@@ -1102,7 +1104,6 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
 
             print('Calculating new gas mass...')
             new_IDs_Gas=np.compress(new_particle_Types==0,new_particle_IDs)
-
             new_Mass_Gas=0
             igas=0
             ngas=len(new_IDs_Gas)
@@ -1110,7 +1111,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
             for new_IDs_Gas_temp in new_IDs_Gas:
                 igas=igas+1
                 print(igas/ngas*100,"%")
-                new_Mass_Gas=new_Mass_Gas+mass_data[0][new_IDs_Gas_temp]
+                new_Mass_Gas=new_Mass_Gas+gas_mass_data[new_IDs_Gas_temp]
 
             delta_m0_temp=new_Mass_Gas
             delta_m0.append(delta_m0_temp) #append the result to our final array
