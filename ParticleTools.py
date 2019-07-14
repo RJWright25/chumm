@@ -87,7 +87,7 @@ def read_mass_table(fname,sim_type):
 
 ########################### READ MASS DATA (EAGLE) ###########################
 
-def gen_mass_data_eagle(fnames,verbose=True): 
+def gen_mass_data_eagle(fnames,isnaps=[],verbose=True): 
     
     """
 
@@ -110,8 +110,13 @@ def gen_mass_data_eagle(fnames,verbose=True):
         mass_table[1] : float dark matter particle mass in sim units
 
     """
+    if isnaps==[]:
+        isnaps=range(len(fnames))
+    else:
+        isnaps=list(isnaps)
 
-    for isnap,fname in enumerate(fnames):
+    for i,fname in enumerate(fnames):
+        isnap=isnaps[i]
         print('Creating mass data for isnap = ',isnap,' ...')
         print('File: ',fname)
 
