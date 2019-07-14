@@ -120,6 +120,7 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
     Gas_Mass={}
     IDs=snap.read_dataset(0,"ParticleIDs")
     Masses=snap.read_dataset(0,"Mass")
+    print(fname[:-5]+"_mass_data.dat")
 
     for ipart_id,part_id in enumerate(IDs):
         print(ipart_id/snap.numpart_total[0]*100," % done")
@@ -137,7 +138,6 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
     DM_Mass=dm_mass*cgs*a**aexp*h**hexp/Msun_cgs
 
     mass_table=[Gas_Mass,DM_Mass]
-    print(fname[:-5]+"_mass_data.dat")
     return mass_table
 
 
