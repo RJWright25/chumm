@@ -137,7 +137,7 @@ def read_mass_data_eagle(fname,outname=[],extra_gas_props=[],verbose=True):
 
     if verbose:
         print('Making dataframe ...')
-    Gas_Tuples=df(dict(zip(Gas_IDs,Gas_Masses)))
+    Gas_Tuples=dict(zip(Gas_IDs,Gas_Masses))
 
 
     if outname==[]:
