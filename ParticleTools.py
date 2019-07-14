@@ -152,9 +152,9 @@ def gen_mass_data_eagle(fnames,isnaps=[],verbose=True):
         mass_table=[Gas_Mass_Dict,DM_Mass]
 
         if not os.path.exists('mass_data'):
-            os.mkdir('mass_data')
+            os.mkdir('./mass_data')
 
-        fname_out='/mass_data/isnap_'+str(isnap).zfill(3)+'_mass_data.dat'
+        fname_out='mass_data/isnap_'+str(isnap).zfill(3)+'_mass_data.dat'
         print(fname_out)
 
         if os.path.exists(fname_out):
