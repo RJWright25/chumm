@@ -113,6 +113,7 @@ def gen_mass_data_eagle(fnames,verbose=True):
 
     for isnap,fname in enumerate(fnames):
         print('Creating mass data for isnap = ',isnap,' ...')
+        print('File: ',fname)
 
         snap = read_eagle.EagleSnapshot(fname)
         snap.select_region(xmin=0,xmax=snap.boxsize,ymin=0,ymax=snap.boxsize,zmin=0,zmax=snap.boxsize)
