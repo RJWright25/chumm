@@ -8,9 +8,9 @@
 import numpy as np
 import h5py
 import read_eagle
-import pandas.DataFrame as df
+from pandas import DataFrame as df
 
-def read_n_part(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4):
+def read_n_part(fname,sim_type):
 
     """
     read_n_part : function
@@ -19,28 +19,16 @@ def read_n_part(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4):
 		
 	Parameters
 	----------
-	run_directory : string 
-		The directory in which the snapshot hdf5 snapshot files exist.
+	fname : str 
+        The file string of the snapshot file. 
 
     sim_type : string 
 		Which type of simulation ("GADGET" OR "SWIFT").
 
-    snap_prefix : string 
-		The string preceding the snap number in the hdf5 snapshot files.
-
-    snap_lz: int
-        The number of digits defining each snapshot in the name of the particle hdf5s.
-        
-    Returns
-	-------
-    npart : int
-        Total number of particles found in the simulation. 
-	
 	"""
 
     try:
-        snap_lz=int(snap_lz)
-        temp_file=h5py.File(run_directory+snap_prefix+str(0).zfill(snap_lz)+".hdf5")
+        temp_file=h5py.File(fname)
     except:
         print("Couldn't find file, please review inputs.")
         return []
@@ -60,7 +48,7 @@ def read_n_part(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4):
 
 ########################### READ MASS TABLE ###########################
 
-def read_mass_table(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4):
+def read_mass_table(fname,sim_type):
 
     """
     read_mass_table : function
@@ -72,15 +60,9 @@ def read_mass_table(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4
 	run_directory : string 
 		The directory in which the snapshot hdf5 snapshot files exist.
 
-    sim_type : string 
-		Which type of simulation ("GADGET" OR "SWIFT").
+    fname : str 
+        The file string of the snapshot file. 
 
-    snap_prefix : string 
-		The string preceding the snap number in the hdf5 snapshot files.
-
-    snap_lz: int
-        The number of digits defining each snapshot in the name of the particle hdf5s.
-        
     Returns
 	-------
     np.array([M0,M1]) : np.ndarray
@@ -89,12 +71,7 @@ def read_mass_table(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4
 	"""
 
     #return mass of PartType0, PartType1 particles in sim units
-    try:
-        snap_lz=int(snap_lz)
-        temp_file=h5py.File(run_directory+snap_prefix+str(0).zfill(snap_lz)+".hdf5")
-    except:
-        print("Couldn't find file, please review inputs.")
-        return []
+    temp_file=h5py.File(fname)
 
     if sim_type=='SWIFT':
         M0=temp_file['PartType0']['Masses'][0]
@@ -111,7 +88,7 @@ def read_mass_table(run_directory,sim_type='SWIFT',snap_prefix="snap_",snap_lz=4
 
 ########################### READ MASS DATA (EAGLE) ###########################
 
-def read_mass_data_eagle(fname,extra_gas_props): 
+def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True): 
     
     """
 
@@ -139,8 +116,9 @@ def read_mass_data_eagle(fname,extra_gas_props):
     snap = read_eagle.EagleSnapshot(fname)
     snap.select_region(xmin=0,xmax=snap.boxsize,ymin=0,ymax=snap.boxsize,zmin=0,zmax=snap.boxsize)
 
-    print ("# Total number of gas particles in snapshot = %d" % snap.numpart_total[0])
-    print ("# Total number of DM particles in snapshot = %d" % snap.numpart_total[1])
+    if verbose:
+        print ("# Total number of gas particles in snapshot = %d" % snap.numpart_total[0])
+        print ("# Total number of DM particles in snapshot = %d" % snap.numpart_total[1])
 
     Gas_Props={}
     Gas_Props["IDs"]=snap.read_dataset(0,"ParticleIDs")
@@ -166,6 +144,7 @@ def read_mass_data_eagle(fname,extra_gas_props):
     DM_Props['Masses']=DM_Mass
 
     mass_table=[Gas_Props,DM_Props]
+
     return mass_table
 
 
