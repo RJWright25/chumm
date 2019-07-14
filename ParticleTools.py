@@ -9,6 +9,7 @@ import numpy as np
 import h5py
 import read_eagle
 import os
+import pickle
 from pandas import DataFrame as df
 from astropy import units
 
