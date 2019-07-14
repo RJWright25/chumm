@@ -1106,8 +1106,8 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
             new_Mass_Gas=0
             igas=0
             ngas=len(new_IDs_Gas)
-            
-            for new_IDs_Gas_temp new_IDs_Gas:
+
+            for new_IDs_Gas_temp in new_IDs_Gas:
                 igas=igas+1
                 print(igas," out of ",ngas)
                 new_Mass_Gas=new_Mass_Gas+mass_data[0][str(new_IDs_Gas_temp)]
