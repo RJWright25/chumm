@@ -867,7 +867,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
 
 ########################### GENERATE ACCRETION RATES: VARYING MASS ###########################
 
-def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
+def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
     
     """
 
@@ -887,9 +887,6 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
     isnap : int
         The index in the base_halo_data list for which to calculate accretion rates.
         (May be different to actual snap).
-
-    mass_data : list of dict
-        The output of eagle masses from read_mass_data_eagle.
     
     halo_index_list : list
         List of the halo indices for which to calculate accretion rates. If not provided,
@@ -917,13 +914,15 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
 	"""
 
     n_halos_tot=len(base_halo_data[isnap]['hostHaloID'])
-    print('Pre-processing mass data ...')
-    gas_mass_data=zip(mass_data[0][0],mass_data[0][1])
-    print('Creating dictionary ...')
-    gas_mass_dict={str(x):y for x,y in gas_mass_data}
-    with open('dumpfile.dat','wb') as dumpfile:
-        pickle.dump(gas_mass_dict,dumpfile)
-        dumpfile.close()
+
+    if verbose:
+        print("Loading in mass data ... ")
+
+    with open('isnap_'+str(isnap).zfill(3)+'_mass_data.dat','rb') as mass_file:
+        mass_table=pickle.load(mass_file)
+        mass_file.close()
+
+    gas_mass_dict=mass_table[0]
 
     # Snap
     try:
@@ -1104,18 +1103,14 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
                         new_particle_IDs=np.compress(sub_mask_good,new_particle_IDs)
 
             #### Now we simply count the number of new particles of each type
-            delta_m1_temp=np.sum(new_particle_Types==1)*mass_data[1]
+            delta_m1_temp=np.sum(new_particle_Types==1)*mass_table[1]
             print('New DM Mass: ',delta_m1_temp)
 
             print('Calculating new gas mass...')
             new_IDs_Gas=np.compress(new_particle_Types==0,new_particle_IDs)
             new_Mass_Gas=0
-            igas=0
-            ngas=len(new_IDs_Gas)
 
             for new_IDs_Gas_temp in new_IDs_Gas:
-                igas=igas+1
-                print(igas/ngas*100,"%")
                 new_Mass_Gas=new_Mass_Gas+gas_mass_dict[str(new_IDs_Gas_temp)]
 
             delta_m0_temp=new_Mass_Gas

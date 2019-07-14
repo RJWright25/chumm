@@ -87,7 +87,7 @@ def read_mass_table(fname,sim_type):
 
 ########################### READ MASS DATA (EAGLE) ###########################
 
-def read_mass_data_eagle(fname,outname=[],extra_gas_props=[],verbose=True): 
+def gen_mass_data_eagle(fnames,verbose=True): 
     
     """
 
@@ -99,64 +99,68 @@ def read_mass_data_eagle(fname,outname=[],extra_gas_props=[],verbose=True):
     Parameters
 	----------
 
-    fname : str
-        The base filename of the EAGLE snapshot file to be loaded. 
+    fnames : list of str
+        List of strings describing snaps desired (in order)
 
     Returns
 	----------
 
     mass_table : list
-        mass_table[0] : pd.DataFrame of gas particle IDs ['IDs'] and corresponding masses ['Mass'] (and any extra gas_props)
+        mass_table[0] : dictionary of gas particle IDs as the keys and corresponding masses 
         mass_table[1] : float dark matter particle mass in sim units
 
-    
     """
 
-    snap = read_eagle.EagleSnapshot(fname)
-    snap.select_region(xmin=0,xmax=snap.boxsize,ymin=0,ymax=snap.boxsize,zmin=0,zmax=snap.boxsize)
+    for isnap,fname in enumerate(fnames):
+        print('Creating mass data for isnap = ',isnap+' ...')
 
-    if verbose:
-        print ("# Total number of gas particles in snapshot = %d" % snap.numpart_total[0])
-        print ("# Total number of DM particles in snapshot = %d" % snap.numpart_total[1])
+        snap = read_eagle.EagleSnapshot(fname)
+        snap.select_region(xmin=0,xmax=snap.boxsize,ymin=0,ymax=snap.boxsize,zmin=0,zmax=snap.boxsize)
 
-    fh5py=h5py.File(fname)
-    h=fh5py["Header"].attrs.get("HubbleParam")
-    a=fh5py["Header"].attrs.get("Time")
-    dm_mass=fh5py["Header"].attrs.get("MassTable")[1]
-    cgs=fh5py['PartType0/Mass'].attrs.get("CGSConversionFactor")
-    aexp=fh5py['PartType0/Mass'].attrs.get("aexp-scale-exponent")
-    hexp=fh5py['PartType0/Mass'].attrs.get("h-scale-exponent")
+        if verbose:
+            print ("# Total number of gas particles in snapshot = %d" % snap.numpart_total[0])
+            print ("# Total number of DM particles in snapshot = %d" % snap.numpart_total[1])
 
-    Msun_cgs=np.float(units.M_sun.cgs.scale)
-    DM_Mass=dm_mass*cgs*a**aexp*h**hexp/Msun_cgs
+        fh5py=h5py.File(fname)
+        h=fh5py["Header"].attrs.get("HubbleParam")
+        a=fh5py["Header"].attrs.get("Time")
+        dm_mass=fh5py["Header"].attrs.get("MassTable")[1]
+        cgs=fh5py['PartType0/Mass'].attrs.get("CGSConversionFactor")
+        aexp=fh5py['PartType0/Mass'].attrs.get("aexp-scale-exponent")
+        hexp=fh5py['PartType0/Mass'].attrs.get("h-scale-exponent")
 
-    if verbose:
-        print('Reading datasets ...')
-    Gas_IDs=snap.read_dataset(0,"ParticleIDs").astype(str)
-    Gas_Masses=snap.read_dataset(0,"Mass")
+        Msun_cgs=np.float(units.M_sun.cgs.scale)
+        DM_Mass=dm_mass*cgs*a**aexp*h**hexp/Msun_cgs
 
-    if verbose:
-        print('Making dataframe ...')
+        if verbose:
+            print('Reading datasets ...')
 
-    Gas_Mass=[Gas_IDs,Gas_Masses]
+        Gas_IDs=snap.read_dataset(0,"ParticleIDs").astype(str)
+        Gas_Masses=snap.read_dataset(0,"Mass")
+        Gas_Mass_Zipped=zip(Gas_IDs,Gas_Masses)
 
-    if outname==[]:
-        fname_out='eagle_mass_data.dat'
-    else:
-        fname_out='eagle_mass_data_'+str(outname)+'.dat'
+        if verbose:
+            print('Creating dictionary ...')
 
-    if os.path.exists(fname_out):
-        print('removing existing mass data ...')
-        os.remove(fname_out)
-    
-    if verbose:
-        print('Saving data with pickle ...')
-    
-    mass_table=[Gas_Mass,DM_Mass]
+        Gas_Mass_Dict={str(x):y for x,y in Gas_Mass_Zipped}
+        mass_table=[Gas_Mass_Dict,DM_Mass]
 
-    with open(fname_out,'wb') as mass_data_file:
-        pickle.dump(mass_table,mass_data_file)
-        mass_data_file.close()
+        if not os.path.exists('mass_data'):
+            os.mkdir('mass_data')
+
+        fname_out='/mass_data/isnap_'+str(isnap).zfill(3)+'_mass_data.dat'
+        print(fname_out)
+
+        if os.path.exists(fname_out):
+            print('Removing existing mass data ...')
+            os.remove(fname_out)
+        
+        if verbose:
+            print('Saving data with pickle ...')
+        
+        with open(fname_out,'wb') as mass_data_file:
+            pickle.dump(mass_table,mass_data_file)
+            mass_data_file.close()
 
     return mass_table
 
