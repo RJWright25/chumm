@@ -915,9 +915,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
         This data is saved for each snapshot on the way in a np.pickle file in the directory "/acc_rates"
 
 	"""
-
-    ################## Input Checks ##################
-
+    
     n_halos_tot=len(base_halo_data[isnap]['hostHaloID'])
 
     # Snap
