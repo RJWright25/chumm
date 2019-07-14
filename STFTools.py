@@ -830,47 +830,48 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
     sim_unit_to_Msun=base_halo_data[0]['UnitInfo']['Mass_unit_to_solarmass']#Simulation mass units in Msun
     m_0=mass_table[0]*sim_unit_to_Msun #parttype0 mass in Msun
     m_1=mass_table[1]*sim_unit_to_Msun #parttype1 mass in Msun
-    lt2=halo_data_all[isnap]['SimulationInfo']['LookbackTime']#final lookback time
-    lt1=halo_data_all[isnap-depth]['SimulationInfo']['LookbackTime']#initial lookback time
+    lt2=base_halo_data[isnap]['SimulationInfo']['LookbackTime']#final lookback time
+    lt1=base_halo_data[isnap-depth]['SimulationInfo']['LookbackTime']#initial lookback time
     delta_t=abs(lt1-lt2)#lookback time change from initial to final snapshot (Gyr)
-    
+
     # Find which particle type is more massive (i.e. DM) and save accretion rates in dictionary
     # 'DM_Acc', 'Gas_Acc' and 'dt' as Msun/Gyr and dt accordingly
     if mass_table[0]>mass_table[1]:
         delta_m={'DM_Acc':np.array(delta_n0)*m_0/delta_t,'Gas_Acc':np.array(delta_n1)*m_1/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
     else:
         delta_m={'DM_Acc':np.array(delta_n1)*m_1/delta_t,'Gas_Acc':np.array(delta_n0)*m_0/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
+    
     # Now save all these accretion rates to file (in directory where run /acc_rates)
-    # (with filename depending on exact calculation parameters)
+    # (with filename depending on exact calculation parameters) - snap is the index in halo data
     # will overwrite existing file (first deletes)
+
     print('Saving accretion rates to .dat file.')
     if trim_particles:
-        if path.exists('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+        if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
             if verbose:
                 print('Overwriting existing accretion data ...')
-            os.remove('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+            os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+        with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
     else:
-        if path.exists('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+        if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
             if verbose:
                 print('Overwriting existing accretion data ...')
-            os.remove('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-        with open('acc_rates/snap_'+str(snap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+            os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+        with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
     #return the delta_m dictionary. 
     return delta_m
 
-
 ########################### GENERATE ACCRETION RATES: VARYING MASS ###########################
 
 def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
     
-    """
+       """
 
-    gen_accretion_rate_eagle : function
+    gen_accretion_rate : function
 	----------
 
     Generate and save accretion rates for each particle type by comparing particle lists and (maybe) trimming particles.
@@ -887,8 +888,8 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
         The index in the base_halo_data list for which to calculate accretion rates.
         (May be different to actual snap).
 
-    particle_data : str
-        The corresponding list of 
+    mass_data : list of dict
+        The output of eagle masses from read_mass_data_eagle.
     
     halo_index_list : list
         List of the halo indices for which to calculate accretion rates. If not provided,
@@ -914,7 +915,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
         This data is saved for each snapshot on the way in a np.pickle file in the directory "/acc_rates"
 
 	"""
-    
+
     ################## Input Checks ##################
 
     n_halos_tot=len(base_halo_data[isnap]['hostHaloID'])
@@ -1016,8 +1017,8 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
         return []
     
     # Initialise outputs
-    delta_n0=[]
-    delta_n1=[]
+    delta_m0=[]
+    delta_m1=[]
     halo_indices_abs=[]
 
     #### Main halo loop
@@ -1038,8 +1039,8 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
             if verbose:
                 print(f'Particle count in halo {ihalo_abs} is less than 5 - not processing')
             # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
-            delta_n0.append(np.nan)
-            delta_n1.append(np.nan)
+            delta_m0.append(np.nan)
+            delta_m1.append(np.nan)
 
         # If particle counts are adequate, then continue with calculation. 
         else:
@@ -1059,8 +1060,8 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
                 
                 if len(substructure_history)<100:#if the particle history is of insufficient length then skip
                     print('Failed to find particle histories for trimming at isnap = ',isnap-depth-1)
-                    delta_n0.append(np.nan)
-                    delta_n1.append(np.nan)
+                    delta_m0.append(np.nan)
+                    delta_m1.append(np.nan)
                 
                 else:#if our particle history is valid
                     t1=time.time()
@@ -1081,6 +1082,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
                         
                         #reduce list to the genuinely unprocessed particles
                         new_particle_Types=np.compress(field_mask_good,new_particle_Types)
+                        new_particle_IDs=np.compress(field_mask_good,new_particle_IDs)
 
                     else:#if a subhalo
                         for ipart in new_particle_IDs:
@@ -1094,78 +1096,56 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
                         
                         #reduce list to unprocessed particles
                         new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
+                        new_particle_IDs=np.compress(sub_mask_good,new_particle_IDs)
 
             #### Now we simply count the number of new particles of each type
+            delta_m1_temp=np.sum(new_particle_Types==1)*mass_data[1]
 
-            delta_n0_temp=np.sum(new_particle_Types==0)
-            delta_n1_temp=np.sum(new_particle_Types==1)
-            delta_n0.append(delta_n0_temp) #append the result to our final array
-            delta_n1.append(delta_n1_temp) #append the result to our final array 
+            new_IDs_Gas=np.compress(new_particle_Types==0,new_particle_IDs)
+            new_Mass_Gas=0
 
-    return np.column_stack((halo_index_list,delta_n0,delta_n1))
+            for new_IDs_Gas_temp in new_IDs_Gas:
+                new_gas_abs_index=np.where(mass_data[0]['IDs']==new_IDs_Gas_temp)[0]
+                new_Mass_Gas=new_Mass_Gas+mass_data[0]['Mass'][new_gas_abs_index]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    delta_n0=temp_accretion_result_array[:,1]
-    delta_n1=temp_accretion_result_array[:,2]
+            delta_m0_temp=new_Mass_Gas
+            delta_m0.append(delta_m0_temp) #append the result to our final array
+            delta_m1.append(delta_m1_temp) #append the result to our final array 
 
     ############################# Post-processing accretion calc results #############################
-
-    sim_unit_to_Msun=base_halo_data[0]['UnitInfo']['Mass_unit_to_solarmass']#Simulation mass units in Msun
-    m_0=mass_table[0]*sim_unit_to_Msun #parttype0 mass in Msun
-    m_1=mass_table[1]*sim_unit_to_Msun #parttype1 mass in Msun
     lt2=base_halo_data[isnap]['SimulationInfo']['LookbackTime']#final lookback time
     lt1=base_halo_data[isnap-depth]['SimulationInfo']['LookbackTime']#initial lookback time
     delta_t=abs(lt1-lt2)#lookback time change from initial to final snapshot (Gyr)
 
     # Find which particle type is more massive (i.e. DM) and save accretion rates in dictionary
     # 'DM_Acc', 'Gas_Acc' and 'dt' as Msun/Gyr and dt accordingly
-    if mass_table[0]>mass_table[1]:
-        delta_m={'DM_Acc':np.array(delta_n0)*m_0/delta_t,'Gas_Acc':np.array(delta_n1)*m_1/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
-    else:
-        delta_m={'DM_Acc':np.array(delta_n1)*m_1/delta_t,'Gas_Acc':np.array(delta_n0)*m_0/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
+
+    delta_m={'DM_Acc':np.array(delta_m1)/delta_t,'Gas_Acc':np.array(delta_m0)/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
 
     # Now save all these accretion rates to file (in directory where run /acc_rates)
-    # (with filename depending on exact calculation parameters)
+    # (with filename depending on exact calculation parameters) - snap is the index in halo data
     # will overwrite existing file (first deletes)
 
     print('Saving accretion rates to .dat file.')
-
     if trim_particles:
-        if path.exists('acc_rates/isnap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+        if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
             if verbose:
                 print('Overwriting existing accretion data ...')
-            os.remove('acc_rates/isnap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-
+            os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
         with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
     else:
-        if path.exists('acc_rates/isnap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+        if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
             if verbose:
                 print('Overwriting existing accretion data ...')
-            os.remove('acc_rates/isnap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-
-        with open('acc_rates/isnap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+            os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+        with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
             pickle.dump(delta_m,acc_data_file)
             acc_data_file.close()
-
     #return the delta_m dictionary. 
     return delta_m
+
 
 ########################### HALO INDEX LISTS GENERATOR ###########################
 

@@ -27,11 +27,7 @@ def read_n_part(fname,sim_type):
 
 	"""
 
-    try:
-        temp_file=h5py.File(fname)
-    except:
-        print("Couldn't find file, please review inputs.")
-        return []
+    temp_file=h5py.File(fname)
 
     if sim_type=='SWIFT':
         n_0=len(temp_file['PartType0']['Masses'])
