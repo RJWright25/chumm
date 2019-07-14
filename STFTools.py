@@ -13,7 +13,6 @@ import astropy.units as u
 from astropy.cosmology import FlatLambdaCDM,z_at_value
 from scipy.spatial import KDTree
 import read_eagle
-from astropy import units
 
 # VELOCIraptor python tools 
 from VRPythonTools import *
@@ -659,7 +658,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
     if trim_particles:#load particle histories if we need to
         snap_reqd=isnap-depth-1#the snap before our initial snap
         try:#check if the files have already been generated
-            print('Trying to find particle histories at snap = ',snap_reqd)
+            print('Trying to find particle histories at isnap = ',snap_reqd)
             parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
             parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
             with open(parthist_filename_all, 'rb') as parthist_file:
@@ -934,7 +933,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
     if trim_particles:#load particle histories if we need to
         snap_reqd=isnap-depth-1#the snap before our initial snap
         try:#check if the files have already been generated
-            print('Trying to find particle histories at snap = ',snap_reqd)
+            print('Trying to find particle histories at isnap = ',snap_reqd)
             parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
             parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
             with open(parthist_filename_all, 'rb') as parthist_file:
@@ -1098,7 +1097,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
                         new_particle_IDs=np.compress(sub_mask_good,new_particle_IDs)
 
             #### Now we simply count the number of new particles of each type
-            delta_m1_temp=np.sum(new_particle_Types==1)*mass_data[1]
+            delta_m1_temp=np.sum(new_particle_Types==1)*mass_data[1]['Mass']
 
             new_IDs_Gas=np.compress(new_particle_Types==0,new_particle_IDs)
             new_Mass_Gas=0

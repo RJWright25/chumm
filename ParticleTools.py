@@ -119,7 +119,7 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
 
     Gas_Props={}
     Gas_Props["IDs"]=snap.read_dataset(0,"ParticleIDs")
-    Gas_Props["Masses"]=snap.read_dataset(0,"Mass")
+    Gas_Props["Mass"]=snap.read_dataset(0,"Mass")
 
     for prop in extra_gas_props:
         Gas_Props[prop]=snap.read_dataset(0,prop)
@@ -138,7 +138,7 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
     DM_Mass=dm_mass*cgs*a**aexp*h**hexp/Msun_cgs
 
     DM_Props={}
-    DM_Props['Masses']=DM_Mass
+    DM_Props['Mass']=DM_Mass
 
     mass_table=[Gas_Props,DM_Props]
 
