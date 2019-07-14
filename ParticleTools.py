@@ -117,15 +117,13 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
         print ("# Total number of gas particles in snapshot = %d" % snap.numpart_total[0])
         print ("# Total number of DM particles in snapshot = %d" % snap.numpart_total[1])
 
-    Gas_Props={}
-    Gas_Props["IDs"]=snap.read_dataset(0,"ParticleIDs")
-    Gas_Props["Mass"]=snap.read_dataset(0,"Mass")
+    Gas_Mass={}
+    IDs=snap.read_dataset(0,"ParticleIDs")
+    Masses=snap.read_dataset(0,"Mass")
 
-    for prop in extra_gas_props:
-        Gas_Props[prop]=snap.read_dataset(0,prop)
-
-    Gas_Props=df(Gas_Props)
-    
+    for ipart_id,part_id in enumerate(IDs):
+        Gas_Mass[str(part_id)]=Masses[ipart_id]
+            
     fh5py=h5py.File(fname)
     h=fh5py["Header"].attrs.get("HubbleParam")
     a=fh5py["Header"].attrs.get("Time")
@@ -137,10 +135,7 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
     Msun_cgs=np.float(units.M_sun.cgs.scale)
     DM_Mass=dm_mass*cgs*a**aexp*h**hexp/Msun_cgs
 
-    DM_Props={}
-    DM_Props['Mass']=DM_Mass
-
-    mass_table=[Gas_Props,DM_Props]
+    mass_table=[Gas_Mass,DM_Mass]
 
     return mass_table
 

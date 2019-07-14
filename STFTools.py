@@ -1097,16 +1097,20 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,mass_data,halo_index_list=[],d
                         new_particle_IDs=np.compress(sub_mask_good,new_particle_IDs)
 
             #### Now we simply count the number of new particles of each type
-            delta_m1_temp=np.sum(new_particle_Types==1)*mass_data[1]['Mass']
+            delta_m1_temp=np.sum(new_particle_Types==1)*mass_data[1]
             print('New DM Mass: ',delta_m1_temp)
-            new_IDs_Gas=np.compress(new_particle_Types==0,new_particle_IDs)
-            new_Mass_Gas=0
 
             print('Calculating new gas mass...')
-            for ipartgas,new_IDs_Gas_temp in enumerate(new_IDs_Gas):
-                print(ipartgas/len(new_IDs_Gas)*100,r'\% done')
-                new_gas_abs_index=np.where(mass_data[0]['IDs']==new_IDs_Gas_temp)[0]
-                new_Mass_Gas=new_Mass_Gas+mass_data[0]['Mass'][new_gas_abs_index]
+            new_IDs_Gas=np.compress(new_particle_Types==0,new_particle_IDs)
+
+            new_Mass_Gas=0
+            igas=0
+            ngas=len(new_IDs_Gas)
+            
+            for new_IDs_Gas_temp new_IDs_Gas:
+                igas=igas+1
+                print(igas," out of ",ngas)
+                new_Mass_Gas=new_Mass_Gas+mass_data[0][str(new_IDs_Gas_temp)]
 
             delta_m0_temp=new_Mass_Gas
             delta_m0.append(delta_m0_temp) #append the result to our final array
