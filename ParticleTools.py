@@ -8,6 +8,7 @@
 import numpy as np
 import h5py
 import read_eagle
+import os
 from pandas import DataFrame as df
 from astropy import units
 
@@ -85,7 +86,7 @@ def read_mass_table(fname,sim_type):
 
 ########################### READ MASS DATA (EAGLE) ###########################
 
-def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True): 
+def read_mass_data_eagle(fname,outname=[],extra_gas_props=[],verbose=True): 
     
     """
 
@@ -117,15 +118,6 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
         print ("# Total number of gas particles in snapshot = %d" % snap.numpart_total[0])
         print ("# Total number of DM particles in snapshot = %d" % snap.numpart_total[1])
 
-    Gas_Mass={}
-    IDs=snap.read_dataset(0,"ParticleIDs")
-    Masses=snap.read_dataset(0,"Mass")
-    print(fname[:-5]+"_mass_data.dat")
-
-    for ipart_id,part_id in enumerate(IDs):
-        print(ipart_id/snap.numpart_total[0]*100," % done")
-        Gas_Mass[str(part_id)]=Masses[ipart_id]
-            
     fh5py=h5py.File(fname)
     h=fh5py["Header"].attrs.get("HubbleParam")
     a=fh5py["Header"].attrs.get("Time")
@@ -137,7 +129,24 @@ def read_mass_data_eagle(fname,extra_gas_props=[],verbose=True):
     Msun_cgs=np.float(units.M_sun.cgs.scale)
     DM_Mass=dm_mass*cgs*a**aexp*h**hexp/Msun_cgs
 
-    mass_table=[Gas_Mass,DM_Mass]
+    Gas_IDs=snap.read_dataset(0,"ParticleIDs").astype(str)
+    Gas_Masses=snap.read_dataset(0,"Mass")
+    Gas_Tuples=dict(zip(Gas_IDs,Gas_Masses))
+
+    mass_table=[Gas_Tuples,DM_Mass]
+
+    if outname==[]:
+        fname_out='eagle_mass_data.dat'
+    else:
+        fname_out='eagle_mass_data_'+str(outname)+'.dat'
+
+    if os.path.exists(fname_out):
+        os.remove(fname_out)
+    
+    with open(fname_out,'wb') as mass_data_file:
+        pickle.dump(mass_table,mass_data_file)
+        mass_data_file.close()
+
     return mass_table
 
 
