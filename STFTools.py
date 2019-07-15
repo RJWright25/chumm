@@ -828,8 +828,10 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
 
     ############################# Post-processing accretion calc results #############################
     sim_unit_to_Msun=base_halo_data[0]['UnitInfo']['Mass_unit_to_solarmass']#Simulation mass units in Msun
-    m_0=mass_table[0]*sim_unit_to_Msun #parttype0 mass in Msun
-    m_1=mass_table[1]*sim_unit_to_Msun #parttype1 mass in Msun
+    h=base_halo_data[isnap]['SimulationInfo']['h_val']
+    a=base_halo_data[isnap]['SimulationInfo']['ScaleFactor']
+    m_0=mass_table[0]*sim_unit_to_Msun*h*a #parttype0 mass in Msun
+    m_1=mass_table[1]*sim_unit_to_Msun*h*a #parttype1 mass in Msun
     lt2=base_halo_data[isnap]['SimulationInfo']['LookbackTime']#final lookback time
     lt1=base_halo_data[isnap-depth]['SimulationInfo']['LookbackTime']#initial lookback time
     delta_t=abs(lt1-lt2)#lookback time change from initial to final snapshot (Gyr)
@@ -1150,7 +1152,6 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
             acc_data_file.close()
     #return the delta_m dictionary. 
     return delta_m
-
 
 ########################### HALO INDEX LISTS GENERATOR ###########################
 

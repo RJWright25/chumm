@@ -142,7 +142,7 @@ def gen_mass_data_eagle(fnames,isnaps=[],verbose=True):
             print('Reading datasets ...')
 
         Gas_IDs=snap.read_dataset(0,"ParticleIDs").astype(str)
-        Gas_Masses=snap.read_dataset(0,"Mass")
+        Gas_Masses=snap.read_dataset(0,"Mass")*cgs*a**aexp*h**hexp/Msun_cgs
         Gas_Mass_Zipped=zip(Gas_IDs,Gas_Masses)
 
         if verbose:
