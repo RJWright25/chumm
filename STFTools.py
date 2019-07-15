@@ -760,7 +760,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
         # Verifying particle counts are adequate
         if part_count_2<2 or part_count_1<2:
             if verbose:
-                print(f'Particle count in halo {ihalo_abs} is less than 5 - not processing')
+                print(f'Particle count in halo {ihalo_abs} is less than 2 - not processing')
             # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
             delta_n0.append(np.nan)
             delta_n1.append(np.nan)
@@ -798,6 +798,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                             try:
                                 allstructure_history[str(ipart)]==1#if the particle has been part of structure, note this by invalidating
                                 field_mask_good.append(False)
+                                print('found the bugger!')
                             except:#if the particle is genuinely new to being in any structure, not its index as valid
                                 field_mask_good.append(True)
                         if verbose:
@@ -810,7 +811,9 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                         for ipart in new_particle_IDs:
                             try:
                                 substructure_history[str(ipart)]==1
-                                sub_mask_good.append(False)
+                                sub_mask_good.append(False)                                
+                                print('found the bugger!')
+
                             except:
                                 sub_mask_good.append(True)
                         if verbose:
