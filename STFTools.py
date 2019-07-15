@@ -1285,7 +1285,7 @@ def gen_filename_dataframe(directory):
 
 ########################### ACCRETION RATE LOADER ###########################
 
-def load_accretion_rate(directory,calc_type,snap,depth,span=[],verbose=1):
+def load_accretion_rate(directory,calc_type,isnap,depth,span=[],verbose=1):
     """
 
     load_accretion_rate : function
@@ -1302,8 +1302,8 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],verbose=1):
         0: base
         1: trimmed
     
-    snap : int
-        Snapshot of accretion rate calculation.
+    isnap : int
+        Snapshot index (in halo data) of accretion rate calculation.
 
     span : int
         The span in halo_indices of the calculation (normally n_halos/n_processes).
@@ -1327,19 +1327,19 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],verbose=1):
 
     filename_dataframe=gen_filename_dataframe(directory)
     if span==[]:
-        correct_snap_spans=np.array(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap))]['span'])
+        correct_snap_spans=np.array(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==isnap))]['span'])
         span_new=np.nanmax(correct_snap_spans)
         correct_span=np.absolute(filename_dataframe['span']-span_new)<10
     else:
         span_new==span
         correct_span=filename_dataframe['span']==span
 
-    relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,correct_span))]['filename'])
-    index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,correct_span))]['index1'])
-    index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==snap,filename_dataframe['depth']==depth,correct_span))]['index2'])
+    relevant_files=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==isnap,filename_dataframe['depth']==depth,correct_span))]['filename'])
+    index1=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==isnap,filename_dataframe['depth']==depth,correct_span))]['index1'])
+    index2=list(filename_dataframe.iloc[np.logical_and.reduce((filename_dataframe['type']==calc_type,filename_dataframe['snap']==isnap,filename_dataframe['depth']==depth,correct_span))]['index2'])
     
     if verbose:
-        print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span_new})')
+        print(f'Found {len(relevant_files)} accretion rate files (snap = {isnap}, type = {calc_type}, depth = {depth}, span = {span_new})')
     
     acc_rate_dataframe={'DM_Acc':[],'Gas_Acc':[],'Tot_Acc':[],'fb':[],'dt':[],'halo_index_list':[]}
 
