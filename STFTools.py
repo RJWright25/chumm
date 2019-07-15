@@ -1285,7 +1285,7 @@ def gen_filename_dataframe(directory):
 
 ########################### ACCRETION RATE LOADER ###########################
 
-def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[],append_fields=[],verbose=1):
+def load_accretion_rate(directory,calc_type,snap,depth,span=[],verbose=1):
     """
 
     load_accretion_rate : function
@@ -1308,12 +1308,7 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
     span : int
         The span in halo_indices of the calculation (normally n_halos/n_processes).
 
-    halo_data_snap : dict
-        Halo data dictionary at this snapshot (to add relevant fields).
-    
-    append_fields : list of str
-        List of halo data fields to append to accretion dataframe. 
-    
+
     Returns
 	----------
     filename_dataframe : pd.DataFrame
@@ -1347,9 +1342,6 @@ def load_accretion_rate(directory,calc_type,snap,depth,span=[],halo_data_snap=[]
         print(f'Found {len(relevant_files)} accretion rate files (snap = {snap}, type = {calc_type}, depth = {depth}, span = {span_new})')
     
     acc_rate_dataframe={'DM_Acc':[],'Gas_Acc':[],'Tot_Acc':[],'fb':[],'dt':[],'halo_index_list':[]}
-
-    if halo_data_snap==[]:
-        append_fields=[]
 
     acc_rate_dataframe=df(acc_rate_dataframe)
 
