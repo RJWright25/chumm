@@ -758,7 +758,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
         part_count_2=len(part_IDs_final)
 
         # Verifying particle counts are adequate
-        if part_count_2<5 or part_count_1<5:
+        if part_count_2<2 or part_count_1<2:
             if verbose:
                 print(f'Particle count in halo {ihalo_abs} is less than 5 - not processing')
             # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
@@ -1041,9 +1041,9 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
         part_count_2=len(part_IDs_final)
 
         # Verifying particle counts are adequate
-        if part_count_2<5 or part_count_1<5:
+        if part_count_2<2 or part_count_1<2:
             if verbose:
-                print(f'Particle count in halo {ihalo_abs} is less than 5 - not processing')
+                print(f'Particle count in halo {ihalo_abs} is less than 2 - not processing')
             # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
             delta_m0.append(np.nan)
             delta_m1.append(np.nan)
