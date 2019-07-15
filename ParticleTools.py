@@ -151,11 +151,11 @@ def gen_mass_data_eagle(fnames,isnaps=[],verbose=True):
         Gas_Mass_Dict={str(x):y for x,y in Gas_Mass_Zipped}
         mass_table=[Gas_Mass_Dict,DM_Mass]
 
-        if not os.path.exists('mass_data'):
-            os.mkdir('./mass_data')
-
+    # If the directory with mass data doesn't exist yet, make it (where we have run the python script)
+        if not os.path.isdir("mass_data"):
+            os.mkdir("mass_data")
+        
         fname_out='mass_data/isnap_'+str(isnap).zfill(3)+'_mass_data.dat'
-        print(fname_out)
 
         if os.path.exists(fname_out):
             print('Removing existing mass data ...')

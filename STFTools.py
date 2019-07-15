@@ -918,7 +918,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
     if verbose:
         print("Loading in mass data ... ")
 
-    with open('isnap_'+str(isnap).zfill(3)+'_mass_data.dat','rb') as mass_file:
+    with open('mass_data/isnap_'+str(isnap).zfill(3)+'_mass_data.dat','rb') as mass_file:
         mass_table=pickle.load(mass_file)
         mass_file.close()
 
