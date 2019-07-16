@@ -805,7 +805,6 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                             try:
                                 allstructure_history[str(ipart)]==1#if the particle has been part of structure, note this by invalidating
                                 field_mask_good.append(False)
-                                print('found the bugger, type ',new_particle_Types[i])
 
                             except:#if the particle is genuinely new to being in any structure, not its index as valid
                                 field_mask_good.append(True)
@@ -813,41 +812,35 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                             print('Done cross checking particles for field halo, now compressing - keeping ',np.sum(field_mask_good),' of ',len(new_particle_IDs),' particles')
                         
                         #reduce list to the genuinely unprocessed particles
-                        print('Previous length of particles:',len(new_particle_IDs))
                         new_particle_Types=np.compress(field_mask_good,new_particle_Types)
                         new_particle_IDs=np.compress(field_mask_good,new_particle_IDs)
-                        print('Trimmed length of particles:',len(new_particle_IDs))
 
                     else:#if a subhalo
                         for i,ipart in enumerate(new_particle_IDs):
                             try:
                                 substructure_history[str(ipart)]==1
                                 sub_mask_good.append(False)
-                                print('found the bugger, type ',new_particle_Types[i])
                             except:
                                 sub_mask_good.append(True)
                         if verbose:
                             print('Done cross checking particles for sub halo, now compressing - keeping ',np.sum(sub_mask_good),' of ',len(new_particle_IDs),' particles')
                         
                         #reduce list to unprocessed particles
-                        print('Previous length of particles:',len(new_particle_IDs))
                         new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
                         new_particle_IDs=np.compress(sub_mask_good,new_particle_IDs)
-                        print('Trimmed length of particles:',len(new_particle_IDs))
 
             #### Now we simply count the number of new particles of each type
 
-            delta_n0_temp=np.sum(new_particle_Types==0)
-            delta_n1_temp=np.sum(new_particle_Types==1)
+            delta_n0_temp=int(np.sum(new_particle_Types==0))
+            delta_n1_temp=int(np.sum(new_particle_Types==1))
             delta_n0.append(delta_n0_temp) #append the result to our final array
             delta_n1.append(delta_n1_temp) #append the result to our final array 
 
     ############################# Post-processing accretion calc results #############################
     sim_unit_to_Msun=base_halo_data[0]['UnitInfo']['Mass_unit_to_solarmass']#Simulation mass units in Msun
     h=base_halo_data[isnap]['SimulationInfo']['h_val']
-    a=base_halo_data[isnap]['SimulationInfo']['ScaleFactor']
-    m_0=mass_table[0]*sim_unit_to_Msun*h*a #parttype0 mass in Msun
-    m_1=mass_table[1]*sim_unit_to_Msun*h*a #parttype1 mass in Msun
+    m_0=mass_table[0]*sim_unit_to_Msun/h #parttype0 mass in Msun (PHYSICAL)
+    m_1=mass_table[1]*sim_unit_to_Msun/h #parttype1 mass in Msun (PHYSICAL)
     lt2=base_halo_data[isnap]['SimulationInfo']['LookbackTime']#final lookback time
     lt1=base_halo_data[isnap-depth]['SimulationInfo']['LookbackTime']#initial lookback time
     delta_t=abs(lt1-lt2)#lookback time change from initial to final snapshot (Gyr)
@@ -855,9 +848,9 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
     # Find which particle type is more massive (i.e. DM) and save accretion rates in dictionary
     # 'DM_Acc', 'Gas_Acc' and 'dt' as Msun/Gyr and dt accordingly
     if mass_table[0]>mass_table[1]:
-        delta_m={'DM_Acc':np.array(delta_n0)*m_0/delta_t,'Gas_Acc':np.array(delta_n1)*m_1/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
+        delta_m={'DM_Acc':np.array(delta_n0)*m_0/delta_t,'DM_Acc_n':delta_n0,'Gas_Acc':np.array(delta_n1)*m_1/delta_t,'Gas_Acc_n':delta_n1,'dt':delta_t,'halo_index_list':halo_index_list}
     else:
-        delta_m={'DM_Acc':np.array(delta_n1)*m_1/delta_t,'Gas_Acc':np.array(delta_n0)*m_0/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
+        delta_m={'DM_Acc':np.array(delta_n1)*m_1/delta_t,'DM_Acc_n':delta_n1,'Gas_Acc':np.array(delta_n0)*m_0/delta_t,'Gas_Acc_n':delta_n0,'dt':delta_t,'halo_index_list':halo_index_list}
     
     # Now save all these accretion rates to file (in directory where run /acc_rates)
     # (with filename depending on exact calculation parameters) - snap is the index in halo data
@@ -1043,6 +1036,9 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
     # Initialise outputs
     delta_m0=[]
     delta_m1=[]
+    delta_n0=[]
+    delta_n1=[]
+
     halo_indices_abs=[]
 
     #### Main halo loop
@@ -1065,6 +1061,8 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
             # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
             delta_m0.append(np.nan)
             delta_m1.append(np.nan)
+            delta_n0.append(np.nan)
+            delta_n1.append(np.nan)
 
         # If particle counts are adequate, then continue with calculation. 
         else:
@@ -1086,6 +1084,8 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
                     print('Failed to find particle histories for trimming at isnap = ',isnap-depth-1)
                     delta_m0.append(np.nan)
                     delta_m1.append(np.nan)
+                    delta_n0.append(np.nan)
+                    delta_n1.append(np.nan)
                 
                 else:#if our particle history is valid
                     t1=time.time()
@@ -1130,13 +1130,17 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
                         print('Trimmed length of particles:',len(new_particle_IDs))
 
             #### Now we simply count the number of new particles of each type
-            delta_m1_temp=np.sum(new_particle_Types==1)*mass_table[1]
+            delta_n1_temp=int(np.sum(new_particle_Types==1))
+            delta_m1_temp=delta_n1_temp*mass_table[1]
             print('New DM Mass: ',delta_m1_temp)
 
-            print('Calculating new gas mass ...')
             new_IDs_Gas=np.compress(new_particle_Types==0,new_particle_IDs)
-            new_Mass_Gas=0
+            delta_n0_temp=len(new_IDs_Gas)
+            delta_n0.append(delta_n0_temp) #append the result to our final array
+            delta_n1.append(delta_n1_temp) #append the result to our final array 
 
+            print('Calculating new gas mass ...')
+            new_Mass_Gas=0
             for new_IDs_Gas_temp in new_IDs_Gas:
                 new_Mass_Gas=new_Mass_Gas+gas_mass_dict[str(new_IDs_Gas_temp)]
 
@@ -1152,7 +1156,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
     # Find which particle type is more massive (i.e. DM) and save accretion rates in dictionary
     # 'DM_Acc', 'Gas_Acc' and 'dt' as Msun/Gyr and dt accordingly
 
-    delta_m={'DM_Acc':np.array(delta_m1)/delta_t,'Gas_Acc':np.array(delta_m0)/delta_t,'dt':delta_t,'halo_index_list':halo_index_list}
+    delta_m={'DM_Acc':np.array(delta_m1)/delta_t,'DM_Acc_n':delta_n1,'Gas_Acc':np.array(delta_m0)/delta_t,'Gas_Acc_n':delta_n0,'dt':delta_t,'halo_index_list':halo_index_list}
 
     # Now save all these accretion rates to file (in directory where run /acc_rates)
     # (with filename depending on exact calculation parameters) - snap is the index in halo data
@@ -1367,7 +1371,7 @@ def load_accretion_rate(directory,calc_type,isnap,depth,span=[],verbose=1):
     if verbose:
         print(f'Found {len(relevant_files)} accretion rate files (snap = {isnap}, type = {calc_type}, depth = {depth}, span = {span_new})')
     
-    acc_rate_dataframe={'DM_Acc':[],'Gas_Acc':[],'Tot_Acc':[],'fb':[],'dt':[],'halo_index_list':[]}
+    acc_rate_dataframe={'DM_Acc':[],'DM_Acc_n':[],'Gas_Acc':[],'Gas_Acc_n':[],'Tot_Acc':[],'fb':[],'dt':[],'halo_index_list':[]}
 
     acc_rate_dataframe=df(acc_rate_dataframe)
 
