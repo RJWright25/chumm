@@ -578,6 +578,8 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
             if os.path.exists(parthist_filename_all):
                 print('Removing existing particle histories')
                 os.remove(parthist_filename_all)
+            if os.path.exists(parthist_filename_sub):
+                print('Removing existing particle histories')
                 os.remove(parthist_filename_sub)
 
             with open(parthist_filename_all, 'wb') as parthist_file:
