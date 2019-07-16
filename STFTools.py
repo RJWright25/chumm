@@ -560,18 +560,16 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
 
             #Iterate through the newly identified particles and set a key to True
             for new_part_structure in new_structure_indices:
-                if new_part_structure%100==0:
-                    print('ex particle key: ',str(int(new_part_structure)))
                 all_part_hist[str(int(new_part_structure))]=1
 
             for new_part_substructure in new_substructure_indices:
-                if new_part_substructure%100==0:
-                    print('ex particle key: ',str(int(new_part_substructure)))
                 sub_part_hist[str(int(new_part_substructure))]=1
 
             # Now if our snapshot is above the minimum snap set at the outset
             # we save the boolean lists (of length npart) for this snapshot and move on
+           
             if isnap>=min_snap:
+                print('SAVING')
                 parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all.dat"
                 parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub.dat"
 
