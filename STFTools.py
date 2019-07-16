@@ -571,28 +571,27 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
 
             # Now if our snapshot is above the minimum snap set at the outset
             # we save the boolean lists (of length npart) for this snapshot and move on
-            if isnap in range(no_snaps):
-                if isnap>=min_snap:
-                    parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all.dat"
-                    parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub.dat"
+            if isnap>=min_snap:
+                parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all.dat"
+                parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub.dat"
 
-                    if verbose:
-                        print('Saving histories for snap = ',str(isnap),'to .dat file')
+                if verbose:
+                    print('Saving histories for snap = ',str(isnap),'to .dat file')
 
-                    if os.path.exists(parthist_filename_all):
-                        print('Removing existing particle histories')
-                        os.remove(parthist_filename_all)
-                        os.remove(parthist_filename_sub)
+                if os.path.exists(parthist_filename_all):
+                    print('Removing existing particle histories')
+                    os.remove(parthist_filename_all)
+                    os.remove(parthist_filename_sub)
 
-                    with open(parthist_filename_all, 'wb') as parthist_file:
-                        pickle.dump(all_part_hist, parthist_file)
-                        parthist_file.close()
-                    with open(parthist_filename_sub, 'wb') as parthist_file:
-                        pickle.dump(sub_part_hist, parthist_file)
-                        parthist_file.close()
+                with open(parthist_filename_all, 'wb') as parthist_file:
+                    pickle.dump(all_part_hist, parthist_file)
+                    parthist_file.close()
+                with open(parthist_filename_sub, 'wb') as parthist_file:
+                    pickle.dump(sub_part_hist, parthist_file)
+                    parthist_file.close()
 
-                    if verbose:                    
-                        print('Done saving histories for snap = ',str(isnap),'to .dat file')
+                if verbose:                    
+                    print('Done saving histories for snap = ',str(isnap),'to .dat file')
 
     print('Unique particle histories created')
     return [all_part_hist,sub_part_hist]
