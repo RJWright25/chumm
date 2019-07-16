@@ -558,11 +558,15 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
             running_list_all=np.unique(running_list_all)
             running_list_sub=np.unique(running_list_sub)
 
-            #Iterate through the newly identified particles and set their index to True
+            #Iterate through the newly identified particles and set a key to True
             for new_part_structure in new_structure_indices:
+                if new_part_structure%100==0:
+                    print('ex particle key: ',str(int(new_part_structure)))
                 all_part_hist[str(int(new_part_structure))]=1
 
             for new_part_substructure in new_substructure_indices:
+                if new_part_substructure%100==0:
+                    print('ex particle key: ',str(int(new_part_substructure)))
                 sub_part_hist[str(int(new_part_substructure))]=1
 
             # Now if our snapshot is above the minimum snap set at the outset
@@ -574,6 +578,11 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
 
                     if verbose:
                         print('Saving histories for snap = ',str(isnap),'to .dat file')
+
+                    if os.path.exists(parthist_filename_all):
+                        print('Removing existing particle histories')
+                        os.remove(parthist_filename_all)
+                        os.remove(parthist_filename_sub)
 
                     with open(parthist_filename_all, 'wb') as parthist_file:
                         pickle.dump(all_part_hist, parthist_file)
@@ -794,11 +803,11 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                     sub_mask_good=[]
 
                     if field_bools[ihalo]==True:#if a field halo then we check whether each particle has been part of ANY structure
-                        for ipart in new_particle_IDs:#iterate through each new particle to the halo
+                        for i,ipart in enumerate(new_particle_IDs):
                             try:
                                 allstructure_history[str(ipart)]==1#if the particle has been part of structure, note this by invalidating
                                 field_mask_good.append(False)
-                                print('found the bugger')
+                                print('found the bugger, type ',new_particle_Types[i])
 
                             except:#if the particle is genuinely new to being in any structure, not its index as valid
                                 field_mask_good.append(True)
@@ -812,11 +821,11 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                         print('Trimmed length of particles:',len(new_particle_IDs))
 
                     else:#if a subhalo
-                        for ipart in new_particle_IDs:
+                        for i,ipart in enumerate(new_particle_IDs):
                             try:
                                 substructure_history[str(ipart)]==1
                                 sub_mask_good.append(False)
-                                print('found the bugger')
+                                print('found the bugger, type ',new_particle_Types[i])
                             except:
                                 sub_mask_good.append(True)
                         if verbose:
