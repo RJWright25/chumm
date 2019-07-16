@@ -798,29 +798,35 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                             try:
                                 allstructure_history[str(ipart)]==1#if the particle has been part of structure, note this by invalidating
                                 field_mask_good.append(False)
-                                print('found the bugger!')
+                                print('found the bugger')
+
                             except:#if the particle is genuinely new to being in any structure, not its index as valid
                                 field_mask_good.append(True)
                         if verbose:
                             print('Done cross checking particles for field halo, now compressing - keeping ',np.sum(field_mask_good),' of ',len(new_particle_IDs),' particles')
                         
                         #reduce list to the genuinely unprocessed particles
+                        print('Previous length of particles:',len(new_particle_IDs))
                         new_particle_Types=np.compress(field_mask_good,new_particle_Types)
+                        new_particle_IDs=np.compress(field_mask_good,new_particle_IDs)
+                        print('Trimmed length of particles:',len(new_particle_IDs))
 
                     else:#if a subhalo
                         for ipart in new_particle_IDs:
                             try:
                                 substructure_history[str(ipart)]==1
-                                sub_mask_good.append(False)                                
-                                print('found the bugger!')
-
+                                sub_mask_good.append(False)
+                                print('found the bugger')
                             except:
                                 sub_mask_good.append(True)
                         if verbose:
                             print('Done cross checking particles for sub halo, now compressing - keeping ',np.sum(sub_mask_good),' of ',len(new_particle_IDs),' particles')
                         
                         #reduce list to unprocessed particles
+                        print('Previous length of particles:',len(new_particle_IDs))
                         new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
+                        new_particle_IDs=np.compress(sub_mask_good,new_particle_IDs)
+                        print('Trimmed length of particles:',len(new_particle_IDs))
 
             #### Now we simply count the number of new particles of each type
 
@@ -1084,28 +1090,35 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
                             try:
                                 allstructure_history[str(ipart)]==1#if the particle has been part of structure, note this by invalidating
                                 field_mask_good.append(False)
+                                print('found the bugger')
+
                             except:#if the particle is genuinely new to being in any structure, not its index as valid
                                 field_mask_good.append(True)
                         if verbose:
                             print('Done cross checking particles for field halo, now compressing - keeping ',np.sum(field_mask_good),' of ',len(new_particle_IDs),' particles')
                         
                         #reduce list to the genuinely unprocessed particles
+                        print('Previous length of particles:',len(new_particle_IDs))
                         new_particle_Types=np.compress(field_mask_good,new_particle_Types)
                         new_particle_IDs=np.compress(field_mask_good,new_particle_IDs)
+                        print('Trimmed length of particles:',len(new_particle_IDs))
 
                     else:#if a subhalo
                         for ipart in new_particle_IDs:
                             try:
                                 substructure_history[str(ipart)]==1
                                 sub_mask_good.append(False)
+                                print('found the bugger')
                             except:
                                 sub_mask_good.append(True)
                         if verbose:
                             print('Done cross checking particles for sub halo, now compressing - keeping ',np.sum(sub_mask_good),' of ',len(new_particle_IDs),' particles')
                         
                         #reduce list to unprocessed particles
+                        print('Previous length of particles:',len(new_particle_IDs))
                         new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
                         new_particle_IDs=np.compress(sub_mask_good,new_particle_IDs)
+                        print('Trimmed length of particles:',len(new_particle_IDs))
 
             #### Now we simply count the number of new particles of each type
             delta_m1_temp=np.sum(new_particle_Types==1)*mass_table[1]
