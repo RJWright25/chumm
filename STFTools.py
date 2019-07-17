@@ -381,7 +381,7 @@ def gen_detailed_halo_data(base_halo_data,extra_halo_fields=[],outname='',verbos
 
 ########################### RETRIEVE PARTICLE LISTS ###########################
 
-def get_particle_lists(base_halo_data_snap,add_subparts_to_fofs=False,verbose=1):
+def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_fofs=False,verbose=1):
     
     """
 
@@ -423,7 +423,10 @@ def get_particle_lists(base_halo_data_snap,add_subparts_to_fofs=False,verbose=1)
 
     # particle data
     try:
-        part_data_temp=ReadParticleDataFile(base_halo_data_snap['FilePath'],ibinary=base_halo_data_snap['FileType'],iverbose=0,iparttypes=1)
+        if include_unbound:
+            part_data_temp=ReadParticleDataFile(base_halo_data_snap['FilePath'],ibinary=base_halo_data_snap['FileType'],iverbose=0,iparttypes=1,unbound=True)
+        else: 
+            part_data_temp=ReadParticleDataFile(base_halo_data_snap['FilePath'],ibinary=base_halo_data_snap['FileType'],iverbose=0,iparttypes=1,unbound=False)
         
         if part_data_temp==[]:
             part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
@@ -467,7 +470,7 @@ def get_particle_lists(base_halo_data_snap,add_subparts_to_fofs=False,verbose=1)
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
-def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
+def gen_particle_history_serial(base_halo_data,include_unbound=True,min_snap=0,verbose=1):
 
     """
 
@@ -519,7 +522,7 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
     for isnap in range(no_snaps):
 
         #Load particle data for this snapshot
-        new_particle_data=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=False,verbose=verbose)
+        new_particle_data=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],include_unbound=include_unbound,add_subparts_to_fofs=False,verbose=verbose)
         
         snap_abs=base_halo_data[isnap]["Snap"]
         #if no halos or no new particle data
@@ -569,8 +572,12 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
             # we save the boolean lists (of length npart) for this snapshot and move on
            
             print('SAVING')
-            parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all.dat"
-            parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub.dat"
+            if include_unbound:
+                parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all.dat"
+                parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub.dat"
+            else:
+                parthist_filename_all="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_all_boundonly.dat"
+                parthist_filename_sub="part_histories/snap_"+str(isnap).zfill(3)+"_parthistory_sub_boundonly.dat"                
 
             if verbose:
                 print('Saving histories for snap = ',str(isnap),'to .dat file')
@@ -597,7 +604,7 @@ def gen_particle_history_serial(base_halo_data,min_snap=0,verbose=1):
 
 ########################### GENERATE ACCRETION RATES: constant MASS ###########################
 
-def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
+def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_index_list=[],depth=5,trim_particles=True,include_unbound=True,verbose=1): 
     
     """
 
@@ -666,8 +673,13 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
         snap_reqd=isnap-depth-1#the snap before our initial snap
         try:#check if the files have already been generated
             print('Trying to find particle histories at isnap = ',snap_reqd)
-            parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
-            parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
+            if include_unbound:
+                parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
+                parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
+            else:
+                parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all_boundonly.dat"
+                parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub_boundonly.dat"
+
             with open(parthist_filename_all, 'rb') as parthist_file:
                 allstructure_history=pickle.load(parthist_file)
                 parthist_file.close()
@@ -682,7 +694,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
     ################## Finding initial and final particle lists; organising ##################
 
     if verbose:
-        print('Now generating accretion rates for isnap = ',isnap,' at depth = ',depth,' trimming = ',trim_particles)
+        print('Now generating accretion rates for isnap = ',isnap,' at depth = ',depth,' trimming = ',trim_particles,', using unbound = ',include_unbound)
     
     # Find progenitor index subfunction
     def find_progen_index(index_0,isnap,depth):
@@ -704,12 +716,20 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
         halo_index_list=list(range(n_halos_tot))
 
     # Find and load FINAL snap particle data
-    part_data_2=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=True,verbose=0)
+    if include_unbound:
+        part_data_2=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=True,include_unbound=True,verbose=0)
+    else:
+        part_data_2=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=True,include_unbound=False,verbose=0)
+
     part_data_2_ordered_IDs=[part_data_2['Particle_IDs'][ihalo] for ihalo in halo_index_list] #just retrieve the halos we want
     part_data_2_ordered_Types=[part_data_2['Particle_Types'][ihalo] for ihalo in halo_index_list] #just retrieve the halos we want
 
     # Find and load INITIAL snap particle data (and ensuring they exist)
-    part_data_1=get_particle_lists(base_halo_data_snap=base_halo_data[isnap-depth],add_subparts_to_fofs=True,verbose=0)
+    if include_unbound:
+        part_data_1=get_particle_lists(base_halo_data_snap=base_halo_data[isnap-depth],include_unbound=True,add_subparts_to_fofs=True,verbose=0)
+    else:
+        part_data_1=get_particle_lists(base_halo_data_snap=base_halo_data[isnap-depth],include_unbound=False,add_subparts_to_fofs=True,verbose=0)
+
     if isnap-depth<0 or part_data_1["Npart"]==[]:# if we can't find initial particles
         print('Initial particle lists not found at required depth (isnap = ',isnap-depth,')')
         return []
@@ -858,29 +878,49 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
 
     print('Saving accretion rates to .dat file.')
     if trim_particles:
-        if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-            if verbose:
-                print('Overwriting existing accretion data ...')
-            os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-        with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-            print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-            pickle.dump(delta_m,acc_data_file)
-            acc_data_file.close()
+        if include_unbound:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
+        else:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
     else:
-        if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-            if verbose:
-                print('Overwriting existing accretion data ...')
-            os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-        with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-            print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-            pickle.dump(delta_m,acc_data_file)
-            acc_data_file.close()
+        if include_unbound:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
+        else:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
     #return the delta_m dictionary. 
     return delta_m
 
 ########################### GENERATE ACCRETION RATES: VARYING MASS ###########################
 
-def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,trim_particles=True,verbose=1): 
+def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,trim_particles=True,include_unbound=True,verbose=1): 
     
     """
 
@@ -953,8 +993,13 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
         snap_reqd=isnap-depth-1#the snap before our initial snap
         try:#check if the files have already been generated
             print('Trying to find particle histories at isnap = ',snap_reqd)
-            parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
-            parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
+            if include_unbound:
+                parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
+                parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
+            else:
+                parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all_boundonly.dat"
+                parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub_boundonly.dat"
+
             with open(parthist_filename_all, 'rb') as parthist_file:
                 allstructure_history=pickle.load(parthist_file)
                 parthist_file.close()
@@ -991,12 +1036,20 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
         halo_index_list=list(range(n_halos_tot))
 
     # Find and load FINAL snap particle data
-    part_data_2=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=True,verbose=0)
+    if include_unbound:
+        part_data_2=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=True,include_unbound=True,verbose=0)
+    else:
+        part_data_2=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=True,include_unbound=False,verbose=0)
+
     part_data_2_ordered_IDs=[part_data_2['Particle_IDs'][ihalo] for ihalo in halo_index_list] #just retrieve the halos we want
     part_data_2_ordered_Types=[part_data_2['Particle_Types'][ihalo] for ihalo in halo_index_list] #just retrieve the halos we want
 
     # Find and load INITIAL snap particle data (and ensuring they exist)
-    part_data_1=get_particle_lists(base_halo_data_snap=base_halo_data[isnap-depth],add_subparts_to_fofs=True,verbose=0)
+    if include_unbound:
+        part_data_1=get_particle_lists(base_halo_data_snap=base_halo_data[isnap-depth],add_subparts_to_fofs=True,include_unbound=True,verbose=0)
+    else:
+        part_data_1=get_particle_lists(base_halo_data_snap=base_halo_data[isnap-depth],add_subparts_to_fofs=True,include_unbound=False,verbose=0)
+
     if isnap-depth<0 or part_data_1["Npart"]==[]:# if we can't find initial particles
         print('Initial particle lists not found at required depth (isnap = ',isnap-depth,')')
         return []
@@ -1164,21 +1217,43 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
 
     print('Saving accretion rates to .dat file.')
     if trim_particles:
-        if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-            if verbose:
-                print('Overwriting existing accretion data ...')
-            os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-        with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-            pickle.dump(delta_m,acc_data_file)
-            acc_data_file.close()
+        if include_unbound:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
+        else:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
     else:
-        if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-            if verbose:
-                print('Overwriting existing accretion data ...')
-            os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-        with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-            pickle.dump(delta_m,acc_data_file)
-            acc_data_file.close()
+        if include_unbound:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
+        else:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
     #return the delta_m dictionary. 
     return delta_m
 
