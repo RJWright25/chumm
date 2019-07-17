@@ -1411,9 +1411,11 @@ def load_accretion_rate(directory,calc_type,isnap,depth,span=[],verbose=1):
     directory : str
         Where to search for accretion rate files.
 
-    calc_type : int or bool
+    calc_type : int
         0: base
         1: trimmed
+        2: base (bound only)
+        3: trimmed (bound only)
     
     isnap : int
         Snapshot index (in halo data) of accretion rate calculation.
