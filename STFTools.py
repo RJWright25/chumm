@@ -1364,7 +1364,7 @@ def gen_filename_dataframe(directory):
 
     #initialise results
     snaps=[]
-    base_or_trim=[]
+    calctype=[]
     depths=[]
     halo_range_1=[]
     halo_range_2=[]
@@ -1374,7 +1374,15 @@ def gen_filename_dataframe(directory):
     for filename in desired_file_list:
         file_split=filename.split('_')
         snaps.append(int(file_split[1]))
-        base_or_trim.append(int(file_split[3][0]=="t"))
+        if file_split[3]=="base":
+            calctype_temp=0
+        elif file_split[3]=="trimmed":
+            calctype_temp=1
+        elif file_split[3]=="base2":
+            calctype_temp=2
+        elif file_split[3]=="trimmed2":
+            calctype_temp=2
+        calctype.append(calctype_temp)
         depths.append(int(file_split[4][-1]))
         halo_range_temp=np.array(file_split[5][:-4].split('-')).astype(int)
         halo_range_1.append(halo_range_temp[0])
@@ -1382,7 +1390,7 @@ def gen_filename_dataframe(directory):
         spans.append(halo_range_temp[1]-halo_range_temp[0]+1)
 
     #create data frame and order according to type, depth, then snap
-    filename_dataframe={'filename':desired_file_list,'snap':snaps,'type':base_or_trim,'depth':depths,'index1':halo_range_1,'index2':halo_range_2,'span':spans}
+    filename_dataframe={'filename':desired_file_list,'snap':snaps,'type':calctype,'depth':depths,'index1':halo_range_1,'index2':halo_range_2,'span':spans}
     filename_dataframe=df(filename_dataframe)
     filename_dataframe=filename_dataframe.sort_values(by=['type','depth','snap','span','index1'])
 
