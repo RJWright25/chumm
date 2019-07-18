@@ -146,13 +146,14 @@ def gen_mass_data_eagle(fnames,isnaps=[],verbose=True):
         Baryon_IDs.extend(snap.read_dataset(4,"ParticleIDs").astype(str))#star particles
         Baryon_Masses=snap.read_dataset(0,"Mass")*cgs*a**aexp*h**hexp/Msun_cgs# gas particles
         Baryon_Masses.extend(snap.read_dataset(4,"Mass")*cgs*a**aexp*h**hexp/Msun_cgs)#star particles
-        
-        Gas_Mass_Zipped=zip(Baryon_IDs,Baryon_Masses)
+        Baryon_SFRs=snap.read_dataset(0,"StarFormationRate")#gasSFR
+        Baryon_SFRs.extend(list(np.ones(snap.numpart_total[4])*-1))
+        Gas_Mass_Zipped=zip(Baryon_IDs,Baryon_Masses,Baryon_SFRs)
 
         if verbose:
             print('Creating dictionary ...')
 
-        Gas_Mass_Dict={str(x):y for x,y in Gas_Mass_Zipped}
+        Gas_Mass_Dict={str(x):[y,z] for x,y,z in Gas_Mass_Zipped}
         mass_table=[Gas_Mass_Dict,DM_Mass]
 
     # If the directory with mass data doesn't exist yet, make it (where we have run the python script)
