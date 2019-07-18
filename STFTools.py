@@ -1381,7 +1381,7 @@ def gen_filename_dataframe(directory):
         elif file_split[3]=="base2":
             calctype_temp=2
         elif file_split[3]=="trimmed2":
-            calctype_temp=2
+            calctype_temp=3
         calctype.append(calctype_temp)
         depths.append(int(file_split[4][-1]))
         halo_range_temp=np.array(file_split[5][:-4].split('-')).astype(int)
