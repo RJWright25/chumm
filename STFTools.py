@@ -1195,7 +1195,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
             print('Calculating new gas mass ...')
             new_Mass_Baryon=0
             for new_IDs_Baryon_temp in new_IDs_Baryon:
-                new_Mass_Baryon=new_Mass_Baryon+gas_mass_dict[str(new_IDs_Gas_temp)]
+                new_Mass_Baryon=new_Mass_Baryon+gas_mass_dict[str(new_IDs_Baryon_temp)]
 
             delta_m0_temp=new_Mass_Gas
             delta_m0.append(delta_m0_temp) #append the result to our final array
