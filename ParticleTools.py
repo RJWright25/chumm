@@ -125,6 +125,7 @@ def gen_mass_data_eagle(fnames,isnaps=[],verbose=True):
 
         if verbose:
             print ("# Total number of gas particles in snapshot = %d" % snap.numpart_total[0])
+            print ("# Total number of star particles in snapshot = %d" % snap.numpart_total[4])
             print ("# Total number of DM particles in snapshot = %d" % snap.numpart_total[1])
 
         fh5py=h5py.File(fname)
