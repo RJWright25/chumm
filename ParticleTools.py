@@ -115,8 +115,8 @@ def gen_mass_data_eagle(fnames,isnaps=[],verbose=True):
     else:
         isnaps=list(isnaps)
 
-    for i,fname in enumerate(fnames):
-        isnap=isnaps[i]
+    for i,isnap in enumerate(isnaps):
+        fname=fnames[isnap]
         print('Creating mass data for isnap = ',isnap,' ...')
         print('File: ',fname)
 
