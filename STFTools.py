@@ -470,7 +470,7 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
-def gen_particle_history_serial(base_halo_data,include_unbound=True,min_snap=0,verbose=1):
+def gen_particle_history_serial(base_halo_data,isnaps=[],include_unbound=True,verbose=1):
 
     """
 
@@ -482,19 +482,20 @@ def gen_particle_history_serial(base_halo_data,include_unbound=True,min_snap=0,v
 	Parameters
 	----------
     base_halo_data : list of dictionaries
-        The halo data list of dictionaries previously generated. The particle histories 
-        are created as per the snaps contained in this list. 
+        The halo data list of dictionaries previously generated (by gen_base_halo_data).
 
-    min_snap : int
-        The snap after which to save particle histories (here to save memory).
+    isnap : list of ints
+        The snaps for which we will add particles in halos or subhalos (and save accordingly).
+
+    include_unbound : bool
+        Flag indicating whether or not to include the unbound particles from the vr outputs. 
 
 	Returns
 	----------
-    {'all_ids':running_list_all,'sub_ids':running_list_sub} : dict (of dict)
-        Dictionary of particle lists which have ever been part of any halo and those which 
-        have been part of a subhalo at any point up to the last snap in the base_halo_data array.
-        This data is saved for each snapshot on the way in a np.pickle file in the directory "part_histories"
-
+    all_part_hist,sub_part_hist : tuple of dictionaries
+        all_part_hist : dictionary with keys being the string of each particle ID found to be in structure up to the last snap in isnaps
+        sub_part_hist : dictionary with keys being the string of each particle ID found to be in substructure up to the last snap in isnaps
+        
 	"""
 
     ###### WILL SAVE TO FILE PARTICLE HISTORIES WITH FORM: part_histories/snap_xxx_parthistory_all.dat and part_histories/snap_xxx_parthistory_sub.dat
@@ -506,11 +507,14 @@ def gen_particle_history_serial(base_halo_data,include_unbound=True,min_snap=0,v
     except:
         print("Invalid halo data")
 
+    if isnaps==[]:
+        isnaps=list(range(no_snaps))
+
     # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
     if not os.path.isdir("part_histories"):
         os.mkdir("part_histories")
 
-    print('Generating particle histories up to snap = ',no_snaps)
+    print('Starting at snap = ',isnap[0])
 
     running_list_all=[]
     running_list_sub=[]
@@ -519,11 +523,10 @@ def gen_particle_history_serial(base_halo_data,include_unbound=True,min_snap=0,v
 
     # for each snapshot which is included in base_halo_data get the particle data and add to the running list
 
-    for isnap in range(no_snaps):
+    for isnap in isnaps:
 
         #Load particle data for this snapshot
         new_particle_data=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],include_unbound=include_unbound,add_subparts_to_fofs=False,verbose=verbose)
-        
         snap_abs=base_halo_data[isnap]["Snap"]
         #if no halos or no new particle data
         if len(new_particle_data['Particle_IDs'])==0 or len(base_halo_data[isnap]['hostHaloID'])<2:
@@ -538,22 +541,22 @@ def gen_particle_history_serial(base_halo_data,include_unbound=True,min_snap=0,v
             n_halos_snap=len(base_halo_data[isnap]['hostHaloID'])# Number of halos at this snap
             sub_bools=base_halo_data[isnap]['hostHaloID']>0 #Boolean mask indicating which halos are subhalos
 
-            if np.sum(sub_bools)<2:
+            if np.sum(sub_bools)<1:#if we have no subhalos, create empty particle list
                 sub_halos_plist=[]
-            else:
+            else:#if we have subhalos, go through each and add the particle list in order for each
                 sub_halos_plist=[]
                 for ihalo,plist in enumerate(new_particle_data['Particle_IDs']):
                     if sub_bools[ihalo]:
                         sub_halos_plist.append(plist)
-                sub_halos_plist=np.concatenate(sub_halos_plist)
+                sub_halos_plist=np.concatenate(sub_halos_plist)#flatten the list of particle ids in substructure at this snap
 
-            all_halos_plist=np.concatenate(new_particle_data['Particle_IDs'])
+            all_halos_plist=np.concatenate(new_particle_data['Particle_IDs'])#flatten the list of all particle ids in any halo for the list of particles in any structure
 
             # Find the particles new to structure or substructure
-            new_structure_indices=np.array(np.compress(np.logical_not(np.in1d(all_halos_plist,running_list_all)),all_halos_plist))
-            new_substructure_indices=np.array(np.compress(np.logical_not(np.in1d(sub_halos_plist,running_list_sub)),sub_halos_plist))
+            new_structure_indices=np.array(np.compress(np.logical_not(np.in1d(all_halos_plist,running_list_all)),all_halos_plist))# list only the new particles 
+            new_substructure_indices=np.array(np.compress(np.logical_not(np.in1d(sub_halos_plist,running_list_sub)),sub_halos_plist))# list only the new particles 
 
-            # Add all these particles to the running list from all the previous snaps
+            # Add all the particles to the running list from the previous snaps
             running_list_all=np.concatenate([running_list_all,all_halos_plist])
             running_list_sub=np.concatenate([running_list_sub,sub_halos_plist])
 
@@ -561,7 +564,7 @@ def gen_particle_history_serial(base_halo_data,include_unbound=True,min_snap=0,v
             running_list_all=np.unique(running_list_all)
             running_list_sub=np.unique(running_list_sub)
 
-            #Iterate through the newly identified particles and set a key to True
+            #Iterate through the newly identified particles and set their ID key to True
             for new_part_structure in new_structure_indices:
                 all_part_hist[str(int(new_part_structure))]=1
 
@@ -600,7 +603,7 @@ def gen_particle_history_serial(base_halo_data,include_unbound=True,min_snap=0,v
                 print('Done saving histories for snap = ',str(isnap),'to .dat file')
 
     print('Unique particle histories created')
-    return [all_part_hist,sub_part_hist]
+    return all_part_hist,sub_part_hist
 
 ########################### GENERATE ACCRETION RATES: constant MASS ###########################
 
