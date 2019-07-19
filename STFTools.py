@@ -495,7 +495,7 @@ def gen_particle_history_serial(base_halo_data,isnaps=[],include_unbound=True,ve
     all_part_hist,sub_part_hist : tuple of dictionaries
         all_part_hist : dictionary with keys being the string of each particle ID found to be in structure up to the last snap in isnaps
         sub_part_hist : dictionary with keys being the string of each particle ID found to be in substructure up to the last snap in isnaps
-        
+
 	"""
 
     ###### WILL SAVE TO FILE PARTICLE HISTORIES WITH FORM: part_histories/snap_xxx_parthistory_all.dat and part_histories/snap_xxx_parthistory_sub.dat
@@ -1190,7 +1190,7 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
             delta_m1_temp=delta_n1_temp*mass_table[1]
             print('New DM Mass: ',delta_m1_temp)
             new_gas_mask=new_particle_Types==0
-            new_IDs_Baryon=np.compress(new_gas_mask),new_particle_IDs)
+            new_IDs_Baryon=np.compress(new_gas_mask,new_particle_IDs)
             delta_n0_temp=len(new_IDs_Gas)
             delta_n0.append(delta_n0_temp) #append the result to our final array
             delta_n1.append(delta_n1_temp) #append the result to our final array 
@@ -1476,5 +1476,3 @@ def load_accretion_rate(directory,calc_type,isnap,depth,span=[],verbose=1):
 
     return acc_rate_dataframe
         
-
-
