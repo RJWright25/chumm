@@ -143,9 +143,7 @@ def gen_mass_data_eagle(fnames,isnaps=[],verbose=True):
             print('Reading datasets ...')
 
         Baryon_IDs=snap.read_dataset(0,"ParticleIDs").astype(str)#gas particles
-        Baryon_IDs.extend(snap.read_dataset(4,"ParticleIDs").astype(str))#star particles
         Baryon_Masses=snap.read_dataset(0,"Mass")*cgs*a**aexp*h**hexp/Msun_cgs# gas particles
-        Baryon_Masses.extend(snap.read_dataset(4,"Mass")*cgs*a**aexp*h**hexp/Msun_cgs)#star particles
         Gas_Mass_Zipped=zip(Baryon_IDs,Baryon_Masses)
 
         if verbose:
