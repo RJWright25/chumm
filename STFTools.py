@@ -514,7 +514,7 @@ def gen_particle_history_serial(base_halo_data,isnaps=[],include_unbound=True,ve
     if not os.path.isdir("part_histories"):
         os.mkdir("part_histories")
 
-    print('Starting at snap = ',isnap[0])
+    print('Starting at snap = ',isnaps[0])
 
     running_list_all=[]
     running_list_sub=[]
