@@ -1173,7 +1173,6 @@ def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,tri
                             try:
                                 substructure_history[str(ipart)]==1
                                 sub_mask_good.append(False)
-                                print('found the bugger')
                             except:
                                 sub_mask_good.append(True)
                         if verbose:
