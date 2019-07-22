@@ -931,7 +931,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
     return delta_m
 ########################### GENERATE ACCRETION RATES: VARYING MASS ###########################
 
-def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,trim_particles=True,trim_unbound=True,include_unbound=True,,verbose=1): 
+def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,trim_particles=True,trim_unbound=True,include_unbound=True,verbose=1): 
     
     """
 
