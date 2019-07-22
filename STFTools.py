@@ -607,7 +607,7 @@ def gen_particle_history_serial(base_halo_data,isnaps=[],include_unbound=True,ve
 
 ########################### GENERATE ACCRETION RATES: constant MASS ###########################
 
-def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_index_list=[],depth=5,trim_particles=True,include_unbound=True,verbose=1): 
+def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_index_list=[],depth=5,trim_particles=True,trim_unbound=True,include_unbound=True,verbose=1): 
     
     """
 
@@ -676,7 +676,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
         snap_reqd=isnap-depth-1#the snap before our initial snap
         try:#check if the files have already been generated
             print('Trying to find particle histories at isnap = ',snap_reqd)
-            if include_unbound:
+            if trim_unbound:
                 parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
                 parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
             else:
@@ -881,7 +881,7 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
 
     print('Saving accretion rates to .dat file.')
     if trim_particles:
-        if include_unbound:
+        if include_unbound and trim_unbound:
             if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
                 if verbose:
                     print('Overwriting existing accretion data ...')
@@ -890,13 +890,22 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                 print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
                 pickle.dump(delta_m,acc_data_file)
                 acc_data_file.close()
-        else:
+        elif not include_unbound and not trim_unbound:
             if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
                 if verbose:
                     print('Overwriting existing accretion data ...')
                 os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
             with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
                 print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+                pickle.dump(delta_m,acc_data_file)
+                acc_data_file.close()
+        elif include_unbound and not trim_unbound:
+            if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed3_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
+                if verbose:
+                    print('Overwriting existing accretion data ...')
+                os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed3_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
+            with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed3_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
+                print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed3_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
                 pickle.dump(delta_m,acc_data_file)
                 acc_data_file.close()
     else:
@@ -920,7 +929,6 @@ def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_ind
                 acc_data_file.close()
     #return the delta_m dictionary. 
     return delta_m
-
 ########################### GENERATE ACCRETION RATES: VARYING MASS ###########################
 
 def gen_accretion_rate_eagle(base_halo_data,isnap,halo_index_list=[],depth=5,trim_particles=True,trim_unbound=True,include_unbound=True,,verbose=1): 
