@@ -18,32 +18,18 @@ def read_n_part(fname,sim_type):
     """
     read_n_part : function
 	----------
-    Return the number of particles in a SWIFT or GADGET simulation.
+    Return the number of particles in a SWIFT, GADGET or EAGLE simulation.
 		
 	Parameters
 	----------
 	fname : str 
         The file string of the snapshot file. 
 
-    sim_type : string 
-		Which type of simulation ("GADGET" OR "SWIFT").
-
 	"""
 
     temp_file=h5py.File(fname)
-
-    if sim_type=='SWIFT':
-        n_0=len(temp_file['PartType0']['Masses'])
-        n_1=len(temp_file['PartType1']['Masses'])
-        npart=n_0+n_1
-        return int(npart)
-
-    elif sim_type=='GADGET':
-        npart=int(np.sum(temp_file['Header'].attrs['NumPart_Total']))
-        return int(npart)
-    else:
-        print('Please enter valid simulation string.')
-        return []
+    npart=temp_file['Header'].attrs['NumPart_Total']
+    return npart
 
 ########################### READ MASS TABLE ###########################
 
