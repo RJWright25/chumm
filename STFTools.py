@@ -588,20 +588,18 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         ###carrying over the old data
         for itype in range(len(N_Particles_FRESH)):#per type array
             print('Carrying over data for ',Part_Names[itype])
-            Processed_L1_IDs_PREV=np.compress(Processed_Flags_PREV[itype]['Processed_L1'],Processed_Flags_PREV[itype]['ParticleID'])
+            print('Finding which particles were processed previously ...')
+            Processed_L1_indices_PREV=np.where(Processed_Flags_PREV[itype]['Processed_L1'])[0]
+            print('Done finding previously processed particles')
             i=0
-            for Processed_L1_ID_PREV_temp in Processed_L1_IDs_PREV:
+            for sortedindex_PREV_temp in Processed_L1_indices_PREV:
                 i=i+1
                 if i%10000:
-                    print(i/len(Processed_L1_IDs_PREV)*100,' % done transferring L1 particles')
+                    print(i/len(Processed_L1_indices_PREV)*100,' % done transferring L1 particles')
                 
-                L2_index_FRESH_temp=np.searchsorted(Processed_Flags_FRESH[itype]['ParticleID'],Processed_L1_ID_PREV_temp)
-                Processed_Flags_FRESH[itype]['Processed_L1']=1
-
-
-
-
-
+                Processed_L1_ID_temp=Processed_Flags_PREV[itype]['ParticleID'][sortedindex_PREV_temp]
+                sortedindex_FRESH_temp=np.searchsorted(Processed_Flags_FRESH[itype]['ParticleID'],Processed_L1_ID_temp)#assuming the ID is in there
+                Processed_Flags_FRESH[itype]['Processed_L1'][sortedindex_FRESH_temp]=1
 
         isnap=isnap+1
 
