@@ -551,13 +551,22 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     isnap=0
     # for the desired snapshots in base_halo_data, get the particle data and add to the running list
     for snap in [6]:
-        #load new snap data
 
+        ###recall old flag arrays
+        if isnap==0:
+            Processed_Flags_PREV=[df(np.columnstack((0,0,0,0)),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(N_Particles_FRESH))]
+        else:
+            Processed_Flags_PREV=Processed_Flags_FRESH
+
+        #load new snap data
         if base_halo_data[snap]['Part_FileType']=='EAGLE': 
             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
+            print('Reading EAGLE snap data ...')
             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
             Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
+            print('Finished with EAGLE snap data ...')
+
         else:
             h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
             Particle_IDs_FRESH=[h5py_Snap['PartType'+str(itype)+'/ParticleIDs'] for itype in PartTypes]
@@ -565,7 +574,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         N_Particles_FRESH=[len(Particle_IDs_FRESH[itype]) for itype in range(len(Particle_IDs_FRESH))]
 
         ###initialise our new flag arrays
-        Processed_Flags_FRESH=[df(np.columnstack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(N_Particles_FRESH))]
+        print('Sorting by IDs ...')
+        Processed_Flags_FRESH=[df(np.column_stack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(N_Particles_FRESH))]
+        
+        for Processed_Flags_FRESH_itype in Processed_Flags_FRESH:
+            Particle_IDs_NEW_SORTED=Processed_Flags_FRESH_itype['ParticleID'] ##### ASSUMING THEY'RE SORTED!!
 
     return Processed_Flags_FRESH
 
