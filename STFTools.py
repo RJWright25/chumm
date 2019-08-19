@@ -235,7 +235,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 ########################### ADD DETAILED HALO DATA ###########################
 
-def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[],outname='',verbose=True):
+def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[],verbose=True):
     
     """
     
@@ -257,16 +257,12 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
 
     extra_halo_fields : list of str
 
-        List of keys to add to halo data. Currently just supports 'R_rel', 'N_Peers.
-
-    outname : str
-
-        Suffix for halo data to be saved as. 
+        List of keys to add to halo data. Currently just supports 'R_rel', 'N_Peers'.
 
     Returns
     --------
 
-    detailed_vrhalodata_outname : list of dict
+    V3_HaloData_outname.dat : list of dict
 
     A list (for each snap desired) of dictionaries which contain halo data with the following fields:
         'ID'
@@ -294,7 +290,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
 	"""
     no_snaps_tot=len(base_halo_data)
 
-    # If we're not given extra halo fields, read all the available halo data
+    # If we're not given vr halo fields, read all the available halo data
     if vr_halo_fields==[]:
         snap_try=-1 
         found=False
@@ -394,7 +390,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
     if verbose:
         print('Saving full halo data to file ...')
 
-    outfilename='V3_HaloData_'+outname+'.dat'
+    outfilename='V3_HaloData_'+base_halo_data[-2]['outname']+'.dat'
 
     # Save data to file (remove if path already exists)
     if path.exists(outfilename):
