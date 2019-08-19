@@ -552,11 +552,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
     isnap=0
     # for the desired snapshots in base_halo_data, get the particle data and add to the running list
-    for snap in [6]:
+    for snap in [len(base_halo_data)]:
 
         ###recall old flag arrays
         if isnap==0:
-            Processed_Flags_PREV=[df(np.column_stack((0,0,0,0)),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(PartTypes))]
+            Processed_Flags_PREV=[df(np.column_stack((0,0,0,0)),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID']) for itype in range(len(PartTypes))]
         else:
             Processed_Flags_PREV=Processed_Flags_FRESH
 
