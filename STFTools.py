@@ -562,10 +562,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         if base_halo_data[snap]['Part_FileType']=='EAGLE': 
             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
-            print('Reading EAGLE snap data ...')
+            print('Reading & slicing EAGLE snap data ...')
             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
             Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
             print('Finished with EAGLE snap data ...')
+            print(np.array(Particle_IDs_FRESH[0]))
 
         else:
             h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
