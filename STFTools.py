@@ -552,7 +552,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
     isnap=0
     # for the desired snapshots in base_halo_data, get the particle data and add to the running list
-    for snap in [len(base_halo_data)]:
+    for snap in [28]:
 
         ###recall old flag arrays
         if isnap==0:
