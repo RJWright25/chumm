@@ -554,7 +554,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         ###recall old flag arrays
         if isnap==0:
-            Processed_Flags_PREV=[df(np.columnstack((0,0,0,0)),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(N_Particles_FRESH))]
+            Processed_Flags_PREV=[df(np.columnstack((0,0,0,0)),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(PartTypes))]
         else:
             Processed_Flags_PREV=Processed_Flags_FRESH
 
