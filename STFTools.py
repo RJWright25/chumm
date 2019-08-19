@@ -189,7 +189,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             halo_data_all[isnap]['Part_FileType']=partdata_filetype
             halo_data_all[isnap]['outname']=outname
             halo_data_all[isnap]['Snap']=snap
-            halo_data_all[isnap]['BoxSize_Comoving']=halo_data_all[isnap]['SimulationInfo']['Period']/scale_factor
+            halo_data_all[isnap]['SimulationInfo']['BoxSize_Comoving']=halo_data_all[isnap]['SimulationInfo']['Period']/scale_factor
             halo_data_output.append(halo_data_all[isnap])
         else:
             halo_data_output.append({'Snap':snap,'Part_FilePath':part_list[snap],'Part_FileType':partdata_filetype})
