@@ -562,6 +562,9 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         print(Processed_Flags_PREV[0])
 
+        print(snap)
+        print(base_halo_data[snap])
+
         #load new snap data
         if base_halo_data[snap]['Part_FileType']=='EAGLE': 
             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
