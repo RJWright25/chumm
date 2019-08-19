@@ -316,12 +316,12 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
         print(np.array(vr_halo_fields))
 
     new_halo_data=[]
-    V1_fields=list(base_halo_data[snap_try].keys())
-    V1_fields_needed=np.compress(np.logical_not(np.in1d(V1_fields,vr_halo_fields)),V1_fields)
+    base_fields=list(base_halo_data[snap_try].keys())
+    fields_needed=np.compress(np.logical_not(np.in1d(base_fields,vr_halo_fields)),base_fields)
 
     if verbose:
         print('Will also collect the following fields from base halo data:')
-        print(np.array(V1_fields_needed))
+        print(np.array(fields_needed))
 
     # Loop through each snap and add the extra fields
     for snap,base_halo_data_snap in enumerate(base_halo_data):
@@ -344,7 +344,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
         if verbose:
             print(f'Adding fields from base halo data')
 
-        for field in V1_fields_needed:
+        for field in fields_needed:
             new_halo_data_snap[field]=base_halo_data[snap][field]
         
         # Add extra halo fields -- post-process velociraptor files   
