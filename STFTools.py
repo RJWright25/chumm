@@ -552,8 +552,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
     isnap=0
     # for the desired snapshots in base_halo_data, get the particle data and add to the running list
-    for snap in [28]:
-
+    for snap in [27,28]:
+        print(f'Processing for snap = {snap}')
         ###recall old flag arrays
         if isnap==0:
             Processed_Flags_PREV=[df(np.column_stack((0,0,0,0)),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID']) for itype in range(len(PartTypes))]
@@ -583,6 +583,27 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         Processed_Flags_FRESH=[df(np.column_stack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2'],dtype=int).sort_values(['ParticleID']) for itype in range(len(N_Particles_FRESH))]
         t2=time.time()
         print(f'Finished sorting by IDs in {t2-t1} sec')
+
+        ###carrying over the old data
+        for itype in range(len(N_Particles_FRESH)):#per type array
+            print('At itype ',itype)
+            print('Finding which particles continued')
+            Particle_IDs_which_proceeded_mask=np.in1d(Processed_Flags_PREV[itype]['ParticleID'],Processed_Flags_FRESH[itype]['ParticleID'])#mask for prev particle IDs which continued
+            print(f'Found which particles continued: {np.sum(Particle_IDs_which_proceeded_mask)/len(Particle_IDs_which_proceeded_mask)*100}%')
+            for ipart_PREV,Particle_ID_PREV in enumerate(Processed_Flags_PREV[itype]['ParticleID']):
+                if ipart_PREV%1000==0:
+                    print(ipart_PREV/len(Processed_Flags_PREV[itype]['ParticleID'])*100,' % done with particles')
+                if Particle_IDs_which_proceeded_mask[ipart_PREV]:
+                    ipart_flag_l1=Processed_Flags_PREV[itype]['Processed_L1'][ipart_PREV]
+                    ipart_flag_l2=Processed_Flags_PREV[itype]['Processed_L2'][ipart_PREV]
+                    if ipart_flag_l1:
+                        ipart_FRESH=np.searchsorted(Processed_Flags_FRESH[itype]['ParticleID'],Particle_ID_PREV)
+                        Processed_Flags_FRESH[itype]['Processed_L1'][ipart_FRESH]=1
+                        if ipart_flag_l2:
+                            Processed_Flags_FRESH[itype]['Processed_L2'][ipart_FRESH]=1
+                else:
+                    continue
+
 
     return Processed_Flags_FRESH
 
