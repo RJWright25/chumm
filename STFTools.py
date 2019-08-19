@@ -597,10 +597,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             Processed_L1_IDs=[]
             for sortedindex_PREV_temp in Processed_L1_indices_PREV:
                 i=i+1
-                if i%10000:
+                if i%10000==0:
                     print(i/len(Processed_L1_indices_PREV)*100,' % done finding L1 particle IDs')
                 Processed_L1_IDs.append(Processed_Flags_PREV[itype]['ParticleID'][sortedindex_PREV_temp])
-            
+
         isnap=isnap+1
 
     return Processed_Flags_FRESH
