@@ -545,6 +545,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     if not os.path.isdir("part_histories"):
         os.mkdir("part_histories")
     
+    Part_Names=['Gas','DM','Stars']
     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
         PartTypes=[0,1,4] #Gas, DM, Stars
     else:
@@ -580,30 +581,28 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         ###initialise our new flag arrays
         print('Sorting by IDs ...')
         t1=time.time()
-        Processed_Flags_FRESH=[df(np.column_stack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2'],dtype=int).sort_values(['ParticleID']) for itype in range(len(N_Particles_FRESH))]
+        Processed_Flags_FRESH=[df(np.column_stack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.ones(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2'],dtype=int).sort_values(['ParticleID']) for itype in range(len(N_Particles_FRESH))]
         t2=time.time()
-        print(f'Finished sorting by IDs in {t2-t1} sec')
-
+        print(f'Finished sorting by IDs in {t2-t1} sec')#now we have new sorted IDs and their indices!
+        
         ###carrying over the old data
         for itype in range(len(N_Particles_FRESH)):#per type array
-            print('At itype ',itype)
-            print('Finding which particles continued')
-            print(len(Processed_Flags_PREV[itype]['ParticleID']),len(Processed_Flags_FRESH[itype]['ParticleID']))
-            Particle_IDs_which_proceeded_mask=np.in1d(Processed_Flags_PREV[itype]['ParticleID'],Processed_Flags_FRESH[itype]['ParticleID'])#mask for prev particle IDs which continued
-            print(f'Found which particles continued: {np.sum(Particle_IDs_which_proceeded_mask)/len(Particle_IDs_which_proceeded_mask)*100}%')
-            for ipart_PREV,Particle_ID_PREV in enumerate(Processed_Flags_PREV[itype]['ParticleID']):
-                if ipart_PREV%1000==0:
-                    print(ipart_PREV/len(Processed_Flags_PREV[itype]['ParticleID'])*100,' % done with particles')
-                if Particle_IDs_which_proceeded_mask[ipart_PREV]:
-                    ipart_flag_l1=Processed_Flags_PREV[itype]['Processed_L1'][ipart_PREV]
-                    ipart_flag_l2=Processed_Flags_PREV[itype]['Processed_L2'][ipart_PREV]
-                    if ipart_flag_l1:
-                        ipart_FRESH=np.searchsorted(Processed_Flags_FRESH[itype]['ParticleID'],Particle_ID_PREV)
-                        Processed_Flags_FRESH[itype]['Processed_L1'][ipart_FRESH]=1
-                        if ipart_flag_l2:
-                            Processed_Flags_FRESH[itype]['Processed_L2'][ipart_FRESH]=1
-                else:
-                    continue
+            print('Carrying over data for ',Part_Names[itype])
+            Processed_L1_IDs_PREV=np.compress(Processed_Flags_PREV[itype]['Processed_L1'],Processed_Flags_PREV[itype]['ParticleID'])
+            i=0
+            for Processed_L1_ID_PREV_temp in Processed_L1_IDs_PREV:
+                i=i+1
+                if i%10000:
+                    print(i/len(Processed_L1_ID_PREV_temp)*100,' % done transferring L1 particles')
+                
+                L2_index_FRESH_temp=np.searchsorted(Processed_Flags_FRESH[itype]['ParticleID'],Processed_L1_ID_PREV_temp)
+                Processed_Flags_FRESH[itype]['Processed_L1']=1
+
+
+
+
+
+
         isnap=isnap+1
 
     return Processed_Flags_FRESH
