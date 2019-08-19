@@ -190,7 +190,6 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             halo_data_all[isnap]['outname']=outname
             halo_data_all[isnap]['Snap']=snap
             halo_data_output.append(halo_data_all[isnap])
-            isnap=isnap+1
         else:
             halo_data_output.append(snap)
 
