@@ -567,8 +567,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         ###initialise our new flag arrays
         Processed_Flags_FRESH=[df(np.columnstack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(N_Particles_FRESH))]
 
-    print('Unique particle histories created')
-
+    return Processed_Flags_FRESH
 
 
 
