@@ -4,15 +4,17 @@
 
 #*** Preamble ***
 import os
-from os import path
 import numpy as np
 import h5py
 import pickle
-from pandas import DataFrame as df
 import astropy.units as u
+import read_eagle
+import time
+
 from astropy.cosmology import FlatLambdaCDM,z_at_value
 from scipy.spatial import KDTree
-import read_eagle
+from pandas import DataFrame as df
+from os import path
 
 # VELOCIraptor python tools 
 from VRPythonTools import *
@@ -575,9 +577,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         ###initialise our new flag arrays
         print('Sorting by IDs ...')
+        t1=time.time()
         Processed_Flags_FRESH=[df(np.column_stack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2'],dtype=int).sort_values(['ParticleID']) for itype in range(len(N_Particles_FRESH))]
-        print('Finished sorting by IDs')
-        
+        t2=time.time()
+        print(f'Finished sorting by IDs in {t2-t1} sec')
         print(Processed_Flags_FRESH[0])
 
     return Processed_Flags_FRESH
