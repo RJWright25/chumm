@@ -528,7 +528,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     # Will save to file at: part_histories/PartTypeX_History_xxx-outname.dat
     # Snaps
     if snaps==[]:
-        snaps=snaps=list(range(no_snaps))
+        snaps=list(range(len(base_halo_data)))
 
     try:
         valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
