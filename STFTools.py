@@ -588,6 +588,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         for itype in range(len(N_Particles_FRESH)):#per type array
             print('At itype ',itype)
             print('Finding which particles continued')
+            print(len(Processed_Flags_PREV[itype]['ParticleID']),Processed_Flags_FRESH[itype]['ParticleID'])
             Particle_IDs_which_proceeded_mask=np.in1d(Processed_Flags_PREV[itype]['ParticleID'],Processed_Flags_FRESH[itype]['ParticleID'])#mask for prev particle IDs which continued
             print(f'Found which particles continued: {np.sum(Particle_IDs_which_proceeded_mask)/len(Particle_IDs_which_proceeded_mask)*100}%')
             for ipart_PREV,Particle_ID_PREV in enumerate(Processed_Flags_PREV[itype]['ParticleID']):
