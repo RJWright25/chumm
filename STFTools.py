@@ -566,7 +566,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
             Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
             print('Finished with EAGLE snap data ...')
-            print(np.array(Particle_IDs_FRESH[0]))
 
         else:
             h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
@@ -576,7 +575,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         ###initialise our new flag arrays
         print('Sorting by IDs ...')
-        Processed_Flags_FRESH=[df(np.column_stack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(N_Particles_FRESH))]
+        Processed_Flags_FRESH=[df(np.column_stack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID']) for itype in range(len(N_Particles_FRESH))]
         print('Finished sorting by IDs')
         
         print(Processed_Flags_FRESH[0])
