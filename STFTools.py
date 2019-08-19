@@ -593,7 +593,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             for Processed_L1_ID_PREV_temp in Processed_L1_IDs_PREV:
                 i=i+1
                 if i%10000:
-                    print(i/len(Processed_L1_ID_PREV_temp)*100,' % done transferring L1 particles')
+                    print(i/len(Processed_L1_IDs_PREV)*100,' % done transferring L1 particles')
                 
                 L2_index_FRESH_temp=np.searchsorted(Processed_Flags_FRESH[itype]['ParticleID'],Processed_L1_ID_PREV_temp)
                 Processed_Flags_FRESH[itype]['Processed_L1']=1
