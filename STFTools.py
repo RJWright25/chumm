@@ -604,7 +604,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                             Processed_Flags_FRESH[itype]['Processed_L2'][ipart_FRESH]=1
                 else:
                     continue
-
+        isnap=isnap+1
 
     return Processed_Flags_FRESH
 
