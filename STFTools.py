@@ -149,8 +149,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     print('Now assembling descendent tree using VR python tools')
     tf_filelist=np.compress(have_halo_data,tf_filelist)  
     snap_no=len(tf_filelist)
-    np.savetxt('tf_filelist.txt',tf_filelist,fmt='%s')
-    tf_filelist="tf_filelist.txt"
+    np.savetxt('tf_filelist_forread.txt',tf_filelist,fmt='%s')
+    tf_filelist="tf_filelist_forread.txt"
 
     # Read in tree data
     halo_tree=ReadHaloMergerTreeDescendant(tf_filelist,ibinary=vr_filetype,iverbose=verbose+1,imerit=True,inpart=False)
@@ -173,21 +173,20 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     cosmo=FlatLambdaCDM(H0=H0,Om0=Om0)
 
     halo_data_output=[]
-    isnap=0
     for snap in sim_snaps:
         if have_halo_data[snap]:
-            scale_factor=halo_data_all[isnap]['SimulationInfo']['ScaleFactor']
+            scale_factor=halo_data_all[snap]['SimulationInfo']['ScaleFactor']
             redshift=z_at_value(cosmo.scale_factor,scale_factor,zmin=-0.5)
             lookback_time=cosmo.lookback_time(redshift).value
-            halo_data_all[isnap]['SimulationInfo']['z']=redshift
-            halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
-            halo_data_all[isnap]['VR_FilePath']=vr_list[isnap]
-            halo_data_all[isnap]['VR_FileType']=vr_filetype
-            halo_data_all[isnap]['Part_FilePath']=part_list[isnap]
-            halo_data_all[isnap]['Part_FileType']=partdata_filetype
-            halo_data_all[isnap]['outname']=outname
-            halo_data_all[isnap]['Snap']=snap
-            halo_data_output.append(halo_data_all[isnap])
+            halo_data_all[snap]['SimulationInfo']['z']=redshift
+            halo_data_all[snap]['SimulationInfo']['LookbackTime']=lookback_time
+            halo_data_all[snap]['VR_FilePath']=vr_list[snap]
+            halo_data_all[snap]['VR_FileType']=vr_filetype
+            halo_data_all[snap]['Part_FilePath']=part_list[snap]
+            halo_data_all[snap]['Part_FileType']=partdata_filetype
+            halo_data_all[snap]['outname']=outname
+            halo_data_all[snap]['Snap']=snap
+            halo_data_output.append(halo_data_all[snap])
             isnap=isnap+1
         else:
             halo_data_output.append(snap)
@@ -589,13 +588,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     pass
             else:#if we have no particles of this type at this snap
                 PartHistory_Flags_Snap[str(itype)]=None
-
-            
             pass
         else: #if we are on the first snap and have no previous history
-
-        
-
 
         isnap=isnap+1
 
