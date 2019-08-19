@@ -206,7 +206,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         pickle.dump(halo_data_output, halo_data_file)
         halo_data_file.close()
 
-    print('Saving V1 halo data to file (removing detailed TreeFrog data)')
+    print('Saving B1 halo data to file (removing detailed TreeFrog data)')
 
     ###### Remove superfluous data for acc_rate calcs
     fields_to_keep=['Count','Snap','ID','hostHaloID','Tail','VR_FilePath','VR_FileType','Part_FilePath','Part_FileType','UnitInfo','SimulationInfo','outname']
@@ -496,108 +496,84 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
-# def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
+def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
-#     """
+    """
 
-#     gen_particle_history_serial : function
-# 	----------
+    gen_particle_history_serial : function
+	----------
 
-#     Generate and save particle history data from velociraptor property and particle files.
+    Generate and save particle history data from velociraptor property and particle files.
 
-# 	Parameters
-# 	----------
-#     base_halo_data : list of dictionaries
-#         The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain the type of particle file we'll be reading. 
+	Parameters
+	----------
+    base_halo_data : list of dictionaries
+        The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain the type of particle file we'll be reading. 
 
-#     snaps : list of ints
-#         The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
-#         particles in halos or subhalos (and save accordingly). The running lists will build on the previous snap. 
+    snaps : list of ints
+        The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
+        particles in halos or subhalos (and save accordingly). The running lists will build on the previous snap. 
 
-# 	Returns
-# 	----------
-#     PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
+	Returns
+	----------
+    PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
 
-#         '/PartTypeX/PartID'
-#         '/PartTypeX/PartIndex'
-#         '/PartTypeX/Processed_L1'
-#         '/PartTypeX/Processed_L2'
+        '/PartTypeX/PartID'
+        '/PartTypeX/PartIndex'
+        '/PartTypeX/Processed_L1'
+        '/PartTypeX/Processed_L2'
 
-# 	"""
+	"""
 
-#     # Will save to file at: part_histories/PartTypeX_History_xxx-outname.dat
-#     # Snaps
-#     if snaps==[]:
-#         snaps=snaps=list(range(no_snaps))
+    # Will save to file at: part_histories/PartTypeX_History_xxx-outname.dat
+    # Snaps
+    if snaps==[]:
+        snaps=snaps=list(range(no_snaps))
 
-#     try:
-#         valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
-#         valid_snaps=np.compress(valid_snaps,snaps)
-#         outname=base_halo_data[valid_snaps[0]]['outname']
+    try:
+        valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
+        valid_snaps=np.compress(valid_snaps,snaps)
+        outname=base_halo_data[valid_snaps[0]]['outname']
 
-#     except:
-#         print("Couldn't validate snaps")
-#         return []
+    except:
+        print("Couldn't validate snaps")
+        return []
 
-#     # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
-#     if not os.path.isdir("part_histories"):
-#         os.mkdir("part_histories")
+    # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
+    if not os.path.isdir("part_histories"):
+        os.mkdir("part_histories")
     
-#     if base_halo_data[valid_snaps[0]]['Part_FileType']='EAGLE':
-#         PartTypes=[0,1,4] #Gas, DM, Stars
-#     else:
-#         PartTypes=[0,1] #Gas, DM
+    if base_halo_data[valid_snaps[0]]['Part_FileType']='EAGLE':
+        PartTypes=[0,1,4] #Gas, DM, Stars
+    else:
+        PartTypes=[0,1] #Gas, DM
 
-#     isnap=0
-    
-#     # for the desired snapshots in base_halo_data, get the particle data and add to the running list
-#     for snap in valid_snaps:
-#         #load new snap data
-#         if base_halo_data[snap]['Part_FileType']=='EAGLE':
-#             EAGLE_boxsize=
-#             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
-#             EAGLE_Snap.select_region()
-#             Particle_IDs=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
-#         else:
-#             h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
-#             Particle_IDs=[h5py_Snap['PartType0/ParticleIDs'],h5py_Snap['PartType1/ParticleIDs'],[],[]]
+    isnap=0
+    # for the desired snapshots in base_halo_data, get the particle data and add to the running list
+    for snap in [6]:
+        #load new snap data
 
-#         npart_Snap=[len(Particle_IDs[i]) for i in range(len(PartTypes))]
+        if base_halo_data[snap]['Part_FileType']=='EAGLE': 
+            EAGLE_boxsize=base_halo_data[snap]['BoxSize_Comoving']
+            EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
+            EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+            Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
+        else:
+            h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
+            Particle_IDs_FRESH=[h5py_Snap['PartType'+str(itype)+'/ParticleIDs'] for itype in PartTypes]
 
-#         if isnap>0:#save old snap data if we can
-#             PartHistory_Flags_Snap_Old=PartHistory_Flags_Snap
+        N_Particles_FRESH=[len(Particle_IDs_FRESH[itype]) for itype in range(len(Particle_IDs_FRESH))]
 
-#         PartHistory_Flags_Snap=dict()#initialise our new snap data 
+        ###initialise our new flag arrays
+        Processed_Flags_FRESH=[df(np.columnstack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID'],inplace=True) for itype in range(len(N_Particles_FRESH))]
 
-#         for itype,typenum in enumerate(PartTypes):
-#             if npart_Snap[itype]>0:#if we have particles of this type at this snap
-#                 PartHistory_Flags_Snap[str(itype)]=df({"ParticleID":np.sort(Particle_IDs[itype]),"ParticleIndex":np.argsort(Particle_IDs[itype]),"L1_B":np.zeros(npart_Snap[itype]),"L1_U":np.zeros(npart_Snap[itype]),"L2_B":np.zeros(npart_Snap[itype]),"L2_U":np.zeros(npart_Snap[itype]),"Is_New":np.zeros(npart_Snap[itype])},dtype=np.uint64)
-                
-#                 if isnap>0:#if we have past data
-#                     #for each new id, check it was in the last.
-#                     for ipart,New_ID_itype in enumerate(PartHistory_Flags_Snap[str(itype)]['ParticleID']):
-#                         try:
-#                             Old_Index_itype=np.searchsorted(PartHistory_Flags_Snap_Old[str(itype)]['ParticleID'],New_ID_itype)
-#                             #if hasn't broken yet, we proceed to fill out the data
-#                         except:
-#                             PartHistory_Flags_Snap[str(itype)]['Is_New'][ipart]=1
-                    
-#                     Old_L1_B_IDs=PartHistory_Flags_Snap_Old[str(itype)]['ParticleID'][PartHistory_Flags_Snap_Old[str(itype)]["L1_B"]]
+    print('Unique particle histories created')
 
 
-#                     ####make a list of (sorted) IDs for each level which need to be flagged
 
 
-#                 else:#if we don't have past data, initialise empty
-#                     pass
-#             else:#if we have no particles of this type at this snap
-#                 PartHistory_Flags_Snap[str(itype)]=None
-#             pass
-#         else: #if we are on the first snap and have no previous history
 
-#         isnap=isnap+1
 
-#     print('Unique particle histories created')
 
 # # ########################### GENERATE ACCRETION RATES: constant MASS ###########################
 
