@@ -543,7 +543,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     if not os.path.isdir("part_histories"):
         os.mkdir("part_histories")
     
-    if base_halo_data[valid_snaps[0]]['Part_FileType']='EAGLE':
+    if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
         PartTypes=[0,1,4] #Gas, DM, Stars
     else:
         PartTypes=[0,1] #Gas, DM
