@@ -183,9 +183,9 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             lookback_time=cosmo.lookback_time(redshift).value
             halo_data_all[isnap]['SimulationInfo']['z']=redshift
             halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
-            halo_data_all[isnap]['VR_FilePath']=vr_list[isnap]
+            halo_data_all[isnap]['VR_FilePath']=vr_list[snap]
             halo_data_all[isnap]['VR_FileType']=vr_filetype
-            halo_data_all[isnap]['Part_FilePath']=part_list[isnap]
+            halo_data_all[isnap]['Part_FilePath']=part_list[snap]
             halo_data_all[isnap]['Part_FileType']=partdata_filetype
             halo_data_all[isnap]['outname']=outname
             halo_data_all[isnap]['Snap']=snap
