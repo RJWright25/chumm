@@ -191,7 +191,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             halo_data_all[isnap]['Snap']=snap
             halo_data_output.append(halo_data_all[isnap])
         else:
-            halo_data_output.append({'Snap':snap})
+            halo_data_output.append({'Snap':snap,'Part_FilePath':part_list[snap],'Part_FileType':partdata_filetype})
 
     print('Saving V2 halo data to file (contains detailed TreeFrog data)')
 
@@ -216,7 +216,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             for field in fields_to_keep:
                 halo_data_all_truncated_snap[field]=halo_data_snap[field]
         else:
-            halo_data_all_truncated_snap={'snap':snap}
+            halo_data_all_truncated_snap={'Snap':snap,'Part_FilePath':part_list[snap],'Part_FileType':partdata_filetype}
         halo_data_all_truncated.append(halo_data_all_truncated_snap)
 
     ###### Save the trimmed data to file
