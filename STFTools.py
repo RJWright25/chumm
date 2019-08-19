@@ -191,7 +191,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             halo_data_all[isnap]['Snap']=snap
             halo_data_output.append(halo_data_all[isnap])
         else:
-            halo_data_output.append(snap)
+            halo_data_output.append({'Snap':snap})
 
     print('Saving V2 halo data to file (contains detailed TreeFrog data)')
 
