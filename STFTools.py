@@ -116,7 +116,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     #for each snap in the above lists we will generate halo data
     for snap in sim_snaps:
         print(vr_list[snap])
-        if vr_list[snap]==None:
+        if not vr_list[snap].startswith('/'):
             have_halo_data.append(False)
             if verbose:
                 print(f'No halo data for snap {snap} (not given a file)')
