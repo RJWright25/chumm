@@ -560,6 +560,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         else:
             Processed_Flags_PREV=Processed_Flags_FRESH
 
+        print(Processed_Flags_PREV[0])
+
         #load new snap data
         if base_halo_data[snap]['Part_FileType']=='EAGLE': 
             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
@@ -581,7 +583,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         Processed_Flags_FRESH=[df(np.column_stack((Particle_IDs_FRESH[itype],list(range(N_Particles_FRESH[itype])),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2'],dtype=int).sort_values(['ParticleID']) for itype in range(len(N_Particles_FRESH))]
         t2=time.time()
         print(f'Finished sorting by IDs in {t2-t1} sec')
-        print(Processed_Flags_FRESH)
 
     return Processed_Flags_FRESH
 
