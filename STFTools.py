@@ -326,10 +326,10 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
     # Loop through each snap and add the extra fields
     for snap,base_halo_data_snap in enumerate(base_halo_data):
         # Rirst check if we have a padded snapshot
-        if type(base_halo_data_snap)==int or type(base_halo_data_snap)==float:
+        if len(base_halo_data_snap.keys())<4: 
             if verbose:
                 print(f'Skipping padded snap ',snap)
-            new_halo_data.append(snap)
+            new_halo_data.append(base_halo_data_snap)
             continue
 
         n_halos_snap=len(base_halo_data[snap]['ID'])
