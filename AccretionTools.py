@@ -64,7 +64,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     if not os.path.isdir("part_histories"):
         os.mkdir("part_histories")
     
-    Part_Names=['Gas','DM','Stars']
+    Part_Names=['gas','DM','stars']
     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
         PartTypes=[0,1,4] #Gas, DM, Stars
     else:
@@ -182,7 +182,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         print('Retrieving particles in structure...')
         L1_Processed_Particles=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
-        L2_Processed_Particles=flatten([L1_Processed_Particles[temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
+        L2_Processed_Particles=flatten([L1_Processed_Particles[[temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L1_Processed_Particles=np.concatenate(L1_Processed_Particles)
         print('Done finding particles in structure...')
 
