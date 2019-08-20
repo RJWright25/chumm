@@ -644,7 +644,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     print("Couldn't coerce new particle indices with old ones")
                     return []
 
-                print(Processed_Flags_FRESH[itype]['ParticleID'].iloc[0:100])
+                print(Processed_Flags_FRESH[itype].iloc[0:100])
 
         ###flipping switches!
 
