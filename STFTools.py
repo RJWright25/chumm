@@ -621,21 +621,23 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
                 for NEW_STAR_ID in Particle_IDs_NEW_STARS_IDs:
                     #for each new star particle, find its past gas properties
-                    print(f'Retrieving gas history of new stellar particle: {istar} out of {len(Particle_IDs_NEW_STARS_IDs)}')
-                    print('Checking if this ID was in the gas list ...')
+                    if istar%10000==0:
+                        print(f'{istar/len(Particle_IDs_NEW_STARS_IDs)*100}% done finding new star particle gas history')
+
                     index_would_be=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
                     gasID_atthatindex=int(Processed_Flags_FRESH[0]['ParticleID'][index_would_be])
-                    # print('Star ID: ',NEW_STAR_ID,'Gas ID at expected index: ',gasID_atthatindex)
                     if not gasID_atthatindex==NEW_STAR_ID:
                         print('The gas ID at the predicted index in the previous snap is not the ID of this stellar particle')
-                    # GAS_index_PREV.append(np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID))
-                    # transfer_L1_flag.append(Processed_Flags_FRESH[0]['Processed_L1'][GAS_index_PREV])
-                    # transfer_L2_flag.append(Processed_Flags_FRESH[0]['Processed_L2'][GAS_index_PREV])
+                        return []
+                    
+                    GAS_index_PREV.append(gasID_atthatindex)
+                    transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'][GAS_index_PREV]))
+                    transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'][GAS_index_PREV]))
                     istar=istar+1
                 
-                # Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex']))
-                # Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
-
+                Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex']))
+                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
+                
                 #check the ID list is the same length as the previous snap
                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
                     #flags are carried over (structure still ordered by ID), now updating the index information
