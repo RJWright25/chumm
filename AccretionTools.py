@@ -176,20 +176,14 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         t2=time.time()
         print(f'Finished carrying over old data in {t2-t1} sec')
 
-        print('Creating running list of particles based on flags ...')
-        t1=time.time()
-        Processed_L1_Running_List=np.concatenate([Processed_Flags_FRESH[itype]['ParticleID'][Processed_Flags_FRESH[itype]['Processed_L1']] for itype in range(len(N_Particles_FRESH))])
-        Processed_L2_Running_List=np.concatenate([Processed_Flags_FRESH[itype]['ParticleID'][Processed_Flags_FRESH[itype]['Processed_L2']] for itype in range(len(N_Particles_FRESH))])
-        t2=time.time()
-        print(f'Finished creating running list of particles based on flags in {t2-t1} sec')
-
         # Find new particles in halos and flip the required switches
+        temp_subhalo_indices=base_halo_data[snap]['hostHaloID']>0
 
-
-
-
-
-
+        print('Retrieving particles in structure...')
+        L1_Processed_Particles=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
+        L2_Processed_Particles=np.concatenate([L1_Processed_Particles[temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
+        L1_Processed_Particles=np.concatenate(L1_Processed_Particles)
+        print('Done finding particles in structure...')
 
         isnap=isnap+1
 
