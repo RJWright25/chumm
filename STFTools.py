@@ -639,6 +639,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
                 
                 #check the ID list is the same length as the previous snap
+                print('length of the new star particle total list: ',len(Particle_IDs_FRESH[itype]),' and length of the appended previous array: ',len(Processed_Flags_FRESH[itype]['ParticleID']))
                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
                     #flags are carried over (structure still ordered by ID), now updating the index information
                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
