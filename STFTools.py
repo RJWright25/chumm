@@ -620,7 +620,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 istar=0
                 for NEW_STAR_ID in Particle_IDs_NEW_STARS_IDs:
                     #for each new star particle, find its past gas properties
-                    print(f'Retrieving gas history of new stellar particle: {i} out of {len(Particle_IDs_NEW_STARS_IDs)}')
+                    print(f'Retrieving gas history of new stellar particle: {istar} out of {len(Particle_IDs_NEW_STARS_IDs)}')
                     GAS_index_PREV=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
                     transfer_L1_flag=Processed_Flags_FRESH[0]['Processed_L1'][GAS_index_PREV]
                     transfer_L2_flag=Processed_Flags_FRESH[0]['Processed_L2'][GAS_index_PREV]
@@ -629,7 +629,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     istar=istar+1
 
                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
-                
+
                 #check the ID list is the same length as the previous snap
                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
                     #flags are carried over (structure still ordered by ID), now updating the index information
