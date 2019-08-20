@@ -635,7 +635,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'].iloc[index_would_be]))
                     istar=istar+1
                 
-                Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex']))
+                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex']))
                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
                 
                 #check the ID list is the same length as the previous snap
