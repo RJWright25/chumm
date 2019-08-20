@@ -560,10 +560,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         if base_halo_data[snap]['Part_FileType']=='EAGLE': 
             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
-            print('Reading & slicing EAGLE snap data ...')
+            print('Reading & slicing new EAGLE snap data ...')
             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
             Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
-            print('Finished with EAGLE snap data ...')
+            print('Finished loading new EAGLE snap data ...')
 
         else:
             h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
@@ -574,17 +574,34 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         ###recall old flag arrays (or initialse)
         if isnap==0:
             #initialise: columns: 0: ID, 1: F1, 2: F2 (of length n_particles; all flags are 0)
-            Processed_Flags_PREV=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.argsort(Particle_IDs_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int).sort_values(['ParticleID']) for itype in range(len(PartTypes))]
-        else:
-            Processed_Flags_PREV=Processed_Flags_FRESH
+            Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.argsort(Particle_IDs_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int).sort_values(['ParticleID']) for itype in range(len(PartTypes))]
+        # else:
+        #     Processed_Flags_PREV=Processed_Flags_FRESH
         
         ###carrying over the old data
-        Processed_Flags_FRESH=Processed_Flags_PREV
-        for itype in range(len(N_Particles_FRESH)):#per type array
-            print('Carrying over data for ',Part_Names[itype])
+        # Processed_Flags_FRESH=Processed_Flags_PREV
+
+        for itype in [2,0,1]:#per type array
+            print('Carrying over flags for ',Part_Names[itype],' at previous snap')
+
+            if itype==0: #if Gas
+                print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
+                print('Finding transformed gas particles ...')
+                #check the new ID list, find the IDs which have disappeared
+                Particle_IDs_REMOVED_GAS_mask=np.in1d(Processed_Flags_FRESH[itype]['ParticleID'],Particle_IDs_FRESH[itype],invert=True)
+                Particle_IDs_REMOVED_GAS_indices=np.where(Particle_IDs_REMOVED_GAS_mask)[0]
+                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].drop(index=Particle_IDs_REMOVED_GAS_indices)
+                
+                #check the ID list is now the same length as the previous snap
+                if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
+                    Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype]) 
+                    print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap}')
+                else:
+                    print("Couldn't coerce new particle indices with old ones")
+                    return []
 
             if itype==1: #if DM
-                print('Cleaning particle list ...')
+                print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
                 #check the ID list is the same length as the previous snap
                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
                     #flags are carried over (structure still ordered by ID), now updating the index information
@@ -593,6 +610,35 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 else:
                     print("Couldn't coerce new particle indices with old ones")
                     return []
+
+            if itype==2: #if STARS
+                print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
+                print('Finding new star particles ...')
+                Particle_IDs_NEW_STARS_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#star IDs that we didn't have last snap (should be from gas)
+                Particle_IDs_NEW_STARS_IDs=np.compress(Particle_IDs_NEW_STARS_mask,Particle_IDs_FRESH[itype])
+
+                istar=0
+                for NEW_STAR_ID in Particle_IDs_NEW_STARS_IDs:
+                    #for each new star particle, find its past gas properties
+                    print(f'Retrieving gas history of new stellar particle: {i} out of {len(Particle_IDs_NEW_STARS_IDs)}')
+                    GAS_index_PREV=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
+                    transfer_L1_flag=Processed_Flags_FRESH[0]['Processed_L1'][GAS_index_PREV]
+                    transfer_L2_flag=Processed_Flags_FRESH[0]['Processed_L2'][GAS_index_PREV]
+
+                    Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].append([NEW_STAR_ID,transfer_L1_flag,transfer_L2_flag,np.nan])
+                    istar=istar+1
+
+                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
+                
+                #check the ID list is the same length as the previous snap
+                if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
+                    #flags are carried over (structure still ordered by ID), now updating the index information
+                    Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
+                    print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap}')
+                else:
+                    print("Couldn't coerce new particle indices with old ones")
+                    return []
+
 
         ###flipping switches!
 
