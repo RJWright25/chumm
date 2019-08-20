@@ -618,16 +618,19 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 Particle_IDs_NEW_STARS_IDs=np.compress(Particle_IDs_NEW_STARS_mask,Particle_IDs_FRESH[itype])
 
                 istar=0
+                GAS_index_PREV=[]
+                transfer_L1_flag=[]
+                transfer_L2_flag=[]
+
                 for NEW_STAR_ID in Particle_IDs_NEW_STARS_IDs:
                     #for each new star particle, find its past gas properties
                     print(f'Retrieving gas history of new stellar particle: {istar} out of {len(Particle_IDs_NEW_STARS_IDs)}')
-                    GAS_index_PREV=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
-                    transfer_L1_flag=Processed_Flags_FRESH[0]['Processed_L1'][GAS_index_PREV]
-                    transfer_L2_flag=Processed_Flags_FRESH[0]['Processed_L2'][GAS_index_PREV]
-
-                    Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].append([NEW_STAR_ID,transfer_L1_flag,transfer_L2_flag,np.nan])
+                    GAS_index_PREV.append(np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID))
+                    transfer_L1_flag.append(Processed_Flags_FRESH[0]['Processed_L1'][GAS_index_PREV])
+                    transfer_L2_flag.append(Processed_Flags_FRESH[0]['Processed_L2'][GAS_index_PREV])
                     istar=istar+1
-
+                
+                Processed_Flags_FRESH[itype].append(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))))
                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
 
                 #check the ID list is the same length as the previous snap
