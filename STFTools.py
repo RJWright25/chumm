@@ -626,13 +626,13 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
                     index_would_be=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
                     gasID_atthatindex=int(Processed_Flags_FRESH[0]['ParticleID'][index_would_be])
+
                     if not gasID_atthatindex==NEW_STAR_ID:
                         print('The gas ID at the predicted index in the previous snap is not the ID of this stellar particle')
                         return []
                     
-                    GAS_index_PREV.append(gasID_atthatindex)
-                    transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'].iloc[GAS_index_PREV]))
-                    transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'].iloc[GAS_index_PREV]))
+                    transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'].iloc[index_would_be]))
+                    transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'].iloc[index_would_be]))
                     istar=istar+1
                 
                 Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex']))
