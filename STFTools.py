@@ -631,8 +631,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                         return []
                     
                     GAS_index_PREV.append(gasID_atthatindex)
-                    transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'][GAS_index_PREV]))
-                    transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'][GAS_index_PREV]))
+                    transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'].iloc[GAS_index_PREV]))
+                    transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'].iloc[GAS_index_PREV]))
                     istar=istar+1
                 
                 Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex']))
