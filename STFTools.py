@@ -555,14 +555,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     # for the desired snapshots in base_halo_data, get the particle data and add to the running list
     for snap in [27,28]:
         print(f'Processing for snap = {snap}')
-        ###recall old flag arrays
-        if isnap==0:
-            Processed_Flags_PREV=[df(np.column_stack((0,0,0,0)),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2']).sort_values(['ParticleID']) for itype in range(len(PartTypes))]
-        else:
-            Processed_Flags_PREV=Processed_Flags_FRESH
-
-        print(Processed_Flags_PREV[0])
-
+    
         #load new snap data
         if base_halo_data[snap]['Part_FileType']=='EAGLE': 
             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
@@ -578,28 +571,31 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         N_Particles_FRESH=[len(Particle_IDs_FRESH[itype]) for itype in range(len(Particle_IDs_FRESH))]
 
-        ###initialise our new flag arrays
-        print('Sorting by IDs ...')
-        t1=time.time()
-        Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.argsort(Particle_IDs_FRESH[itype]),np.ones(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','ParticleIndex','Processed_L1','Processed_L2'],dtype=int) for itype in range(len(N_Particles_FRESH))]
-        t2=time.time()
-        print(f'Finished sorting by IDs in {t2-t1} sec')#now we have new sorted IDs and their indices!
+        ###recall old flag arrays (or initialse)
+        if isnap==0:
+            #initialise: columns: 0: ID, 1: F1, 2: F2 (of length n_particles; all flags are 0)
+            Processed_Flags_PREV=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.argsort(Particle_IDs_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int).sort_values(['ParticleID']) for itype in range(len(PartTypes))]
+        else:
+            Processed_Flags_PREV=Processed_Flags_FRESH
         
         ###carrying over the old data
+        Processed_Flags_FRESH=Processed_Flags_PREV
         for itype in range(len(N_Particles_FRESH)):#per type array
             print('Carrying over data for ',Part_Names[itype])
-            print('Finding which particles were processed previously ...')
-            Processed_L1_indices_PREV=np.where(Processed_Flags_PREV[itype]['Processed_L1'])[0]
-            Processed_L1_indices_PREV
-            print('Done finding previously processed particles')
-            
-            i=0
-            Processed_L1_IDs=[]
-            for sortedindex_PREV_temp in Processed_L1_indices_PREV:
-                i=i+1
-                if i%10000==0:
-                    print(i/len(Processed_L1_indices_PREV)*100,' % done finding L1 particle IDs')
-                Processed_L1_IDs.append(Processed_Flags_PREV[itype]['ParticleID'][sortedindex_PREV_temp])
+
+            if itype==1: #if DM
+                print('Cleaning particle list ...')
+                #check the ID list is the same length as the previous snap
+                if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
+                    #flags are carried over (structure still ordered by ID), now updating the index information
+                    Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
+                    print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap}')
+                else:
+                    print("Couldn't coerce new particle indices with old ones")
+                    return []
+
+        ###flipping switches!
+
 
         isnap=isnap+1
 
