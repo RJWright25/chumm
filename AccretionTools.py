@@ -181,10 +181,12 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         temp_subhalo_indices=np.where(base_halo_data[snap]['hostHaloID']>0)
 
         print('Retrieving particles in structure...')
+        t1=time.time()
         L1_Processed_Particles=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
         L2_Processed_Particles=np.concatenate([L1_Processed_Particles[temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L1_Processed_Particles=np.concatenate(L1_Processed_Particles)
-        print('Done finding particles in structure...')
+        t2=time.time()
+        print(f'Finished finding particles in structure in {t2-t1} sec')
 
         isnap=isnap+1
 
