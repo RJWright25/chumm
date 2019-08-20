@@ -627,17 +627,12 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     index_would_be=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
                     gasID_atthatindex=int(Processed_Flags_FRESH[0]['ParticleID'][index_would_be])
 
-                    if not gasID_atthatindex==NEW_STAR_ID:
-                        print('The gas ID at the predicted index in the previous snap is not the ID of this stellar particle')
-                        return []
-                    
                     transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'].iloc[index_would_be]))
                     transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'].iloc[index_would_be]))
                     istar=istar+1
                 
-                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex']))
+                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int))
                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
-                print(Processed_Flags_FRESH[itype].iloc[0:100])
                 
                 #check the ID list is the same length as the previous snap
                 print('length of the new star particle total list: ',len(Particle_IDs_FRESH[itype]),' and length of the appended previous array: ',len(Processed_Flags_FRESH[itype]['ParticleID']))
