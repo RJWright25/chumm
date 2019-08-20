@@ -624,8 +624,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     print(f'Retrieving gas history of new stellar particle: {istar} out of {len(Particle_IDs_NEW_STARS_IDs)}')
                     print('Checking if this ID was in the gas list ...')
                     index_would_be=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
-                    print(index_would_be)
-                    gasID_atthatindex=Processed_Flags_FRESH[0]['ParticleID'][index_would_be][1]
+                    gasID_atthatindex=int(Processed_Flags_FRESH[0]['ParticleID'][index_would_be])
                     # print('Star ID: ',NEW_STAR_ID,'Gas ID at expected index: ',gasID_atthatindex)
                     if not gasID_atthatindex==NEW_STAR_ID:
                         print('The gas ID at the predicted index in the previous snap is not the ID of this stellar particle')
