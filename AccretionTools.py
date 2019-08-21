@@ -1187,9 +1187,9 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 
             else:
                 h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
-                Particle_IDs_FRESH_unsorted=h5py_Snap['PartType'+str(itype)+'/ParticleIDs'] 
+                Particle_IDs_FRESH_unsorted=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
 
-            ID_Mapping[str(itype)]=dict("ParticleIDs_Sorted":np.sort(Particle_IDs_FRESH_unsorted),"ParticleIndex_Original":np.argsort(Particle_IDs_FRESH_unsorted))
+            ID_Mapping[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_FRESH_unsorted),"ParticleIndex_Original":np.argsort(Particle_IDs_FRESH_unsorted)}
 
     return ID_Mapping
 
