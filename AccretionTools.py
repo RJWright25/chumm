@@ -1236,7 +1236,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
             print(f'Dumping {PartNames[itype]} data to file')
             t1=time.time()
-            outfile=h5py.File("/part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
+            outfile=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
             dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype='int64',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
             dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype='int64',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
             dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype='int64',data=Particle_History_Flags[str(itype)]["HostStructure"])
