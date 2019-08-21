@@ -1214,7 +1214,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 Particle_IDs_Unsorted_itype=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
             
-            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"Processed_L1":np.zeros(N_Particles_itype),"Processed_L2":np.zeros(N_Particles_itype)}
+            Particle_History_Flags[str(itype)]=dict(df(np.column_stack((Particle_IDs_Unsorted_itype,np.zeros(len(Particle_IDs_Unsorted_itype)),np.zeros(len(Particle_IDs_Unsorted_itype)),list(range(len(Particle_IDs_Unsorted_itype))))), columns=list(Particle_History_Flags_PrevSnap[str(itype)].keys())).sort_values("ParticleIDs"))
             t2=time.time()
 
             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1}")
