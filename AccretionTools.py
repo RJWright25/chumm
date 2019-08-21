@@ -1195,7 +1195,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles["ParticleIDs"].loc[fieldhalo_Particles["ParticleTypes"]==itype])}
         subhalo_Particles_bytype={str(itype):np.array(subhalo_Particles["ParticleIDs"].loc[subhalo_Particles["ParticleTypes"]==itype])}
         t2=time.time()
-
+        print(subhalo_Particles_bytype["0"])
         print(f"Loaded, concatenated and sorted halo particle lists in {t2-t1} sec")
 
         # map IDs to indices and initialise array
