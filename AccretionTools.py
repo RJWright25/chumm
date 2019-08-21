@@ -1219,7 +1219,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             ipart_switch=0
             subhalo_Particles_bytype_SET=set(subhalo_Particles_bytype[str(itype)])
 
-            for temp_ID_L1 in fieldhalo_Particles_bytype[str(itype)][:1000000]:
+            for temp_ID_L1 in fieldhalo_Particles_bytype[str(itype)][:100000]:
     
                 ipart_switch=ipart_switch+1
                 if ipart_switch%10000==0:
