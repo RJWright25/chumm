@@ -1208,6 +1208,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
 
             #initialise flag data structure with mapped IDs
+            print(f"Mapping IDs to indices for all {PartNames[itype]} particles at snap {snap} ...")
             Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"HostStructure":np.zeros(N_Particles_itype)}
             t2=time.time()
             print(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted'][-1])
