@@ -1221,18 +1221,29 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1} sec")
             
             #check if existed previously & add data
-            if isnap>0:
-                t1=time.time()
-                sorted_index_at_prev=[]
-                old_Sorted_IDs=Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']
-                for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted'][:1000000]):#loop through all particles of this type at this snap
-                    if sorted_index_at_now%100000==0:
-                        print(sorted_index_at_now/N_Particles_itype*100,f'% done checking previous {PartNames[itype]} particles')
-                    sorted_index_at_prev_temp=binary_search_1(temp_itype_ParticleID,old_Sorted_IDs)
+            # if isnap>0:
+            #     t1=time.time()
+                
 
-                t2=time.time()
-                print(f'Took {t2-t1} sec to find all old indices using bs2')
 
+            #     t2=time.time()
+            #     print(f'Took {t2-t1} sec to flip switches using bs1')
+
+            #flip switches of new particles
+            print("Flipping L1 switches ...")
+            t1=time.time()
+            for temp_ID_L1 in fieldhalo_Particles_bytype[str(itype)]:
+                sorted_index_temp_ID_L1=binary_search_1(element=temp_ID_L1,array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+                Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]=Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]+1
+            t2=time.time()
+            print(f"Flipped L1 switches in {t2-t1} sec")
+            print("Flipping L2 switches ...")
+            t1=time.time()
+            for temp_ID_L1 in subhalo_Particles_bytype[str(itype)]:
+                sorted_index_temp_ID_L1=binary_search_1(element=temp_ID_L1,array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+                Particle_History_Flags[str(itype)]["Processed_L2"][sorted_index_temp_ID_L1]=Particle_History_Flags[str(itype)]["Processed_L2"][sorted_index_temp_ID_L1]+1
+            t2=time.time()
+            print(f"Flipped L2 switches in {t2-t1} sec")
         isnap+=1
 
     return Particle_History_Flags
