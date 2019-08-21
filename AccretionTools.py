@@ -1237,6 +1237,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     
                 ipart_switch=ipart_switch+1
                 if ipart_switch%10==0:
+                    print(temp_ID_L1)
                     print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100)
 
                 sorted_index_temp_ID_L1=binary_search_1(element=temp_ID_L1,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
