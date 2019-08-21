@@ -1220,7 +1220,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1} sec")
             
             #flip switches of new particles
-            print("Adding HostIndices ...")
+            print("Adding host indices ...")
             t1=time.time()
             ipart_switch=0
             subhalo_Particles_bytype_SET=set(subhalo_Particles_bytype[str(itype)][:,0])
@@ -1234,14 +1234,15 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
                 sorted_index_temp_ID=binary_search_2(element=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
                 Particle_History_Flags[str(itype)]["HostHaloIndex"][sorted_index_temp_ID]=field_particle_HostHalo
-
                 ipart_switch=ipart_switch+1
 
             t2=time.time()
             print(f"Added host halos in {t2-t1} sec for {PartNames[itype]} particles")
-            print(np.sum(Particle_History_Flags[str(itype)]["HostHaloIndex"]>0))
+            print(np.sum(np.logical_and(Particle_History_Flags[str(itype)]["HostHaloIndex"]==-1)))
+
         print(f'Dumping data to file')
         t1=time.time()
+
         if len(base_halo_data[snap]["hostHaloID"])<65000:
             dtype_for_host='uint16'
         else:
@@ -1250,9 +1251,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         for itype in PartTypes:
             dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype='int64',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
             dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype='int32',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
-            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype=dtype_for_host,compression='gzip',data=Particle_History_Flags[str(itype)]["HostStructure"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype=dtype_for_host,compression='gzip',data=Particle_History_Flags[str(itype)]["HostHaloIndex"])
+        
         outfile.close()
         t2=time.time()
+
         print(f'Dumped {PartNames[itype]} data to file in {t2-t1} sec')
 
         isnap+=1
