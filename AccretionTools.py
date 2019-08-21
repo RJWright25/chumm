@@ -1224,7 +1224,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             if isnap>0:
                 t1=time.time()
                 sorted_index_at_prev=[]
-                for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']):#loop through all particles of this type at this snap
+                for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted'][:100000]):#loop through all particles of this type at this snap
                     if sorted_index_at_now%10000==0:
                         print(sorted_index_at_now/N_Particles_itype*100,f'% done checking previous {PartNames[itype]} particles')
                     
