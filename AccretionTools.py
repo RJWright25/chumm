@@ -1224,7 +1224,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             if isnap>0:
                 for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']):
                     sorted_index_at_prev=np.searchsorted(Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"],temp_itype_ParticleID)#index of this ID from current snap in prev sorted list
-                    print(sorted_index_at_prev)
                     if Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"][sorted_index_at_prev]==temp_itype_ParticleID:
                         pass
                     else:
