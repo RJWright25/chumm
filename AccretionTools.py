@@ -1180,9 +1180,9 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=True,verbose=1)
             os.remove(outfile_name)
             outfile=h5py.File(outfile_name,'w')
         else:
-            outfile_name="part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5"
+            outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5"
             os.remove(outfile_name)
-            outfile=h5py.File("part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
+            outfile=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
 
         #Load the EAGLE data for this snapshot
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
