@@ -1235,7 +1235,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             t2=time.time()
             print(f"Flipped L1&L2 switches in {t2-t1} sec for {PartNames[itype]} particles")
 
-            dset_IDs=outfile.create_dataset(f'/PartType{itype}/ParticleIDs_Sorted',dtype=)
+            dset_IDs=outfile.create_dataset(f'/PartType{itype}/ParticleIDs_Sorted',dtype='i8')
 
 
         isnap+=1
