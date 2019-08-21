@@ -1180,8 +1180,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             Particle_History_Flags_PrevSnap=dict()
             for itype in PartTypes:
                 Particle_History_Flags_PrevSnap[str(itype)]={"ParticleIDs_Sorted":[],"ParticleIndex_Original":[],"Processed_L1":[],"Processed_L2":[]}
+            Particle_History_Flags=dict()
         else:
             Particle_History_Flags_PrevSnap=Particle_History_Flags
+            Particle_History_Flags=dict()
 
 
         #Load the Halo particle lists for this snapshot for each particle type
