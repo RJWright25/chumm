@@ -1233,7 +1233,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     print(ipart_switch/n_fieldhalo_particles*100,f'% done adding host halos for {PartNames[itype]} particles')
 
                 sorted_index_temp_ID=binary_search_2(element=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
-                Particle_History_Flags[str(itype)]["HostHaloIndex"][sorted_index_temp_ID]=field_particle_HostHalo
+                Particle_History_Flags[str(itype)]["HostHaloIndex"][sorted_index_temp_ID]=int(field_particle_HostHalo)
                 ipart_switch=ipart_switch+1
 
             t2=time.time()
