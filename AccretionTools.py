@@ -1160,7 +1160,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     if not os.path.isdir("part_histories"):
         os.mkdir("part_histories")
     
-    PartNames=['gas','DM','','','stars','BH']
+    PartNames=['gas','DM','','','star','BH']
 
     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
@@ -1230,7 +1230,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                         print(sorted_index_at_prev,sorted_index_at_now)
                         print(Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"][index_at_prev],temp_itype_ParticleID)
             else:
-                print('Not checking previous state given this is the first snap we have data for ...')
+                print('Not checking previous state given this is the first snap we have data for")
 
         isnap+=1
 
