@@ -1228,10 +1228,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             for field_particle_ID_and_host in fieldhalo_Particles_bytype[str(itype)]:
                 field_particle_ID=field_particle_ID_and_host[0]
                 field_particle_HostHalo=field_particle_ID_and_host[1]
-                if field_particle_HostHalo in temp_subhalo_indices:
-                    print('This particle is in a subhalo')
-                else:
-                    print('This particle is in a field halo')
 
                 if ipart_switch%10000==0:
                     print(field_particle_ID_and_host)
@@ -1244,7 +1240,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
             t2=time.time()
             print(f"Added host halos in {t2-t1} sec for {PartNames[itype]} particles")
-
+            print(Particle_History_Flags[str(itype)]["HostHaloIndex"][0:1000])
         print(f'Dumping data to file')
         t1=time.time()
         if len(base_halo_data[snap]["hostHaloID"])<65000:
