@@ -223,17 +223,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         print(f'Finished finding particles in structure in {t2-t1} sec')
 
 
-        for ipartnew in range(len(L1_Processed_Particles_FRESH)):
-            NEW_PARTICLE_ID=int(L1_Processed_Particles_FRESH['ParticleID'].iloc[ipartnew])
-            NEW_PARTICLE_TYPE=int(L1_Processed_Particles_FRESH['ParticleType'].iloc[ipartnew])
-
-            if NEW_PARTICLE_TYPE==4:
-                NEW_PARTICLE_TYPE=2
-
-            NEW_PARTICLE_INDEX=np.searchsorted(np.array(Processed_Flags_FRESH[itype]['ParticleID']),NEW_PARTICLE_ID)
-            print(f'NEW PARTICLE ID: {NEW_PARTICLE_ID}','ID AT EXPECTED INDEX: ',int(Processed_Flags_FRESH[itype]['ParticleID'].iloc[NEW_PARTICLE_INDEX]))
-            
-
         isnap=isnap+1
 
     return Processed_Flags_FRESH
