@@ -178,7 +178,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         print(f'Finished carrying over old data in {t2-t1} sec')
 
         # Find new particles in halos and flip the required switches
-        temp_subhalo_indices=np.where(base_halo_data[snap]['hostHaloID']>0)
+        temp_subhalo_indices=list(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
         print(temp_subhalo_indices)
 
         print('Retrieving and organising particles in structure...')
