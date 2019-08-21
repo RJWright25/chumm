@@ -1181,7 +1181,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         #Load the Halo particle lists for this snapshot for each particle type
         t1=time.time()
         snap_Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
-        
         n_halos=len(snap_Halo_Particle_Lists["Particle_IDs"])
         n_halo_particles=[len(snap_Halo_Particle_Lists["Particle_IDs"][ihalo]) for ihalo in range(n_halos)]
         temp_subhalo_indices=np.where(base_halo_data[snap]["hostHaloID"]>0)[0]
@@ -1192,9 +1191,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         #fieldhalo==l1, subhalo==l2
         fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostHaloIndex":allhalo_Particle_hosts},dtype=int).sort_values(["ParticleIDs"])
         subhalo_Particles=df({'ParticleIDs':np.concatenate([snap_Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'ParticleTypes':np.concatenate([snap_Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),"HostHaloIndex":subhalo_Particle_hosts},dtype=int).sort_values(["ParticleIDs"])
-            
-        fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles["ParticleIDs"].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
-        subhalo_Particles_bytype={str(itype):np.array(subhalo_Particles["ParticleIDs"].loc[subhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
+        fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles[["ParticleIDs","HostHaloIndex"]].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
+        subhalo_Particles_bytype={str(itype):np.array(subhalo_Particles[["ParticleIDs","HostHaloIndex"]].loc[subhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
         
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists in {t2-t1} sec")
@@ -1216,12 +1214,12 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
             #initialise flag data structure with mapped IDs
             print(f"Mapping IDs to indices for all {PartNames[itype]} particles at snap {snap} ...")
-            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"HostStructure":np.zeros(N_Particles_itype)}
+            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"HostHaloIndex":np.ones(N_Particles_itype)*(-1)}
             t2=time.time()
             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1} sec")
             
             #flip switches of new particles
-            print("Flipping L1&L2 switches ...")
+            print("Adding HostIndices ...")
             t1=time.time()
             ipart_switch=0
             subhalo_Particles_bytype_SET=set(subhalo_Particles_bytype[str(itype)])
