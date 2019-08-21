@@ -98,7 +98,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         # If needed, initialise data
         if isnap==0:
             #initialise: columns: 0: ID, 1: F1, 2: F2 (of length n_particles; all flags are 0)
-            Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.argsort(Particle_IDs_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int).sort_values(['ParticleID']) for itype in range(len(PartTypes))]
+            Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int)) for itype in range(len(PartTypes))]
 
         # Carry over old flags and index particle IDs
         t1=time.time()
@@ -110,6 +110,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 if verbose:
                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
                     print('Finding transformed gas particles ...')
+                t1=time.time()
                 #check the new ID list, find the IDs which have disappeared
                 Particle_IDs_REMOVED_GAS_mask=np.in1d(Processed_Flags_FRESH[itype]['ParticleID'],Particle_IDs_FRESH[itype],invert=True)
                 Particle_IDs_REMOVED_GAS_indices=np.where(Particle_IDs_REMOVED_GAS_mask)[0]
@@ -118,8 +119,9 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 #check the ID list is now the same length as the previous snap
                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
+                    t2=time.time()
                     if verbose:
-                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap}')
+                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
                 else:
                     print("Couldn't coerce new particle indices with old ones")
                     return []
@@ -127,12 +129,14 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             if itype==1: #if DM
                 if verbose:
                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
+                t1=time.time()
                 #check the ID list is the same length as the previous snap
                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
                     #flags are carried over (structure still ordered by ID), now updating the index information
                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
+                    t2=time.time()
                     if verbose:
-                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap}')
+                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
                 else:
                     print("Couldn't coerce new particle indices with old ones")
                     return []
@@ -142,6 +146,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
                     print('Finding new star particles ...')
 
+                t1=time.time()
                 Particle_IDs_NEW_STARS_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#star IDs that we didn't have last snap (should be from gas)
                 Particle_IDs_NEW_STARS_IDs=np.compress(Particle_IDs_NEW_STARS_mask,Particle_IDs_FRESH[itype])
 
@@ -170,8 +175,9 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
                     #flags are carried over (structure still ordered by ID), now updating the index information
                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
+                    t2=time.time()
                     if verbose:
-                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap}')
+                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
                 else:
                     print("Couldn't coerce new particle indices with old ones")
                     return []
@@ -197,6 +203,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         L2_Processed_Particles_FRESH_IDs=np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L2_Processed_Particles_FRESH_Types=np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L2_Processed_Particles_FRESH=df(np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types)),dtype=int,columns=['ParticleID','ParticleType']).sort_values(['ParticleType','ParticleID'])
+
+
         print(L2_Processed_Particles_FRESH.iloc[0:100])
         print(L2_Processed_Particles_FRESH.iloc[-100:-1])
         t2=time.time()
