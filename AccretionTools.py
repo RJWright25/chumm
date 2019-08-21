@@ -1193,7 +1193,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types'])},dtype=int).sort_values(["ParticleIDs"])
         subhalo_Particles=df({'ParticleIDs':np.concatenate([snap_Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'Particle_Types':np.concatenate([snap_Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])},dtype=int).sort_values(["ParticleIDs"])
         
-        fieldhalo_Particles_bytype=[fieldhalo_Particles.iloc[fieldhalo_Particles[ParticleTypes]==itype] for itype in PartTypes]
+        fieldhalo_Particles_bytype=[fieldhalo_Particles.iloc[fieldhalo_Particles['ParticleTypes']==itype] for itype in PartTypes]
+        subhalo_Particles_bytype=[fieldhalo_Particles.iloc[subhalo_Particles['ParticleTypes']==itype] for itype in PartTypes]
 
         t2=time.time()
 
