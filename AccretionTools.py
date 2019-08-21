@@ -1233,6 +1233,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             print("Flipping L1 switches ...")
             t1=time.time()
             ipart_switch=0
+            print(fieldhalo_Particles_bytype[str(itype)])
             for temp_ID_L1 in fieldhalo_Particles_bytype[str(itype)]:
                 ipart_switch=ipart_switch+1
                 if ipart_switch%10==0:
