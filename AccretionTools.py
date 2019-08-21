@@ -1159,6 +1159,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=True,verbose=1)
     if test_run:
         if not os.path.isdir("part_histories_test"):
             os.mkdir("part_histories_test")
+
      
     else:
         if not os.path.isdir("part_histories"):
@@ -1175,9 +1176,13 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=True,verbose=1)
     # Iterate through snapshots and flip switches as required
     for snap in valid_snaps:
         if test_run:
-            outfile=h5py.File("part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
+            outfile_name="part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5"
+            os.remove(outfile_name)
+            outfile=h5py.File(outfile_name,'w')
         else:
-            outfile=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
+            outfile_name="part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5"
+            os.remove(outfile_name)
+            outfile=h5py.File("part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
 
         #Load the EAGLE data for this snapshot
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
