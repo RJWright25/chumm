@@ -98,7 +98,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         # If needed, initialise data
         if isnap==0:
             #initialise: columns: 0: ID, 1: F1, 2: F2 (of length n_particles; all flags are 0)
-            Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int)) for itype in range(len(PartTypes))]
+            Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int) for itype in range(len(PartTypes))]
 
         # Carry over old flags and index particle IDs
         t1=time.time()
