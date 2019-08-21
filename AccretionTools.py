@@ -82,11 +82,12 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
             if verbose:
                 print('Reading & slicing new EAGLE snap data ...')
-
+            t1=time.time()
             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
             Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
+            t2=time.time()
             if verbose:
-                print('Finished loading new EAGLE snap data')
+                print(f'Finished loading new EAGLE snap data in {t2-t1} sec')
 
         else:
             h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
@@ -193,14 +194,25 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         t1=time.time()
         Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
         L1_Processed_Particles_FRESH=df(np.column_stack((np.concatenate(Halo_Particle_Lists['Particle_IDs']),np.concatenate(Halo_Particle_Lists['Particle_Types']))),dtype=int,columns=['ParticleID','ParticleType']).sort_values(['ParticleType','ParticleID'])
-
         L2_Processed_Particles_FRESH_IDs=np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L2_Processed_Particles_FRESH_Types=np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L2_Processed_Particles_FRESH=df(np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types)),dtype=int,columns=['ParticleID','ParticleType']).sort_values(['ParticleType','ParticleID'])
         print(L2_Processed_Particles_FRESH.iloc[0:100])
-        print(L2_Processed_Particles_FRESH.iloc[-100:1])
+        print(L2_Processed_Particles_FRESH.iloc[-100:-1])
         t2=time.time()
         print(f'Finished finding particles in structure in {t2-t1} sec')
+
+
+        for NEW_PARTICLE in L1_Processed_Particles_FRESH:
+            NEW_PARTICLE_ID=int(NEW_PARTICLE['ParticleID'])
+            NEW_PARTICLE_TYPE=int(NEW_PARTICLE['ParticleType'])
+
+            if NEW_PARTICLE_TYPE==4:
+                NEW_PARTICLE_TYPE=2
+
+            NEW_PARTICLE_INDEX=np.searchsorted(np.array(Processed_Flags_FRESH[itype]['ParticleID']),NEW_PARTICLE_ID)
+            print(f'NEW PARTICLE ID: {NEW_PARTICLE_ID}','ID AT EXPECTED INDEX: ',int(Processed_Flags_FRESH[itype]['ParticleID'].iloc[NEW_PARTICLE_INDEX]))
+            
 
         isnap=isnap+1
 
