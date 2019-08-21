@@ -208,14 +208,16 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         t1=time.time()
         Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
-        L1_Processed_Particles_FRESH=df(np.column_stack((np.concatenate(Halo_Particle_Lists['Particle_IDs']),np.concatenate(Halo_Particle_Lists['Particle_Types']))),dtype=int,columns=['ParticleID','ParticleType']).sort_values(['ParticleType','ParticleID'])
+        L1_Processed_Particles_FRESH=np.column_stack((np.concatenate(Halo_Particle_Lists['Particle_IDs']),np.concatenate(Halo_Particle_Lists['Particle_Types'])))
         L2_Processed_Particles_FRESH_IDs=np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L2_Processed_Particles_FRESH_Types=np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
-        L2_Processed_Particles_FRESH=df(np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types)),dtype=int,columns=['ParticleID','ParticleType']).sort_values(['ParticleType','ParticleID'])
+        L2_Processed_Particles_FRESH=np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types))
         t2=time.time()
         print(f'Finished finding particles in structure in {t2-t1} sec')
 
 
+        
+        
         isnap=isnap+1
 
     return Processed_Flags_FRESH
