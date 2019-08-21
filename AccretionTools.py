@@ -1225,7 +1225,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             ipart_switch=0
             subhalo_Particles_bytype_SET=set(subhalo_Particles_bytype[str(itype)][:,0])
 
-            for field_particle_ID_and_host in fieldhalo_Particles_bytype[str(itype)][0:100000]:
+            for field_particle_ID_and_host in fieldhalo_Particles_bytype[str(itype)][0:250000]:
                 field_particle_ID=field_particle_ID_and_host[0]
                 field_particle_HostHalo=field_particle_ID_and_host[1]
 
