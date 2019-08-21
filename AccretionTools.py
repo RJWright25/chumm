@@ -1225,17 +1225,20 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             ipart_switch=0
             subhalo_Particles_bytype_SET=set(subhalo_Particles_bytype[str(itype)][:,0])
 
-            for temp_ID_L1 in fieldhalo_Particles_bytype[str(itype)][:,0]:
-    
-                ipart_switch=ipart_switch+1
+            for field_particle_ID_and_host in fieldhalo_Particles_bytype[str(itype)]:
+                field_particle_ID=field_particle_ID_and_host[0]
+                field_particle_HostHalo=field_particle_ID_and_host[1]
+                if field_particle_HostHalo in temp_subhalo_indices:
+                    print('This particle is in a subhalo')
+                
                 if ipart_switch%10000==0:
-                    print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)][])*100,f'% done flipping L1&L2 switches for {PartNames[itype]} particles')
+                    print(field_particle_ID_and_host)
+                    print(ipart_switch/n_fieldhalo_particles*100,f'% done flipping L1&L2 switches for {PartNames[itype]} particles')
 
-                sorted_index_temp_ID_L1=binary_search_2(element=temp_ID_L1,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
-                Particle_History_Flags[str(itype)]["HostStructure"][sorted_index_temp_ID_L1]=1
+                sorted_index_temp_ID=binary_search_2(element=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+                Particle_History_Flags[str(itype)]["HostHaloIndex"][sorted_index_temp_ID]=field_particle_HostHalo
 
-                if temp_ID_L1 in subhalo_Particles_bytype_SET:
-                    Particle_History_Flags[str(itype)]["HostStructure"][sorted_index_temp_ID_L1]=2
+                ipart_switch=ipart_switch+1
 
             t2=time.time()
             print(f"Flipped L1&L2 switches in {t2-t1} sec for {PartNames[itype]} particles")
