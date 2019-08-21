@@ -1221,8 +1221,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1} sec")
             
             #check if existed previously & add data
-            t1=time.time()
             if isnap>0:
+                t1=time.time()
                 sorted_index_at_prev=[]
                 for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']):#loop through all particles of this type at this snap
                     if sorted_index_at_now%10000==0:
@@ -1230,8 +1230,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     
                     old_Sorted_IDs=Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']
                     sorted_index_at_prev.append(binary_search_1(temp_itype_ParticleID,old_Sorted_IDs))
-            t2=time.time()
-            print(f'Took {t2-t1} sec to find all old indices using bs1')
+                t2=time.time()
+                print(f'Took {t2-t1} sec to find all old indices using bs1')
         isnap+=1
 
     return Particle_History_Flags
