@@ -180,11 +180,24 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         # Find new particles in halos and flip the required switches
         temp_subhalo_indices=np.where(base_halo_data[snap]['hostHaloID']>0)
 
-        print('Retrieving particles in structure...')
+        print('Retrieving and organising particles in structure...')
+        #recall previous data
+        if isnap==0:
+            L1_Processed_Particles_PREV=[]
+            L2_Processed_Particles_PREV=[]
+
+        else:
+            L1_Processed_Particles_Running_PREV=L1_Processed_Particles_Running
+            L2_Processed_Particles_Running_PREV=L2_Processed_Particles_Running
+
         t1=time.time()
-        L1_Processed_Particles=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
-        L2_Processed_Particles=np.concatenate([L1_Processed_Particles[temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
-        L1_Processed_Particles=np.concatenate(L1_Processed_Particles)
+        Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
+        L1_Processed_Particles_FRESH=df(np.column_stack((np.concatenate(Halo_Particle_Lists['Particle_IDs']),np.concatenate(Halo_Particle_Lists['Particle_Types']))),dtype=int,columns=['ParticleID','ParticleType']).sort_values(['ParticleType','ParticleID'])
+
+        L2_Processed_Particles_FRESH_IDs=np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
+        L2_Processed_Particles_FRESH_Types=np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
+        L2_Processed_Particles_FRESH=df(np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types)),dtype=int,columns=['ParticleID','ParticleType']).sort_values(['ParticleType','ParticleID'])
+
         t2=time.time()
         print(f'Finished finding particles in structure in {t2-t1} sec')
 
