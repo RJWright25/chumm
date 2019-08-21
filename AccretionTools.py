@@ -112,16 +112,19 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     print('Finding transformed gas particles ...')
                 t1=time.time()
                 #check the new ID list, find the IDs which have disappeared
+                t11=time.time()
                 Particle_IDs_REMOVED_GAS_mask=np.in1d(Processed_Flags_FRESH[itype]['ParticleID'],Particle_IDs_FRESH[itype],invert=True)
                 Particle_IDs_REMOVED_GAS_indices=np.where(Particle_IDs_REMOVED_GAS_mask)[0]
                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].drop(index=Particle_IDs_REMOVED_GAS_indices)
-                
+                t12=time.time()
+                print(f'This bit took {t12-t11}')
+
                 #check the ID list is now the same length as the previous snap
                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
                     t2=time.time()
                     if verbose:
-                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
+                        print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
                 else:
                     print("Couldn't coerce new particle indices with old ones")
                     return []
@@ -136,7 +139,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
                     t2=time.time()
                     if verbose:
-                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
+                        print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
                 else:
                     print("Couldn't coerce new particle indices with old ones")
                     return []
@@ -177,7 +180,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
                     t2=time.time()
                     if verbose:
-                        print(f'Successfully indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
+                        print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
                 else:
                     print("Couldn't coerce new particle indices with old ones")
                     return []
