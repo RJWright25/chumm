@@ -1160,7 +1160,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     if not os.path.isdir("part_histories"):
         os.mkdir("part_histories")
     
-    PartNames=['gas','DM','stars','BH']
+    PartNames=['gas','DM','','','stars','BH']
 
     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
@@ -1217,6 +1217,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             #initialise flag data structure with mapped IDs
             Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"Processed_L1":np.zeros(N_Particles_itype),"Processed_L2":np.zeros(N_Particles_itype)}
             t2=time.time()
+
             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1}")
             
             #check if existed previously & add data
