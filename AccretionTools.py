@@ -1190,7 +1190,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         snap_Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
         #fieldhalo==l1, subhalo==l2
         fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types'])},dtype=int)
-        subhalo_Particles=df({'ParticleIDs':np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'Particle_Types':np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])},dtype=int)
+        subhalo_Particles=df({'ParticleIDs':np.concatenate([snap_Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'Particle_Types':np.concatenate([snap_Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])},dtype=int)
         t2=time.time()
 
         print(f"Loaded and concatenated halo particle lists in {t2-t1} sec")
