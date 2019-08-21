@@ -1113,10 +1113,6 @@ from RW_GenPythonTools import *
 #     return acc_rate_dataframe
         
 
-
-
-
-
 def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
     """
@@ -1164,7 +1160,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     if not os.path.isdir("part_histories"):
         os.mkdir("part_histories")
     
-    Part_Names=['gas','DM','stars','BH']
+    PartNames=['gas','DM','stars','BH']
 
     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
@@ -1174,22 +1170,52 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     isnap=0
     # Iterate through snapshots and flip switches as required
     for snap in valid_snaps:
-
+        
+        #Load the EAGLE data for this snapshot
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
         EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
         EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
 
-        ID_Mapping=dict()
+        if isnap==0:
+            Particle_History_Flags_PrevSnap=dict()
+            for itype in PartTypes:
+                Particle_History_Flags_PrevSnap[str(itype)]={"ParticleIDs_Sorted":[],"ParticleIndex_Original":[],"Processed_L1":[],"Processed_L2":[]}
+        else:
+            Particle_History_Flags_PrevSnap=Particle_History_Flags
+
+
+        #Load the Halo particle lists for this snapshot
+        t1=time.time()
+        snap_Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
+        #fieldhalo==l1, subhalo==l2
+        fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types'])},dtype=int)
+        subhalo_Particles=df({'ParticleIDs':np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'Particle_Types':np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])},dtype=int)
+        t2=time.time()
+
+        print(f"Loaded and concatenated halo particle lists in {t2-t1} sec")
+
+        # map IDs to indices and initialise array
         for itype in PartTypes:
+
             #load new snap data
             if base_halo_data[snap]['Part_FileType']=='EAGLE': 
-                Particle_IDs_FRESH_unsorted=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
-                
+                Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
+                N_Particles_itype=len(Particle_IDs_Unsorted_itype)
             else:
                 h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
-                Particle_IDs_FRESH_unsorted=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
+                Particle_IDs_Unsorted_itype=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
+                N_Particles_itype=len(Particle_IDs_Unsorted_itype)
 
-            ID_Mapping[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_FRESH_unsorted),"ParticleIndex_Original":np.argsort(Particle_IDs_FRESH_unsorted)}
+            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"Processed_L1":np.zeros(N_Particles_itype),"Processed_L2":np.zeros(N_Particles_itype)}
 
-    return ID_Mapping
+            #now iterate through each particle ID and check (1) history and (2) its previous state
+
+            for temp_itype_ParticleID in Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']:
+                
+
+
+
+        isnap+=1
+
+    return Particle_History_Flags
 
