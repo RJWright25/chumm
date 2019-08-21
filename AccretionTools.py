@@ -1230,9 +1230,9 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 field_particle_HostHalo=field_particle_ID_and_host[1]
                 if field_particle_HostHalo in temp_subhalo_indices:
                     print('This particle is in a subhalo')
-                else field_particle_HostHalo in temp_subhalo_indices:
+                else:
                     print('This particle is in a field halo')
-                    
+
                 if ipart_switch%10000==0:
                     print(field_particle_ID_and_host)
                     print(ipart_switch/n_fieldhalo_particles*100,f'% done flipping L1&L2 switches for {PartNames[itype]} particles')
