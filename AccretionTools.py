@@ -1238,7 +1238,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
             t2=time.time()
             print(f"Added host halos in {t2-t1} sec for {PartNames[itype]} particles")
-            print(Particle_History_Flags[str(itype)]["HostHaloIndex"][0:10000])
+            print(np.array(Particle_History_Flags[str(itype)]["HostHaloIndex"][0:10000]))
 
         print(f'Dumping data to file')
         t1=time.time()
