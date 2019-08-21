@@ -1223,11 +1223,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
             for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']):
                 #check if existed previously
-                sorted_index_at_prev=np.searchsorted(Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"],temp_itype_ParticleID)#index of this ID in prev sorted list
+                sorted_index_at_prev=np.searchsorted(Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"],temp_itype_ParticleID)#index of this ID from current snap in prev sorted list
                 print(sorted_index_at_prev)
-                if Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"][index_at_prev]==temp_itype_ParticleID:
+                if Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"][sorted_index_at_prev]==temp_itype_ParticleID:
                     print("Particle existed previously!")
-                    print(index_at_prev,index_at_now)
+                    print(sorted_index_at_prev,sorted_index_at_now)
                     print(Particle_History_Flags_PrevSnap[str(itype)]["Particle_IDs_Sorted"][index_at_prev],temp_itype_ParticleID)
 
 
