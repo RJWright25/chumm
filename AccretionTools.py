@@ -113,7 +113,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 t1=time.time()
                 #check the new ID list, find the IDs which have disappeared
                 t11=time.time()
-                Particle_IDs_REMOVED_GAS_mask=np.in1d(Processed_Flags_FRESH[itype]['ParticleID'],Particle_IDs_FRESH[itype],invert=True)
+                Particle_IDs_REMOVED_GAS_mask=np.isin(Processed_Flags_FRESH[itype]['ParticleID'],Particle_IDs_FRESH[itype],invert=True)
                 Particle_IDs_REMOVED_GAS_indices=np.where(Particle_IDs_REMOVED_GAS_mask)[0]
                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].drop(index=Particle_IDs_REMOVED_GAS_indices)
                 t12=time.time()
