@@ -1225,6 +1225,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=True,verbose=1)
                 h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
                 Particle_IDs_Unsorted_itype=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
+            
 
             #initialise flag data structure with mapped IDs
             print(f"Mapping IDs to indices for all {PartNames[itype]} particles at snap {snap} ...")
@@ -1243,7 +1244,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=True,verbose=1)
                 field_particle_HostHalo=field_particle_ID_and_host[1]
 
                 if ipart_switch%10000==0:
-                    print(ipart_switch/n_fieldhalo_particles*100,f'% done adding host halos for {PartNames[itype]} particles')
+                    print(ipart_switch/N_Particles_itype*100,f'% done adding host halos for {PartNames[itype]} particles')
 
                 sorted_index_temp_ID=binary_search_2(element=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
                 Particle_History_Flags[str(itype)]["HostHaloIndex"][sorted_index_temp_ID]=int(field_particle_HostHalo)
@@ -1268,7 +1269,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=True,verbose=1)
         outfile.close()
         t2=time.time()
 
-        print(f'Dumped {PartNames[itype]} data to file in {t2-t1} sec')
+        print(f'Dumped snap {snap} data to file in {t2-t1} sec')
 
         isnap+=1
 
