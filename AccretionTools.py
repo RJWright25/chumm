@@ -1169,7 +1169,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     isnap=0
     # Iterate through snapshots and flip switches as required
     for snap in valid_snaps:
-        outfile=h5py.File("PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
 
         #Load the EAGLE data for this snapshot
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
@@ -1235,8 +1234,15 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             t2=time.time()
             print(f"Flipped L1&L2 switches in {t2-t1} sec for {PartNames[itype]} particles")
 
-            dset_IDs=outfile.create_dataset(f'/PartType{itype}/ParticleIDs_Sorted',dtype='i64')
-
+            print('Dumping to file')
+            t1=time.time()
+            outfile=h5py.File("PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
+            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype='i64',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype='i64',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype='i64',data=Particle_History_Flags[str(itype)]["HostStructure"])
+            t2=time.time()
+            outfile.close()
+            print(f'Dumped to file in {t2-t1}')
 
         isnap+=1
 
