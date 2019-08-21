@@ -1209,8 +1209,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=True,verbose=1)
         n_fieldhalo_particles=np.sum([len(fieldhalo_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
         n_subhalo_particles=np.sum([len(subhalo_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
         t2=time.time()
-        print(f"Loaded, concatenated and sorted halo particle lists in {t2-t1} sec")
-        print(f"There are {n_fieldhalo_particles} particles in structure (L1), and {n_subhalo_particles} particles in substructure (L2)")
+        print(f"Loaded, concatenated and sorted halo particle lists for snap {snap} in {t2-t1} sec")
+        print(f"There are {n_fieldhalo_particles} particles in structure (L1), and {n_subhalo_particles} particles in substructure (L2) at snap {snap}")
 
         # map IDs to indices from EAGLE DATA and initialise array
         
