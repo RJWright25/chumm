@@ -184,8 +184,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         print('Retrieving and organising particles in structure...')
         #recall previous data
         if isnap==0:
-            L1_Processed_Particles_PREV=[]
-            L2_Processed_Particles_PREV=[]
+            L1_Processed_Particles_PREV=df(np.column_stack(([],[])))
+            L2_Processed_Particles_PREV=df()
 
         else:
             L1_Processed_Particles_Running_PREV=L1_Processed_Particles_Running
@@ -204,6 +204,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
 
         for NEW_PARTICLE in L1_Processed_Particles_FRESH:
+            print(NEW_PARTICLE)
             NEW_PARTICLE_ID=int(NEW_PARTICLE['ParticleID'])
             NEW_PARTICLE_TYPE=int(NEW_PARTICLE['ParticleType'])
 
