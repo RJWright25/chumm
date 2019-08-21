@@ -1113,7 +1113,7 @@ from RW_GenPythonTools import *
 #     return acc_rate_dataframe
         
 
-def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
+def gen_particle_history_serial(base_halo_data,snaps=[],test_run=True,verbose=1):
 
     """
 
@@ -1156,8 +1156,13 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         return []
 
     # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
-    if not os.path.isdir("part_histories"):
-        os.mkdir("part_histories")
+    if test_run:
+        if not os.path.isdir("part_histories_test"):
+            os.mkdir("part_histories_test")
+     
+    else:
+        if not os.path.isdir("part_histories"):
+            os.mkdir("part_histories")
     
     PartNames=['gas','DM','','','star','BH']
 
@@ -1169,7 +1174,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     isnap=0
     # Iterate through snapshots and flip switches as required
     for snap in valid_snaps:
-        outfile=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
+        if test_run:
+            outfile=h5py.File("part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
+        else:
+            outfile=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
 
         #Load the EAGLE data for this snapshot
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
@@ -1238,7 +1246,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
             t2=time.time()
             print(f"Added host halos in {t2-t1} sec for {PartNames[itype]} particles")
-
 
         print(f'Dumping data to file')
         t1=time.time()
