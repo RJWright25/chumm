@@ -1200,9 +1200,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists in {t2-t1} sec")
 
-        # map IDs to indices and initialise array
+        # map IDs to indices from EAGLE DATA and initialise array
+        
         for itype in PartTypes:
-
+            
+            t1=time.time()
             #load new snap data
             if base_halo_data[snap]['Part_FileType']=='EAGLE': 
                 Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
@@ -1211,8 +1213,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
                 Particle_IDs_Unsorted_itype=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
-
+            
             Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"Processed_L1":np.zeros(N_Particles_itype),"Processed_L2":np.zeros(N_Particles_itype)}
+            t2=time.time()
+
+            print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1}")
 
             #now iterate through each particle ID and check (1) history and (2) its previous state
 
