@@ -1232,6 +1232,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     sorted_index_at_prev.append(binary_search_1(temp_itype_ParticleID,old_Sorted_IDs))
                 t2=time.time()
                 print(f'Took {t2-t1} sec to find all old indices using bs1')
+                
         isnap+=1
 
     return Particle_History_Flags
