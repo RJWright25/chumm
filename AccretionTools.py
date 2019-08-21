@@ -1179,7 +1179,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         if isnap==0:
             Particle_History_Flags_PrevSnap=dict()
             for itype in PartTypes:
-                Particle_History_Flags_PrevSnap[str(itype)]={"ParticleIDs_Sorted":[],"ParticleIndex_Original":[],"HostStructure"}
+                Particle_History_Flags_PrevSnap[str(itype)]={"ParticleIDs_Sorted":[],"ParticleIndex_Original":[],"HostStructure":[]}
             Particle_History_Flags=dict()
         else:
             Particle_History_Flags_PrevSnap=Particle_History_Flags
