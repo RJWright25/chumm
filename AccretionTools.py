@@ -179,7 +179,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         # Find new particles in halos and flip the required switches
         temp_subhalo_indices=list(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
-        print(temp_subhalo_indices)
 
         print('Retrieving and organising particles in structure...')
         #recall previous data
@@ -198,7 +197,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         L2_Processed_Particles_FRESH_IDs=np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L2_Processed_Particles_FRESH_Types=np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
         L2_Processed_Particles_FRESH=df(np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types)),dtype=int,columns=['ParticleID','ParticleType']).sort_values(['ParticleType','ParticleID'])
-
+        print(L2_Processed_Particles_FRESH.iloc[0:100])
         t2=time.time()
         print(f'Finished finding particles in structure in {t2-t1} sec')
 
