@@ -1196,9 +1196,12 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         subhalo_Particles=df({'ParticleIDs':np.concatenate([snap_Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'ParticleTypes':np.concatenate([snap_Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])},dtype=int).sort_values(["ParticleIDs"])
         fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles["ParticleIDs"].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
         subhalo_Particles_bytype={str(itype):np.array(subhalo_Particles["ParticleIDs"].loc[subhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
+        
 
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists in {t2-t1} sec")
+        print(f"There are {np.sum([len(fieldhalo_Particles_bytype[str(itype)]) for itype in PartTypes])} particles in structure, and ")
+        print(f"There are {np.sum([len(subhalo_Particles_bytype[str(itype)]) for itype in PartTypes])} particles in substructure")
 
         # map IDs to indices from EAGLE DATA and initialise array
         
@@ -1238,7 +1241,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 ipart_switch=ipart_switch+1
                 if ipart_switch%1000==0:
                     print(temp_ID_L1)
-                    print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100)
+                    print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100,'% done flipping L1 switches')
 
                 sorted_index_temp_ID_L1=binary_search_2(element=temp_ID_L1,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
                 # Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]=Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]+1
