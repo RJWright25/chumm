@@ -203,10 +203,9 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         print(f'Finished finding particles in structure in {t2-t1} sec')
 
 
-        for NEW_PARTICLE in L1_Processed_Particles_FRESH:
-            print(NEW_PARTICLE)
-            NEW_PARTICLE_ID=int(NEW_PARTICLE['ParticleID'])
-            NEW_PARTICLE_TYPE=int(NEW_PARTICLE['ParticleType'])
+        for ipartnew in range(len(L1_Processed_Particles_FRESH)):
+            NEW_PARTICLE_ID=int(L1_Processed_Particles_FRESH['ParticleID'].iloc[ipartnew])
+            NEW_PARTICLE_TYPE=int(L1_Processed_Particles_FRESH['ParticleType'].iloc[ipartnew])
 
             if NEW_PARTICLE_TYPE==4:
                 NEW_PARTICLE_TYPE=2
