@@ -1194,6 +1194,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles[["ParticleIDs","HostHaloIndex"]].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
         subhalo_Particles_bytype={str(itype):np.array(subhalo_Particles[["ParticleIDs","HostHaloIndex"]].loc[subhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
         
+        print(fieldhalo_Particles_bytype)
+        
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists in {t2-t1} sec")
         print(f"There are {np.sum([len(fieldhalo_Particles_bytype[str(itype)]) for itype in PartTypes])} particles in structure (L1), and {np.sum([len(subhalo_Particles_bytype[str(itype)]) for itype in PartTypes])} particles in substructure (L2)")
