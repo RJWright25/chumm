@@ -447,7 +447,7 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
     snap=int(base_halo_data_snap["Snap"])
 
     if verbose:
-        print('Reading particle lists for snap = ',snap)
+        print('Reading halo particle lists for snap = ',snap)
 
     # particle data
     try:
