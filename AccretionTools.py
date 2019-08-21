@@ -1182,14 +1182,17 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         t1=time.time()
 
         temp_subhalo_indices=np.where(base_halo_data[snap]["hostHaloID"]>0)[0]
+
         snap_Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
         #fieldhalo==l1, subhalo==l2
-        fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types'])},dtype=int).sort_values(["ParticleIDs"])
+        fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostHalo":np.concatenate([np.ones(len(snap_Halo_Particle_Lists["Particle_IDs"][ihalo]))*base_halo_data[snap]["hostHaloID"] for ihalo in range(len(base_halo_data[snap]["hostHaloID"]))])},dtype=int).sort_values(["ParticleIDs"])
         subhalo_Particles=df({'ParticleIDs':np.concatenate([snap_Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'ParticleTypes':np.concatenate([snap_Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])},dtype=int).sort_values(["ParticleIDs"])
+        
+        print(np.column_stack((fieldhalo_Particles["ParticleIDs"][5000:5200],fieldhalo_Particles["hostHaloID"][5000:5200])))
+        
         fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles["ParticleIDs"].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
         subhalo_Particles_bytype={str(itype):np.array(subhalo_Particles["ParticleIDs"].loc[subhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
         
-
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists in {t2-t1} sec")
         print(f"There are {np.sum([len(fieldhalo_Particles_bytype[str(itype)]) for itype in PartTypes])} particles in structure (L1), and {np.sum([len(subhalo_Particles_bytype[str(itype)]) for itype in PartTypes])} particles in substructure (L2)")
@@ -1237,10 +1240,15 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         print(f'Dumping data to file')
         t1=time.time()
+        if len(base_halo_data[snap]["hostHaloID"])<65000:
+            dtype_for_host='uint16'
+        else:
+            dtype_for_host='uint32'
+
         for itype in PartTypes:
             dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype='int64',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
             dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype='int32',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
-            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype='int8',compression='gzip',data=Particle_History_Flags[str(itype)]["HostStructure"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype=dtype_for_host,compression='gzip',data=Particle_History_Flags[str(itype)]["HostStructure"])
         outfile.close()
         t2=time.time()
         print(f'Dumped {PartNames[itype]} data to file in {t2-t1} sec')
