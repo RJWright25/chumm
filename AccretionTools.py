@@ -1210,10 +1210,8 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
             #now iterate through each particle ID and check (1) history and (2) its previous state
 
-            for temp_itype_ParticleID in Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']:
+            # for temp_itype_ParticleID in Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']:
                 
-
-
 
         isnap+=1
 
