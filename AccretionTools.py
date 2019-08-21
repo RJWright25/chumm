@@ -1225,12 +1225,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             ipart_switch=0
             subhalo_Particles_bytype_SET=set(subhalo_Particles_bytype[str(itype)][:,0])
 
-            for field_particle_ID_and_host in fieldhalo_Particles_bytype[str(itype)]:
+            for field_particle_ID_and_host in fieldhalo_Particles_bytype[str(itype)][0:1000000]:
                 field_particle_ID=field_particle_ID_and_host[0]
                 field_particle_HostHalo=field_particle_ID_and_host[1]
 
                 if ipart_switch%10000==0:
-                    print(field_particle_ID_and_host)
                     print(ipart_switch/n_fieldhalo_particles*100,f'% done adding host halos for {PartNames[itype]} particles')
 
                 sorted_index_temp_ID=binary_search_2(element=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
