@@ -66,7 +66,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     
     Part_Names=['gas','DM','stars']
     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
-        PartTypes=[0,1,4] #Gas, DM, Stars
+        PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
     else:
         PartTypes=[0,1] #Gas, DM
 
@@ -102,7 +102,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         # Carry over old flags and index particle IDs
         t1=time.time()
-        for itype in [2,0,1]:#per type array
+        for itype in [2,3,0,1]:#per type array
             if verbose:
                 print('Carrying over flags for ',Part_Names[itype],' from previous snap')
 
@@ -113,8 +113,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 t1=time.time()
                 #check the new ID list, find the IDs which have disappeared
                 t11=time.time()
-                Particle_IDs_REMOVED_GAS_mask=np.isin(Processed_Flags_FRESH[itype]['ParticleID'],Particle_IDs_FRESH[itype],invert=True)
-                Particle_IDs_REMOVED_GAS_indices=np.where(Particle_IDs_REMOVED_GAS_mask)[0]
+                Particle_IDs_REMOVED_IDs=np.concatenate([Particle_IDs_NEW_STARS_IDs,Particle_IDs_NEW_BH_IDs])
+                print('Number of new Gas+Bh particles this snap: ',len(Particle_IDs_REMOVED_IDs))
+                print('Delta length of fresh/old id list: ',len(Processed_Flags_FRESH[itype]['ParticleID'])-N_Particles_FRESH[itype])
+                Particle_IDs_REMOVED_GAS_indices=np.searchsorted(np.array(Processed_Flags_FRESH[itype]['ParticleID']),Particle_IDs_REMOVED_IDs)
                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].drop(index=Particle_IDs_REMOVED_GAS_indices)
                 t12=time.time()
                 print(f'This bit took {t12-t11}')
@@ -184,6 +186,17 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 else:
                     print("Couldn't coerce new particle indices with old ones")
                     return []
+
+            if itype==3: #if BH
+                if verbose:
+                    print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
+                    print('Finding new BH particles ...')
+
+                t1=time.time()
+                Particle_IDs_NEW_BH_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#BH IDs that we didn't have last snap (should be from gas)
+                Particle_IDs_NEW_BH_IDs=np.compress(Particle_IDs_NEW_BH_mask,Particle_IDs_FRESH[itype])
+
+
         t2=time.time()
         print(f'Finished carrying over old data in {t2-t1} sec')
 
