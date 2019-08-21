@@ -17,210 +17,210 @@ from VRPythonTools import *
 from STFTools import *
 from RW_GenPythonTools import *
 
-def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
+# def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
-    """
+#     """
 
-    gen_particle_history_serial : function
-	----------
+#     gen_particle_history_serial : function
+# 	----------
 
-    Generate and save particle history data from velociraptor property and particle files.
+#     Generate and save particle history data from velociraptor property and particle files.
 
-	Parameters
-	----------
-    base_halo_data : list of dictionaries
-        The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain the type of particle file we'll be reading. 
+# 	Parameters
+# 	----------
+#     base_halo_data : list of dictionaries
+#         The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain the type of particle file we'll be reading. 
 
-    snaps : list of ints
-        The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
-        particles in halos or subhalos (and save accordingly). The running lists will build on the previous snap. 
+#     snaps : list of ints
+#         The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
+#         particles in halos or subhalos (and save accordingly). The running lists will build on the previous snap. 
 
-	Returns
-	----------
-    PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
+# 	Returns
+# 	----------
+#     PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
 
-        '/PartTypeX/PartID'
-        '/PartTypeX/PartIndex'
-        '/PartTypeX/Processed_L1'
-        '/PartTypeX/Processed_L2'
+#         '/PartTypeX/PartID'
+#         '/PartTypeX/PartIndex'
+#         '/PartTypeX/Processed_L1'
+#         '/PartTypeX/Processed_L2'
 
-	"""
+# 	"""
 
-    # Will save to file at: part_histories/PartTypeX_History_xxx-outname.dat
-    # Snaps
-    if snaps==[]:
-        snaps=list(range(len(base_halo_data)))
+#     # Will save to file at: part_histories/PartTypeX_History_xxx-outname.dat
+#     # Snaps
+#     if snaps==[]:
+#         snaps=list(range(len(base_halo_data)))
 
-    try:
-        valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
-        valid_snaps=np.compress(valid_snaps,snaps)
-        outname=base_halo_data[valid_snaps[0]]['outname']
+#     try:
+#         valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
+#         valid_snaps=np.compress(valid_snaps,snaps)
+#         outname=base_halo_data[valid_snaps[0]]['outname']
 
-    except:
-        print("Couldn't validate snaps")
-        return []
+#     except:
+#         print("Couldn't validate snaps")
+#         return []
 
-    # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
-    if not os.path.isdir("part_histories"):
-        os.mkdir("part_histories")
+#     # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
+#     if not os.path.isdir("part_histories"):
+#         os.mkdir("part_histories")
     
-    Part_Names=['gas','DM','stars','BH']
-    if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
-        PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
-    else:
-        PartTypes=[0,1] #Gas, DM
+#     Part_Names=['gas','DM','stars','BH']
+#     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
+#         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
+#     else:
+#         PartTypes=[0,1] #Gas, DM
 
-    isnap=0
-    # Iterate through snapshots and flip switches as required
-    for snap in valid_snaps:
-        if verbose:
-            print(f'Processing for snap = {snap}')
+#     isnap=0
+#     # Iterate through snapshots and flip switches as required
+#     for snap in valid_snaps:
+#         if verbose:
+#             print(f'Processing for snap = {snap}')
     
-        #load new snap data
-        if base_halo_data[snap]['Part_FileType']=='EAGLE': 
-            EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
-            EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
-            if verbose:
-                print('Reading & slicing new EAGLE snap data ...')
-            t1=time.time()
-            EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-            Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
-            t2=time.time()
-            if verbose:
-                print(f'Finished loading new EAGLE snap data in {t2-t1} sec')
+#         #load new snap data
+#         if base_halo_data[snap]['Part_FileType']=='EAGLE': 
+#             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
+#             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
+#             if verbose:
+#                 print('Reading & slicing new EAGLE snap data ...')
+#             t1=time.time()
+#             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+#             Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
+#             t2=time.time()
+#             if verbose:
+#                 print(f'Finished loading new EAGLE snap data in {t2-t1} sec')
 
-        else:
-            h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
-            Particle_IDs_FRESH=[h5py_Snap['PartType'+str(itype)+'/ParticleIDs'] for itype in PartTypes]
+#         else:
+#             h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
+#             Particle_IDs_FRESH=[h5py_Snap['PartType'+str(itype)+'/ParticleIDs'] for itype in PartTypes]
 
-        N_Particles_FRESH=[len(Particle_IDs_FRESH[itype]) for itype in range(len(Particle_IDs_FRESH))]
+#         N_Particles_FRESH=[len(Particle_IDs_FRESH[itype]) for itype in range(len(Particle_IDs_FRESH))]
 
-        # If needed, initialise data
-        if isnap==0:
-            #initialise: columns: 0: ID, 1: F1, 2: F2 (of length n_particles; all flags are 0)
-            Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int) for itype in range(len(PartTypes))]
+#         # If needed, initialise data
+#         if isnap==0:
+#             #initialise: columns: 0: ID, 1: F1, 2: F2 (of length n_particles; all flags are 0)
+#             Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int) for itype in range(len(PartTypes))]
 
-        # Carry over old flags and index particle IDs
-        t1=time.time()
-        for itype in [2,3,0,1]:#per type array
-            if verbose:
-                print('Carrying over flags for ',Part_Names[itype],' from previous snap')
+#         # Carry over old flags and index particle IDs
+#         t1=time.time()
+#         for itype in [2,3,0,1]:#per type array
+#             if verbose:
+#                 print('Carrying over flags for ',Part_Names[itype],' from previous snap')
 
-            if itype==0: #if Gas
-                if verbose:
-                    print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
-                    print('Finding transformed gas particles ...')
-                t1=time.time()
-                #check the new ID list, find the IDs which have disappeared
-                t11=time.time()
-                Particle_IDs_REMOVED_IDs=np.concatenate([Particle_IDs_NEW_STARS_IDs,Particle_IDs_NEW_BH_IDs])
-                print('Number of new Gas+Bh particles this snap: ',len(Particle_IDs_REMOVED_IDs))
-                print('Delta length of fresh/old id list: ',len(Processed_Flags_FRESH[itype]['ParticleID'])-N_Particles_FRESH[itype])
-                Particle_IDs_REMOVED_GAS_indices=np.searchsorted(np.array(Processed_Flags_FRESH[itype]['ParticleID']),Particle_IDs_REMOVED_IDs)
-                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].drop(index=Particle_IDs_REMOVED_GAS_indices)
-                t12=time.time()
-                print(f'This bit took {t12-t11}')
+#             if itype==0: #if Gas
+#                 if verbose:
+#                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
+#                     print('Finding transformed gas particles ...')
+#                 t1=time.time()
+#                 #check the new ID list, find the IDs which have disappeared
+#                 t11=time.time()
+#                 Particle_IDs_REMOVED_IDs=np.concatenate([Particle_IDs_NEW_STARS_IDs,Particle_IDs_NEW_BH_IDs])
+#                 print('Number of new Gas+Bh particles this snap: ',len(Particle_IDs_REMOVED_IDs))
+#                 print('Delta length of fresh/old id list: ',len(Processed_Flags_FRESH[itype]['ParticleID'])-N_Particles_FRESH[itype])
+#                 Particle_IDs_REMOVED_GAS_indices=np.searchsorted(np.array(Processed_Flags_FRESH[itype]['ParticleID']),Particle_IDs_REMOVED_IDs)
+#                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].drop(index=Particle_IDs_REMOVED_GAS_indices)
+#                 t12=time.time()
+#                 print(f'This bit took {t12-t11}')
 
-                #check the ID list is now the same length as the previous snap
-                if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
-                    Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
-                    t2=time.time()
-                    if verbose:
-                        print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
-                else:
-                    print("Couldn't coerce new particle indices with old ones")
-                    return []
+#                 #check the ID list is now the same length as the previous snap
+#                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
+#                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
+#                     t2=time.time()
+#                     if verbose:
+#                         print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
+#                 else:
+#                     print("Couldn't coerce new particle indices with old ones")
+#                     return []
 
-            if itype==1: #if DM
-                if verbose:
-                    print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
-                t1=time.time()
-                #check the ID list is the same length as the previous snap
-                if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
-                    #flags are carried over (structure still ordered by ID), now updating the index information
-                    Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
-                    t2=time.time()
-                    if verbose:
-                        print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
-                else:
-                    print("Couldn't coerce new particle indices with old ones")
-                    return []
+#             if itype==1: #if DM
+#                 if verbose:
+#                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
+#                 t1=time.time()
+#                 #check the ID list is the same length as the previous snap
+#                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
+#                     #flags are carried over (structure still ordered by ID), now updating the index information
+#                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
+#                     t2=time.time()
+#                     if verbose:
+#                         print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
+#                 else:
+#                     print("Couldn't coerce new particle indices with old ones")
+#                     return []
 
-            if itype==2: #if STARS
-                if verbose:
-                    print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
-                    print('Finding new star particles ...')
+#             if itype==2: #if STARS
+#                 if verbose:
+#                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
+#                     print('Finding new star particles ...')
 
-                t1=time.time()
-                Particle_IDs_NEW_STARS_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#star IDs that we didn't have last snap (should be from gas)
-                Particle_IDs_NEW_STARS_IDs=np.compress(Particle_IDs_NEW_STARS_mask,Particle_IDs_FRESH[itype])
+#                 t1=time.time()
+#                 Particle_IDs_NEW_STARS_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#star IDs that we didn't have last snap (should be from gas)
+#                 Particle_IDs_NEW_STARS_IDs=np.compress(Particle_IDs_NEW_STARS_mask,Particle_IDs_FRESH[itype])
 
-                istar=0
-                GAS_index_PREV=[]
-                transfer_L1_flag=[]
-                transfer_L2_flag=[]
+#                 istar=0
+#                 GAS_index_PREV=[]
+#                 transfer_L1_flag=[]
+#                 transfer_L2_flag=[]
 
-                for NEW_STAR_ID in Particle_IDs_NEW_STARS_IDs:
-                    #for each new star particle, find its past gas properties
-                    if istar%10000==0:
-                        if verbose:
-                            print(f'{istar/len(Particle_IDs_NEW_STARS_IDs)*100}% done finding new star particle gas history')
+#                 for NEW_STAR_ID in Particle_IDs_NEW_STARS_IDs:
+#                     #for each new star particle, find its past gas properties
+#                     if istar%10000==0:
+#                         if verbose:
+#                             print(f'{istar/len(Particle_IDs_NEW_STARS_IDs)*100}% done finding new star particle gas history')
 
-                    index_would_be=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
-                    gasID_atthatindex=int(Processed_Flags_FRESH[0]['ParticleID'][index_would_be])
+#                     index_would_be=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
+#                     gasID_atthatindex=int(Processed_Flags_FRESH[0]['ParticleID'][index_would_be])
 
-                    transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'].iloc[index_would_be]))
-                    transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'].iloc[index_would_be]))
-                    istar=istar+1
+#                     transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'].iloc[index_would_be]))
+#                     transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'].iloc[index_would_be]))
+#                     istar=istar+1
                 
-                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int))
-                Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
+#                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int))
+#                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
                 
-                #check the ID list is the same length as the previous snap
-                if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
-                    #flags are carried over (structure still ordered by ID), now updating the index information
-                    Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
-                    t2=time.time()
-                    if verbose:
-                        print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
-                else:
-                    print("Couldn't coerce new particle indices with old ones")
-                    return []
+#                 #check the ID list is the same length as the previous snap
+#                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
+#                     #flags are carried over (structure still ordered by ID), now updating the index information
+#                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
+#                     t2=time.time()
+#                     if verbose:
+#                         print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
+#                 else:
+#                     print("Couldn't coerce new particle indices with old ones")
+#                     return []
 
-            if itype==3: #if BH
-                if verbose:
-                    print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
-                    print('Finding new BH particles ...')
+#             if itype==3: #if BH
+#                 if verbose:
+#                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
+#                     print('Finding new BH particles ...')
 
-                t1=time.time()
-                Particle_IDs_NEW_BH_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#BH IDs that we didn't have last snap (should be from gas)
-                Particle_IDs_NEW_BH_IDs=np.compress(Particle_IDs_NEW_BH_mask,Particle_IDs_FRESH[itype])
+#                 t1=time.time()
+#                 Particle_IDs_NEW_BH_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#BH IDs that we didn't have last snap (should be from gas)
+#                 Particle_IDs_NEW_BH_IDs=np.compress(Particle_IDs_NEW_BH_mask,Particle_IDs_FRESH[itype])
 
 
-        t2=time.time()
-        print(f'Finished carrying over old data in {t2-t1} sec')
+#         t2=time.time()
+#         print(f'Finished carrying over old data in {t2-t1} sec')
 
-        # Find new particles in halos and flip the required switches
-        temp_subhalo_indices=list(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
+#         # Find new particles in halos and flip the required switches
+#         temp_subhalo_indices=list(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
 
-        print('Retrieving and organising particles in structure...')
-        #recall previous data
+#         print('Retrieving and organising particles in structure...')
+#         #recall previous data
 
-        t1=time.time()
-        Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
-        L1_Processed_Particles_FRESH=np.column_stack((np.concatenate(Halo_Particle_Lists['Particle_IDs']),np.concatenate(Halo_Particle_Lists['Particle_Types'])))
-        L2_Processed_Particles_FRESH_IDs=np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
-        L2_Processed_Particles_FRESH_Types=np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
-        L2_Processed_Particles_FRESH=np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types))
-        t2=time.time()
-        print(f'Finished finding particles in structure in {t2-t1} sec')
+#         t1=time.time()
+#         Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
+#         L1_Processed_Particles_FRESH=np.column_stack((np.concatenate(Halo_Particle_Lists['Particle_IDs']),np.concatenate(Halo_Particle_Lists['Particle_Types'])))
+#         L2_Processed_Particles_FRESH_IDs=np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
+#         L2_Processed_Particles_FRESH_Types=np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
+#         L2_Processed_Particles_FRESH=np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types))
+#         t2=time.time()
+#         print(f'Finished finding particles in structure in {t2-t1} sec')
 
 
         
         
-        isnap=isnap+1
+#         isnap=isnap+1
 
-    return Processed_Flags_FRESH
+#     return Processed_Flags_FRESH
 
 # # ########################### GENERATE ACCRETION RATES: constant MASS ###########################
 
@@ -1112,3 +1112,84 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
 #     return acc_rate_dataframe
         
+
+
+
+
+
+def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
+
+    """
+
+    gen_particle_history_serial : function
+	----------
+
+    Generate and save particle history data from velociraptor property and particle files.
+
+	Parameters
+	----------
+    base_halo_data : list of dictionaries
+        The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain the type of particle file we'll be reading. 
+
+    snaps : list of ints
+        The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
+        particles in halos or subhalos (and save accordingly). The running lists will build on the previous snap. 
+
+	Returns
+	----------
+    PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
+
+        '/PartTypeX/PartID'
+        '/PartTypeX/PartIndex'
+        '/PartTypeX/Processed_L1'
+        '/PartTypeX/Processed_L2'
+
+	"""
+
+    # Will save to file at: part_histories/PartTypeX_History_xxx-outname.dat
+    # Snaps
+    if snaps==[]:
+        snaps=list(range(len(base_halo_data)))
+
+    try:
+        valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
+        valid_snaps=np.compress(valid_snaps,snaps)
+        outname=base_halo_data[valid_snaps[0]]['outname']
+
+    except:
+        print("Couldn't validate snaps")
+        return []
+
+    # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
+    if not os.path.isdir("part_histories"):
+        os.mkdir("part_histories")
+    
+    Part_Names=['gas','DM','stars','BH']
+
+    if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
+        PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
+    else:
+        PartTypes=[0,1] #Gas, DM
+
+    isnap=0
+    # Iterate through snapshots and flip switches as required
+    for snap in valid_snaps:
+
+        EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
+        EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
+        EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+
+        ID_Mapping=dict()
+        for itype in PartTypes:
+            #load new snap data
+            if base_halo_data[snap]['Part_FileType']=='EAGLE': 
+                Particle_IDs_FRESH_unsorted=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
+                
+            else:
+                h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
+                Particle_IDs_FRESH_unsorted=h5py_Snap['PartType'+str(itype)+'/ParticleIDs'] 
+
+            ID_Mapping[str(itype)]=dict("ParticleIDs_Sorted":np.sort(Particle_IDs_FRESH_unsorted),"ParticleIndex_Original":np.argsort(Particle_IDs_FRESH_unsorted))
+
+    return ID_Mapping
+
