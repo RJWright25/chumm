@@ -1184,12 +1184,12 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         
         n_halos=len(snap_Halo_Particle_Lists["Particle_IDs"])
         n_halo_particles=[len(snap_Halo_Particle_Lists["Particle_IDs"][ihalo]) for ihalo in range(n_halos)]
-        temp_subhalo_indices=np.where(base_halo_data[snap]["hostHaloID"]>0)[0]
-        
-        fieldhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='uint32')*base_halo_data[snap]["ID"][ihalo] for ihalo in range(n_halos)])
-        subhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo])*base_halo_data[snap]["ID"][ihalo] for ihalo in temp_subhalo_indices])
 
-        print(fieldhalo_Particle_hosts[0:5200])
+        temp_subhalo_indices=np.where(base_halo_data[snap]["hostHaloID"]>0)[0]
+        temp_field_indices=np.where(base_halo_data[snap]["hostHaloID"]<0)[0]
+        
+        fieldhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='uint32')*ihalo for ihalo in range(n_halos)])
+        subhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo])*ihalo for ihalo in temp_subhalo_indices])
         
         #fieldhalo==l1, subhalo==l2
         fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types'])},dtype=int).sort_values(["ParticleIDs"])
