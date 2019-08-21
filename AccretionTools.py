@@ -1235,10 +1235,14 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             ipart_switch=0
             print(fieldhalo_Particles_bytype[str(itype)])
             for temp_ID_L1 in fieldhalo_Particles_bytype[str(itype)]:
+    
                 ipart_switch=ipart_switch+1
+                if ipart_switch%10==0:
+                    print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100)
+                    
                 sorted_index_temp_ID_L1=binary_search_1(element=temp_ID_L1,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
                 # Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]=Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]+1
-                
+
             t2=time.time()
             print(f"Flipped L1 switches in {t2-t1} sec")
             print("Flipping L2 switches ...")
