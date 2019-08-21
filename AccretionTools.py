@@ -1179,7 +1179,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         if isnap==0:
             Particle_History_Flags_PrevSnap=dict()
             for itype in PartTypes:
-                Particle_History_Flags_PrevSnap[str(itype)]={"ParticleIDs_Sorted":[],"ParticleIndex_Original":[],"Processed_L1":[],"Processed_L2":[]}
+                Particle_History_Flags_PrevSnap[str(itype)]={"ParticleIDs_Sorted":[],"ParticleIndex_Original":[],"HostStructure"}
             Particle_History_Flags=dict()
         else:
             Particle_History_Flags_PrevSnap=Particle_History_Flags
@@ -1217,7 +1217,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
 
             #initialise flag data structure with mapped IDs
-            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"Processed_L1":np.zeros(N_Particles_itype),"Processed_L2":np.zeros(N_Particles_itype)}
+            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"HostStructure":np.zeros(N_Particles_itype)}
             t2=time.time()
 
             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1} sec")
@@ -1232,9 +1232,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             #     print(f'Took {t2-t1} sec to flip switches using bs1')
 
             #flip switches of new particles
-            print("Flipping L1 switches ...")
+            print("Flipping L1&L2 switches ...")
             t1=time.time()
             ipart_switch=0
+            subhalo_Particles_bytype_SET=set(subhalo_Particles_bytype[str(itype)])
+
             for temp_ID_L1 in fieldhalo_Particles_bytype[str(itype)]:
     
                 ipart_switch=ipart_switch+1
@@ -1242,10 +1244,13 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100,'% done flipping L1 switches')
 
                 sorted_index_temp_ID_L1=binary_search_2(element=temp_ID_L1,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
-                # Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]=Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]+1
+                Particle_History_Flags[str(itype)]["HostStructure"][sorted_index_temp_ID_L1]=1
+
+                if temp_ID_L1 in subhalo_Particles_bytype_SET:
+                    Particle_History_Flags[str(itype)]["HostStructure"][sorted_index_temp_ID_L1]=2
 
             t2=time.time()
-            print(f"Flipped L1 switches in {t2-t1} sec")
+            print(f"Flipped L1&L2 switches in {t2-t1} sec")
         isnap+=1
 
     return Particle_History_Flags
