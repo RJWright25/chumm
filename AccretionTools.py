@@ -1228,7 +1228,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted'][:1000000]):#loop through all particles of this type at this snap
                     if sorted_index_at_now%100000==0:
                         print(sorted_index_at_now/N_Particles_itype*100,f'% done checking previous {PartNames[itype]} particles')
-                    sorted_index_at_prev_temp=binary_search_1(temp_itype_ParticleID,old_Sorted_IDs)
+                    sorted_index_at_prev_temp=binary_search_2(temp_itype_ParticleID,old_Sorted_IDs)
 
                 t2=time.time()
                 print(f'Took {t2-t1} sec to find all old indices using bs2')
