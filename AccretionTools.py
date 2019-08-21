@@ -1240,18 +1240,11 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                     print(temp_ID_L1)
                     print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100)
 
-                sorted_index_temp_ID_L1=binary_search_1(element=temp_ID_L1,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+                sorted_index_temp_ID_L1=binary_search_2(element=temp_ID_L1,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
                 # Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]=Particle_History_Flags[str(itype)]["Processed_L1"][sorted_index_temp_ID_L1]+1
 
             t2=time.time()
             print(f"Flipped L1 switches in {t2-t1} sec")
-            print("Flipping L2 switches ...")
-            t1=time.time()
-            for temp_ID_L1 in subhalo_Particles_bytype[str(itype)]:
-                sorted_index_temp_ID_L1=binary_search_1(temp_ID_L1,Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
-                Particle_History_Flags[str(itype)]["Processed_L2"][sorted_index_temp_ID_L1]=Particle_History_Flags[str(itype)]["Processed_L2"][sorted_index_temp_ID_L1]+1
-            t2=time.time()
-            print(f"Flipped L2 switches in {t2-t1} sec")
         isnap+=1
 
     return Particle_History_Flags
