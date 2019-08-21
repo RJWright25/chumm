@@ -1237,9 +1237,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
         print(f'Dumping {PartNames[itype]} data to file')
         t1=time.time()
-        dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype='int64',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
-        dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype='int32',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
-        dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype='int8',compression='gzip',data=Particle_History_Flags[str(itype)]["HostStructure"])
+        for itype in PartTypes:
+            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype='int64',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype='int32',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype='int8',compression='gzip',data=Particle_History_Flags[str(itype)]["HostStructure"])
         outfile.close()
         t2=time.time()
         print(f'Dumped {PartNames[itype]} data to file in {t2-t1} sec')
