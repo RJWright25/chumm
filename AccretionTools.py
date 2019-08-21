@@ -1222,6 +1222,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             
             #check if existed previously & add data
             if isnap>0:
+                old_IDs=set(Particle_History_Flags_PrevSnap[str(itype)]['Particle_IDs_Sorted'])
                 for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']):
                     if sorted_index_at_now%10000==0:
                         print(sorted_index_at_now/N_Particles_itype*100,f'% done checking previous {PartNames[itype]} particles')
