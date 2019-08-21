@@ -1222,12 +1222,12 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             
             #check if existed previously & add data
             if isnap>0:
-                old_IDs=set(Particle_History_Flags_PrevSnap[str(itype)]['Particle_IDs_Sorted'])
+                old_IDs=set(Particle_History_Flags_PrevSnap[str(itype)]['ParticleIDs_Sorted'])
                 for sorted_index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']):
                     if sorted_index_at_now%10000==0:
                         print(sorted_index_at_now/N_Particles_itype*100,f'% done checking previous {PartNames[itype]} particles')
-                    sorted_index_at_prev=np.searchsorted(Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"],temp_itype_ParticleID)#index of this ID from current snap in prev sorted list
-                    if np.isin(temp_itype_ParticleID,Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"]):
+                    # sorted_index_at_prev=np.searchsorted(Particle_History_Flags_PrevSnap[str(itype)]["ParticleIDs_Sorted"],temp_itype_ParticleID)#index of this ID from current snap in prev sorted list
+                    if temp_itype_ParticleID in old_IDs:
                         pass
                     else:
                         print(f"A {PartNames[itype]} particle disappeared!")
