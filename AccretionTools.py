@@ -1184,18 +1184,17 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             Particle_History_Flags_PrevSnap=Particle_History_Flags
 
 
-        #Load the Halo particle lists for this snapshot
+        #Load the Halo particle lists for this snapshot for each particle type
         t1=time.time()
+
         temp_subhalo_indices=np.where(base_halo_data[snap]["hostHaloID"]>0)[0]
         snap_Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
-        
         #fieldhalo==l1, subhalo==l2
         fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types'])},dtype=int).sort_values(["ParticleIDs"])
         subhalo_Particles=df({'ParticleIDs':np.concatenate([snap_Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'ParticleTypes':np.concatenate([snap_Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])},dtype=int).sort_values(["ParticleIDs"])
         fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles["ParticleIDs"].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
         subhalo_Particles_bytype={str(itype):np.array(subhalo_Particles["ParticleIDs"].loc[subhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
-        if np.array_equal(subhalo_Particles_bytype["0"],np.sort(subhalo_Particles_bytype["0"])):
-            print("still sorted")
+
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists in {t2-t1} sec")
 
@@ -1215,8 +1214,16 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
             #now iterate through each particle ID and check (1) history and (2) its previous state
 
-            # for temp_itype_ParticleID in Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']:
-                
+            for index_at_now,temp_itype_ParticleID in enumerate(Particle_History_Flags[str(itype)]['ParticleIDs_Sorted']):
+                #check if existed previously
+                index_at_prev=np.searchsorted(Particle_History_Flags_PrevSnap[str(itype)]["Particle_IDs_Sorted"],temp_itype_ParticleID)#index of this ID in prev sorted list
+                if Particle_History_Flags_PrevSnap[str(itype)]["Particle_IDs_Sorted"][index_at_prev]==temp_itype_ParticleID:
+                    print("Particle existed previously!")
+                    print(index_at_prev,index_at_now)
+                    print(Particle_History_Flags_PrevSnap[str(itype)]["Particle_IDs_Sorted"][index_at_prev],temp_itype_ParticleID)
+
+
+
 
         isnap+=1
 
