@@ -1283,52 +1283,52 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
 
 
 
-def gen_accretion_data_serial(base_halo_data,snap,halo_index_list=None,snap_gap=1,fidelity_gap=1,verbose=1):
+# def gen_accretion_data_serial(base_halo_data,snap,halo_index_list=None,snap_gap=1,fidelity_gap=1,verbose=1):
     
-    """
+#     """
 
-    gen_accretion_data_serial : function
-	----------
+#     gen_accretion_data_serial : function
+# 	----------
 
-    Generate and save accretion rates for each particle type by comparing particle lists with appropriate kwargs. 
+#     Generate and save accretion rates for each particle type by comparing particle lists with appropriate kwargs. 
 
-    ** note: particle histories and base_halo_data must have been created as per gen_particle_history_serial (this file)
-             and gen_base_halo_data in STFTools.py
+#     ** note: particle histories and base_halo_data must have been created as per gen_particle_history_serial (this file)
+#              and gen_base_halo_data in STFTools.py
 
-	Parameters
-	----------
-    base_halo_data : list of dictionaries
-        The minimal halo data list of dictionaries previously generated ("B1" is sufficient)
+# 	Parameters
+# 	----------
+#     base_halo_data : list of dictionaries
+#         The minimal halo data list of dictionaries previously generated ("B1" is sufficient)
 
-    snap : int
-        The index in the base_halo_data for which to calculate accretion rates (should be actual snap index)
-        We will retrieve particle data based on the flags at this index
+#     snap : int
+#         The index in the base_halo_data for which to calculate accretion rates (should be actual snap index)
+#         We will retrieve particle data based on the flags at this index
     
-    halo_index_list : list
-        List of the halo indices for which to calculate accretion rates. If 'None',
-        find for all halos in the base_halo_data dictionary at the desired snapshot. 
+#     halo_index_list : list
+#         List of the halo indices for which to calculate accretion rates. If 'None',
+#         find for all halos in the base_halo_data dictionary at the desired snapshot. 
 
-    snap_gap : int
-        How many snaps to skip back to when comparing particle lists.
-        Initial snap for calculation will be snap-snap_gap. 
+#     snap_gap : int
+#         How many snaps to skip back to when comparing particle lists.
+#         Initial snap for calculation will be snap-snap_gap. 
 
-    snap_gap : int
-        How many snaps to skip back to when comparing particle lists.
-        Initial snap (s1) for calculation will be s1=snap-snap_gap, and we will check particle histories at s1-1. 
+#     snap_gap : int
+#         How many snaps to skip back to when comparing particle lists.
+#         Initial snap (s1) for calculation will be s1=snap-snap_gap, and we will check particle histories at s1-1. 
 
-	Returns
-	----------
+# 	Returns
+# 	----------
     
-    AccretionData_snap{snap2}_sg{snap_gap}_fg{fidelity_gap}_ihalo_xxxxxx_xxxxxx_outname.hdf5: hdf5 file with datasets
+#     AccretionData_snap{snap2}_sg{snap_gap}_fg{fidelity_gap}_ihalo_xxxxxx_xxxxxx_outname.hdf5: hdf5 file with datasets
 
-        '/PartTypeX/ihalo_xxxxxx/ParticleIDs': IDs of all accreted particles (length: n_new_particles)
-        '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
-        '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
-        '/PartTypeX/ihalo_xxxxxx/TotalDeltaN': Total gross particle growth (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaN': Unprocessed particle growth (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/TotalDeltaM': Total gross mass growth in physical Msun (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaM': Unprocessed mass growth in physical Msun (length: 1)
+#         '/PartTypeX/ihalo_xxxxxx/ParticleIDs': IDs of all accreted particles (length: n_new_particles)
+#         '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
+#         '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
+#         '/PartTypeX/ihalo_xxxxxx/TotalDeltaN': Total gross particle growth (length: 1)
+#         '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaN': Unprocessed particle growth (length: 1)
+#         '/PartTypeX/ihalo_xxxxxx/TotalDeltaM': Total gross mass growth in physical Msun (length: 1)
+#         '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaM': Unprocessed mass growth in physical Msun (length: 1)
 
-        Where there will be n_halos ihalo datasets. 
+#         Where there will be n_halos ihalo datasets. 
 
-        '/Header': Contains attributes: "t1","t2","dt","z_ave","lookbacktime_ave"
+#         '/Header': Contains attributes: "t1","t2","dt","z_ave","lookbacktime_ave"
