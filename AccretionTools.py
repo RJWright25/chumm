@@ -817,11 +817,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     if test_run:
         if not os.path.exists('acc_data_test'):
             os.mkdir('acc_data_test')
-        outfile_name='acc_data_test/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)"_"+str(halo_index_list[-1].zfill(6)+"_"+run_outname+'_test.hdf5')
+        outfile_name='acc_data_test/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1].zfill(6)+"_"+run_outname+'_test.hdf5')
     else:
         if not os.path.exists('acc_data'):
             os.mkdir('acc_data')
-        outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)"_"+str(halo_index_list[-1].zfill(6)+"_"+run_outname+'.hdf5')
+        outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1].zfill(6)+"_"+run_outname+'.hdf5')
 
     # Particle types from sim type
     PartNames=['gas','DM','','','star','BH']
@@ -834,13 +834,17 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
     #Load in particle histories
     part_histories_snap=int(snap-snap_gap-1)
+    print(f'Retrieving & organising particle histories for snap = {part_histories_snap} ...')
     Part_Histories_File=h5py.File("part_histories/PartHistory_"+str(part_histories_snap).zfill(3)+"_"+run_outname+".hdf5",'r')
     Part_Histories_IDs=[Part_Histories_File["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
     Part_Histories_Index=[Part_Histories_File["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
     Part_Histories_HostStructure=[Part_Histories_File["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
+    print(f'Done retrieving & organising particle histories for snap = {part_histories_snap}')
 
     #Load in particle lists from VR
+    print('Retrieving VR halo particle lists ...')
     snap_1_halo_particles=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=True)
+    print('Done loading VR halo particle lists')
 
     for iihalo,ihalo in enumerate(halo_index_list):# for each halo at the final snap
         is_subhalo=base_halo_data[snap]['hostHaloID'][ihalo]>0
