@@ -56,7 +56,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         This file needs to be PADDED with None to be of the same length as the actual snaps. 
 
     temporal_idval : int
-        The multiplier used by VELOCIraptor to create unique temporal halo IDs. 
+        The multiplier used by TreeFrog to create unique temporal halo IDs. 
 
     verbose : bool
         Flag indicating how verbose we want the code to be when we run.
@@ -159,7 +159,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
     # Now build trees and add onto halo data array
     if temporal_idval==[]:#if not given halo TEMPORALHALOIVAL, use the vr default
-        BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose)
+        BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=int(10**12))
     else:
         BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=temporal_idval)
     
@@ -497,6 +497,6 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
     return part_data_temp
 
 
-# def find_progen_index(base_halo_data,index2,snap2,snap1):### given halo index2 at snap 2, find progenitor index at snap 1
-        
+def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 at snap 2, find progenitor index at snap 1
+
 
