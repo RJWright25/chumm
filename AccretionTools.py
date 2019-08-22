@@ -842,13 +842,16 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
     #Load in particle lists from VR
     print('Retrieving VR halo particle lists ...')
-    snap_1_halo_particles=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=True)
+    snap_1_halo_particles=get_particle_lists(base_halo_data[snap-snap_gap],include_unbound=True,add_subparts_to_fofs=True)
+    snap_2_halo_particles=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=True)
+    snap_3_halo_particles=get_particle_lists(base_halo_data[snap+fidelity_gap],include_unbound=True,add_subparts_to_fofs=True)
     print('Done loading VR halo particle lists')
 
     for iihalo,ihalo in enumerate(halo_index_list):# for each halo at the final snap
         is_subhalo=base_halo_data[snap]['hostHaloID'][ihalo]>0
         ihalo_final_particle_IDs=snap_1_halo_particles['Particle_IDs'][ihalo]
-        print(is_subhalo,len(ihalo_final_particle_IDs))
+        ihalo_final_particle_Types=snap_1_halo_particles['Particle_Types'][ihalo]
+
 
 
 
