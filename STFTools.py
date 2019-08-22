@@ -497,6 +497,6 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
     return part_data_temp
 
 
-def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 at snap 2, find progenitor index at snap 1
+# def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 at snap 2, find progenitor index at snap 1
 
 
