@@ -211,7 +211,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     print('Saving B1 halo data to file (removing detailed TreeFrog data)')
 
     ###### Remove superfluous data for acc_rate calcs
-    fields_to_keep=['Count','Snap','ID','hostHaloID','Tail','VR_FilePath','VR_FileType','Part_FilePath','Part_FileType','UnitInfo','SimulationInfo','outname']
+    fields_to_keep=['Count','Snap','ID','hostHaloID','Tail','','VR_FilePath','VR_FileType','Part_FilePath','Part_FileType','UnitInfo','SimulationInfo','outname']
     halo_data_all_truncated=[]
     for snap,halo_data_snap in enumerate(halo_data_output):
         if have_halo_data[snap]:
@@ -500,11 +500,15 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 def find_progen_index(base_halo_data,index2,snap2,snap1):### given halo index2 at snap 2, find progenitor index at snap 1
         id2=base_halo_data[snap2]['ID'][index2]#the original id
         tail_id=base_halo_data[snap2]['Tail'][index2]#the tail id
+
         for idepth in range(1,snap2-snap1+1,1):
+            if len(tail_id)>1:
+                print("Multiple progenitors!")
+                tail_id=tail_id[0]            
             new_id=tail_id #the new id from tail in last snap
             if new_id in base_halo_data[snap2-idepth]['ID']:
-                new_index=int(np.where(base_halo_data[snap2-idepth]['ID']==new_id)[0][0]) #what index in the previous snap does the new_id correspond to
-                tail_id=int(base_halo_data[snap2-idepth]['Tail'][new_index]) #the new id for next loop
+                new_index=np.where(base_halo_data[snap2-idepth]['ID']==new_id)[0] #what index(s) in the previous snap does the new_id correspond to
+                tail_id=base_halo_data[snap2-idepth]['Tail'][new_index] #the new id for next loop
             else:
                 new_index=np.nan
                 return new_index
