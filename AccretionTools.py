@@ -852,7 +852,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     print('Done loading VR halo particle lists')
 
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
-        subhalo=base_halo_data[snap]['hostHaloID'][ihalo]>0#flag as to whether this is a subhalo(True) or a field halo(False)
+        subhalo=base_halo_data[snap]['hostHaloID'][ihalo_s2]>0#flag as to whether this is a subhalo(True) or a field halo(False)
         
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,snap1=snap1)
         ihalo_s3=find_descen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,snap3=snap3)
