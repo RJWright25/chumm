@@ -824,7 +824,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
     # Particle types from sim type
     PartNames=['gas','DM','','','star','BH']
-    if base_halo_data[valid_snaps[-1]]['Part_FileType']=='EAGLE':
+    if base_halo_data[snap]['Part_FileType']=='EAGLE':
         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
         SimType='EAGLE'
     else:
