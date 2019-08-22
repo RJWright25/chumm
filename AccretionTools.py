@@ -812,8 +812,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         snap=len(base_halo_data)-1#if not given snap, just use the last one
 
     #Initialising outputs
-    valid_snaps=[len(base_halo_data[isnap].keys())>3 for isnap in range(len(base_halo_data))] #which indices of base_halo_data are valid
-    run_outname=base_halo_data[valid_snaps[-1]]['outname']
+    run_outname=base_halo_data[snap]['outname']
     if test_run:
         if not os.path.exists('acc_data_test'):
             os.mkdir('acc_data_test')
