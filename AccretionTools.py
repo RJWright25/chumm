@@ -851,6 +851,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         is_subhalo=base_halo_data[snap]['hostHaloID'][ihalo]>0
         ihalo_final_particle_IDs=snap_1_halo_particles['Particle_IDs'][ihalo]
         ihalo_final_particle_Types=snap_1_halo_particles['Particle_Types'][ihalo]
+        print(is_subhalo,len(ihalo_final_particle_IDs))
 
 
 
