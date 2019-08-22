@@ -17,535 +17,6 @@ from VRPythonTools import *
 from STFTools import *
 from RW_GenPythonTools import *
 
-# def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
-
-#     """
-
-#     gen_particle_history_serial : function
-# 	----------
-
-#     Generate and save particle history data from velociraptor property and particle files.
-
-# 	Parameters
-# 	----------
-#     base_halo_data : list of dictionaries
-#         The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain the type of particle file we'll be reading. 
-
-#     snaps : list of ints
-#         The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
-#         particles in halos or subhalos (and save accordingly). The running lists will build on the previous snap. 
-
-# 	Returns
-# 	----------
-#     PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
-
-#         '/PartTypeX/PartID'
-#         '/PartTypeX/PartIndex'
-#         '/PartTypeX/Processed_L1'
-#         '/PartTypeX/Processed_L2'
-
-# 	"""
-
-#     # Will save to file at: part_histories/PartTypeX_History_xxx-outname.dat
-#     # Snaps
-#     if snaps==[]:
-#         snaps=list(range(len(base_halo_data)))
-
-#     try:
-#         valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
-#         valid_snaps=np.compress(valid_snaps,snaps)
-#         outname=base_halo_data[valid_snaps[0]]['outname']
-
-#     except:
-#         print("Couldn't validate snaps")
-#         return []
-
-#     # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
-#     if not os.path.isdir("part_histories"):
-#         os.mkdir("part_histories")
-    
-#     Part_Names=['gas','DM','stars','BH']
-#     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
-#         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
-#     else:
-#         PartTypes=[0,1] #Gas, DM
-
-#     isnap=0
-#     # Iterate through snapshots and flip switches as required
-#     for snap in valid_snaps:
-#         if verbose:
-#             print(f'Processing for snap = {snap}')
-    
-#         #load new snap data
-#         if base_halo_data[snap]['Part_FileType']=='EAGLE': 
-#             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
-#             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
-#             if verbose:
-#                 print('Reading & slicing new EAGLE snap data ...')
-#             t1=time.time()
-#             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-#             Particle_IDs_FRESH=[EAGLE_Snap.read_dataset(itype,"ParticleIDs") for itype in PartTypes]
-#             t2=time.time()
-#             if verbose:
-#                 print(f'Finished loading new EAGLE snap data in {t2-t1} sec')
-
-#         else:
-#             h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
-#             Particle_IDs_FRESH=[h5py_Snap['PartType'+str(itype)+'/ParticleIDs'] for itype in PartTypes]
-
-#         N_Particles_FRESH=[len(Particle_IDs_FRESH[itype]) for itype in range(len(Particle_IDs_FRESH))]
-
-#         # If needed, initialise data
-#         if isnap==0:
-#             #initialise: columns: 0: ID, 1: F1, 2: F2 (of length n_particles; all flags are 0)
-#             Processed_Flags_FRESH=[df(np.column_stack((np.sort(Particle_IDs_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]),np.zeros(N_Particles_FRESH[itype]))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int) for itype in range(len(PartTypes))]
-
-#         # Carry over old flags and index particle IDs
-#         t1=time.time()
-#         for itype in [2,3,0,1]:#per type array
-#             if verbose:
-#                 print('Carrying over flags for ',Part_Names[itype],' from previous snap')
-
-#             if itype==0: #if Gas
-#                 if verbose:
-#                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
-#                     print('Finding transformed gas particles ...')
-#                 t1=time.time()
-#                 #check the new ID list, find the IDs which have disappeared
-#                 t11=time.time()
-#                 Particle_IDs_REMOVED_IDs=np.concatenate([Particle_IDs_NEW_STARS_IDs,Particle_IDs_NEW_BH_IDs])
-#                 print('Number of new Gas+Bh particles this snap: ',len(Particle_IDs_REMOVED_IDs))
-#                 print('Delta length of fresh/old id list: ',len(Processed_Flags_FRESH[itype]['ParticleID'])-N_Particles_FRESH[itype])
-#                 Particle_IDs_REMOVED_GAS_indices=np.searchsorted(np.array(Processed_Flags_FRESH[itype]['ParticleID']),Particle_IDs_REMOVED_IDs)
-#                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].drop(index=Particle_IDs_REMOVED_GAS_indices)
-#                 t12=time.time()
-#                 print(f'This bit took {t12-t11}')
-
-#                 #check the ID list is now the same length as the previous snap
-#                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
-#                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
-#                     t2=time.time()
-#                     if verbose:
-#                         print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
-#                 else:
-#                     print("Couldn't coerce new particle indices with old ones")
-#                     return []
-
-#             if itype==1: #if DM
-#                 if verbose:
-#                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
-#                 t1=time.time()
-#                 #check the ID list is the same length as the previous snap
-#                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
-#                     #flags are carried over (structure still ordered by ID), now updating the index information
-#                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
-#                     t2=time.time()
-#                     if verbose:
-#                         print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
-#                 else:
-#                     print("Couldn't coerce new particle indices with old ones")
-#                     return []
-
-#             if itype==2: #if STARS
-#                 if verbose:
-#                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
-#                     print('Finding new star particles ...')
-
-#                 t1=time.time()
-#                 Particle_IDs_NEW_STARS_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#star IDs that we didn't have last snap (should be from gas)
-#                 Particle_IDs_NEW_STARS_IDs=np.compress(Particle_IDs_NEW_STARS_mask,Particle_IDs_FRESH[itype])
-
-#                 istar=0
-#                 GAS_index_PREV=[]
-#                 transfer_L1_flag=[]
-#                 transfer_L2_flag=[]
-
-#                 for NEW_STAR_ID in Particle_IDs_NEW_STARS_IDs:
-#                     #for each new star particle, find its past gas properties
-#                     if istar%10000==0:
-#                         if verbose:
-#                             print(f'{istar/len(Particle_IDs_NEW_STARS_IDs)*100}% done finding new star particle gas history')
-
-#                     index_would_be=np.searchsorted(Processed_Flags_FRESH[0]['ParticleID'],NEW_STAR_ID)
-#                     gasID_atthatindex=int(Processed_Flags_FRESH[0]['ParticleID'][index_would_be])
-
-#                     transfer_L1_flag.append(int(Processed_Flags_FRESH[0]['Processed_L1'].iloc[index_would_be]))
-#                     transfer_L2_flag.append(int(Processed_Flags_FRESH[0]['Processed_L2'].iloc[index_would_be]))
-#                     istar=istar+1
-                
-#                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].append(df(np.column_stack((Particle_IDs_NEW_STARS_IDs,transfer_L1_flag,transfer_L2_flag,np.zeros(len(Particle_IDs_NEW_STARS_IDs)))),columns=['ParticleID','Processed_L1','Processed_L2','ParticleIndex'],dtype=int))
-#                 Processed_Flags_FRESH[itype]=Processed_Flags_FRESH[itype].sort_values(['ParticleID'])
-                
-#                 #check the ID list is the same length as the previous snap
-#                 if len(Particle_IDs_FRESH[itype])==len(Processed_Flags_FRESH[itype]['ParticleID']):
-#                     #flags are carried over (structure still ordered by ID), now updating the index information
-#                     Processed_Flags_FRESH[itype]['ParticleIndex']=np.argsort(Particle_IDs_FRESH[itype])
-#                     t2=time.time()
-#                     if verbose:
-#                         print(f'Successfully carried flags and indexed IDs for {Part_Names[itype]} at snap = {snap} in {t2-t1} sec')
-#                 else:
-#                     print("Couldn't coerce new particle indices with old ones")
-#                     return []
-
-#             if itype==3: #if BH
-#                 if verbose:
-#                     print(f'Cleaning particle list for {Part_Names[itype]} at snap = {snap}')
-#                     print('Finding new BH particles ...')
-
-#                 t1=time.time()
-#                 Particle_IDs_NEW_BH_mask=np.in1d(Particle_IDs_FRESH[itype],Processed_Flags_FRESH[itype]['ParticleID'],invert=True)#BH IDs that we didn't have last snap (should be from gas)
-#                 Particle_IDs_NEW_BH_IDs=np.compress(Particle_IDs_NEW_BH_mask,Particle_IDs_FRESH[itype])
-
-
-#         t2=time.time()
-#         print(f'Finished carrying over old data in {t2-t1} sec')
-
-#         # Find new particles in halos and flip the required switches
-#         temp_subhalo_indices=list(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
-
-#         print('Retrieving and organising particles in structure...')
-#         #recall previous data
-
-#         t1=time.time()
-#         Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
-#         L1_Processed_Particles_FRESH=np.column_stack((np.concatenate(Halo_Particle_Lists['Particle_IDs']),np.concatenate(Halo_Particle_Lists['Particle_Types'])))
-#         L2_Processed_Particles_FRESH_IDs=np.concatenate([Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
-#         L2_Processed_Particles_FRESH_Types=np.concatenate([Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices])
-#         L2_Processed_Particles_FRESH=np.column_stack((L2_Processed_Particles_FRESH_IDs,L2_Processed_Particles_FRESH_Types))
-#         t2=time.time()
-#         print(f'Finished finding particles in structure in {t2-t1} sec')
-
-
-        
-        
-#         isnap=isnap+1
-
-#     return Processed_Flags_FRESH
-
-# # ########################### GENERATE ACCRETION RATES: constant MASS ###########################
-
-# # def gen_accretion_rate_constant_mass(base_halo_data,isnap,mass_table=[],halo_index_list=[],depth=5,trim_particles=True,trim_unbound=True,include_unbound=True,verbose=1): 
-    
-# #     """
-
-# #     gen_accretion_rate : function
-# # 	----------
-
-# #     Generate and save accretion rates for each particle type by comparing particle lists and (maybe) trimming particles.
-# #     The snapshot for which this is calculated represents the final snapshot in the calculation. 
-
-# #     ** note: if trimming particles, part_histories must have been generated
-
-# # 	Parameters
-# # 	----------
-# #     base_halo_data : list of dictionaries
-# #         The minimal halo data list of dictionaries previously generated ("base1" is sufficient)
-
-# #     isnap : int
-# #         The index in the base_halo_data list for which to calculate accretion rates.
-# #         (May be different to actual snap).
-
-# #     mass_table : list
-# #         List of the particle masses in order (directly from simulation, unconverted).
-    
-# #     halo_index_list : list
-# #         List of the halo indices for which to calculate accretion rates. If not provided,
-# #         find for all halos in the base_halo_data dictionary at the desired snapshot. 
-
-# #     depth : int
-# #         How many snaps to skip back to when comparing particle lists.
-# #         Initial snap for calculation will be snap-depth. 
-    
-# #     trim_particles: bool
-# #         Boolean flag as to indicating whether or not to remove the particles which have previously been 
-# #         part of structure or substructure in our accretion rate calculation. 
-
-# # 	Returns
-# # 	----------
-# #     delta_m : dictionary
-# #         Dictionary of accretion rates for each particle type to each halo at the desired snap.
-# #         Keys: 
-# #             "DM_Acc"
-# #             "Gas_Acc"
-# #             "dt"
-# #             "halo_index_list"
-# #         This data is saved for each snapshot on the way in a np.pickle file in the directory "/acc_rates"
-
-# # 	"""
-
-# #     ################## Input Checks ##################
-
-# #     n_halos_tot=len(base_halo_data[isnap]['hostHaloID'])
-
-# #     # Snap
-# #     try:
-# #         isnap=int(isnap)
-# #     except:
-# #         print('Invalid snap')
-# #         return []
-    
-# #     # If the directory with particle histories doesn't exist yet, make it (where we have run the python script)
-# #     if not os.path.isdir("acc_rates"):
-# #         os.mkdir("acc_rates")
-
-# #     # If trimming the accretion rates we have to load the particle histories
-# #     if trim_particles:#load particle histories if we need to
-# #         snap_reqd=isnap-depth-1#the snap before our initial snap
-# #         try:#check if the files have already been generated
-# #             print('Trying to find particle histories at isnap = ',snap_reqd)
-# #             if trim_unbound:
-# #                 parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all.dat"
-# #                 parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub.dat"
-# #             else:
-# #                 parthist_filename_all="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_all_boundonly.dat"
-# #                 parthist_filename_sub="part_histories/snap_"+str(snap_reqd).zfill(3)+"_parthistory_sub_boundonly.dat"
-
-# #             with open(parthist_filename_all, 'rb') as parthist_file:
-# #                 allstructure_history=pickle.load(parthist_file)
-# #                 parthist_file.close()
-# #             with open(parthist_filename_sub, 'rb') as parthist_file:
-# #                 substructure_history=pickle.load(parthist_file)
-# #                 parthist_file.close()
-# #             print('Found particle histories')
-# #         except:#if they haven't, generate them and load the required snap
-# #                 print('Failed to find particle histories for trimming at snap = ',isnap-depth-1,', terminating')
-# #                 return []
-
-# #     ################## Finding initial and final particle lists; organising ##################
-
-# #     if verbose:
-# #         print('Now generating accretion rates for isnap = ',isnap,' at depth = ',depth,' trimming = ',trim_particles,', using unbound = ',include_unbound)
-    
-# #     # Find progenitor index subfunction
-# #     def find_progen_index(index_0,isnap,depth):
-# #         id_0=base_halo_data[isnap]['ID'][index_0]#the original id
-# #         tail_id=base_halo_data[isnap]['Tail'][index_0]#the tail id
-# #         for idepth in range(1,depth+1,1):
-#             new_id=tail_id #the new id from tail in last snap
-#             if new_id in base_halo_data[isnap-idepth]['ID']:
-#                 new_index=np.where(base_halo_data[isnap-idepth]['ID']==new_id)[0][0] #what index in the previous snap does the new_id correspond to
-#                 tail_id=base_halo_data[isnap-idepth]['Tail'][new_index] #the new id for next loop
-#             else:
-#                 new_index=np.nan
-#                 return new_index
-#              #new index at snap-depth
-#         return new_index
-    
-#     # If we aren't given a halo_index_list, then just calculate for all 
-#     if halo_index_list==[]:
-#         halo_index_list=list(range(n_halos_tot))
-
-#     # Find and load FINAL snap particle data
-#     if include_unbound:
-#         part_data_2=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=True,include_unbound=True,verbose=0)
-#     else:
-#         part_data_2=get_particle_lists(base_halo_data_snap=base_halo_data[isnap],add_subparts_to_fofs=True,include_unbound=False,verbose=0)
-
-#     part_data_2_ordered_IDs=[part_data_2['Particle_IDs'][ihalo] for ihalo in halo_index_list] #just retrieve the halos we want
-#     part_data_2_ordered_Types=[part_data_2['Particle_Types'][ihalo] for ihalo in halo_index_list] #just retrieve the halos we want
-
-#     # Find and load INITIAL snap particle data (and ensuring they exist)
-#     if include_unbound:
-#         part_data_1=get_particle_lists(base_halo_data_snap=base_halo_data[isnap-depth],include_unbound=True,add_subparts_to_fofs=True,verbose=0)
-#     else:
-#         part_data_1=get_particle_lists(base_halo_data_snap=base_halo_data[isnap-depth],include_unbound=False,add_subparts_to_fofs=True,verbose=0)
-
-#     if isnap-depth<0 or part_data_1["Npart"]==[]:# if we can't find initial particles
-#         print('Initial particle lists not found at required depth (isnap = ',isnap-depth,')')
-#         return []
-
-#     # Organise initial particle lists
-#     print('Organising initial particle lists')
-#     t1=time.time()
-
-#     part_data_1_ordered_IDs=[]#initialise empty initial particle lists
-#     # Iterate through each final halo and find its progenitor particle lists at the desired depth
-#     for ihalo_abs in halo_index_list:
-#         progen_index=find_progen_index(ihalo_abs,isnap=isnap,depth=depth)#finds progenitor index at desired snap
-
-#         if progen_index>-1:#if progenitor index is valid
-#             part_data_1_ordered_IDs.append(part_data_1['Particle_IDs'][progen_index])
-
-#         else:#if progenitor can't be found, make particle lists for this halo (both final and initial) empty to avoid confusion
-#             part_data_1_ordered_IDs.append([])
-#             part_data_2['Particle_IDs']=[]
-#             part_data_2['Particle_Types']=[]
-
-#     t2=time.time()
-
-#     print(f'Organised initial particle lists in {t2-t1} sec')
-
-#     n_halos_tot=len(base_halo_data[isnap]['hostHaloID'])#number of total halos at the final snapshot in the halo_data_all dictionary
-#     n_halos_desired=len(halo_index_list)#number of halos for calculation desired
-#     field_bools=(base_halo_data[isnap]['hostHaloID']==-1)#boolean mask of halos which are field
-
-#     if len(part_data_1_ordered_IDs)==len(part_data_2_ordered_IDs):
-#         if verbose:
-#             print(f'Accretion rate calculator parsed {n_halos_desired} halos')
-#     else:
-#         print('An unequal number of particle lists and/or halo indices were parsed, terminating')
-#         return []
-    
-#     # Initialise outputs
-#     delta_n0=[]
-#     delta_n1=[]
-#     halo_indices_abs=[]
-
-#     #### Main halo loop
-#     for ihalo,ihalo_abs in enumerate(halo_index_list):
-#         #ihalo is counter, ihalo_abs is absolute halo index (at final snap)
-#         if verbose:
-#             print(f'Finding particles new to halo {ihalo_abs}')
-
-#         part_IDs_init=part_data_1_ordered_IDs[ihalo]
-#         part_IDs_final=part_data_2_ordered_IDs[ihalo]
-#         part_Types_final=part_data_2_ordered_Types[ihalo]
-        
-#         part_count_1=len(part_IDs_init)
-#         part_count_2=len(part_IDs_final)
-
-#         # Verifying particle counts are adequate
-#         if part_count_2<2 or part_count_1<2:
-#             if verbose:
-#                 print(f'Particle count in halo {ihalo_abs} is less than 2 - not processing')
-#             # if <2 particles at initial or final snap, then don't calculate accretion rate to this halo
-#             delta_n0.append(np.nan)
-#             delta_n1.append(np.nan)
-
-#         # If particle counts are adequate, then continue with calculation. 
-#         else:
-#             if verbose:
-#                 print(f'Particle count in halo {ihalo_abs} is adequate for accretion rate calculation')
-
-#             #Finding list of particles new to the halo 
-#             new_particle_IDs=np.array(np.compress(np.logical_not(np.in1d(part_IDs_final,part_IDs_init)),part_IDs_final))#list of particles new to halo
-#             new_particle_Types=np.array(np.compress(np.logical_not(np.in1d(part_IDs_final,part_IDs_init)),part_Types_final))#list of particle types new to halo
-
-#             if verbose:
-#                 print('Number of new particles to halo: ',len(new_particle_IDs))
-
-#             #Trimming particles which have been part of structure in the past (i.e. those which are already in halos)    
-
-#             if trim_particles:#if we have the particle histories
-                
-#                 if len(substructure_history)<100:#if the particle history is of insufficient length then skip
-#                     print('Failed to find particle histories for trimming at isnap = ',isnap-depth-1)
-#                     delta_n0.append(np.nan)
-#                     delta_n1.append(np.nan)
-                
-#                 else:#if our particle history is valid
-#                     t1=time.time()
-
-#                     #reset lists which count whether a particle is valid or not (based on what its history is)
-#                     field_mask_good=[]
-#                     sub_mask_good=[]
-
-#                     if field_bools[ihalo]==True:#if a field halo then we check whether each particle has been part of ANY structure
-#                         for i,ipart in enumerate(new_particle_IDs):
-#                             try:
-#                                 allstructure_history[str(ipart)]==1#if the particle has been part of structure, note this by invalidating
-#                                 field_mask_good.append(False)
-
-#                             except:#if the particle is genuinely new to being in any structure, not its index as valid
-#                                 field_mask_good.append(True)
-#                         if verbose:
-#                             print('Done cross checking particles for field halo, now compressing - keeping ',np.sum(field_mask_good),' of ',len(new_particle_IDs),' particles')
-                        
-#                         #reduce list to the genuinely unprocessed particles
-#                         new_particle_Types=np.compress(field_mask_good,new_particle_Types)
-#                         new_particle_IDs=np.compress(field_mask_good,new_particle_IDs)
-
-#                     else:#if a subhalo
-#                         for i,ipart in enumerate(new_particle_IDs):
-#                             try:
-#                                 substructure_history[str(ipart)]==1
-#                                 sub_mask_good.append(False)
-#                             except:
-#                                 sub_mask_good.append(True)
-#                         if verbose:
-#                             print('Done cross checking particles for sub halo, now compressing - keeping ',np.sum(sub_mask_good),' of ',len(new_particle_IDs),' particles')
-                        
-#                         #reduce list to unprocessed particles
-#                         new_particle_Types=np.compress(sub_mask_good,new_particle_Types)
-#                         new_particle_IDs=np.compress(sub_mask_good,new_particle_IDs)
-
-#             #### Now we simply count the number of new particles of each type
-
-#             delta_n0_temp=int(np.sum(new_particle_Types==0))
-#             delta_n1_temp=int(np.sum(new_particle_Types==1))
-#             delta_n0.append(delta_n0_temp) #append the result to our final array
-#             delta_n1.append(delta_n1_temp) #append the result to our final array 
-
-#     ############################# Post-processing accretion calc results #############################
-#     sim_unit_to_Msun=base_halo_data[0]['UnitInfo']['Mass_unit_to_solarmass']#Simulation mass units in Msun
-#     h=base_halo_data[isnap]['SimulationInfo']['h_val']
-#     m_0=mass_table[0]*sim_unit_to_Msun/h #parttype0 mass in Msun (PHYSICAL)
-#     m_1=mass_table[1]*sim_unit_to_Msun/h #parttype1 mass in Msun (PHYSICAL)
-#     lt2=base_halo_data[isnap]['SimulationInfo']['LookbackTime']#final lookback time
-#     lt1=base_halo_data[isnap-depth]['SimulationInfo']['LookbackTime']#initial lookback time
-#     delta_t=abs(lt1-lt2)#lookback time change from initial to final snapshot (Gyr)
-
-#     # Find which particle type is more massive (i.e. DM) and save accretion rates in dictionary
-#     # 'DM_Acc', 'Gas_Acc' and 'dt' as Msun/Gyr and dt accordingly
-#     if mass_table[0]>mass_table[1]:
-#         delta_m={'DM_Acc':np.array(delta_n0)*m_0/delta_t,'DM_Acc_n':delta_n0,'Gas_Acc':np.array(delta_n1)*m_1/delta_t,'Gas_Acc_n':delta_n1,'dt':delta_t,'halo_index_list':halo_index_list}
-#     else:
-#         delta_m={'DM_Acc':np.array(delta_n1)*m_1/delta_t,'DM_Acc_n':delta_n1,'Gas_Acc':np.array(delta_n0)*m_0/delta_t,'Gas_Acc_n':delta_n0,'dt':delta_t,'halo_index_list':halo_index_list}
-    
-#     # Now save all these accretion rates to file (in directory where run /acc_rates)
-#     # (with filename depending on exact calculation parameters) - snap is the index in halo data
-#     # will overwrite existing file (first deletes)
-
-#     print('Saving accretion rates to .dat file.')
-#     if trim_particles:
-#         if include_unbound and trim_unbound:
-#             if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-#                 if verbose:
-#                     print('Overwriting existing accretion data ...')
-#                 os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#             with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-#                 print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#                 pickle.dump(delta_m,acc_data_file)
-#                 acc_data_file.close()
-#         elif not include_unbound and not trim_unbound:
-#             if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-#                 if verbose:
-#                     print('Overwriting existing accretion data ...')
-#                 os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#             with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-#                 print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#                 pickle.dump(delta_m,acc_data_file)
-#                 acc_data_file.close()
-#         elif include_unbound and not trim_unbound:
-#             if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed3_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-#                 if verbose:
-#                     print('Overwriting existing accretion data ...')
-#                 os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed3_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#             with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed3_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-#                 print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_trimmed3_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#                 pickle.dump(delta_m,acc_data_file)
-#                 acc_data_file.close()
-#     else:
-#         if include_unbound:
-#             if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-#                 if verbose:
-#                     print('Overwriting existing accretion data ...')
-#                 os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#             with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-#                 print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#                 pickle.dump(delta_m,acc_data_file)
-#                 acc_data_file.close()
-#         else:
-#             if path.exists('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat'):
-#                 if verbose:
-#                     print('Overwriting existing accretion data ...')
-#                 os.remove('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#             with open('acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat', 'wb') as acc_data_file:
-#                 print('Saving to acc_rates/snap_'+str(isnap).zfill(3)+'_accretion_base2_depth'+str(depth)+'_'+str(halo_index_list[0])+'-'+str(halo_index_list[-1])+'.dat')
-#                 pickle.dump(delta_m,acc_data_file)
-#                 acc_data_file.close()
-#     #return the delta_m dictionary. 
-#     return delta_m
 
 # ########################### GENERATE ACCRETION RATES: VARYING MASS ###########################
 
@@ -1152,41 +623,40 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
     try:
         valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
         valid_snaps=np.compress(valid_snaps,snaps)
-        outname=base_halo_data[valid_snaps[0]]['outname']
+        run_outname=base_halo_data[valid_snaps[0]]['outname']
 
     except:
         print("Couldn't validate snaps")
         return []
 
     # if the directory with particle histories doesn't exist yet, make it (where we have run the python script)
-    if test_run:
-        if not os.path.isdir("part_histories_test"):
-            os.mkdir("part_histories_test")
-
-    else:
-        if not os.path.isdir("part_histories"):
-            os.mkdir("part_histories")
     
     PartNames=['gas','DM','','','star','BH']
 
     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
+        SimType='EAGLE'
     else:
         PartTypes=[0,1] #Gas, DM
+        SimType='OtherHydro'
 
     isnap=0
     # Iterate through snapshots and flip switches as required
     for snap in valid_snaps:
         if test_run:
-            outfile_name="part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5"
+            if not os.path.isdir("part_histories_test"):
+                os.mkdir("part_histories_test")
+            outfile_name="part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
             if os.path.exists(outfile_name):
                 os.remove(outfile_name)
             outfile=h5py.File(outfile_name,'w')
         else:
-            outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5"
+            if not os.path.isdir("part_histories"):
+                os.mkdir("part_histories")
+            outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
             if os.path.exists(outfile_name):
                 os.remove(outfile_name)
-            outfile=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+outname+".hdf5",'w')
+            outfile=h5py.File(outfile_name,'w')
 
         #Load the EAGLE data for this snapshot
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
@@ -1224,7 +694,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
             
             t1=time.time()
             #load new snap data
-            if base_halo_data[snap]['Part_FileType']=='EAGLE': 
+            if SimType=='EAGLE': 
                 Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
             else:
@@ -1282,52 +752,101 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
     return Particle_History_Flags
 
 
-# def gen_accretion_data_serial(base_halo_data,snap,halo_index_list=None,snap_gap=1,fidelity_gap=1,verbose=1):
+def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index_list=None,snap_gap=1,fidelity_gap=1,verbose=1):
     
-#     """
+    """
 
-#     gen_accretion_data_serial : function
-# 	----------
+    gen_accretion_data_serial : function
+	----------
 
-#     Generate and save accretion rates for each particle type by comparing particle lists with appropriate kwargs. 
+    Generate and save accretion rates for each particle type by comparing particle lists with appropriate kwargs. 
 
-#     ** note: particle histories and base_halo_data must have been created as per gen_particle_history_serial (this file)
-#              and gen_base_halo_data in STFTools.py
+    ** note: particle histories and base_halo_data must have been created as per gen_particle_history_serial (this file)
+             and gen_base_halo_data in STFTools.py
 
-# 	Parameters
-# 	----------
-#     base_halo_data : list of dictionaries
-#         The minimal halo data list of dictionaries previously generated ("B1" is sufficient)
+	Parameters
+	----------
+    base_halo_data : list of dictionaries
+        The minimal halo data list of dictionaries previously generated ("B1" is sufficient)
 
-#     snap : int
-#         The index in the base_halo_data for which to calculate accretion rates (should be actual snap index)
-#         We will retrieve particle data based on the flags at this index
+    snap : int
+        The index in the base_halo_data for which to calculate accretion rates (should be actual snap index)
+        We will retrieve particle data based on the flags at this index
     
-#     halo_index_list : list
-#         List of the halo indices for which to calculate accretion rates. If 'None',
-#         find for all halos in the base_halo_data dictionary at the desired snapshot. 
+    halo_index_list : list
+        List of the halo indices for which to calculate accretion rates. If 'None',
+        find for all halos in the base_halo_data dictionary at the desired snapshot. 
 
-#     snap_gap : int
-#         How many snaps to skip back to when comparing particle lists.
-#         Initial snap for calculation will be snap-snap_gap. 
+    snap_gap : int
+        How many snaps to skip back to when comparing particle lists.
+        Initial snap for calculation will be snap-snap_gap. 
 
-#     snap_gap : int
-#         How many snaps to skip back to when comparing particle lists.
-#         Initial snap (s1) for calculation will be s1=snap-snap_gap, and we will check particle histories at s1-1. 
+    snap_gap : int
+        How many snaps to skip back to when comparing particle lists.
+        Initial snap (s1) for calculation will be s1=snap-snap_gap, and we will check particle histories at s1-1. 
 
-# 	Returns
-# 	----------
+	Returns
+	----------
     
-#     AccretionData_snap{snap2}_sg{snap_gap}_fg{fidelity_gap}_ihalo_xxxxxx_xxxxxx_outname.hdf5: hdf5 file with datasets
+    AccretionData_snap{snap2}_sg{snap_gap}_fg{fidelity_gap}_ihalo_xxxxxx_xxxxxx_outname.hdf5: hdf5 file with datasets
 
-#         '/PartTypeX/ihalo_xxxxxx/ParticleIDs': IDs of all accreted particles (length: n_new_particles)
-#         '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
-#         '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
-#         '/PartTypeX/ihalo_xxxxxx/TotalDeltaN': Total gross particle growth (length: 1)
-#         '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaN': Unprocessed particle growth (length: 1)
-#         '/PartTypeX/ihalo_xxxxxx/TotalDeltaM': Total gross mass growth in physical Msun (length: 1)
-#         '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaM': Unprocessed mass growth in physical Msun (length: 1)
+        '/PartTypeX/ihalo_xxxxxx/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
+        '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
+        '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
+        '/PartTypeX/ihalo_xxxxxx/TotalDeltaN': Total gross particle growth (length: 1)
+        '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaN': Unprocessed particle growth (length: 1)
+        '/PartTypeX/ihalo_xxxxxx/TotalDeltaM': Total gross mass growth in physical Msun (length: 1)
+        '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaM': Unprocessed mass growth in physical Msun (length: 1)
 
-#         Where there will be n_halos ihalo datasets. 
+        Where there will be n_halos ihalo datasets. 
 
-#         '/Header': Contains attributes: "t1","t2","dt","z_ave","lookbacktime_ave"
+        '/Header': Contains attributes: "t1","t2","dt","z_ave","lt_ave"
+
+    
+    """
+    #Initialising halo index list
+    if halo_index_list==None:
+        halo_index_list=list(range(len(base_halo_data)))#use all halos if not handed halo index list
+    #Assigning snap
+    if snap==None:
+        snap=len(base_halo_data)-1#if not given snap, just use the last one
+
+    #Initialising outputs
+    valid_snaps=[len(base_halo_data[isnap].keys())>3 for isnap in range(len(base_halo_data))] #which indices of base_halo_data are valid
+    run_outname=base_halo_data[valid_snaps[-1]]['outname']
+    if test_run:
+        if not os.path.exists('acc_data_test'):
+            os.mkdir('acc_data_test')
+        outfile_name='acc_data_test/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)"_"+str(halo_index_list[-1].zfill(6)+"_"+run_outname+'_test.hdf5')
+    else:
+        if not os.path.exists('acc_data'):
+            os.mkdir('acc_data')
+        outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)"_"+str(halo_index_list[-1].zfill(6)+"_"+run_outname+'.hdf5')
+
+    # Particle types from sim type
+    PartNames=['gas','DM','','','star','BH']
+    if base_halo_data[valid_snaps[-1]]['Part_FileType']=='EAGLE':
+        PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
+        SimType='EAGLE'
+    else:
+        PartTypes=[0,1] #Gas, DM
+        SimType='OtherHydro'
+
+    #Load in particle histories
+    part_histories_snap=int(snap-snap_gap-1)
+    Part_Histories_File=h5py.File("part_histories/PartHistory_"+str(part_histories_snap).zfill(3)+"_"+run_outname+".hdf5",'r')
+    Part_Histories_IDs=[Part_Histories_File["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
+    Part_Histories_Index=[Part_Histories_File["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
+    Part_Histories_HostStructure=[Part_Histories_File["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
+
+    #Load in particle lists from VR
+    snap_1_halo_particles=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=True)
+
+    for iihalo,ihalo in enumerate(halo_index_list):# for each halo at the final snap
+        is_subhalo=base_halo_data[snap]['hostHaloID'][ihalo]>0
+        ihalo_final_particle_IDs=snap_1_halo_particles['Particle_IDs'][ihalo]
+        print(len(ihalo_final_particle_IDs))
+
+
+
+     
