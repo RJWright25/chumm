@@ -816,11 +816,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     if test_run:
         if not os.path.exists('acc_data_test'):
             os.mkdir('acc_data_test')
-        outfile_name='acc_data_test/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1]).zfill(6)+"_"+run_outname+'_test.hdf5')
+        outfile_name='acc_data_test/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1]).zfill(6)+"_"+run_outname+'_test.hdf5'
     else:
         if not os.path.exists('acc_data'):
             os.mkdir('acc_data')
-        outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1]).zfill(6)+"_"+run_outname+'.hdf5')
+        outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1]).zfill(6)+"_"+run_outname+'.hdf5'
 
     # Particle types from sim type
     PartNames=['gas','DM','','','star','BH']
