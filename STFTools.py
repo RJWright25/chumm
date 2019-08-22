@@ -209,7 +209,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         halo_data_file.close()
 
     print('Saving B1 halo data to file (removing detailed TreeFrog data)')
-
+    print(list(halo_data_output[28].keys()))
     ###### Remove superfluous data for acc_rate calcs
     fields_to_keep=['Count','Snap','ID','hostHaloID','TailID','HeadID','VR_FilePath','VR_FileType','Part_FilePath','Part_FileType','UnitInfo','SimulationInfo','outname']
     halo_data_all_truncated=[]
