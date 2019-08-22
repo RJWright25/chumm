@@ -500,11 +500,12 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 def find_progen_index(base_halo_data,index2,snap2,snap1):### given halo index2 at snap 2, find progenitor index at snap 1
         id2=base_halo_data[snap2]['ID'][index2]#the original id
         tail_id=base_halo_data[snap2]['Tail'][index2]#the tail id
-
         for idepth in range(1,snap2-snap1+1,1):
-            if len(tail_id)>1:
+            if np.size(tail_id)>1:
                 print("Multiple progenitors!")
-                tail_id=tail_id[0]            
+                tail_id=int(tail_id[0])
+            else:
+                tail_id=int(tail_id)
             new_id=tail_id #the new id from tail in last snap
             if new_id in base_halo_data[snap2-idepth]['ID']:
                 new_index=np.where(base_halo_data[snap2-idepth]['ID']==new_id)[0] #what index(s) in the previous snap does the new_id correspond to
