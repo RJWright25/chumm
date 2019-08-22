@@ -1280,9 +1280,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
     return Particle_History_Flags
 
 
-
-
-
 # def gen_accretion_data_serial(base_halo_data,snap,halo_index_list=None,snap_gap=1,fidelity_gap=1,verbose=1):
     
 #     """
