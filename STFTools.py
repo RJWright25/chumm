@@ -179,7 +179,6 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     for snap in sim_snaps:
         if have_halo_data[snap]:
             isnap=isnap+1
-            print(isnap)
             scale_factor=halo_data_all[isnap]['SimulationInfo']['ScaleFactor']
             redshift=z_at_value(cosmo.scale_factor,scale_factor,zmin=-0.5)
             lookback_time=cosmo.lookback_time(redshift).value
@@ -497,5 +496,4 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 
 
 # def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 at snap 2, find progenitor index at snap 1
-
-
+    
