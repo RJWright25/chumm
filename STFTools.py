@@ -164,11 +164,11 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
     tf_filelist="tf_filelist_compressed.txt"
     # Read in tree data
-    halo_tree=ReadHaloMergerTree(tf_filelist,ibinary=vr_filetype,iverbose=verbose+1,imerit=True,inpart=False)
+    halo_tree=ReadHaloMergerTreeDescen(tf_filelist,ibinary=vr_filetype,iverbose=verbose+1,imerit=True,inpart=False)
 
     # Now build trees and add onto halo data array
 
-    BuildTemporalHeadTail(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=temporal_idval)
+    BuildTemporalHeadTailDescen(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=temporal_idval)
     
     print('Finished assembling descendent tree using VR python tools')
 
