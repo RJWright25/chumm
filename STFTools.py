@@ -164,7 +164,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
     tf_filelist="tf_filelist_compressed.txt"
     # Read in tree data
-    halo_tree=ReadHaloMergerTreeDescen(tf_filelist,ibinary=vr_filetype,iverbose=verbose+1,imerit=True,inpart=False)
+    halo_tree=ReadHaloMergerTreeDescendant(tf_filelist,ibinary=vr_filetype,iverbose=verbose+1,imerit=True,inpart=False)
 
     # Now build trees and add onto halo data array
 
