@@ -542,12 +542,32 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
         tail_ID=base_halo_data[snap2-idepth]["Tail"][index_idepth]
         index_idepth=np.where(base_halo_data[snap2-idepth-1]["ID"]==tail_ID)[0]
         if len(index_idepth)==0:
+            print(f'No valid tail at depth = {idepth+1}')
             index_idepth=np.nan
             break
         else:
             index_idepth=index_idepth[0]
             print(tail_ID,base_halo_data[snap2-idepth-1]["ID"][index_idepth])
+            if idepth==depth-1:
+                return index_idepth
     
+    print('Using first head instead of tails')
+    index_idepth=index2
+    for idepth in range(depth):
+        current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
+        progenitor_indices=np.where(base_halo_data[snap2-idepth-1]["Head"]==current_ID)[0]
+        if len(progenitor_indices)==0:
+            print(f'No progenitors found at depth = {idepth+1}')
+            index_idepth=np.nan
+            break
+        else:
+            print(index_idepth)
+            index_idepth=index_idepth[0]
+            
+       
+
+
+
     return index_idepth
 
     
