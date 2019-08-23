@@ -21,7 +21,7 @@ from VRPythonTools import *
 
 ########################### CREATE BASE HALO DATA ###########################
 
-def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filetype,tf_filelist,outname='',temporal_idval=[],verbose=1):
+def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filetype,tf_filelist,outname='',temporal_idval=10**12,verbose=1):
     
     """
 
@@ -127,7 +127,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             print(f'[File: {vr_list[snap]}]')
            
         #use VR python tools to load in halo data for this snap
-        halo_data_snap=ReadPropertyFile(vr_list[snap],ibinary=vr_filetype,iseparatesubfiles=0,iverbose=0, desiredfields=base_fields, isiminfo=True, iunitinfo=True)
+        halo_data_snap=ReadPropertyFile(vr_list[snap],ibinary=vr_filetype,iseparatesubfiles=0,iverbose=0, desiredfields=base_fields, isiminfo=True, iunitinfo=True,)
         
         #if data is found
         if not halo_data_snap==[]:
@@ -144,8 +144,6 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     halo_data_counts=[item[1] for item in halo_data_all]
     halo_data_all=[item[0] for item in halo_data_all]
 
-    for isnap,item in enumerate(halo_data_all):
-        halo_data_all[isnap]['Count']=halo_data_counts[isnap]
 
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
@@ -154,14 +152,21 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
     tf_filelist="tf_filelist_compressed.txt"
 
+    for isnap,item in enumerate(halo_data_all):
+        halo_data_all[isnap]['Count']=halo_data_counts[isnap]
+        if item["ID"][0]<temporal_idval:
+            #read in IDs from TreeFrog
+            treefile_compressed_isnap=tf_filelist[isnap]
+            treefrog_ids=h5py.File(treefile_compressed_isnap)["/ID"]
+            halo_data_all[isnap]["ID"]=treefrog_ids
+            print(treefrog_ids)
+
     # Read in tree data
     halo_tree=ReadHaloMergerTreeDescendant(tf_filelist,ibinary=vr_filetype,iverbose=verbose+1,imerit=True,inpart=False)
 
     # Now build trees and add onto halo data array
-    if temporal_idval==[]:#if not given halo TEMPORALHALOIVAL, use the vr default
-        BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=int(10**12))
-    else:
-        BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=temporal_idval)
+
+    BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=temporal_idval)
     
     print('Finished assembling descendent tree using VR python tools')
 
