@@ -147,7 +147,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
-    tf_filelist=np.compress(have_halo_data,tf_filelist)  
+    tf_filelist=np.compress(have_halo_data,tf_filelist)
+    print(tf_filelist)
     snap_no=len(tf_filelist)
     np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
     tf_filelist="tf_filelist_compressed.txt"
