@@ -1235,7 +1235,7 @@ def TraceMainDescendant(istart,ihalo,numsnaps,numhalos,halodata,tree,TEMPORALHAL
 		#now move along tree first pass to store head and tails and root tails of main branch
 		while (True):
 			#ids contain index information
-			print(haloindex)
+			print(haloid)
 			haloindex=int(haloid%TEMPORALHALOIDVAL)-1
 
 			halodata[halosnap]['Num_descen'][haloindex]=tree[halosnap]['Num_descen'][haloindex]
