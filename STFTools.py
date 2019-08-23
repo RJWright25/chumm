@@ -153,9 +153,11 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         if item["ID"][0]<temporal_idval:
             #read in IDs from TreeFrog
             treefile_compressed_isnap=tf_filelist[isnap]
+            print(treefile_compressed_isnap)
             with h5py.File(treefile_compressed_isnap,'r+') as treefile_isnap:
+                print(treefile_isnap)
                 treefile_ids=treefile_isnap["/ID"]
-                
+
 
     print('Now assembling descendent tree using VR python tools')
     snap_no=len(tf_filelist)
