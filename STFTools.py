@@ -501,6 +501,46 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 
     return part_data_temp
 
+########################### FIND BEST PROGENITOR FOR ACCRETION ###########################
 
-# def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 at snap 2, find progenitor index at snap 1
+def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 at snap 2, find progenitor index at snap 1
     
+ 
+    """
+
+    find_progen_index : function
+	----------
+
+    Find the index of the best matching progenitor halo at the previous snap. 
+
+	Parameters
+    ----------
+
+    base_halo_data : dictionary
+        The halo data dictionary for the relevant snapshot.
+
+    index2 : int
+        The index of the halo at the current (accretion) snap. 
+
+    snap2 : int
+        The snapshot index of the current (accretion) snap.
+    
+    snap1 : int
+        The snapshot for which the index of the halo is desired. 
+
+    Returns
+    ----------
+    index1 : int
+        The index of the best matched halo at the desired snap. 
+
+	"""
+
+    depth = snap2-snap1
+    index_idepth=index
+    for idepth in range(depth):
+        current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
+        tail_ID=base_halo_data[snap2-idepth]["Tail"][index_idepth][0]
+        index_idepth=np.where(base_halo_data[snap2-idepth-1]["ID"]==tail_ID)[0][0]
+
+    
+
