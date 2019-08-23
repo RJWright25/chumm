@@ -155,8 +155,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             treefile_compressed_isnap=tf_filelist[isnap]+'.tree'
             with h5py.File(treefile_compressed_isnap,'r+') as treefile_isnap:
                 treefile_ids=treefile_isnap["/ID"]
-            halo_data_all[isnap]["ID"]=treefile_ids
-            print(treefile_ids)
+                halo_data_all[isnap]["ID"]=treefile_ids
+            print(halo_data_all[isnap]["ID"])
 
 
     print('Now assembling descendent tree using VR python tools')
