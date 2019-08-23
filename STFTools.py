@@ -536,11 +536,13 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
 	"""
 
     depth = snap2-snap1
-    index_idepth=index
+    index_idepth=index2
     for idepth in range(depth):
         current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
         tail_ID=base_halo_data[snap2-idepth]["Tail"][index_idepth][0]
         index_idepth=np.where(base_halo_data[snap2-idepth-1]["ID"]==tail_ID)[0][0]
+    
+    return index_idepth
 
     
 
