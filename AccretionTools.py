@@ -868,7 +868,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
         print(f'Subhalo? {subhalo}, N_part={len(ihalo_final_particle_IDs)}, progenitor ihalo: {ihalo_s1}, descendent ihalo: {ihalo_s2}')
 
-print(count)
+    print(count)
 
 
 
