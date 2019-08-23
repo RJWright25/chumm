@@ -563,8 +563,7 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
         else:
             print(index_idepth)
             if len(progenitor_indices)>1:
-                print(progenitor_indices)
-                index_idepth=index_idepth[0]
+                index_idepth=progenitor_indices[0]
             else:
                 index_idepth=progenitor_indices
             
