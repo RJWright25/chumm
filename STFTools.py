@@ -155,9 +155,10 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             #read in IDs from TreeFrog
             treefile_compressed_isnap=tf_filelist[isnap]
             print(treefile_compressed_isnap)
-            treefrog_ids=h5py.File(treefile_compressed_isnap)["ID"]
-            halo_data_all[isnap]["ID"]=treefrog_ids
-            print(treefrog_ids)
+            print(list(h5py.File(treefile_compressed_isnap).keys()))
+            # treefrog_ids=h5py.File(treefile_compressed_isnap)["ID"]
+            # halo_data_all[isnap]["ID"]=treefrog_ids
+            # print(treefrog_ids)
 
     snap_no=len(tf_filelist)
     np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
