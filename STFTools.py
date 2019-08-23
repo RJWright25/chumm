@@ -148,11 +148,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
     tf_filelist=np.compress(have_halo_data,tf_filelist)
-    print(tf_filelist)
-    snap_no=len(tf_filelist)
-    np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
-    tf_filelist="tf_filelist_compressed.txt"
-    print(tf_filelist)
+
     for isnap,item in enumerate(halo_data_all):
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]
         if item["ID"][0]<temporal_idval:
@@ -163,6 +159,9 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             halo_data_all[isnap]["ID"]=treefrog_ids
             print(treefrog_ids)
 
+    snap_no=len(tf_filelist)
+    np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
+    tf_filelist="tf_filelist_compressed.txt"
     # Read in tree data
     halo_tree=ReadHaloMergerTreeDescendant(tf_filelist,ibinary=vr_filetype,iverbose=verbose+1,imerit=True,inpart=False)
 
