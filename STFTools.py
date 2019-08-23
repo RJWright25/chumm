@@ -545,8 +545,8 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
             index_idepth=np.nan
             break
         else:
-            print(index_idepth)
             index_idepth=index_idepth[0]
+            print(tail_ID,base_halo_data[snap2-idepth-1]["ID"][index_idepth])
     
     return index_idepth
 
