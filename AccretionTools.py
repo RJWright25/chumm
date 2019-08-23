@@ -858,6 +858,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,snap1=snap1)
         # ihalo_s3=find_descen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,snap3=snap3)
+        print(ihalo_s1)
         if ihalo_s1!=np.nan:
             count=count+1
 
