@@ -154,6 +154,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             #read in IDs from TreeFrog
             treefile_compressed_isnap=tf_filelist[isnap]+'.tree'
             treefile_isnap=h5py.File(treefile_compressed_isnap,'r+')
+            print(isnap,treefile_isnap)
             treefile_ids=treefile_isnap["/ID"].value
             halo_data_all[isnap]["ID"]=treefile_ids
             treefile_isnap.close()
