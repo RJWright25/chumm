@@ -168,7 +168,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
     # Now build trees and add onto halo data array
 
-    BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=temporal_idval)
+    BuildTemporalHeadTail(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=verbose,TEMPORALHALOIDVAL=temporal_idval)
     
     print('Finished assembling descendent tree using VR python tools')
 
