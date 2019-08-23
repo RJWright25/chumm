@@ -151,7 +151,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     snap_no=len(tf_filelist)
     np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
     tf_filelist="tf_filelist_compressed.txt"
-
+    print(tf_filelist)
     for isnap,item in enumerate(halo_data_all):
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]
         if item["ID"][0]<temporal_idval:
