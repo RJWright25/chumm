@@ -157,7 +157,6 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             treefile_ids=treefile_isnap["/ID"].value
             halo_data_all[isnap]["ID"]=treefile_ids
             treefile_isnap.close()
-            print(halo_data_all[isnap]["ID"])
 
 
     print('Now assembling descendent tree using VR python tools')
