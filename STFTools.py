@@ -503,7 +503,7 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 
 ########################### FIND BEST PROGENITOR FOR ACCRETION ###########################
 
-def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 at snap 2, find progenitor index at snap 1
+def find_progen_index(base_halo_data,index2,snap2,depth): ### given halo index2 at snap 2, find progenitor index at snap 1
     
  
     """
@@ -525,8 +525,8 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
     snap2 : int
         The snapshot index of the current (accretion) snap.
     
-    snap1 : int
-        The snapshot for which the index of the halo is desired. 
+    depth : int
+        The number of snapshots for which to scroll back. 
 
     Returns
     ----------
@@ -535,14 +535,11 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
 
 	"""
     padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
-    depth = snap2-snap1
-    index_idepth=index2
+
     for idepth in range(depth):
         current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
         tail_ID=base_halo_data[snap2-idepth]["Tail"][index_idepth]
-        tail_Snap=base_halo_data[snap2-idepth]["TailSnap"][index_idepth]+padding
-        if not (tail_Snap==snap2-idepth-1 or tail_Snap==snap2-idepth):
-            print(f"progenitor found at different snap: {tail_Snap} instead of {snap2-idepth-1}")
+
         index_idepth=np.where(base_halo_data[snap2-idepth-1]["ID"]==tail_ID)[0]
         if len(index_idepth)==0:
             index_idepth=np.nan
@@ -556,4 +553,54 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
     return index_idepth
 
     
+
+    def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 at snap 2, find progenitor index at snap 1
+    
+ 
+    """
+
+    find_descen_index : function
+	----------
+
+    Find the index of the best matching descendent halo at the following snap. 
+
+	Parameters
+    ----------
+
+    base_halo_data : dictionary
+        The halo data dictionary for the relevant snapshot.
+
+    index2 : int
+        The index of the halo at the current (accretion) snap. 
+
+    snap2 : int
+        The snapshot index of the current (accretion) snap.
+    
+    depth : int
+        The number of snapshots for which to scroll forward. 
+
+    Returns
+    ----------
+    index3 : int
+        The index of the best matched halo at the desired snap. 
+
+	"""
+    padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
+
+    for idepth in range(depth):
+        current_ID=base_halo_data[snap2+idepth]["ID"][index_idepth]
+        head_ID=base_halo_data[snap2+idepth]["Head"][index_idepth]
+
+        index_idepth=np.where(base_halo_data[snap2+idepth+1]["ID"]==head_ID)[0]
+        if len(index_idepth)==0:
+            index_idepth=np.nan
+            break
+        else:
+            index_idepth=index_idepth[0]
+            if idepth==depth-1:
+                return index_idepth
+
+
+    return index_idepth
+
 
