@@ -535,14 +535,13 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
 
 	"""
     padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
-    print(padding)
     depth = snap2-snap1
     index_idepth=index2
     for idepth in range(depth):
         current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
         tail_ID=base_halo_data[snap2-idepth]["Tail"][index_idepth]
         tail_Snap=base_halo_data[snap2-idepth]["TailSnap"][index_idepth]+padding
-        if not tail_Snap==snap2-idepth-1:
+        if not tail_Snap==snap2-idepth-1 or tail_Snap==snap2-idepth:
             print(f"progenitor found at different snap: {tail_Snap} instead of {snap2-idepth-1}")
         index_idepth=np.where(base_halo_data[snap2-idepth-1]["ID"]==tail_ID)[0]
         if len(index_idepth)==0:
