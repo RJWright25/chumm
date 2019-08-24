@@ -858,7 +858,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,depth=1)
         ihalo_s3=find_descen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,depth=1)
-        if ihalo_s1!=np.nan and ihalo_s3!=np.nan:
+        if ihalo_s1>0 and ihalo_s3>0:
             count=count+1
         ihalo_final_particle_IDs=snap_1_halo_particles['Particle_IDs'][ihalo_s2]
         ihalo_final_particle_Types=snap_1_halo_particles['Particle_Types'][ihalo_s2]
