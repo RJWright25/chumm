@@ -554,7 +554,7 @@ def find_progen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
 
     
 
-    def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 at snap 2, find progenitor index at snap 1
+def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 at snap 2, find progenitor index at snap 1
     
  
     """
@@ -585,6 +585,7 @@ def find_progen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
         The index of the best matched halo at the desired snap. 
 
 	"""
+
     padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
 
     for idepth in range(depth):
