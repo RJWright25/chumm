@@ -534,14 +534,15 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
         The index of the best matched halo at the desired snap. 
 
 	"""
-
+    padding=np.sum([len(base_halo_data[isnap] for isnap in range(len(base_halo_data)))]<5)
+    print(padding)
     depth = snap2-snap1
     index_idepth=index2
     for idepth in range(depth):
         current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
         tail_ID=base_halo_data[snap2-idepth]["Tail"][index_idepth]
         tail_Snap=base_halo_data[snap2-idepth]["TailSnap"][index_idepth]
-        if not tail_Snap==snap2-idepth-1:
+        if not tail_Snap+padding==snap2-idepth-1:
             print(f"progenitor found at different snap: {tail_Snap} instead of {snap2-idepth-1}")
         index_idepth=np.where(base_halo_data[snap2-idepth-1]["ID"]==tail_ID)[0]
         if len(index_idepth)==0:
@@ -551,23 +552,6 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
             index_idepth=index_idepth[0]
             if idepth==depth-1:
                 return index_idepth
-    
-    index_idepth=index2
-    for idepth in range(depth):
-        current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
-        progenitor_indices=np.where(base_halo_data[snap2-idepth-1]["Head"]==current_ID)[0]
-        if len(progenitor_indices)==0:
-            index_idepth=np.nan
-            break
-        else:
-            print(index_idepth)
-            if len(progenitor_indices)>0:
-                index_idepth=progenitor_indices[0]
-            else:
-                index_idepth=progenitor_indices
-            
-       
-
 
 
     return index_idepth
