@@ -540,9 +540,11 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
     for idepth in range(depth):
         current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
         tail_ID=base_halo_data[snap2-idepth]["Tail"][index_idepth]
+        tail_Snap=base_halo_data[snap2-idepth]["TailSnap"][index_idepth]
+        if tail_Snap!=snap2-idepth-1
+            print(f"progenitor found at different snap: {tail_Snap} instead of {snap2-idepth-1}")
         index_idepth=np.where(base_halo_data[snap2-idepth-1]["ID"]==tail_ID)[0]
         if len(index_idepth)==0:
-            print(f'No valid tail at depth = {idepth+1}')
             index_idepth=np.nan
             break
         else:
@@ -550,13 +552,11 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
             if idepth==depth-1:
                 return index_idepth
     
-    print('Using first head instead of tails')
     index_idepth=index2
     for idepth in range(depth):
         current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
         progenitor_indices=np.where(base_halo_data[snap2-idepth-1]["Head"]==current_ID)[0]
         if len(progenitor_indices)==0:
-            print(f'No progenitors found at depth = {idepth+1}')
             index_idepth=np.nan
             break
         else:
