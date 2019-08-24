@@ -534,7 +534,7 @@ def find_progen_index(base_halo_data,index2,snap2,snap1): ### given halo index2 
         The index of the best matched halo at the desired snap. 
 
 	"""
-    padding=np.sum([len(base_halo_data[isnap]) for isnap in range(len(base_halo_data))]<5)
+    padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
     print(padding)
     depth = snap2-snap1
     index_idepth=index2
