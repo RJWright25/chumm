@@ -535,7 +535,7 @@ def find_progen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
 
 	"""
     padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
-
+    index_idepth=index2
     for idepth in range(depth):
         current_ID=base_halo_data[snap2-idepth]["ID"][index_idepth]
         tail_ID=base_halo_data[snap2-idepth]["Tail"][index_idepth]
@@ -587,6 +587,7 @@ def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
 	"""
 
     padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
+    index_idepth=index2
 
     for idepth in range(depth):
         current_ID=base_halo_data[snap2+idepth]["ID"][index_idepth]
