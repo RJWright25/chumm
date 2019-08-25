@@ -945,6 +945,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
                 print(f"Finding particles {itype}")
                 new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
+                new_particle_IDs_itype_snap2_partindex=[Part_Histories_Index_snap2[iitype][index] for index in new_particle_IDs_itype_snap2_historyindex]
                 print(f"Found particles {itype}")
 
                 # new_processed_flag=
