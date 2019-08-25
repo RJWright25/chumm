@@ -854,7 +854,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 snap_2_masses[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")
             else:#DM
                 hdf5file_1=h5py.File(base_halo_data[snap1]['Part_FilePath'])
-                print(list(hdf5file_1.keys()))
+                print(list(hdf5file_1['Header'].keys()))
         print('Done reading in EAGLE snapshot data')
 
     #Load in particle data
