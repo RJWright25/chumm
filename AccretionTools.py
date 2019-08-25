@@ -838,12 +838,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         SimType='OtherHydro'
 
     if part_filetype=='EAGLE':
+        print('Reading in EAGLE snapshot data ...')
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
         EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
         EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
         EAGLE_Snap_2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
         EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-        
+
         snap_1_masses=dict()
         snap_2_masses=dict()
 
@@ -855,6 +856,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 hdf5file_1=h5py.File(base_halo_data[snap1]['Part_FilePath'])
                 dm_mass_1=hdf5file_1["MassTable"][1]
                 print(dm_mass_1)
+        print('Done reading in EAGLE snapshot data')
 
     #Load in particle data
     print(f'Retrieving & organising particle data for snap = {part_histories_snap} ...')
