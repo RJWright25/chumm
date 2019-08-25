@@ -851,8 +851,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
         for itype in PartTypes:
             if not itype==1:#everything except DM
-                snap_1_masses[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")
-                snap_2_masses[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")
+                snap_1_masses[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10
+                snap_2_masses[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10
             else:#DM
                 hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
                 dm_mass=hdf5file['Header'].attrs['MassTable'][1]*hdf5file['Units'].attrs['UnitMass_in_g']/hdf5file['Constants'].attrs['SOLAR_MASS']
