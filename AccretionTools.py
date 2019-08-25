@@ -837,7 +837,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         PartTypes=[0,1] #Gas, DM
         SimType='OtherHydro'
 
-    if part_filetype==EAGLE:
+    if part_filetype=='EAGLE':
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
         EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
         EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
