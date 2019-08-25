@@ -913,7 +913,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
                 lost_particle_IDs_itype=np.sort(np.compress(lost_particle_mask_itype,snap1_IDs_temp))
                 
-                new_processed_flag=
+                # new_processed_flag=
 
                 
 
