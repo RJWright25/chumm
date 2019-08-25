@@ -943,10 +943,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
                 lost_particle_IDs_itype=np.compress(lost_particle_mask_itype,snap1_IDs_temp)
 
-                print(f'Finding raw particle data for PartType{itype}...')
+                print(f'Finding raw particle data for PartType{itype} at snap {snap2} ...')
                 snap2_particle_indices_in_history=[binary_search_2(new_particle_IDs_itype_ipart,Part_Histories_IDs_snap2)] for new_particle_IDs_itype_ipart in new_particle_IDs_itype]
                 snap2_particle_indices_in_partdata=[Part_Histories_Index_snap2[snap2_particle_indices_in_history_ipart] for snap2_particle_indices_in_history_ipart in snap2_particle_indices_in_history]
-                
+                print(f'Finished with raw particle data for PartType{itype} at snap {snap2}')
+
                 # new_processed_flag=
 
                 
