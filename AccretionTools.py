@@ -948,6 +948,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 for inewpart_ID in new_particle_IDs_itype:
                     new_particle_index_in_history=binary_search_2(inewpart_ID,Part_Histories_IDs_snap2[iitype])
                     new_particle_indices_in_partdata_snap2.append(Part_Histories_Index_snap2[iitype][new_particle_index_in_history])
+                print(new_particle_indices_in_partdata_snap2)
                 print(f'Finished with raw particle data for PartType{itype} at snap {snap2}')
 
                 # new_processed_flag=
