@@ -814,6 +814,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     snap1=snap-snap_gap
     snap2=snap
     snap3=snap+fidelity_gap
+    part_histories_snap=snap1-1
 
     #Initialising outputs
     run_outname=base_halo_data[snap]['outname']
@@ -854,8 +855,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 snap_2_masses[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")
             else:#DM
                 hdf5file_1=h5py.File(base_halo_data[snap1]['Part_FilePath'])
-                print(list(hdf5file_1['Header'].attrs))
-        print('Done reading in EAGLE snapshot data')
+                dm_mass=hdf5file_1['Header'].attrs['MassTable'][1]
+                print(dm_mass)          
+
+print('Done reading in EAGLE snapshot data')
 
     #Load in particle data
     print(f'Retrieving & organising particle data for snap = {part_histories_snap} ...')
