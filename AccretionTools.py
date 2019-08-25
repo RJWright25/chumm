@@ -921,8 +921,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         else:
             #### return nan accretion rate
 
-    print(count)
-
+            pass
 
 
 
