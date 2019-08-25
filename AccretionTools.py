@@ -825,15 +825,44 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         if not os.path.exists('acc_data'):
             os.mkdir('acc_data')
         outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1]).zfill(6)+"_"+run_outname+'.hdf5'
+    
+    part_filetype=base_halo_data[snap]['Part_FileType']
 
     # Particle types from sim type
     PartNames=['gas','DM','','','star','BH']
-    if base_halo_data[snap]['Part_FileType']=='EAGLE':
+    if part_filetype=='EAGLE':
         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
         SimType='EAGLE'
     else:
         PartTypes=[0,1] #Gas, DM
         SimType='OtherHydro'
+
+    if part_filetype==EAGLE:
+        EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
+        EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
+        EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+        EAGLE_Snap_2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
+        EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+        
+        snap_1_masses=dict()
+        snap_2_masses=dict()
+
+        for itype in PartTypes:
+            if not itype==1:#everything except DM
+                snap_1_masses[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")
+                snap_2_masses[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")
+            else:#DM
+                hdf5file_1=h5py.File(base_halo_data[snap1]['Part_FilePath'])
+                dm_mass_1=hdf5file_1["MassTable"][1]
+                print(dm_mass_1)
+
+    #Load in particle data
+    print(f'Retrieving & organising particle data for snap = {part_histories_snap} ...')
+    Part_Histories_File=h5py.File("part_histories/PartHistory_"+str(part_histories_snap).zfill(3)+"_"+run_outname+".hdf5",'r')
+    Part_Histories_IDs=[Part_Histories_File["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
+    Part_Histories_Index=[Part_Histories_File["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
+    Part_Histories_HostStructure=[Part_Histories_File["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
+    print(f'Done retrieving & organising particle histories for snap = {part_histories_snap}')
 
     #Load in particle histories
     part_histories_snap=int(snap-snap_gap-1)
@@ -855,13 +884,42 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
         subhalo=base_halo_data[snap]['hostHaloID'][ihalo_s2]>0#flag as to whether this is a subhalo(True) or a field halo(False)
-        
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,depth=1)
         ihalo_s3=find_descen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,depth=1)
+        
         if ihalo_s1>0 and ihalo_s3>0:
             count=count+1
-        ihalo_final_particle_IDs=snap_1_halo_particles['Particle_IDs'][ihalo_s2]
-        ihalo_final_particle_Types=snap_1_halo_particles['Particle_Types'][ihalo_s2]
+            snap1_IDs_temp=snap_1_halo_particles[ihalo_s1]
+            snap1_Types_temp=snap_1_halo_particles[ihalo_s1]
+            snap2_IDs_temp=snap_2_halo_particles[ihalo_s2]
+            snap2_Types_temp=snap_2_halo_particles[ihalo_s2]
+            snap3_IDs_temp=snap_3_halo_particles[ihalo_s3]
+            snap3_Types_temp=snap_3_halo_particles[ihalo_s3]
+
+            #returns mask for s2 of particles which were not in s1
+            new_particle_IDs_mask_snap2=np.in1d(snap2_IDs_temp,snap1_IDs_temp,invert=True)
+            # new_particle_IDs_snap2=np.compress(new_particle_IDs_mask_snap2,snap2_IDs_temp)
+            # new_particle_Types_snap2=np.compress(new_particle_IDs_mask_snap2,snap2_Types_temp)
+
+            #returns mask for s1 of particles which are in s1 but not s2          
+            lost_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
+            # lost_particle_IDs_snap1=np.compress(lost_particle_IDs_mask_snap1,snap1_IDs_temp)
+            # lost_particle_Types_snap2=np.compress(lost_particle_IDs_mask_snap1,snap1_Types_temp)
+
+            for itype in PartTypes:
+                new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
+                new_particle_IDs_itype=np.sort(np.compress(new_particle_mask_itype,snap2_IDs_temp))
+
+                lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
+                lost_particle_IDs_itype=np.sort(np.compress(lost_particle_mask_itype,snap1_IDs_temp))
+                
+                new_processed_flag=
+
+                
+
+
+        else:
+            #### return nan accretion rate
 
     print(count)
 
