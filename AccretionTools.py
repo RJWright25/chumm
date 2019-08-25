@@ -858,7 +858,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 dm_mass=hdf5file_1['Header'].attrs['MassTable'][1]
                 print(dm_mass)          
 
-print('Done reading in EAGLE snapshot data')
+    print('Done reading in EAGLE snapshot data')
 
     #Load in particle data
     print(f'Retrieving & organising particle data for snap = {part_histories_snap} ...')
