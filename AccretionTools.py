@@ -856,8 +856,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             else:#DM
                 hdf5file_1=h5py.File(base_halo_data[snap1]['Part_FilePath'])
                 dm_mass=hdf5file_1['Header'].attrs['MassTable'][1]
-                units=hdf5file_1['Units']
-                constants=hdf5file_1['Constants']
+                units=list(hdf5file_1['Units'].attrs)
+                constants=list(df5file_1['Constants'].attrs)
                 print(units)          
                 print(constants)          
 
