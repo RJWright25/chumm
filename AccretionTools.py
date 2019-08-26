@@ -900,7 +900,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     print('Done loading VR halo particle lists')
     
     count=0
-
+    
+    subhalos=set(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
+    fieldhalos=set(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
+    
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
         subhalo=int(base_halo_data[snap]['hostHaloID'][ihalo_s2]>0)#flag as to whether this is a subhalo(True) or a field halo(False)
         processed_flag=subhalo+1#1 if field halo, 2 if subhalo
@@ -936,11 +939,19 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 if itype==1:#DM:
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
-                else:
+                    #particle_masses
+                    new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)]
+                    #pre-processed
+                    previous_hostIDs=[Part_Histories_HostStructure_snap1[history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
+
+
+            
+                elif itype==0:#Gas
                     new_particle_IDs_itype_snap2_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap2[iitype],elements=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap1[iitype],elements=new_particle_IDs_itype_snap2)
+                    #particle_masses
+                    new_particle_masses=[snap_2_masses[""]]
 
-                print(np.sum(np.logical_not(np.array(new_particle_IDs_itype_snap1_historyindex)>0)))
         else:
             #### return nan accretion rate
 
