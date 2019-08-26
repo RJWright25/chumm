@@ -669,84 +669,84 @@ def ReadUnitInfo(basefilename):
 
 
 def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesubfiles=0,iparttypes=0,iverbose=0, binarydtype=np.int64, unbound=True):
-    """
-    VELOCIraptor/STF catalog_group, catalog_particles and catalog_parttypes in various formats
+	"""
+	VELOCIraptor/STF catalog_group, catalog_particles and catalog_parttypes in various formats
 
-    Note that a file will indicate how many files the total output has been split into
+	Note that a file will indicate how many files the total output has been split into
 
-    """
-    inompi=True
-    if (iverbose): print("reading particle data",basefilename)
-    gfilename=basefilename+".catalog_groups"
-    pfilename=basefilename+".catalog_particles"
-    upfilename=pfilename+".unbound"
-    tfilename=basefilename+".catalog_parttypes"
-    utfilename=tfilename+".unbound"
-    #check for file existence
-    if (os.path.isfile(gfilename)==True):
-        numfiles=0
-    else:
-        gfilename+=".0"
-        pfilename+=".0"
-        upfilename+=".0"
-        tfilename+=".0"
-        utfilename+=".0"
-        inompi=False
-        if (os.path.isfile(gfilename)==False):
-            print("file not found")
-            return []
-    byteoffset=0
+	"""
+	inompi=True
+	if (iverbose): print("reading particle data",basefilename)
+	gfilename=basefilename+".catalog_groups"
+	pfilename=basefilename+".catalog_particles"
+	upfilename=pfilename+".unbound"
+	tfilename=basefilename+".catalog_parttypes"
+	utfilename=tfilename+".unbound"
+	#check for file existence
+	if (os.path.isfile(gfilename)==True):
+		numfiles=0
+	else:
+		gfilename+=".0"
+		pfilename+=".0"
+		upfilename+=".0"
+		tfilename+=".0"
+		utfilename+=".0"
+		inompi=False
+		if (os.path.isfile(gfilename)==False):
+			print("file not found")
+			return []
+	byteoffset=0
 
-    #load header information from file to get total number of groups
-    #ascii
-    if (ibinary==0):
-        gfile = open(gfilename, 'r')
-        [filenum,numfiles]=gfile.readline().split()
-        filenum=int(filenum);numfiles=int(numfiles)
-        [numhalos, numtothalos]= gfile.readline().split()
-        numhalos=np.uint64(numhalos);numtothalos=np.uint64(numtothalos)
-    #binary
-    elif (ibinary==1):
-        gfile = open(gfilename, 'rb')
-        [filenum,numfiles]=np.fromfile(gfile,dtype=np.int32,count=2)
-        [numhalos,numtothalos]=np.fromfile(gfile,dtype=np.uint64,count=2)
-    #hdf
-    elif (ibinary==2):
-        gfile = h5py.File(gfilename, 'r')
-        filenum=int(gfile["File_id"][0])
-        numfiles=int(gfile["Num_of_files"][0])
-        numhalos=np.uint64(gfile["Num_of_groups"][0])
-        numtothalos=np.uint64(gfile["Total_num_of_groups"][0])
-    gfile.close()
+	#load header information from file to get total number of groups
+	#ascii
+	if (ibinary==0):
+		gfile = open(gfilename, 'r')
+		[filenum,numfiles]=gfile.readline().split()
+		filenum=int(filenum);numfiles=int(numfiles)
+		[numhalos, numtothalos]= gfile.readline().split()
+		numhalos=np.uint64(numhalos);numtothalos=np.uint64(numtothalos)
+	#binary
+	elif (ibinary==1):
+		gfile = open(gfilename, 'rb')
+		[filenum,numfiles]=np.fromfile(gfile,dtype=np.int32,count=2)
+		[numhalos,numtothalos]=np.fromfile(gfile,dtype=np.uint64,count=2)
+	#hdf
+	elif (ibinary==2):
+		gfile = h5py.File(gfilename, 'r')
+		filenum=int(gfile["File_id"][0])
+		numfiles=int(gfile["Num_of_files"][0])
+		numhalos=np.uint64(gfile["Num_of_groups"][0])
+		numtothalos=np.uint64(gfile["Total_num_of_groups"][0])
+	gfile.close()
 
-    particledata=dict()
-    particledata['Npart']=np.zeros(numtothalos,dtype=np.uint64)
-    particledata['Npart_unbound']=np.zeros(numtothalos,dtype=np.uint64)
-    particledata['Particle_IDs']=[[] for i in range(numtothalos)]
-    if (iparttypes==1):
-        particledata['Particle_Types']=[[] for i in range(numtothalos)]
+	particledata=dict()
+	particledata['Npart']=np.zeros(numtothalos,dtype=np.uint64)
+	particledata['Npart_unbound']=np.zeros(numtothalos,dtype=np.uint64)
+	particledata['Particle_IDs']=[[] for i in range(numtothalos)]
+	if (iparttypes==1):
+		particledata['Particle_Types']=[[] for i in range(numtothalos)]
 
-    #now for all files
-    counter=np.uint64(0)
-    subfilenames=[""]
-    if (iseparatesubfiles==1): subfilenames=["",".sublevels"]
-    for ifile in range(numfiles):
-        for subname in subfilenames:
-            bfname=basefilename+subname
-            gfilename=bfname+".catalog_groups"
-            pfilename=bfname+".catalog_particles"
-            upfilename=pfilename+".unbound"
-            tfilename=bfname+".catalog_parttypes"
-            utfilename=tfilename+".unbound"
-            if (inompi==False):
-                gfilename+="."+str(ifile)
-                pfilename+="."+str(ifile)
-                upfilename+="."+str(ifile)
-                tfilename+="."+str(ifile)
-                utfilename+="."+str(ifile)
-            if (iverbose) : print("reading",bfname,ifile)
+	#now for all files
+	counter=np.uint64(0)
+	subfilenames=[""]
+	if (iseparatesubfiles==1): subfilenames=["",".sublevels"]
+	for ifile in range(numfiles):
+		for subname in subfilenames:
+			bfname=basefilename+subname
+			gfilename=bfname+".catalog_groups"
+			pfilename=bfname+".catalog_particles"
+			upfilename=pfilename+".unbound"
+			tfilename=bfname+".catalog_parttypes"
+			utfilename=tfilename+".unbound"
+			if (inompi==False):
+				gfilename+="."+str(ifile)
+				pfilename+="."+str(ifile)
+				upfilename+="."+str(ifile)
+				tfilename+="."+str(ifile)
+				utfilename+="."+str(ifile)
+			if (iverbose) : print("reading",bfname,ifile)
 
-            #ascii
+			#ascii
 			if (ibinary==0):
 				gfile = open(gfilename, 'r')
 				#read header information
