@@ -969,7 +969,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)]
                     #checking previous snap
                     print('Checking the previous state of particles ...')
-                    previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap2_historyindex]
+                    previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
                     if not isubhalo:
                         new_previous_structure=previous_structure                   
                         print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<1)/len(new_previous_structure)*100}%')
@@ -998,7 +998,23 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     print("Getting particle masses...")
                     new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
                     #checking previous snap
-                    print('Checking the previous state of particles')
+                    print('Checking the previous state of particles ...')
+                    previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
+                    if not isubhalo:
+                        new_previous_structure=previous_structure                   
+                        print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<1)/len(new_previous_structure)*100}%')
+                        print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
+                    else:
+                        new_previous_structure=[]
+                        for previous_halo_id in previous_structure:
+                            if previous_halo_id==grouphaloid:
+                                new_previous_structure.append(-1)
+                            else:
+                                new_previous_structure.append(previous_halo_id)
+                        new_previous_structure=np.array(new_previous_structure)
+                        print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100}%')
+                        print(f'CGM {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
+                        print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
 
                     #fidelity
                     print('Checking which particles stayed ...')
