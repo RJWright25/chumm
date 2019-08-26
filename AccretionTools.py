@@ -856,8 +856,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             else:#DM
                 hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
                 dm_mass=hdf5file['Header'].attrs['MassTable'][1]*10**10
-                snap_1_masses[str(itype)]=dm_masses
-                snap_2_masses[str(itype)]=dm_masses
+                snap_1_masses[str(itype)]=dm_mass
+                snap_2_masses[str(itype)]=dm_mass
         print('Done reading in EAGLE snapshot data')
        
     else:#assuming constant mass (convert to physical!)
@@ -942,7 +942,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
                 new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
                 if SimType=='EAGLE':
-                    new_particle_IDs_itype_snap2_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][index]] for index in new_particle_IDs_itype_snap2_historyindex]
+                    if itype==1:
+                        new_particle_IDs_itype_snap2_masses=[snap_2_masses[str(itype)] for index in new_particle_IDs_itype_snap2]
+                    else:
+                        new_particle_IDs_itype_snap2_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][index]] for index in new_particle_IDs_itype_snap2_historyindex]
                 else:
                     new_particle_IDs_itype_snap2_masses=[snap_2_masses[str(itype)] for index in new_particle_IDs_itype_snap2]
 
