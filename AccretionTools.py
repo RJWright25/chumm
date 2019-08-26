@@ -821,8 +821,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     halo_index_list_snap1=[find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap_gap) for ihalo in halo_index_list_snap2]
     halo_index_list_snap3=[find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=fidelity_gap) for ihalo in halo_index_list_snap2]
 
-    print(np.column_stack((halo_index_list_snap1,halo_index_list_snap2,halo_index_list_snap3)))
-
     #Initialising outputs
     run_outname=base_halo_data[snap]['outname']
     if test_run:
@@ -905,7 +903,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     snap_1_halo_particles=get_particle_lists(base_halo_data[snap1],halo_index_list=halo_index_list_snap1,include_unbound=True,add_subparts_to_fofs=True)
     snap_2_halo_particles=get_particle_lists(base_halo_data[snap2],halo_index_list=halo_index_list_snap2,include_unbound=True,add_subparts_to_fofs=True)
     snap_3_halo_particles=get_particle_lists(base_halo_data[snap3],halo_index_list=halo_index_list_snap3,include_unbound=True,add_subparts_to_fofs=True)
-    print(snap_1_halo_particles)
     print('Done loading VR halo particle lists')
 
     count=0    
