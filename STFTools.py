@@ -456,10 +456,7 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 
     # particle data
     try:
-        if include_unbound:
-            part_data_temp=ReadParticleDataFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap['VR_FileType'],iverbose=0,iparttypes=1,unbound=True)
-        else: 
-            part_data_temp=ReadParticleDataFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap['VR_FileType'],iverbose=0,iparttypes=1,unbound=False)
+        part_data_temp=ReadParticleDataFile(base_halo_data_snap['VR_FilePath'],halo_index_list=halo_index_list,ibinary=base_halo_data_snap['VR_FileType'],iverbose=0,iparttypes=1,unbound=include_unbound)
         
         if part_data_temp==[]:
             part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
