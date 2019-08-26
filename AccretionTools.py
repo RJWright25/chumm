@@ -928,8 +928,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 print(f"Compressing for new particles of type {itype} ...")
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)
-                lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
-                lost_particle_IDs_itype_snap1=np.compress(lost_particle_mask_itype,snap1_IDs_temp)
+                # lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
+                # lost_particle_IDs_itype_snap1=np.compress(lost_particle_mask_itype,snap1_IDs_temp)
 
                 print(f"Finding index of accreted particles in halo {ihalo_s2} of type {itype}: n = {len(new_particle_IDs_itype_snap2)}")
                 new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
