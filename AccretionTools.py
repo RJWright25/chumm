@@ -916,7 +916,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         ihalo_s3=halo_index_list_snap3[iihalo]
         print('Halo index: ',ihalo_s2)
         print(f'Progenitor: {ihalo_s1}, descendent: {ihalo_s3}')
-        if ihalo_s1>0 and ihalo_s3>0:# if we found both the progenitor and the descendent 
+        if ihalo_s1>-1 and ihalo_s3>-1:# if we found both the progenitor and the descendent 
             count=count+1
             snap1_IDs_temp=snap_1_halo_particles['Particle_IDs'][ihalo_s2]
             snap1_Types_temp=snap_1_halo_particles['Particle_Types'][ihalo_s2]
