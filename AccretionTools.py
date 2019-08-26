@@ -934,7 +934,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
                 print(f"Finding index of accreted particles in halo {ihalo_s2} of type {itype}: n = {len(new_particle_IDs_itype_snap2)}")
                 new_particle_IDs_itype_snap2_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap2[iitype],elements=new_particle_IDs_itype_snap2)
-
+                print(np.sum(new_particle_IDs_itype_snap2_historyindex==np.nan))
         else:
             #### return nan accretion rate
 
