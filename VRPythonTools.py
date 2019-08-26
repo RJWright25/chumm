@@ -891,8 +891,8 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 				Types_truncated.append(np.nan)
 				Npart_truncated.append(np.nan)
 				Npart_unbound_truncated.append(np.nan)
-
 		particledata_trunc={"Particle_IDs":IDs_truncated,"Particle_Types":Types_truncated,"Npart":Npart_truncated,"Npart_unbound":Npart_unbound_truncated}
+		del particledata
 		return particledata_trunc
 
 def ReadSOParticleDataFile(basefilename,ibinary=0,iverbose=0,binarydtype=np.int64):
