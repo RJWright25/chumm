@@ -940,7 +940,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     new_particle_IDs_itype_snap2_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap2[iitype],elements=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap1[iitype],elements=new_particle_IDs_itype_snap2)
 
-                print(np.sum(new_particle_IDs_itype_snap1_historyindex>0)
+                print(np.sum(np.logical_not(new_particle_IDs_itype_snap1_historyindex>0)))
         else:
             #### return nan accretion rate
 
