@@ -876,11 +876,21 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 	if halo_index_list==None:
 		return particledata
 	else:
-		particledata_truncated=[]
-		ID_lists=[particledata["Particle_IDs"][ihalo] for ihalo in halo_index_list]
-		Types_lists=[particledata["Particle_Types"][ihalo] for ihalo in halo_index_list]
-		Npart_lists=[particledata["Npart"][ihalo] for ihalo in halo_index_list]
-		Npart_unbound=[particledata["Npart_unbound"][ihalo] for ihalo in halo_index_list]
+		ID_lists=[]
+		Types_lists=[]
+		Npart_lists=[]
+		Npart_unbound=[]
+		for ihalo in halo_index_list:
+			if ihalo>-10:
+				ID_lists.append(particledata["Particle_IDs"][ihalo])
+				Types_lists.append(particledata["Particle_Types"][ihalo])
+				Npart_lists.append(particledata["Npart"][ihalo])
+				Npart_unbound.append(particledata["Npart_unbound"][ihalo])
+			else:
+				ID_lists.append([])
+				Types_lists.append([])
+				Npart_lists.append([])
+				Npart_unbound.append([])		
 
 		particledata={"Particle_IDs":ID_lists,"Particle_Types":Types_lists,"Npart":Npart_lists,"Npart_unbound":Npart_unbound}
 		return particledata
