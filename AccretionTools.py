@@ -950,14 +950,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     #pre-processed
                     previous_hostIDs=[Part_Histories_HostStructure_snap1[history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
 
-
-            
                 elif itype==0:#Gas
                     new_particle_IDs_itype_snap2_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap2[iitype],elements=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap1[iitype],elements=new_particle_IDs_itype_snap2)
                     #particle_masses
-                    new_particle_masses=[snap_2_masses[""]]
-
+                    new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[str(itype)][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
+                    #pre-processed
+                    previous_hostIDs=[Part_Histories_HostStructure_snap1[history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
         else:
             #### return nan accretion rate
 
