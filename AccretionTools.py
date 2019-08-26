@@ -982,7 +982,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                             else:
                                 new_previous_structure.append(previous_halo_id)
                         new_previous_structure=np.array(new_previous_structure)
-                        print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
+                        print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100}%')
                         print(f'CGM {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100}%')
                         print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
 
