@@ -722,7 +722,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
                 if ipart_switch%100000==0:
                     print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100,f'% done adding host halos for {PartNames[itype]} particles')
 
-                sorted_index_temp_ID=binary_search_2(element=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+                sorted_index_temp_ID=binary_search_2(elements=[field_particle_ID],sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])[0]
                 Particle_History_Flags[str(itype)]["HostHaloIndex"][sorted_index_temp_ID]=int(field_particle_HostHalo)
                 ipart_switch=ipart_switch+1
 
@@ -926,14 +926,16 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             for iitype,itype in enumerate(PartTypes):
                 
                 print(f"Compressing for new particles of type {itype} ...")
+
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)
                 # lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
                 # lost_particle_IDs_itype_snap1=np.compress(lost_particle_mask_itype,snap1_IDs_temp)
 
                 print(f"Finding index of accreted particles in halo {ihalo_s2} of type {itype}: n = {len(new_particle_IDs_itype_snap2)}")
-                new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
-                new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
+                new_particle_IDs_itype_snap2_historyindex=binary_search_2(sorted_array=Part_Histories_IDs_snap2[iitype],elements=new_particle_IDs_itype_snap2)
+                new_particle_IDs_itype_snap1_historyindex=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],elements=new_particle_IDs_itype_snap2)
+                #fine to check against old gas list, Part_Histories_IDs_snap1 should have all the Part_Histories_IDs_snap2 values (and more)
                 if SimType=='EAGLE':
                     if itype==1:
                         new_particle_IDs_itype_snap2_masses=[snap_2_masses[str(itype)] for index in new_particle_IDs_itype_snap2]
