@@ -830,64 +830,64 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
 					offset=np.uint64([gfile["Offset"][ihalo] for ihalo in halo_index_list])
 					uoffset=np.uint64([gfile["Offset_unbound"][ihalo] for ihalo in halo_index_list])
 
-                gfile.close()
-                pfile = h5py.File(pfilename, 'r')
-                upfile = h5py.File(upfilename, 'r')
+				gfile.close()
+				pfile = h5py.File(pfilename, 'r')
+				upfile = h5py.File(upfilename, 'r')
 				if halo_index_list==None:
 					piddata=np.int64(pfile["Particle_IDs"])
 					upiddata=np.int64(upfile["Particle_IDs"])
 				else:
 					piddata=np.int64([pfile["Particle_IDs"][ihalo] for ihalo in halo_index_list])
 					upiddata=np.int64([upfile["Particle_IDs"][ihalo] for ihalo in halo_index_list])
-                npart=len(piddata)
-                unpart=len(upiddata)
+				npart=len(piddata)
+				unpart=len(upiddata)
 
-                pfile.close()
-                upfile.close()
-                if (iparttypes==1):
-                    tfile = h5py.File(tfilename, 'r')
-                    utfile = h5py.File(utfilename, 'r')
+				pfile.close()
+				upfile.close()
+				if (iparttypes==1):
+					tfile = h5py.File(tfilename, 'r')
+					utfile = h5py.File(utfilename, 'r')
 					if halo_index_list==None:
 						tdata=np.uint16(tfile["Particle_types"])
 						utdata=np.uint16(utfile["Particle_types"])
 					else:
 						tdata=np.int64([pfile["Particle_types"][ihalo] for ihalo in halo_index_list])
 						utdata=np.int64([upfile["Particle_types"][ihalo] for ihalo in halo_index_list])
-                    tfile.close()
-                    utfile.close()
+					tfile.close()
+					utfile.close()
 
 
-            #now with data loaded, process it to produce data structure
-            unumingroup=np.zeros(numhalos,dtype=np.uint64)
-            for i in range(int(numhalos-1)):
-                unumingroup[i]=(uoffset[i+1]-uoffset[i]);
-            unumingroup[-1]=(unpart-uoffset[-1])
+			#now with data loaded, process it to produce data structure
+			unumingroup=np.zeros(numhalos,dtype=np.uint64)
+			for i in range(int(numhalos-1)):
+				unumingroup[i]=(uoffset[i+1]-uoffset[i]);
+			unumingroup[-1]=(unpart-uoffset[-1])
 
-            if unbound:
-                particledata['Npart'][counter:counter+numhalos]=numingroup
-            else:
-                particledata['Npart'][counter:counter+numhalos] = numingroup-unumingroup
+			if unbound:
+				particledata['Npart'][counter:counter+numhalos]=numingroup
+			else:
+				particledata['Npart'][counter:counter+numhalos] = numingroup-unumingroup
 
-            particledata['Npart_unbound'][counter:counter+numhalos]=unumingroup
-            for i in range(numhalos):
-                if unbound:
-                    particledata['Particle_IDs'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
-                    particledata['Particle_IDs'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
-                    particledata['Particle_IDs'][int(i+counter)][int(numingroup[i]-unumingroup[i]):numingroup[i]]=upiddata[uoffset[i]:uoffset[i]+unumingroup[i]]
-                    if (iparttypes==1):
-                        particledata['Particle_Types'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
-                        particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
-                        particledata['Particle_Types'][int(i+counter)][int(numingroup[i]-unumingroup[i]):numingroup[i]]=utdata[uoffset[i]:uoffset[i]+unumingroup[i]]
-                else:
-                    particledata['Particle_IDs'][int(i+counter)]=np.zeros(numingroup[i]-unumingroup[i],dtype=np.int64)
-                    particledata['Particle_IDs'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
-                    if (iparttypes==1):
-                        particledata['Particle_Types'][int(i+counter)]=np.zeros(numingroup[i]-unumingroup[i],dtype=np.int64)
-                        particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
+			particledata['Npart_unbound'][counter:counter+numhalos]=unumingroup
+			for i in range(numhalos):
+				if unbound:
+					particledata['Particle_IDs'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
+					particledata['Particle_IDs'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
+					particledata['Particle_IDs'][int(i+counter)][int(numingroup[i]-unumingroup[i]):numingroup[i]]=upiddata[uoffset[i]:uoffset[i]+unumingroup[i]]
+					if (iparttypes==1):
+						particledata['Particle_Types'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
+						particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
+						particledata['Particle_Types'][int(i+counter)][int(numingroup[i]-unumingroup[i]):numingroup[i]]=utdata[uoffset[i]:uoffset[i]+unumingroup[i]]
+				else:
+					particledata['Particle_IDs'][int(i+counter)]=np.zeros(numingroup[i]-unumingroup[i],dtype=np.int64)
+					particledata['Particle_IDs'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
+					if (iparttypes==1):
+						particledata['Particle_Types'][int(i+counter)]=np.zeros(numingroup[i]-unumingroup[i],dtype=np.int64)
+						particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
 
-            counter+=numhalos
+			counter+=numhalos
 
-    return particledata
+	return particledata
 
 def ReadSOParticleDataFile(basefilename,ibinary=0,iverbose=0,binarydtype=np.int64):
 	"""
