@@ -933,9 +933,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)
-
+        print('**********************************')
         print('Halo index: ',ihalo_s2,f'(subhalo: {isubhalo})')
         print(f'Progenitor: {ihalo_s1}, descendent: {ihalo_s3}')
+        print('**********************************')
 
         if ihalo_tracked and structuretype<25:# if we found both the progenitor and the descendent (and it's not a subsubhalo)
             count=count+1
@@ -977,16 +978,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     print("Getting particle masses...")
                     new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
                     #fidelity
-                    print('Checking which particles stayed with python set')
-                    t1=time.time()
+                    print('Checking which particles stayed ...')
                     new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
-                    t2=time.time()
                     print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed, took {t2-t1} sec')
-                    # print('Checking which particles stayed with np.in1d')
-                    # t1=time.time()
-                    # new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
-                    # t2=time.time()
-                    # print(f'Done, took {t2-t1} sec')
 
                 else:
                     #stars or bh
