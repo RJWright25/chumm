@@ -856,8 +856,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             else:#DM
                 hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
                 dm_mass=hdf5file['Header'].attrs['MassTable'][1]*10**10
-                snap_1_ndm=hdf5file['Header'].attrs['NumPart_Total'][1]
-                dm_masses=np.ones(snap_1_ndm)*dm_mass
                 snap_1_masses[str(itype)]=dm_masses
                 snap_2_masses[str(itype)]=dm_masses
         print('Done reading in EAGLE snapshot data')
@@ -866,9 +864,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
         snap_1_masses=dict()
         snap_2_masses=dict()
-        npart=hdf5file["Header"].attrs["NumPart_Total"][0]
-        masses_0=hdf5file["Header"].attrs["MassTable"][0]*np.ones(npart)*10**10
-        masses_1=hdf5file["Header"].attrs["MassTable"][1]*np.ones(npart)*10**10
+        masses_0=hdf5file["Header"].attrs["MassTable"][0
+        masses_1=hdf5file["Header"].attrs["MassTable"][1]
         snap_1_masses[str(0)]=masses_0
         snap_1_masses[str(1)]=masses_1
 
@@ -913,11 +910,12 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     count=0
 
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
-        subhalo=base_halo_data[snap]['hostHaloID'][ihalo_s2]>0#flag as to whether this is a subhalo(True) or a field halo(False)
+        subhalo=int(base_halo_data[snap]['hostHaloID'][ihalo_s2]>0)#flag as to whether this is a subhalo(True) or a field halo(False)
+        processed_flag=subhalo+1#1 if field halo, 2 if subhalo
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,depth=1)
         ihalo_s3=find_descen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,depth=1)
         
-        if ihalo_s1>0 and ihalo_s3>0:
+        if ihalo_s1>0 and ihalo_s3>0:# if we find both the progenitor and the descendent 
             count=count+1
             snap1_IDs_temp=snap_1_halo_particles['Particle_IDs'][ihalo_s1]
             snap1_Types_temp=snap_1_halo_particles['Particle_Types'][ihalo_s1]
@@ -928,16 +926,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
             #returns mask for s2 of particles which were not in s1
             new_particle_IDs_mask_snap2=np.in1d(snap2_IDs_temp,snap1_IDs_temp,invert=True)
-            # new_particle_IDs_snap2=np.compress(new_particle_IDs_mask_snap2,snap2_IDs_temp)
-            # new_particle_Types_snap2=np.compress(new_particle_IDs_mask_snap2,snap2_Types_temp)
 
             #returns mask for s1 of particles which are in s1 but not s2          
             lost_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
-            # lost_particle_IDs_snap1=np.compress(lost_particle_IDs_mask_snap1,snap1_IDs_temp)
-            # lost_particle_Types_snap2=np.compress(lost_particle_IDs_mask_snap1,snap1_Types_temp)
 
             for iitype,itype in enumerate(PartTypes):
-
+                
+                print(f"At {ihalo_s2} compressing for new particles of type {itype} ...")
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)
                 lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
@@ -945,13 +940,17 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
                 print(f"Finding new particles in halo {ihalo_s2} of type {itype}: n = {len(new_particle_IDs_itype_snap2)}")
                 new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
-                new_particle_IDs_itype_snap2_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][index]] for index in new_particle_IDs_itype_snap2_historyindex]
-                print(new_particle_IDs_itype_snap2_masses)
-
-                # new_processed_flag=
+                new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
+                if SimType=='EAGLE':
+                    new_particle_IDs_itype_snap2_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][index]] for index in new_particle_IDs_itype_snap2_historyindex]
+                else:
+                    new_particle_IDs_itype_snap2_masses=[snap_2_masses[str(itype)] for index in new_particle_IDs_itype_snap2]
 
                 
 
+
+
+            
 
         else:
             #### return nan accretion rate
