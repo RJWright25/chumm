@@ -884,7 +884,7 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 		for ihalo in halo_index_list:
 			print(f"At halo {ihalo}")
 			if ihalo>-1:
-				print(particledata["Particle_IDs"][ihalo])
+				# print(particledata["Particle_IDs"][ihalo])
 				IDs_truncated.append(particledata["Particle_IDs"][ihalo])
 				Types_truncated.append(particledata["Particle_Types"][ihalo])
 				Npart_truncated.append(particledata["Npart"][ihalo])
@@ -896,6 +896,8 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 				Npart_unbound_truncated.append(np.nan)
 
 		particledata_trunc={"Particle_IDs":IDs_truncated,"Particle_Types":Types_truncated,"Npart":Npart_truncated,"Npart_unbound":Npart_unbound_truncated}
+		print("Truncated particle data:")
+		print(particledata_trunc)
 		return particledata_trunc
 
 def ReadSOParticleDataFile(basefilename,ibinary=0,iverbose=0,binarydtype=np.int64):
