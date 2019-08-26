@@ -670,20 +670,14 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
         snap_Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
         n_halos=len(snap_Halo_Particle_Lists["Particle_IDs"])
         n_halo_particles=[len(snap_Halo_Particle_Lists["Particle_IDs"][ihalo]) for ihalo in range(n_halos)]
-        temp_subhalo_indices=np.where(base_halo_data[snap]["hostHaloID"]>0)[0]
-        temp_field_indices=np.where(base_halo_data[snap]["hostHaloID"]<0)[0]
         allhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='uint32')*ihalo for ihalo in range(n_halos)])
-        subhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='uint32')*ihalo for ihalo in temp_subhalo_indices])
         
         #fieldhalo==l1, subhalo==l2
         fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostHaloIndex":allhalo_Particle_hosts},dtype=int).sort_values(["ParticleIDs"])
-        subhalo_Particles=df({'ParticleIDs':np.concatenate([snap_Halo_Particle_Lists['Particle_IDs'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),'ParticleTypes':np.concatenate([snap_Halo_Particle_Lists['Particle_Types'][temp_subhalo_index] for temp_subhalo_index in temp_subhalo_indices]),"HostHaloIndex":subhalo_Particle_hosts},dtype=int).sort_values(["ParticleIDs"])
         fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles[["ParticleIDs","HostHaloIndex"]].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
-        subhalo_Particles_bytype={str(itype):np.array(subhalo_Particles[["ParticleIDs","HostHaloIndex"]].loc[subhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
 
         print(len())
         n_fieldhalo_particles=np.sum([len(fieldhalo_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
-        n_subhalo_particles=np.sum([len(subhalo_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists for snap {snap} in {t2-t1} sec")
         print(f"There are {n_fieldhalo_particles} particles in structure (L1), and {n_subhalo_particles} particles in substructure (L2) at snap {snap}")
@@ -713,7 +707,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
             print("Adding host indices ...")
             t1=time.time()
             ipart_switch=0
-            subhalo_Particles_bytype_SET=set(subhalo_Particles_bytype[str(itype)][:,0])
 
             for field_particle_ID_and_host in fieldhalo_Particles_bytype[str(itype)]:
                 field_particle_ID=field_particle_ID_and_host[0]
@@ -847,8 +840,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     if part_filetype=='EAGLE':
         print('Reading in EAGLE snapshot data ...')
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
-        EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
-        EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
         EAGLE_Snap_2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
         EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
 
@@ -857,19 +848,16 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
         for itype in PartTypes:
             if not itype==1:#everything except DM
-                snap_1_masses[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10
                 snap_2_masses[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10
             else:#DM
-                hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
+                hdf5file=h5py.File(base_halo_data[snap2]['Part_FilePath'])
                 dm_mass=hdf5file['Header'].attrs['MassTable'][1]*10**10
-                snap_1_masses[str(itype)]=dm_mass
                 snap_2_masses[str(itype)]=dm_mass
         print('Done reading in EAGLE snapshot data')
        
     else:#assuming constant mass (convert to physical!)
         hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
         snap_1_masses=dict()
-        snap_2_masses=dict()
         masses_0=hdf5file["Header"].attrs["MassTable"][0]
         masses_1=hdf5file["Header"].attrs["MassTable"][1]
         snap_1_masses[str(0)]=masses_0
@@ -929,6 +917,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         if structuretype>10:
             isubhalo=True
             grouphaloid=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])-1
+            grouphaloindex=np.where(base_halo_data[snap2]["ID"][ihalo_s2]==grouphaloid)[0][0]
 
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]
@@ -969,6 +958,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     print('Checking the previous state of particles ...')
                     new_particle_IDs_itype_snap2_historyindex=binary_search_1(elements=new_particle_IDs_itype_snap2,sorted_array=Part_Histories_IDs_snap2[iitype])
                     new_particle_IDs_itype_snap1_historyindex=binary_search_1(elements=new_particle_IDs_itype_snap2,sorted_array=Part_Histories_IDs_snap1[iitype])
+                    new_particle_masses=[]
 
                     previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
                     if not isubhalo:
@@ -978,10 +968,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     else:
                         new_previous_structure=[]
                         for previous_halo_id in previous_structure:
-                            if previous_halo_id==0:
-                                new_previous_structure.append(0)
-                            elif previous_halo_id==grouphaloid:
-                                print(previous_halo_id)
+                            if previous_halo_id==grouphaloindex:
                                 new_previous_structure.append(-1)
                             else:
                                 new_previous_structure.append(previous_halo_id)
