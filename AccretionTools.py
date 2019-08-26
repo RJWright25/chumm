@@ -814,7 +814,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     snap1=snap-snap_gap
     snap2=snap
     snap3=snap+fidelity_gap
-    part_histories_snap=snap1-1
 
     #Initialising outputs
     run_outname=base_halo_data[snap]['outname']
@@ -871,13 +870,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
 
     #Load in particle histories
-    print(f'Retrieving & organising particle histories for snap = {part_histories_snap} ...')
-    Part_Histories_File_snap0=h5py.File("part_histories/PartHistory_"+str(part_histories_snap).zfill(3)+"_"+run_outname+".hdf5",'r')
-    Part_Histories_IDs_snap0=[Part_Histories_File_snap0["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
-    Part_Histories_Index_snap0=[Part_Histories_File_snap0["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
-    Part_Histories_HostStructure_snap0=[Part_Histories_File_snap0["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
-    print(f'Done retrieving & organising particle histories for snap = {part_histories_snap}')
-
     print(f'Retrieving & organising particle histories for snap = {snap1} ...')
     Part_Histories_File_snap1=h5py.File("part_histories/PartHistory_"+str(snap1).zfill(3)+"_"+run_outname+".hdf5",'r')
     Part_Histories_IDs_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
@@ -925,20 +917,21 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             snap3_Types_temp=snap_3_halo_particles['Particle_Types'][ihalo_s3]
 
             #returns mask for s2 of particles which were not in s1
+            print(f"Finding new particles to ihalo {ihalo_s2} ...")
             new_particle_IDs_mask_snap2=np.in1d(snap2_IDs_temp,snap1_IDs_temp,invert=True)
 
             #returns mask for s1 of particles which are in s1 but not s2          
-            lost_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
+            # lost_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
 
             for iitype,itype in enumerate(PartTypes):
                 
-                print(f"At {ihalo_s2} compressing for new particles of type {itype} ...")
+                print(f"Compressing for new particles of type {itype} ...")
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)
                 lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
                 lost_particle_IDs_itype_snap1=np.compress(lost_particle_mask_itype,snap1_IDs_temp)
 
-                print(f"Finding new particles in halo {ihalo_s2} of type {itype}: n = {len(new_particle_IDs_itype_snap2)}")
+                print(f"Finding index of accreted particles in halo {ihalo_s2} of type {itype}: n = {len(new_particle_IDs_itype_snap2)}")
                 new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
                 new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
                 if SimType=='EAGLE':
