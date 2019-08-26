@@ -458,19 +458,19 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
         halo_index_list=list(range(len(base_halo_data_snap["hostHaloID"])))
 
     # particle data
-    # try:
-    part_data_temp=ReadParticleDataFile(base_halo_data_snap['VR_FilePath'],halo_index_list=halo_index_list,ibinary=base_halo_data_snap['VR_FileType'],iverbose=0,iparttypes=1,unbound=include_unbound)
-    
-    if part_data_temp==[]:
-        part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
-        print('Particle data not found for snap = ',snap)
-        return part_data_temp
+    try:
+        part_data_temp=ReadParticleDataFile(base_halo_data_snap['VR_FilePath'],halo_index_list=halo_index_list,ibinary=base_halo_data_snap['VR_FileType'],iverbose=0,iparttypes=1,unbound=include_unbound)
+        
+        if part_data_temp==[]:
+            part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
+            print('Particle data not found for snap = ',snap)
+            return part_data_temp
 
-    # except: #if we can't load particle data
-    #     if verbose:
-    #         print('Particle data not included in hdf5 file for snap = ',snap)
-    #     part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
-    #     return part_data_temp
+    except: #if we can't load particle data
+        if verbose:
+            print('Particle data not included in hdf5 file for snap = ',snap)
+        part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
+        return part_data_temp
 
     if add_subparts_to_fofs:
 

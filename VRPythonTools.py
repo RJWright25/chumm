@@ -883,7 +883,7 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 		Npart_unbound_truncated=[]
 		for ihalo in halo_index_list:
 			if ihalo>-1:
-				# print(particledata["Particle_IDs"][ihalo])
+				print(particledata["Particle_IDs"][ihalo])
 				IDs_truncated.append(particledata["Particle_IDs"][ihalo])
 				Types_truncated.append(particledata["Particle_Types"][ihalo])
 				Npart_truncated.append(particledata["Npart"][ihalo])
