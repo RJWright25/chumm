@@ -917,7 +917,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         if structuretype>10:
             isubhalo=True
             grouphaloid=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])-1
-            grouphaloindex=np.where(base_halo_data[snap2]["ID"][ihalo_s2]==grouphaloid)[0][0]
+            try:
+                grouphaloindex=np.where(base_halo_data[snap2]["ID"][ihalo_s2]==grouphaloid)[0][0]
+            except:
+                grouphaloindex=np.nan
 
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]
