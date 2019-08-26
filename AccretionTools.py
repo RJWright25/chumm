@@ -15,7 +15,7 @@ from os import path
 #  python tools 
 from VRPythonTools import *
 from STFTools import *
-from RW_GenPythonTools import *
+from GenPythonTools import *
 
 
 # ########################### GENERATE ACCRETION RATES: VARYING MASS ###########################
