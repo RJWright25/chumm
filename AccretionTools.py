@@ -924,7 +924,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         print('**********************************')
         print('Halo index: ',ihalo_s2,f'(Subhalo: {isubhalo})')
         if isubhalo:
-            print(f'Host ihalo: {grouphaloid}')
+            print(f'Host ihalo: {grouphaloindex}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
         print('**********************************')
 
