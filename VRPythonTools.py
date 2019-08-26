@@ -747,74 +747,74 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
             if (iverbose) : print("reading",bfname,ifile)
 
             #ascii
-            if (ibinary==0):
-                gfile = open(gfilename, 'r')
-                #read header information
-                gfile.readline()
-                [numhalos,foo]= gfile.readline().split()
-                numhalos=np.uint64(numhalos)
-                gfile.close()
-                #load data
-                gdata=np.loadtxt(gfilename,skiprows=2,dtype=np.uint64)
-                numingroup=gdata[:numhalos]
-                offset=gdata[int(numhalos):int(2*numhalos)]
-                uoffset=gdata[int(2*numhalos):int(3*numhalos)]
-                #particle id data
-                pfile=open(pfilename, 'r')
-                pfile.readline()
-                [npart,foo]= pfile.readline().split()
-                npart=np.uint64(npart)
-                pfile.close()
-                piddata=np.loadtxt(pfilename,skiprows=2,dtype=np.int64)
-                upfile= open(upfilename, 'r')
-                upfile.readline()
-                [unpart,foo]= upfile.readline().split()
-                unpart=np.uint64(unpart)
-                upfile.close()
-                upiddata=np.loadtxt(upfilename,skiprows=2,dtype=np.int64)
-                if (iparttypes==1):
-                    #particle id data
-                    tfile= open(tfilename, 'r')
-                    tfile.readline()
-                    [npart,foo]= tfile.readline().split()
-                    tfile.close()
-                    tdata=np.loadtxt(tfilename,skiprows=2,dtype=np.uint16)
-                    utfile= open(utfilename, 'r')
-                    utfile.readline()
-                    [unpart,foo]= utfile.readline().split()
-                    utfile.close()
-                    utdata=np.loadtxt(utfilename,skiprows=2,dtype=np.uint16)
-            #binary
-            elif (ibinary==1):
-                gfile = open(gfilename, 'rb')
-                np.fromfile(gfile,dtype=np.int32,count=2)
-                [numhalos,foo]=np.fromfile(gfile,dtype=np.uint64,count=2)
-                #need to generalise to
-                numingroup=np.fromfile(gfile,dtype=binarydtype ,count=numhalos)
-                offset=np.fromfile(gfile,dtype=binarydtype,count=numhalos)
-                uoffset=np.fromfile(gfile,dtype=binarydtype,count=numhalos)
-                gfile.close()
-                pfile = open(pfilename, 'rb')
-                np.fromfile(pfile,dtype=np.int32,count=2)
-                [npart,foo]=np.fromfile(pfile,dtype=np.uint64,count=2)
-                piddata=np.fromfile(pfile,dtype=binarydtype ,count=npart)
-                pfile.close()
-                upfile = open(upfilename, 'rb')
-                np.fromfile(upfile,dtype=np.int32,count=2)
-                [unpart,foo]=np.fromfile(upfile,dtype=np.uint64,count=2)
-                upiddata=np.fromfile(upfile,dtype=binarydtype ,count=unpart)
-                upfile.close()
-                if (iparttypes==1):
-                    tfile = open(tfilename, 'rb')
-                    np.fromfile(tfile,dtype=np.int32,count=2)
-                    [npart,foo]=np.fromfile(tfile,dtype=np.uint16,count=2)
-                    tdata=np.fromfile(tfile,dtype=binarydtype ,count=npart)
-                    tfile.close()
-                    utfile = open(utfilename, 'rb')
-                    np.fromfile(utfile,dtype=np.int32,count=2)
-                    [unpart,foo]=np.fromfile(utfile,dtype=np.uint16,count=2)
-                    utdata=np.fromfile(utfile,dtype=binarydtype ,count=unpart)
-                    utfile.close()
+			if (ibinary==0):
+				gfile = open(gfilename, 'r')
+				#read header information
+				gfile.readline()
+				[numhalos,foo]= gfile.readline().split()
+				numhalos=np.uint64(numhalos)
+				gfile.close()
+				#load data
+				gdata=np.loadtxt(gfilename,skiprows=2,dtype=np.uint64)
+				numingroup=gdata[:numhalos]
+				offset=gdata[int(numhalos):int(2*numhalos)]
+				uoffset=gdata[int(2*numhalos):int(3*numhalos)]
+				#particle id data
+				pfile=open(pfilename, 'r')
+				pfile.readline()
+				[npart,foo]= pfile.readline().split()
+				npart=np.uint64(npart)
+				pfile.close()
+				piddata=np.loadtxt(pfilename,skiprows=2,dtype=np.int64)
+				upfile= open(upfilename, 'r')
+				upfile.readline()
+				[unpart,foo]= upfile.readline().split()
+				unpart=np.uint64(unpart)
+				upfile.close()
+				upiddata=np.loadtxt(upfilename,skiprows=2,dtype=np.int64)
+				if (iparttypes==1):
+					#particle id data
+					tfile= open(tfilename, 'r')
+					tfile.readline()
+					[npart,foo]= tfile.readline().split()
+					tfile.close()
+					tdata=np.loadtxt(tfilename,skiprows=2,dtype=np.uint16)
+					utfile= open(utfilename, 'r')
+					utfile.readline()
+					[unpart,foo]= utfile.readline().split()
+					utfile.close()
+					utdata=np.loadtxt(utfilename,skiprows=2,dtype=np.uint16)
+			#binary
+			elif (ibinary==1):
+				gfile = open(gfilename, 'rb')
+				np.fromfile(gfile,dtype=np.int32,count=2)
+				[numhalos,foo]=np.fromfile(gfile,dtype=np.uint64,count=2)
+				#need to generalise to
+				numingroup=np.fromfile(gfile,dtype=binarydtype ,count=numhalos)
+				offset=np.fromfile(gfile,dtype=binarydtype,count=numhalos)
+				uoffset=np.fromfile(gfile,dtype=binarydtype,count=numhalos)
+				gfile.close()
+				pfile = open(pfilename, 'rb')
+				np.fromfile(pfile,dtype=np.int32,count=2)
+				[npart,foo]=np.fromfile(pfile,dtype=np.uint64,count=2)
+				piddata=np.fromfile(pfile,dtype=binarydtype ,count=npart)
+				pfile.close()
+				upfile = open(upfilename, 'rb')
+				np.fromfile(upfile,dtype=np.int32,count=2)
+				[unpart,foo]=np.fromfile(upfile,dtype=np.uint64,count=2)
+				upiddata=np.fromfile(upfile,dtype=binarydtype ,count=unpart)
+				upfile.close()
+				if (iparttypes==1):
+					tfile = open(tfilename, 'rb')
+					np.fromfile(tfile,dtype=np.int32,count=2)
+					[npart,foo]=np.fromfile(tfile,dtype=np.uint16,count=2)
+					tdata=np.fromfile(tfile,dtype=binarydtype ,count=npart)
+					tfile.close()
+					utfile = open(utfilename, 'rb')
+					np.fromfile(utfile,dtype=np.int32,count=2)
+					[unpart,foo]=np.fromfile(utfile,dtype=np.uint16,count=2)
+					utdata=np.fromfile(utfile,dtype=binarydtype ,count=unpart)
+					utfile.close()
             #hdf
 			elif (ibinary==2):
 
