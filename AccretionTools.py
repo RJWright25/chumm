@@ -934,9 +934,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         ihalo_s3=halo_index_list_snap3[iihalo]
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)
         print('**********************************')
-        print('Halo index: ',ihalo_s2,f'(Subhalo: {isubhalo})')
+        print('Halo index (ihalo): ',ihalo_s2,f'(Subhalo: {isubhalo})')
         if isubhalo:
-            print(f'Host halo: {grouphaloid}')
+            print(f'Host ihalo: {grouphaloid}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
         print('**********************************')
 
@@ -952,14 +952,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             print(f"Finding new particles to ihalo {ihalo_s2} ...")
             new_particle_IDs_mask_snap2=np.in1d(snap2_IDs_temp,snap1_IDs_temp,invert=True)
 
-            #returns mask for s1 of particles which are in s1 but not s2          
-            # lost_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
             for iitype,itype in enumerate(PartTypes):
+
                 print(f"Compressing for new particles of type {itype} ...")
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)
-                # lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
-                # lost_particle_IDs_itype_snap1=np.compress(lost_particle_mask_itype,snap1_IDs_temp)
 
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 if itype==1:#DM:
@@ -970,6 +967,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 else:
                     #checking previous snap
                     print('Checking the previous state of particles ...')
+                    new_particle_IDs_itype_snap2_historyindex=binary_search_1(elements=new_particle_IDs_itype_snap2,sorted_array=Part_Histories_IDs_snap2[iitype])
+                    new_particle_IDs_itype_snap1_historyindex=binary_search_1(elements=new_particle_IDs_itype_snap2,sorted_array=Part_Histories_IDs_snap1[iitype])
+
                     previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
                     if not isubhalo:
                         new_previous_structure=previous_structure                   
