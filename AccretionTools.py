@@ -864,7 +864,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
         snap_1_masses=dict()
         snap_2_masses=dict()
-        masses_0=hdf5file["Header"].attrs["MassTable"][0
+        masses_0=hdf5file["Header"].attrs["MassTable"][0]
         masses_1=hdf5file["Header"].attrs["MassTable"][1]
         snap_1_masses[str(0)]=masses_0
         snap_1_masses[str(1)]=masses_1
