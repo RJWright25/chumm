@@ -810,9 +810,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     else:
         halo_index_list_snap2=halo_index_list
 
-
-    #find progenitor halos
-        halo_index_list
     #Assigning snap
     if snap==None:
         snap=len(base_halo_data)-1#if not given snap, just use the last one
@@ -821,8 +818,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     snap2=snap
     snap3=snap+fidelity_gap
 
-    halo_index_list_snap1=[find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap2-snap1) for ihalo in halo_index_list_snap2]
-    halo_index_list_snap3=[find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap3-snap2) for ihalo in halo_index_list_snap2]
+    halo_index_list_snap1=[int(find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap_gap)) for ihalo in halo_index_list_snap2]
+    halo_index_list_snap3=[int(find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=fidelity_gap)) for ihalo in halo_index_list_snap2]
 
     print(np.column_stack((halo_index_list_snap1,halo_index_list_snap2,halo_index_list_snap3)))
 
@@ -918,7 +915,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         subhalo=int(base_halo_data[snap]['hostHaloID'][ihalo_s2]>0)#flag as to whether this is a subhalo(True) or a field halo(False)
         processed_flag=subhalo+1#1 if field halo, 2 if subhalo
         ihalo_s1=halo_index_list_snap1[iihalo]
-        ihalo_s3=halo_index_list_snap1[iihalo]
+        ihalo_s3=halo_index_list_snap3[iihalo]
         
         if ihalo_s1>0 and ihalo_s3>0:# if we found both the progenitor and the descendent 
             count=count+1
