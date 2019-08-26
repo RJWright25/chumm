@@ -876,23 +876,22 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 	if halo_index_list==None:
 		return particledata
 	else:
-		ID_lists=[]
-		Types_lists=[]
-		Npart_lists=[]
-		Npart_unbound=[]
+		IDs_truncated=[]
+		Types_truncated=[]
+		Npart_truncated=[]
+		Npart_unbound_truncated=[]
 		for ihalo in halo_index_list:
-			if ihalo>-10:
-				ID_lists.append(particledata["Particle_IDs"][ihalo])
-				Types_lists.append(particledata["Particle_Types"][ihalo])
-				Npart_lists.append(particledata["Npart"][ihalo])
-				Npart_unbound.append(particledata["Npart_unbound"][ihalo])
+			if ihalo>-1:
+				IDs_truncated.append(particledata["Particle_IDs"][ihalo])
+				Types_truncated.append(particledata["Particle_Types"][ihalo])
+				Npart_truncated.append(particledata["Npart"][ihalo])
+				Npart_unbound_truncated.append(particledata["Npart_unbound"][ihalo])
 			else:
-				ID_lists.append([])
-				Types_lists.append([])
-				Npart_lists.append([])
-				Npart_unbound.append([])		
-		print(ID_lists)
-		particledata={"Particle_IDs":ID_lists,"Particle_Types":Types_lists,"Npart":Npart_lists,"Npart_unbound":Npart_unbound}
+				IDs_truncated.append(np.nan)
+				Types_truncated.append(np.nan)
+				Npart_truncated.append(np.nan)
+				Npart_unbound_truncated.append(np.nan)
+		particledata={"Particle_IDs":IDs_truncated,"Particle_Types":Types_truncated,"Npart":Npart_truncated,"Npart_unbound":Npart_unbound_truncated}
 		return particledata
 
 def ReadSOParticleDataFile(basefilename,ibinary=0,iverbose=0,binarydtype=np.int64):
