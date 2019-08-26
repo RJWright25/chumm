@@ -923,7 +923,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         ihalo_s3=halo_index_list_snap3[iihalo]
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)
         print('**********************************')
-        print('Halo index (ihalo): ',ihalo_s2,f'(Subhalo: {isubhalo})')
+        print('Halo index: ',ihalo_s2,f'(Subhalo: {isubhalo})')
         if isubhalo:
             print(f'Host ihalo: {grouphaloid}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
@@ -953,13 +953,15 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
                     #particle_masses
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)]
+                
                 else:
+                    #particle_masses
+                    new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
+                    new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
                     #checking previous snap
-                    print('Checking the previous state of particles ...')
-                    new_particle_IDs_itype_snap2_historyindex=binary_search_1(elements=new_particle_IDs_itype_snap2,sorted_array=Part_Histories_IDs_snap2[iitype])
-                    new_particle_IDs_itype_snap1_historyindex=binary_search_1(elements=new_particle_IDs_itype_snap2,sorted_array=Part_Histories_IDs_snap1[iitype])
-                    new_particle_masses=[]
+                    new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(1)]
 
+                    print('Checking the previous state of particles ...')
                     previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
                     if not isubhalo:
                         new_previous_structure=previous_structure                   
