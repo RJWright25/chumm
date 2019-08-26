@@ -826,9 +826,13 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
 					uoffset=np.uint64(gfile["Offset_unbound"])
 				else:
 					numhalos=np.uint64(len(halo_index_list))
-					numingroup=np.uint64([gfile["Group_Size"][ihalo] for ihalo in halo_index_list])
-					offset=np.uint64([gfile["Offset"][ihalo] for ihalo in halo_index_list])
-					uoffset=np.uint64([gfile["Offset_unbound"][ihalo] for ihalo in halo_index_list])
+					numingroup=[]
+					offset=[]
+					uoffset=[]
+					for ihalo in halo_index_list:
+						numingroup.append(np.uint64(gfile["Group_Size"][ihalo])
+						offset.append(np.uint64([gfile["Offset"][ihalo])
+						uoffset.append(gfile["Offset_unbound"][ihalo])
 
 				gfile.close()
 				pfile = h5py.File(pfilename, 'r')
@@ -837,8 +841,13 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
 					piddata=np.int64(pfile["Particle_IDs"])
 					upiddata=np.int64(upfile["Particle_IDs"])
 				else:
-					piddata=np.int64([pfile["Particle_IDs"][ihalo] for ihalo in halo_index_list])
-					upiddata=np.int64([upfile["Particle_IDs"][ihalo] for ihalo in halo_index_list])
+					piddata=[]
+					upidata=[]
+					for ihalo in halo_index_list:
+						piddata.append(np.int64(pfile["Particle_IDs"][ihalo]))
+						upiddata.append(np.int64(upfile["Particle_IDs"][ihalo]))
+					piddata=np.array(piddata)
+					upiddata=np.array(upiddata)
 				npart=len(piddata)
 				unpart=len(upiddata)
 
@@ -851,8 +860,13 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
 						tdata=np.uint16(tfile["Particle_types"])
 						utdata=np.uint16(utfile["Particle_types"])
 					else:
-						tdata=np.int64([pfile["Particle_types"][ihalo] for ihalo in halo_index_list])
-						utdata=np.int64([upfile["Particle_types"][ihalo] for ihalo in halo_index_list])
+						tdata=[]
+						utdata=[]
+						for ihalo in halo_index_list:
+							tdata.append(np.int64(pfile["Particle_types"][ihalo]))
+							utdata.append(np.int64(upfile["Particle_types"][ihalo]))
+						tdata=np.array(tdata)
+						utdata=np.array(utdata)
 					tfile.close()
 					utfile.close()
 

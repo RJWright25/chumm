@@ -806,7 +806,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     """
     #Initialising halo index list
     if halo_index_list==None:
-        halo_index_list=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
+        halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
+    else:
+        halo_index_list_snap2=halo_index_list
+
+
+    #find progenitor halos
+        halo_index_list
     #Assigning snap
     if snap==None:
         snap=len(base_halo_data)-1#if not given snap, just use the last one
@@ -814,6 +820,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     snap1=snap-snap_gap
     snap2=snap
     snap3=snap+fidelity_gap
+
+    halo_index_list_snap1=[find_progen_index(base_halo_data,index=ihalo,snap2=snap2,depth=snap2-snap1) for ihalo in halo_index_list_snap2]
 
     #Initialising outputs
     run_outname=base_halo_data[snap]['outname']
@@ -903,7 +911,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     
     subhalos=set(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
     fieldhalos=set(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
-    
+
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
         subhalo=int(base_halo_data[snap]['hostHaloID'][ihalo_s2]>0)#flag as to whether this is a subhalo(True) or a field halo(False)
         processed_flag=subhalo+1#1 if field halo, 2 if subhalo
