@@ -891,7 +891,7 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 				Types_lists.append([])
 				Npart_lists.append([])
 				Npart_unbound.append([])		
-
+		print(ID_lists)
 		particledata={"Particle_IDs":ID_lists,"Particle_Types":Types_lists,"Npart":Npart_lists,"Npart_unbound":Npart_unbound}
 		return particledata
 
