@@ -872,11 +872,18 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 						particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
 
 			counter+=numhalos
-			
+
 	if halo_index_list==None:
 		return particledata
 	else:
-		return pandas.DataFrame(particledata).iloc[halo_index_list]
+		particledata_truncated=[]
+		ID_lists=[particledata["Particle_IDs"][ihalo] for ihalo in halo_index_list]
+		Types_lists=[particledata["Particle_Types"][ihalo] for ihalo in halo_index_list]
+		Npart_lists=[particledata["Npart"][ihalo] for ihalo in halo_index_list]
+		Npart_unbound=[particledata["Npart_unbound"][ihalo] for ihalo in halo_index_list]
+
+		particledata={"Particle_IDs":ID_lists,"Particle_Types":Types_lists,"Npart":Npart_lists,"Npart_unbound":Npart_unbound}
+		return particledata
 
 def ReadSOParticleDataFile(basefilename,ibinary=0,iverbose=0,binarydtype=np.int64):
 	"""
