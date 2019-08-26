@@ -793,6 +793,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         '/PartTypeX/ihalo_xxxxxx/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
+
         '/PartTypeX/ihalo_xxxxxx/TotalDeltaN': Total gross particle growth (length: 1)
         '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaN': Unprocessed particle growth (length: 1)
         '/PartTypeX/ihalo_xxxxxx/TotalDeltaM': Total gross mass growth in physical Msun (length: 1)
@@ -909,21 +910,40 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     subhalos=set(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
     fieldhalos=set(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
 
+    Integrated_OUTPUT={str(itype):{} for itype in PartTypes}
+    for itype in PartTypes:####SUMMED OUTPUTS WHICH HAVE BEEN TRIMMED OF PARTICLES WHICH WERE NOT IN THE HALO AT THE FIDELITY STEP
+        Integrated_OUTPUT[str(itype)]["TotalDeltaN"]=[]
+        Integrated_OUTPUT[str(itype)]["UnprocessedDeltaN"]=[]
+        Integrated_OUTPUT[str(itype)]["TotalDeltaM"]=[]
+        Integrated_OUTPUT[str(itype)]["UnprocessedDeltaM"]=[]
+
+    Verbose_OUTPUT={str(itype):{} for itype in PartTypes}
+    for itype in PartTypes:
+        Integrated_OUTPUT[str(itype)]["IDs"]=[]
+        Integrated_OUTPUT[str(itype)]["Fidelity"]=[]
+        Integrated_OUTPUT[str(itype)]["PrevHostStructure"]=[]#-1: cosmological, 0: from CGM (highest level group) - this won't happen for groups/clusters, >0: from another halo/subhalo at the same level (that subhalo's ID)
+        
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
-        subhalo=int(base_halo_data[snap]['hostHaloID'][ihalo_s2]>0)#flag as to whether this is a subhalo(True) or a field halo(False)
-        processed_flag=subhalo+1#1 if field halo, 2 if subhalo
+        isubhalo=False
+        structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]
+        if structuretype>10:
+            isubhalo=True
+            grouphaloid=base_halo_data[snap2]["hostHaloID"][ihalo_s2]
+
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]
-        print('Halo index: ',ihalo_s2)
+        ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)
+
+        print('Halo index: ',ihalo_s2,f'(subhalo: {isubhalo})')
         print(f'Progenitor: {ihalo_s1}, descendent: {ihalo_s3}')
-        if ihalo_s1>-1 and ihalo_s3>-1:# if we found both the progenitor and the descendent 
+
+        if ihalo_tracked and structuretype<25:# if we found both the progenitor and the descendent (and it's not a subsubhalo)
             count=count+1
             snap1_IDs_temp=snap_1_halo_particles['Particle_IDs'][ihalo_s2]
             snap1_Types_temp=snap_1_halo_particles['Particle_Types'][ihalo_s2]
             snap2_IDs_temp=snap_2_halo_particles['Particle_IDs'][ihalo_s2]
             snap2_Types_temp=snap_2_halo_particles['Particle_Types'][ihalo_s2]
-            snap3_IDs_temp=snap_3_halo_particles['Particle_IDs'][ihalo_s2]
-            snap3_Types_temp=snap_3_halo_particles['Particle_Types'][ihalo_s2]
+            snap3_IDs_temp=set(snap_3_halo_particles['Particle_IDs'][ihalo_s2])
 
             #returns mask for s2 of particles which were not in s1
             print(f"Finding new particles to ihalo {ihalo_s2} ...")
@@ -931,7 +951,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
             #returns mask for s1 of particles which are in s1 but not s2          
             # lost_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
-
             for iitype,itype in enumerate(PartTypes):
                 
                 print(f"Compressing for new particles of type {itype} ...")
@@ -941,19 +960,29 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 # lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
                 # lost_particle_IDs_itype_snap1=np.compress(lost_particle_mask_itype,snap1_IDs_temp)
 
-                print(f"Finding index of accreted particles in halo {ihalo_s2} of type {itype}: n = {len(new_particle_IDs_itype_snap2)}")
+                print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 if itype==1:#DM:
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
                     #particle_masses
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)]
+                    #fidelity
+                    print('Checking which particles stayed ...')
+                    new_particle_stayed_snap3=[ipart in snap3_IDs_temp for ipart in new_particle_IDs_itype_snap2].astype(int)
 
                 elif itype==0:#Gas
                     new_particle_IDs_itype_snap2_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap2[iitype],elements=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap1[iitype],elements=new_particle_IDs_itype_snap2)
                     #particle_masses
+                    print("Getting particle masses...")
                     new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
+                    #fidelity
+                    print('Checking which particles stayed ...')
+                    new_particle_stayed_snap3=[ipart in snap3_IDs_temp for ipart in new_particle_IDs_itype_snap2].astype(int)
 
+                else:
+                    #stars or bh
+                    pass
         else:
             #### return nan accretion rate
 
