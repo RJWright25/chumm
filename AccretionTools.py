@@ -935,6 +935,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 print(f"Finding index of accreted particles in halo {ihalo_s2} of type {itype}: n = {len(new_particle_IDs_itype_snap2)}")
                 new_particle_IDs_itype_snap2_historyindex=binary_search_2(sorted_array=Part_Histories_IDs_snap2[iitype],elements=new_particle_IDs_itype_snap2)
                 new_particle_IDs_itype_snap1_historyindex=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],elements=new_particle_IDs_itype_snap2)
+                print(np.sum(new_particle_IDs_itype_snap2_historyindex==np.nan))
                 #fine to check against old gas list, Part_Histories_IDs_snap1 should have all the Part_Histories_IDs_snap2 values (and more)
                 if SimType=='EAGLE':
                     if itype==1:
