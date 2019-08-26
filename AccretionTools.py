@@ -969,7 +969,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)]
                     #checking previous snap
                     print('Checking the previous state of particles ...')
-                    previous_structure=[Part_Histories_HostStructure_snap1[str(itype)][history_index] for history_index in new_particle_IDs_itype_snap2_historyindex]
+                    previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap2_historyindex]
                     #fidelity
                     print('Checking which particles stayed ...')
                     new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
