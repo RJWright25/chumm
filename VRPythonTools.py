@@ -668,13 +668,14 @@ def ReadUnitInfo(basefilename):
 	return unitdata
 
 
-def ReadParticleDataFile(basefilename,ibinary=2,iseparatesubfiles=0,iparttypes=0,iverbose=0, binarydtype=np.int64, unbound=True):
+def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfiles=0,iparttypes=0,iverbose=0, binarydtype=np.int64, unbound=True):
 	"""
 	VELOCIraptor/STF catalog_group, catalog_particles and catalog_parttypes in various formats
 
 	Note that a file will indicate how many files the total output has been split into
 
 	"""
+	
 	inompi=True
 	if (iverbose): print("reading particle data",basefilename)
 	gfilename=basefilename+".catalog_groups"
@@ -717,6 +718,7 @@ def ReadParticleDataFile(basefilename,ibinary=2,iseparatesubfiles=0,iparttypes=0
 		numfiles=int(gfile["Num_of_files"][0])
 		numhalos=np.uint64(gfile["Num_of_groups"][0])
 		numtothalos=np.uint64(gfile["Total_num_of_groups"][0])
+
 	gfile.close()
 
 	particledata=dict()
@@ -853,7 +855,7 @@ def ReadParticleDataFile(basefilename,ibinary=2,iseparatesubfiles=0,iparttypes=0
 				particledata['Npart'][counter:counter+numhalos] = numingroup-unumingroup
 
 			particledata['Npart_unbound'][counter:counter+numhalos]=unumingroup
-			for i in range(numhalos):
+			for i in halo_index_list:
 				if unbound:
 					particledata['Particle_IDs'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
 					particledata['Particle_IDs'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
@@ -870,8 +872,11 @@ def ReadParticleDataFile(basefilename,ibinary=2,iseparatesubfiles=0,iparttypes=0
 						particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
 
 			counter+=numhalos
-
-	return particledata
+			
+	if halo_index_list==None:
+		return particledata
+	else:
+		return pandas.DataFrame(particledata).iloc[halo_index_list]
 
 def ReadSOParticleDataFile(basefilename,ibinary=0,iverbose=0,binarydtype=np.int64):
 	"""
