@@ -928,13 +928,15 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]
         if structuretype>10:
             isubhalo=True
-            grouphaloid=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])
+            grouphaloid=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])-1
 
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)
         print('**********************************')
         print('Halo index: ',ihalo_s2,f'(Subhalo: {isubhalo})')
+        if isubhalo:
+            print(f'Host halo: {grouphaloid}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
         print('**********************************')
 
@@ -953,9 +955,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             #returns mask for s1 of particles which are in s1 but not s2          
             # lost_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
             for iitype,itype in enumerate(PartTypes):
-                
                 print(f"Compressing for new particles of type {itype} ...")
-
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)
                 # lost_particle_mask_itype=np.logical_and(lost_particle_IDs_mask_snap1,snap1_Types_temp==itype)
@@ -978,7 +978,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     else:
                         new_previous_structure=[]
                         for previous_halo_id in previous_structure:
-                            if previous_halo_id==grouphaloid:
+                            if previous_halo_id==0:
+                                new_previous_structure.append(0)
+                            elif previous_halo_id==grouphaloid:
+                                print(previous_halo_id)
                                 new_previous_structure.append(-1)
                             else:
                                 new_previous_structure.append(previous_halo_id)
