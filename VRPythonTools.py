@@ -845,8 +845,8 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
 					upidata=[]
 					for ihalo in halo_index_list:
 						if not ihalo>-10:
-							piddata.append(np.nan)
-							upiddata.append(np.nan)
+							piddata.append([])
+							upiddata.append([])
 						else:
 							piddata.append(np.int64(pfile["Particle_IDs"][ihalo]))
 							upiddata.append(np.int64(upfile["Particle_IDs"][ihalo]))
@@ -869,8 +869,8 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
 						utdata=[]
 						for ihalo in halo_index_list:
 							if not ihalo>-10:
-								tdata.append(np.nan)
-								utdata.append(np.nan)
+								tdata.append([])
+								utdata.append([])
 							else:
 								tdata.append(np.int64(pfile["Particle_types"][ihalo]))
 								utdata.append(np.int64(upfile["Particle_types"][ihalo]))
