@@ -830,8 +830,8 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
 					offset=[]
 					uoffset=[]
 					for ihalo in halo_index_list:
-						numingroup.append(np.uint64(gfile["Group_Size"][ihalo])
-						offset.append(np.uint64([gfile["Offset"][ihalo])
+						numingroup.append(np.uint64(gfile["Group_Size"][ihalo]))
+						offset.append(np.uint64(gfile["Offset"][ihalo]))
 						uoffset.append(gfile["Offset_unbound"][ihalo])
 
 				gfile.close()
