@@ -921,14 +921,14 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,depth=1)
         ihalo_s3=find_descen_index(base_halo_data,index2=ihalo_s2,snap2=snap2,depth=1)
         
-        if ihalo_s1>0 and ihalo_s3>0:# if we find both the progenitor and the descendent 
+        if ihalo_s1>0 and ihalo_s3>0:# if we found both the progenitor and the descendent 
             count=count+1
-            snap1_IDs_temp=snap_1_halo_particles['Particle_IDs'][ihalo_s1]
-            snap1_Types_temp=snap_1_halo_particles['Particle_Types'][ihalo_s1]
+            snap1_IDs_temp=snap_1_halo_particles['Particle_IDs'][ihalo_s2]
+            snap1_Types_temp=snap_1_halo_particles['Particle_Types'][ihalo_s2]
             snap2_IDs_temp=snap_2_halo_particles['Particle_IDs'][ihalo_s2]
             snap2_Types_temp=snap_2_halo_particles['Particle_Types'][ihalo_s2]
-            snap3_IDs_temp=snap_3_halo_particles['Particle_IDs'][ihalo_s3]
-            snap3_Types_temp=snap_3_halo_particles['Particle_Types'][ihalo_s3]
+            snap3_IDs_temp=snap_3_halo_particles['Particle_IDs'][ihalo_s2]
+            snap3_Types_temp=snap_3_halo_particles['Particle_Types'][ihalo_s2]
 
             #returns mask for s2 of particles which were not in s1
             print(f"Finding new particles to ihalo {ihalo_s2} ...")
