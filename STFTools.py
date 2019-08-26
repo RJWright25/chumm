@@ -143,7 +143,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     # List of number of halos detected for each snap and list isolated data dictionary for each snap (in dictionaries)
     halo_data_counts=[item[1] for item in halo_data_all]
     halo_data_all=[item[0] for item in halo_data_all]
-    print(list(halo_data_all[28].keys()))
+    print(list(halo_data_all[23].keys()))
 
 
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
