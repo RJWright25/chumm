@@ -816,8 +816,8 @@ def ReadParticleDataFile(basefilename,halo_index_list=None,ibinary=2,iseparatesu
                     utdata=np.fromfile(utfile,dtype=binarydtype ,count=unpart)
                     utfile.close()
             #hdf
-            elif (ibinary==2):
-				
+			elif (ibinary==2):
+
 				gfile = h5py.File(gfilename, 'r')
 				if halo_index_list==None:
 					numhalos=np.uint64(gfile["Num_of_groups"][0])
