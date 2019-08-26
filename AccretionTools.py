@@ -970,6 +970,22 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     #checking previous snap
                     print('Checking the previous state of particles ...')
                     previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap2_historyindex]
+                    if not isubhalo:
+                        new_previous_structure=previous_structure                   
+                        print(f'Cosmological {PartNames[itype]} accretion: {np.sum(new_previous_structure==-1)/len(new_previous_structure)*100}%')
+                        print(f'Clumpy {PartNames[itype]} accretion: {np.sum(new_previous_structure>0)/len(new_previous_structure)*100}%')
+                    else:
+                        new_previous_structure=[]
+                        for previous_halo_id in previous_structure:
+                            if previous_halo_id==grouphaloid:
+                                new_previous_structure.append(0)
+                            else:
+                                new_previous_structure.append(previous_halo_id)
+                        new_previous_structure=np.array(new_previous_structure)
+                        print(f'Cosmological {PartNames[itype]} accretion: {np.sum(new_previous_structure==-1)/len(new_previous_structure)*100}%')
+                        print(f'CGM {PartNames[itype]} accretion: {np.sum(new_previous_structure==0)/len(new_previous_structure)*100}%')
+                        print(f'Clumpy {PartNames[itype]} accretion: {np.sum(new_previous_structure>0)/len(new_previous_structure)*100}%')
+
                     #fidelity
                     print('Checking which particles stayed ...')
                     new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
