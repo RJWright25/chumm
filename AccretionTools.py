@@ -969,7 +969,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)]
                     #fidelity
                     print('Checking which particles stayed ...')
-                    new_particle_stayed_snap3=[ipart in snap3_IDs_temp for ipart in new_particle_IDs_itype_snap2].astype(int)
+                    new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
+                    print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed')
 
                 elif itype==0:#Gas
                     new_particle_IDs_itype_snap2_historyindex=binary_search_1(sorted_array=Part_Histories_IDs_snap2[iitype],elements=new_particle_IDs_itype_snap2)
@@ -980,7 +981,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     #fidelity
                     print('Checking which particles stayed ...')
                     new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
-                    print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed, took {t2-t1} sec')
+                    print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed')
 
                 else:
                     #stars or bh
