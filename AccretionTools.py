@@ -978,7 +978,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
                     #fidelity
                     print('Checking which particles stayed ...')
-                    new_particle_stayed_snap3=[ipart in snap3_IDs_temp for ipart in new_particle_IDs_itype_snap2].astype(int)
+                    new_particle_stayed_snap3=[ipart in snap3_IDs_temp for ipart in new_particle_IDs_itype_snap2]
 
                 else:
                     #stars or bh
