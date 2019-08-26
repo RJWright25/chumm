@@ -977,8 +977,17 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     print("Getting particle masses...")
                     new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
                     #fidelity
-                    print('Checking which particles stayed ...')
+                    print('Checking which particles stayed with python set')
+                    t1=time.time()
                     new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
+                    t2=time.time()
+                    print(f'Done, took {t2-t1} sec')
+
+                    print('Checking which particles stayed with np.in1d')
+                    t1=time.time()
+                    new_particle_stayed_snap3=np.in1d(new_particle_IDs_itype_snap2,snap3_IDs_temp)
+                    t2=time.time()
+                    print(f'Done, took {t2-t1} sec')
 
                 else:
                     #stars or bh
