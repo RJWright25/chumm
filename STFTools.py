@@ -414,7 +414,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
 
 ########################### RETRIEVE PARTICLE LISTS ###########################
 
-def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_fofs=False,verbose=1):
+def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=True,add_subparts_to_fofs=False,verbose=1):
     
     """
 
@@ -453,6 +453,9 @@ def get_particle_lists(base_halo_data_snap,include_unbound=True,add_subparts_to_
 
     if verbose:
         print('Reading halo particle lists for snap = ',snap)
+    
+    if halo_index_list==None:
+        halo_index_list=list(range(len(base_halo_data_snap["hostHaloID"])))
 
     # particle data
     try:
