@@ -982,11 +982,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
                     t2=time.time()
                     print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)}% stayed, took {t2-t1} sec')
-                    print('Checking which particles stayed with np.in1d')
-                    t1=time.time()
-                    new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
-                    t2=time.time()
-                    print(f'Done, took {t2-t1} sec')
+                    # print('Checking which particles stayed with np.in1d')
+                    # t1=time.time()
+                    # new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
+                    # t2=time.time()
+                    # print(f'Done, took {t2-t1} sec')
 
                 else:
                     #stars or bh
