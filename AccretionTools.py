@@ -821,7 +821,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     halo_index_list_snap1=[int(find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap_gap)) for ihalo in halo_index_list_snap2]
     halo_index_list_snap3=[int(find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=fidelity_gap)) for ihalo in halo_index_list_snap2]
 
-    print(np.column_stack((halo_index_list_snap1,halo_index_list_snap2,halo_index_list_snap3)))
+    print(np.column_stack((halo_index_list_snap1,halo_index_list_snap2,halo_index_list_snap3),dtype=np.int64))
 
     #Initialising outputs
     run_outname=base_halo_data[snap]['outname']
