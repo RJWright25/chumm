@@ -584,7 +584,7 @@ from GenPythonTools import *
 #     return acc_rate_dataframe
         
 
-def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1):
+def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
 
     """
 
@@ -597,9 +597,6 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
 	----------
     base_halo_data : list of dictionaries
         The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain the type of particle file we'll be reading. 
-
-    test_run : bool
-        Flag for whether we want to 
 
     snaps : list of ints
         The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
@@ -643,20 +640,13 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
     isnap=0
     # Iterate through snapshots and flip switches as required
     for snap in valid_snaps:
-        if test_run:
-            if not os.path.isdir("part_histories_test"):
-                os.mkdir("part_histories_test")
-            outfile_name="part_histories_test/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
-            if os.path.exists(outfile_name):
-                os.remove(outfile_name)
-            outfile=h5py.File(outfile_name,'w')
-        else:
-            if not os.path.isdir("part_histories"):
-                os.mkdir("part_histories")
-            outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
-            if os.path.exists(outfile_name):
-                os.remove(outfile_name)
-            outfile=h5py.File(outfile_name,'w')
+
+        if not os.path.isdir("part_histories"):
+            os.mkdir("part_histories")
+        outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
+        if os.path.exists(outfile_name):
+            os.remove(outfile_name)
+        outfile=h5py.File(outfile_name,'w')
 
         #Load the EAGLE data for this snapshot
         EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
@@ -670,17 +660,15 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
         snap_Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)
         n_halos=len(snap_Halo_Particle_Lists["Particle_IDs"])
         n_halo_particles=[len(snap_Halo_Particle_Lists["Particle_IDs"][ihalo]) for ihalo in range(n_halos)]
-        allhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='uint32')*ihalo for ihalo in range(n_halos)])
+        allhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='int64')*haloid for haloid in base_halo_data[snap]['ID']])
         
-        #fieldhalo==l1, subhalo==l2
-        fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostHaloIndex":allhalo_Particle_hosts},dtype=int).sort_values(["ParticleIDs"])
-        fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles[["ParticleIDs","HostHaloIndex"]].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
-
-        print(len())
+        #anyhalo==l1
+        fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostStructureID":allhalo_Particle_hosts},dtype=np.int64).sort_values(["ParticleIDs"])
+        fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles[["ParticleIDs","HostStructureID"]].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
         n_fieldhalo_particles=np.sum([len(fieldhalo_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists for snap {snap} in {t2-t1} sec")
-        print(f"There are {n_fieldhalo_particles} particles in structure (L1), and {n_subhalo_particles} particles in substructure (L2) at snap {snap}")
+        print(f"There are {n_fieldhalo_particles} particles in structure (L1)")
 
         # map IDs to indices from EAGLE DATA and initialise array
         
@@ -695,11 +683,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
                 h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
                 Particle_IDs_Unsorted_itype=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
-            
 
             #initialise flag data structure with mapped IDs
             print(f"Mapping IDs to indices for all {PartNames[itype]} particles at snap {snap} ...")
-            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"HostHaloIndex":np.ones(N_Particles_itype,dtype='int32')*(-1)}
+            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"HostStructureID":np.ones(N_Particles_itype,dtype='int64')-np.int64(2)}
             t2=time.time()
             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1} sec")
             
@@ -716,7 +703,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
                     print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100,f'% done adding host halos for {PartNames[itype]} particles')
 
                 sorted_index_temp_ID=binary_search_1(element=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])[0]
-                Particle_History_Flags[str(itype)]["HostHaloIndex"][sorted_index_temp_ID]=int(field_particle_HostHalo)
+                Particle_History_Flags[str(itype)]["HostStructureID"][sorted_index_temp_ID]=int(field_particle_HostHalo)
                 ipart_switch=ipart_switch+1
 
             t2=time.time()
@@ -725,15 +712,10 @@ def gen_particle_history_serial(base_halo_data,snaps=[],test_run=False,verbose=1
         print(f'Dumping data to file')
         t1=time.time()
 
-        if len(base_halo_data[snap]["hostHaloID"])<65000:
-            dtype_for_host='uint16'
-        else:
-            dtype_for_host='uint32'
-
         for itype in PartTypes:
-            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype='int64',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
-            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype='int32',compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
-            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype=dtype_for_host,compression='gzip',data=Particle_History_Flags[str(itype)]["HostHaloIndex"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype=np.int64,compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype=np.int32,compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype=np.int64,compression='gzip',data=Particle_History_Flags[str(itype)]["HostStructureID"])
         
         outfile.close()
         t2=time.time()
@@ -914,11 +896,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
         isubhalo=False
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]
-        grouphaloindex=None
-        grouphaloindex
         if structuretype>10:
             isubhalo=True
-            grouphaloindex=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])-1
+            grouphaloID=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])
 
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]
