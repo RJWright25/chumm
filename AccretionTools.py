@@ -953,7 +953,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 print(f"Checking previous state of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
                 if not isubhalo:
-                    new_previous_structure=previous_structure                   
+                    new_particle_masses=previous_structure                   
                     print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
                     print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
                 else:
@@ -973,6 +973,12 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
                 print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed')
 
+                #properties recorded: 
+                # new_particle_IDs_itype_snap2, new_particle_masses, new_previous_structure, new_particle_stayed_snap3
+                print(len(new_particle_IDs_itype_snap2))
+                print(len(new_particle_masses))
+                print(len(new_previous_structure))
+                print(len(new_particle_stayed_snap3))
         else:
             #### return nan accretion rate
 
@@ -981,6 +987,3 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
 
 
-
-
-     
