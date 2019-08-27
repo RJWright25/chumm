@@ -1001,10 +1001,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             #### return nan accretion rate
             print(f'Saving ihalo {ihalo_s2} data to hdf5 ...')
             halo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
-            halo_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float8)
-            halo_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float8)
-            halo_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float8)
-            halo_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float8)
+            halo_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
+            halo_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
+            halo_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float16)
+            halo_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
             print(f'Done with ihalo {ihalo_s2}!')
 
     
