@@ -485,7 +485,6 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
         for i_field_halo,field_halo_ID in enumerate(base_halo_data_snap['ID'][field_halo_indices_temp]):#go through each field halo
             
             sub_halos_temp=(np.where(base_halo_data_snap['hostHaloID']==field_halo_ID)[0])#find the indices of its subhalos
-            print(sub_halos_temp)
             if len(sub_halos_temp)>0:#where there is substructure
 
                 field_halo_temp_index=field_halo_indices_temp[i_field_halo]
@@ -506,9 +505,9 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
     if halo_index_list==None:
         return part_data_temp
     else:
-        truncated_IDs=[part_data_temp["Particle_IDs"][ihalo] for ihalo in halo_index_list]
-        truncated_Types=[part_data_temp["Particle_Types"][ihalo] for ihalo in halo_index_list]
-        truncated_Npart=[part_data_temp["Npart"][ihalo] for ihalo in halo_index_list]
+        truncated_IDs=[part_data_temp["Particle_IDs"][int(ihalo)] for ihalo in halo_index_list]
+        truncated_Types=[part_data_temp["Particle_Types"][int(ihalo)] for ihalo in halo_index_list]
+        truncated_Npart=[part_data_temp["Npart"][int(ihalo)] for ihalo in halo_index_list]
         part_data_temp_truncated={"Particle_IDs":truncated_IDs,"Particle_Types":truncated_Types,"Npart":truncated_Npart}
         return part_data_temp_truncated
 
