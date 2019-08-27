@@ -765,13 +765,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     AccretionData_snap{snap2}_sg{snap_gap}_fg{fidelity_gap}_ihalo_xxxxxx_xxxxxx_outname.hdf5: hdf5 file with datasets
 
         '/PartTypeX/ihalo_xxxxxx/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
+        '/PartTypeX/ihalo_xxxxxx/Masses': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
-
-        '/PartTypeX/ihalo_xxxxxx/TotalDeltaN': Total gross particle growth (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaN': Unprocessed particle growth (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/TotalDeltaM': Total gross mass growth in physical Msun (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/UnprocessedDeltaM': Unprocessed mass growth in physical Msun (length: 1)
+            ....etc
 
         Where there will be n_halos ihalo datasets. 
 
@@ -937,38 +934,40 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 if itype==1:#DM:
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
+                    
                     #particle_masses
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)]
                 
                 else:
-                    #particle_masses
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
-                    #checking previous snap
-                    new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(1)]
+                    
+                    #particle_masses
+                    new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
+                    
+                #checking previous snap
+                print('Checking the previous state of particles ...')
+                previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
+                if not isubhalo:
+                    new_previous_structure=previous_structure                   
+                    print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
+                    print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
+                else:
+                    new_previous_structure=[]
+                    for previous_halo_id in previous_structure:
+                        if previous_halo_id==prev_grouphaloID:
+                            new_previous_structure.append(0)
+                        else:
+                            new_previous_structure.append(previous_halo_id)
+                    new_previous_structure=np.array(new_previous_structure)
+                    print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
+                    print(f'CGM {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100}%')
+                    print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
 
-                    print('Checking the previous state of particles ...')
-                    previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
-                    if not isubhalo:
-                        new_previous_structure=previous_structure                   
-                        print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
-                        print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
-                    else:
-                        new_previous_structure=[]
-                        for previous_halo_id in previous_structure:
-                            if previous_halo_id==prev_grouphaloID:
-                                new_previous_structure.append(0)
-                            else:
-                                new_previous_structure.append(previous_halo_id)
-                        new_previous_structure=np.array(new_previous_structure)
-                        print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
-                        print(f'CGM {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100}%')
-                        print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
-
-                    #fidelity
-                    print('Checking which particles stayed ...')
-                    new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
-                    print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed')
+                #fidelity
+                print('Checking which particles stayed ...')
+                new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
+                print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed')
 
         else:
             #### return nan accretion rate
