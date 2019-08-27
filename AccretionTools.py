@@ -975,7 +975,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
                 #properties recorded: 
                 # new_particle_IDs_itype_snap2, new_particle_masses, new_previous_structure, new_particle_stayed_snap3
-                print(len(new_particle_IDs_itype_snap2))
+                print(np.sum(new_particle_IDs_itype_snap2>0))
                 print(len(new_particle_masses))
                 print(len(new_previous_structure))
                 print(len(new_particle_stayed_snap3))
