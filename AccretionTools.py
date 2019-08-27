@@ -821,26 +821,28 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         EAGLE_Snap_2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
         EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
 
-        snap_1_masses=dict()
         snap_2_masses=dict()
 
         for itype in PartTypes:
             if not itype==1:#everything except DM
                 snap_2_masses[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10
+                snap_2_ids[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"ParticleIDs")
             else:#DM
                 hdf5file=h5py.File(base_halo_data[snap2]['Part_FilePath'])
                 dm_mass=hdf5file['Header'].attrs['MassTable'][1]*10**10
-                snap_2_masses[str(itype)]=dm_mass
+                n_part=hdf5file['Header'].attrs('NumPart_Total')[1]
+                snap_2_masses[str(itype)]=dm_mass*np.ones(n_part)
+                snap_2_ids[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"ParticleIDs")
         print('Done reading in EAGLE snapshot data')
        
     else:#assuming constant mass (convert to physical!)
-        hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
-        snap_1_masses=dict()
+        hdf5file=h5py.File(base_halo_data[snap2]['Part_FilePath'])
         masses_0=hdf5file["Header"].attrs["MassTable"][0]
         masses_1=hdf5file["Header"].attrs["MassTable"][1]
-        snap_1_masses[str(0)]=masses_0
-        snap_1_masses[str(1)]=masses_1
-
+        n_part_0=hdf5file["Header"].attrs["NumPart_Total"][0]
+        n_part_1=hdf5file["Header"].attrs["NumPart_Total"][1]
+        snap_2_masses[str(1)]=masses_1*np.ones(n_part_0)
+        snap_2_masses[str(0)]=masses_0*np.ones(n_part_1)
 
     #Load in particle histories
     print(f'Retrieving & organising particle histories for snap = {snap1} ...')
@@ -936,17 +938,21 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
                     
                     #particle_masses
-                    new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)]
+                    new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)][0]
                 
                 else:
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
                     
                     #particle_masses
+                    print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                     new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
-                    
+                    IDs_from_file=[snap_2_ids[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
+                    print('New IDs and IDs from file are:')
+                    print(np.column_stack((new_particle_IDs_itype_snap2,IDs_from_file)))
+
                 #checking previous snap
-                print('Checking the previous state of particles ...')
+                print(f"Checking previous state of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
                 if not isubhalo:
                     new_previous_structure=previous_structure                   
