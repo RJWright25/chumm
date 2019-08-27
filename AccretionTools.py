@@ -702,7 +702,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
                 if ipart_switch%100000==0:
                     print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100,f'% done adding host halos for {PartNames[itype]} particles')
 
-                sorted_index_temp_ID=binary_search_1(element=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])[0]
+                sorted_index_temp_ID=binary_search_1(elements=field_particle_ID,sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])[0]
                 Particle_History_Flags[str(itype)]["HostStructureID"][sorted_index_temp_ID]=int(field_particle_HostHalo)
                 ipart_switch=ipart_switch+1
 
@@ -848,21 +848,31 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
     #Load in particle histories
     print(f'Retrieving & organising particle histories for snap = {snap1} ...')
-    Part_Histories_File_snap1=h5py.File("part_histories/PartHistory_"+str(snap1).zfill(3)+"_"+run_outname+".hdf5",'r')
+    if test_run:
+        Part_Histories_File_snap1=h5py.File("part_histories/archive/PartHistory_"+str(snap1).zfill(3)+"_"+run_outname+".hdf5",'r')
+    else:
+        Part_Histories_File_snap1=h5py.File("part_histories/PartHistory_"+str(snap1).zfill(3)+"_"+run_outname+".hdf5",'r')
+        
     Part_Histories_IDs_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
     Part_Histories_Index_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
     Part_Histories_HostStructure_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
     print(f'Done retrieving & organising particle histories for snap = {snap1}')
 
     print(f'Retrieving & organising particle histories for snap = {snap2} ...')
-    Part_Histories_File_snap2=h5py.File("part_histories/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
+    if test_run:
+        Part_Histories_File_snap2=h5py.File("part_histories/archive/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
+    else:
+        Part_Histories_File_snap2=h5py.File("part_histories/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
     Part_Histories_IDs_snap2=[Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
     Part_Histories_Index_snap2=[Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
     Part_Histories_HostStructure_snap2=[Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
     print(f'Done retrieving & organising particle histories for snap = {snap2}')
 
     print(f'Retrieving & organising particle histories for snap = {snap3} ...')
-    Part_Histories_File_snap3=h5py.File("part_histories/PartHistory_"+str(snap3).zfill(3)+"_"+run_outname+".hdf5",'r')
+    if test_run:
+        Part_Histories_File_snap3=h5py.File("part_histories/archive/PartHistory_"+str(snap3).zfill(3)+"_"+run_outname+".hdf5",'r')
+    else:
+        Part_Histories_File_snap3=h5py.File("part_histories/PartHistory_"+str(snap3).zfill(3)+"_"+run_outname+".hdf5",'r')
     Part_Histories_IDs_snap3=[Part_Histories_File_snap3["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
     Part_Histories_Index_snap3=[Part_Histories_File_snap3["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
     Part_Histories_HostStructure_snap3=[Part_Histories_File_snap3["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
