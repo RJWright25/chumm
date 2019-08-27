@@ -936,23 +936,18 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)
 
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
+                new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
+                new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
+                    
+                #particle_masses
+                print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 if itype==1:#DM:
-                    new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
-                    new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
-                    
-                    #particle_masses
-                    new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)][0]
-                
+                    new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*snap_2_masses[str(itype)][0]   
                 else:
-                    new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)
-                    new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)
-                    
-                    #particle_masses
-                    print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                     new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
-                    IDs_from_file=[snap_2_ids[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
-                    print('New IDs and IDs from file are:')
-                    print(np.column_stack((new_particle_IDs_itype_snap2,IDs_from_file)))
+
+                #add any other properties to check here...
+                x=1
 
                 #checking previous snap
                 print(f"Checking previous state of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
