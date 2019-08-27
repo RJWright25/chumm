@@ -822,7 +822,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
 
         snap_2_masses=dict()
-
+        snap_2_ids=dict()
         for itype in PartTypes:
             if not itype==1:#everything except DM
                 snap_2_masses[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10
@@ -836,6 +836,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         print('Done reading in EAGLE snapshot data')
        
     else:#assuming constant mass (convert to physical!)
+        snap_2_masses=dict()
+        snap_2_ids=dict()
+        
         hdf5file=h5py.File(base_halo_data[snap2]['Part_FilePath'])
         masses_0=hdf5file["Header"].attrs["MassTable"][0]
         masses_1=hdf5file["Header"].attrs["MassTable"][1]
