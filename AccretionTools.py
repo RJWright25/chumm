@@ -901,6 +901,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         if structuretype>10:
             isubhalo=True
             grouphaloID=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])
+            grouphaloindex=int(np.where(grouphaloID==base_halo_data[snap2]["ID"])[0])
+            prev_grouphaloindex=find_progen_index(base_halo_data,index2=grouphaloindex,snap2=15,depth=1)
+            prev_grouphaloID=base_halo_data[snap1]["ID"][prev_grouphaloindex]
 
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]
@@ -908,7 +911,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         print('**********************************')
         print('Halo index: ',ihalo_s2,f'(Subhalo: {isubhalo})')
         if isubhalo:
-            print(f'Host halo: {grouphaloID}')
+            print(f'Host halo at previous snap: {prev_grouphaloID}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
         print('**********************************')
 
@@ -954,7 +957,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                         new_previous_structure=[]
                         for previous_halo_id in previous_structure:
                             print(previous_halo_id,grouphaloID)
-                            if previous_halo_id==grouphaloID:
+                            if previous_halo_id==prev_grouphaloID:
                                 new_previous_structure.append(0)
                             else:
                                 new_previous_structure.append(previous_halo_id)
