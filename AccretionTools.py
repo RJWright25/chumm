@@ -919,7 +919,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         if structuretype>10:
             isubhalo=True
             grouphaloindex=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])-1
-            id 
 
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]

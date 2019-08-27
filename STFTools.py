@@ -471,7 +471,6 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
         part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
         return part_data_temp
     
-    print('Unprocessed PLs:',part_data_temp)
     if add_subparts_to_fofs:
 
         if verbose==1:
