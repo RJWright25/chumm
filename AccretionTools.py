@@ -819,15 +819,15 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     z2=base_halo_data[snap2]['SimulationInfo']['z']
     z3=base_halo_data[snap3]['SimulationInfo']['z']
     
-    header_hdf5.attrs.create('ave_LookbackTime',data=lt_ave,dtype=np.float8)
-    header_hdf5.attrs.create('ave_z',data=z_ave,dtype=np.float8)
-    header_hdf5.attrs.create('delta_LookbackTime',data=dt,dtype=np.float8)
-    header_hdf5.attrs.create('snap1_LookbackTime',data=t1,dtype=np.float8)
-    header_hdf5.attrs.create('snap2_LookbackTime',data=t2,dtype=np.float8)
-    header_hdf5.attrs.create('snap3_LookbackTime',data=t3,dtype=np.float8)
-    header_hdf5.attrs.create('snap1_z',data=z1,dtype=np.float8)
-    header_hdf5.attrs.create('snap2_z',data=z2,dtype=np.float8)
-    header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float8)
+    header_hdf5.attrs.create('ave_LookbackTime',data=lt_ave,dtype=np.float16)
+    header_hdf5.attrs.create('ave_z',data=z_ave,dtype=np.float16)
+    header_hdf5.attrs.create('delta_LookbackTime',data=dt,dtype=np.float16)
+    header_hdf5.attrs.create('snap1_LookbackTime',data=t1,dtype=np.float16)
+    header_hdf5.attrs.create('snap2_LookbackTime',data=t2,dtype=np.float16)
+    header_hdf5.attrs.create('snap3_LookbackTime',data=t3,dtype=np.float16)
+    header_hdf5.attrs.create('snap1_z',data=z1,dtype=np.float16)
+    header_hdf5.attrs.create('snap2_z',data=z2,dtype=np.float16)
+    header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
 
     part_filetype=base_halo_data[snap]['Part_FileType']
 
