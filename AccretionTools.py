@@ -1008,6 +1008,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
             print(f'Done with ihalo {ihalo_s2}!')
 
     
+    output_hdf5.close()
 
 
 
