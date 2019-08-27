@@ -157,7 +157,9 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             treefile_ids=treefile_isnap["/ID"].value
             halo_data_all[isnap]["ID"]=treefile_ids
             treefile_isnap.close()
-
+        if item["hostHaloID"][0]<temporal_idval:
+            #read in IDs from TreeFrog
+            halo_data_all[isnap]["hostHaloID"]=np.int64((isnap*temporal_idval)+halo_data_all[isnap]["hostHaloID"])
 
     print('Now assembling descendent tree using VR python tools')
     snap_no=len(tf_filelist)
