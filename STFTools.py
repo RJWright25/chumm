@@ -482,11 +482,11 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
             print('Appending FOF particle lists with substructure')
         
         field_halo_indices_temp=np.where(base_halo_data_snap['hostHaloID']==-1)[0]#find field/fof halos
-
+        
         for i_field_halo,field_halo_ID in enumerate(base_halo_data_snap['ID'][field_halo_indices_temp]):#go through each field halo
             
             sub_halos_temp=(np.where(base_halo_data_snap['hostHaloID']==field_halo_ID)[0])#find the indices of its subhalos
-
+            print(sub_halos_temp)
             if len(sub_halos_temp)>0:#where there is substructure
 
                 field_halo_temp_index=field_halo_indices_temp[i_field_halo]
