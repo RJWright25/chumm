@@ -726,7 +726,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     return Particle_History_Flags
 
 
-def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index_list=None,snap_gap=1,fidelity_gap=1,verbose=1):
+def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index_list=None,pre_depth=1,post_depth=1,verbose=1):
     
     """
 
@@ -751,18 +751,18 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         List of the halo indices for which to calculate accretion rates. If 'None',
         find for all halos in the base_halo_data dictionary at the desired snapshot. 
 
-    snap_gap : int
+    pre_depth : int
         How many snaps to skip back to when comparing particle lists.
-        Initial snap for calculation will be snap-snap_gap. 
+        Initial snap for calculation will be snap-pre_depth. 
 
-    snap_gap : int
+    pre_depth : int
         How many snaps to skip back to when comparing particle lists.
-        Initial snap (s1) for calculation will be s1=snap-snap_gap, and we will check particle histories at s1-1. 
+        Initial snap (s1) for calculation will be s1=snap-pre_depth, and we will check particle histories at s1-1. 
 
 	Returns
 	----------
     
-    AccretionData_snap{snap2}_sg{snap_gap}_fg{fidelity_gap}_ihalo_xxxxxx_xxxxxx_outname.hdf5: hdf5 file with datasets
+    AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}_ihalo_xxxxxx_xxxxxx_outname.hdf5: hdf5 file with datasets
 
         '/PartTypeX/ihalo_xxxxxx/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/Masses': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
@@ -776,6 +776,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
     
     """
+
     #Initialising halo index list
     if halo_index_list==None:
         halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
@@ -786,24 +787,48 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     if snap==None:
         snap=len(base_halo_data)-1#if not given snap, just use the last one
     
-    snap1=snap-snap_gap
-    snap2=snap
-    snap3=snap+fidelity_gap
 
-    halo_index_list_snap1=[find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap_gap) for ihalo in halo_index_list_snap2]
-    halo_index_list_snap3=[find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=fidelity_gap) for ihalo in halo_index_list_snap2]
+    snap1=snap-pre_depth
+    snap2=snap
+    snap3=snap+post_depth
+
+    halo_index_list_snap1=[find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=pre_depth) for ihalo in halo_index_list_snap2]
+    halo_index_list_snap3=[find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=post_depth) for ihalo in halo_index_list_snap2]
 
     #Initialising outputs
     run_outname=base_halo_data[snap]['outname']
     if test_run:
         if not os.path.exists('acc_data_test'):
             os.mkdir('acc_data_test')
-        outfile_name='acc_data_test/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1]).zfill(6)+"_"+run_outname+'_test.hdf5'
+        outfile_name='acc_data_test/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'.hdf5'
     else:
         if not os.path.exists('acc_data'):
             os.mkdir('acc_data')
-        outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_sg'+str(snap_gap)+'_fg'+str(fidelity_gap)+'_ihalo'+str(halo_index_list[0]).zfill(6)+"_"+str(halo_index_list[-1]).zfill(6)+"_"+run_outname+'.hdf5'
+        outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'.hdf5'
     
+    output_hdf5=h5py.File(outfile_name,"w+")
+    header_hdf5=output_hdf5.create_group("Header")
+
+    lt_ave=(base_halo_data[snap1]['SimulationInfo']['LookbackTime']+base_halo_data[snap2]['SimulationInfo']['LookbackTime'])/2
+    z_ave=(base_halo_data[snap1]['SimulationInfo']['z']+base_halo_data[snap2]['SimulationInfo']['z'])/2
+    dt=(base_halo_data[snap1]['SimulationInfo']['LookbackTime']-base_halo_data[snap2]['SimulationInfo']['LookbackTime'])
+    t1=base_halo_data[snap1]['SimulationInfo']['LookbackTime']
+    t2=base_halo_data[snap2]['SimulationInfo']['LookbackTime']
+    t3=base_halo_data[snap3]['SimulationInfo']['LookbackTime']
+    z1=base_halo_data[snap1]['SimulationInfo']['z']
+    z2=base_halo_data[snap2]['SimulationInfo']['z']
+    z3=base_halo_data[snap3]['SimulationInfo']['z']
+    
+    header_hdf5.attrs.create('ave_LookbackTime',data=lt_ave,dtype=np.float8)
+    header_hdf5.attrs.create('ave_z',data=z_ave,dtype=np.float8)
+    header_hdf5.attrs.create('delta_LookbackTime',data=dt,dtype=np.float8)
+    header_hdf5.attrs.create('snap1_LookbackTime',data=t1,dtype=np.float8)
+    header_hdf5.attrs.create('snap2_LookbackTime',data=t2,dtype=np.float8)
+    header_hdf5.attrs.create('snap3_LookbackTime',data=t3,dtype=np.float8)
+    header_hdf5.attrs.create('snap1_z',data=z1,dtype=np.float8)
+    header_hdf5.attrs.create('snap2_z',data=z2,dtype=np.float8)
+    header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float8)
+
     part_filetype=base_halo_data[snap]['Part_FileType']
 
     # Particle types from sim type
@@ -884,20 +909,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     subhalos=set(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
     fieldhalos=set(np.where(base_halo_data[snap]['hostHaloID']>0)[0])
 
-    Integrated_OUTPUT={str(itype):{} for itype in PartTypes}
-    for itype in PartTypes:####SUMMED OUTPUTS WHICH HAVE BEEN TRIMMED OF PARTICLES WHICH WERE NOT IN THE HALO AT THE FIDELITY STEP
-        Integrated_OUTPUT[str(itype)]["TotalDeltaN"]=[]
-        Integrated_OUTPUT[str(itype)]["UnprocessedDeltaN"]=[]
-        Integrated_OUTPUT[str(itype)]["TotalDeltaM"]=[]
-        Integrated_OUTPUT[str(itype)]["UnprocessedDeltaM"]=[]
-
-    Verbose_OUTPUT={str(itype):{} for itype in PartTypes}
-    for itype in PartTypes:
-        Integrated_OUTPUT[str(itype)]["IDs"]=[]
-        Integrated_OUTPUT[str(itype)]["Fidelity"]=[]
-        Integrated_OUTPUT[str(itype)]["PrevHostStructure"]=[]#-1: cosmological, 0: from CGM (highest level group) - this won't happen for groups/clusters, >0: from another halo/subhalo at the same level (that subhalo's ID)
+    #outputs: IDs, Masses, Fidelity, PreviousHost
+    #prev_host: -1: cosmological, 0: from CGM (highest level group) - this won't happen for groups/clusters, >0: from another halo/subhalo at the same level (that subhalo's ID)
         
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
+
         isubhalo=False
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]
         if structuretype>10:
@@ -969,21 +985,29 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
 
                 #fidelity
-                print('Checking which particles stayed ...')
+                print(f"Checking which accreted particles stayed in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
                 print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed')
 
-                #properties recorded: 
-                # new_particle_IDs_itype_snap2, new_particle_masses, new_previous_structure, new_particle_stayed_snap3
-                print(np.sum(new_particle_IDs_itype_snap2>0))
-                print(len(new_particle_masses))
-                print(len(new_previous_structure))
-                print(len(new_particle_stayed_snap3))
+                print(f'Saving ihalo {ihalo_s2} data to hdf5 ...')
+                halo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
+                halo_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs_itype_snap2,dtype=np.int64)
+                halo_hdf5.create_dataset('Masses',data=new_particle_masses,dtype=np.float32)
+                halo_hdf5.create_dataset('Fidelity',data=new_particle_stayed_snap3,dtype=np.int8)
+                halo_hdf5.create_dataset('PreviousHost',data=new_previous_structure,dtype=np.int32)
+                print(f'Done with ihalo {ihalo_s2}!')
+
         else:
             #### return nan accretion rate
+            print(f'Saving ihalo {ihalo_s2} data to hdf5 ...')
+            halo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
+            halo_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float8)
+            halo_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float8)
+            halo_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float8)
+            halo_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float8)
+            print(f'Done with ihalo {ihalo_s2}!')
 
-            pass
-
+    
 
 
 
