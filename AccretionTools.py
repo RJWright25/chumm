@@ -726,7 +726,7 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
     return Particle_History_Flags
 
 
-def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index_list=None,pre_depth=1,post_depth=1,verbose=1):
+def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,verbose=1):
     
     """
 
@@ -797,14 +797,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
     #Initialising outputs
     run_outname=base_halo_data[snap]['outname']
-    if test_run:
-        if not os.path.exists('acc_data_test'):
-            os.mkdir('acc_data_test')
-        outfile_name='acc_data_test/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'.hdf5'
-    else:
-        if not os.path.exists('acc_data'):
-            os.mkdir('acc_data')
-        outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'.hdf5'
+    if not os.path.exists('acc_data'):
+        os.mkdir('acc_data')
+    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'.hdf5'
     
     output_hdf5=h5py.File(outfile_name,"w")
     header_hdf5=output_hdf5.create_group("Header")
@@ -994,7 +989,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 print(f'Saving {PartNames[itype]} data for ihalo {ihalo_s2} to hdf5 ...')
                 halo_parttype_hdf5=halo_hdf5.create_group('PartType'+str(itype))
                 halo_parttype_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs_itype_snap2,dtype=np.int64)
-                halo_parttype_hdf5.create_dataset('Masses',data=new_particle_masses,dtype=np.float32)
+                halo_parttype_hdf5.create_dataset('Masses',data=new_particle_masses,dtype=np.float64)
                 halo_parttype_hdf5.create_dataset('Fidelity',data=new_particle_stayed_snap3,dtype=np.int8)
                 halo_parttype_hdf5.create_dataset('PreviousHost',data=new_previous_structure,dtype=np.int32)
                 print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
