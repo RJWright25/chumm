@@ -908,7 +908,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
         print('**********************************')
         print('Halo index: ',ihalo_s2,f'(Subhalo: {isubhalo})')
         if isubhalo:
-            print(f'Host ihalo: {grouphaloindex}')
+            print(f'Host halo: {grouphaloID}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
         print('**********************************')
 
@@ -953,7 +953,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                     else:
                         new_previous_structure=[]
                         for previous_halo_id in previous_structure:
-                            print(previous_halo_id,grouphaloindex)
+                            print(previous_halo_id,grouphaloID)
                             if previous_halo_id==grouphaloindex:
                                 new_previous_structure.append(-1)
                             else:
