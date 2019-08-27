@@ -918,11 +918,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             grouphaloID=int(base_halo_data[snap2]["hostHaloID"][ihalo_s2])
             grouphaloindex=int(np.where(grouphaloID==base_halo_data[snap2]["ID"])[0])
             prev_grouphaloindex=find_progen_index(base_halo_data,index2=grouphaloindex,snap2=15,depth=1)
-            if prev_grouphaloID>0:
+            if prev_grouphaloindex>0:
                 prev_grouphaloID=base_halo_data[snap1]["ID"][prev_grouphaloindex]
             else:
                 prev_grouphaloID=np.nan
-                
+
         ihalo_s1=halo_index_list_snap1[iihalo]
         ihalo_s3=halo_index_list_snap3[iihalo]
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)
