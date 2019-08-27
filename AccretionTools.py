@@ -780,10 +780,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     
     """
     #Initialising halo index list
-    if halo_index_list==None:
-        halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
-    else:
+    try:
+        halo_index_list[0]
         halo_index_list_snap2=halo_index_list
+
+    except:
+        halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
+
 
     #Assigning snap
     if snap==None:
