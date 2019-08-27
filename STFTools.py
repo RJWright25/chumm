@@ -505,9 +505,18 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
     if halo_index_list==None:
         return part_data_temp
     else:
-        truncated_IDs=[part_data_temp["Particle_IDs"][int(ihalo)] for ihalo in halo_index_list]
-        truncated_Types=[part_data_temp["Particle_Types"][int(ihalo)] for ihalo in halo_index_list]
-        truncated_Npart=[part_data_temp["Npart"][int(ihalo)] for ihalo in halo_index_list]
+        truncated_IDs=[]
+        truncated_Types=[]
+        truncated_Npart=[]
+        for ihalo in halo_index_list:
+            if ihalo>-1:
+                truncated_IDs.append(part_data_temp["Particle_IDs"][int(ihalo)])
+                truncated_Types.append(part_data_temp["Particle_Types"][int(ihalo)])
+                truncated_Npart.append(part_data_temp["Npart"][int(ihalo)])
+            else:
+                truncated_IDs.append([])
+                truncated_Types.append([])
+                truncated_Npart.append(np.nan)
         part_data_temp_truncated={"Particle_IDs":truncated_IDs,"Particle_Types":truncated_Types,"Npart":truncated_Npart}
         return part_data_temp_truncated
 
