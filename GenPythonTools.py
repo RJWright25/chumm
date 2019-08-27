@@ -56,14 +56,14 @@ def gen_indices_mp(index_list,n_processes):
                 indices_temp=list(range(last_index,last_index+n_indices_per_process+1))
                 i_index_lists.append(indices_temp)
                 last_index=indices_temp[-1]+1
-                index_list_temp=[all_[index_temp] for index_temp in indices_temp]
+                index_list_temp=[index_list[index_temp] for index_temp in indices_temp]
                 output_index_lists.append(halo_index_list_temp)
 
             else:
                 indices_temp=list(range(last_index,last_index+n_halos_per_process))
                 i_index_lists.append(indices_temp)
                 last_index=indices_temp[-1]+1
-                index_list_temp=[all_halo_indices[index_temp] for index_temp in indices_temp]
+                index_list_temp=[index_list[index_temp] for index_temp in indices_temp]
                 output_index_lists.append(halo_index_list_temp)
 
     return output_index_lists
