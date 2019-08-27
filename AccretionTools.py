@@ -933,11 +933,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
 
         if ihalo_tracked and structuretype<25:# if we found both the progenitor and the descendent (and it's not a subsubhalo)
             count=count+1
-            snap1_IDs_temp=snap_1_halo_particles['Particle_IDs'][ihalo_s2]
-            snap1_Types_temp=snap_1_halo_particles['Particle_Types'][ihalo_s2]
-            snap2_IDs_temp=snap_2_halo_particles['Particle_IDs'][ihalo_s2]
-            snap2_Types_temp=snap_2_halo_particles['Particle_Types'][ihalo_s2]
-            snap3_IDs_temp=set(snap_3_halo_particles['Particle_IDs'][ihalo_s2])
+            snap1_IDs_temp=snap_1_halo_particles['Particle_IDs'][iihalo]
+            snap1_Types_temp=snap_1_halo_particles['Particle_Types'][iihalo]
+            snap2_IDs_temp=snap_2_halo_particles['Particle_IDs'][iihalo]
+            snap2_Types_temp=snap_2_halo_particles['Particle_Types'][iihalo]
+            snap3_IDs_temp=set(snap_3_halo_particles['Particle_IDs'][iihalo])
 
             #returns mask for s2 of particles which were not in s1
             print(f"Finding new particles to ihalo {ihalo_s2} ...")
