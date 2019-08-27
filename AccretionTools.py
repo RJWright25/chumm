@@ -801,7 +801,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
         os.mkdir('acc_data')
     outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'.hdf5'
     
-    output_hdf5=h5py.File(outfile_name,"w")
+    output_hdf5=h5py.File(outfile_name,"r+")
     header_hdf5=output_hdf5.create_group("Header")
 
     lt_ave=(base_halo_data[snap1]['SimulationInfo']['LookbackTime']+base_halo_data[snap2]['SimulationInfo']['LookbackTime'])/2
