@@ -913,6 +913,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
     #prev_host: -1: cosmological, 0: from CGM (highest level group) - this won't happen for groups/clusters, >0: from another halo/subhalo at the same level (that subhalo's ID)
         
     for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
+        
+        halo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
 
         isubhalo=False
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]
@@ -989,23 +991,23 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]
                 print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed')
 
-                print(f'Saving ihalo {ihalo_s2} data to hdf5 ...')
-                halo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
-                halo_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs_itype_snap2,dtype=np.int64)
-                halo_hdf5.create_dataset('Masses',data=new_particle_masses,dtype=np.float32)
-                halo_hdf5.create_dataset('Fidelity',data=new_particle_stayed_snap3,dtype=np.int8)
-                halo_hdf5.create_dataset('PreviousHost',data=new_previous_structure,dtype=np.int32)
-                print(f'Done with ihalo {ihalo_s2}!')
+                print(f'Saving {PartNames[itype]} data for ihalo {ihalo_s2} to hdf5 ...')
+                halo_parttype_hdf5=halo_hdf5.create_group('PartType'+str(itype))
+                halo_parttype_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs_itype_snap2,dtype=np.int64)
+                halo_parttype_hdf5.create_dataset('Masses',data=new_particle_masses,dtype=np.float32)
+                halo_parttype_hdf5.create_dataset('Fidelity',data=new_particle_stayed_snap3,dtype=np.int8)
+                halo_parttype_hdf5.create_dataset('PreviousHost',data=new_previous_structure,dtype=np.int32)
+                print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
 
         else:
             #### return nan accretion rate
-            print(f'Saving ihalo {ihalo_s2} data to hdf5 ...')
-            halo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
-            halo_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
-            halo_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
-            halo_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float16)
-            halo_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
-            print(f'Done with ihalo {ihalo_s2}!')
+            print(f'Saving {PartNames[itype]} data for ihalo {ihalo_s2} to hdf5 ...')
+            halo_parttype_hdf5=halo_hdf5.create_group('PartType'+str(itype))
+            halo_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
+            halo_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
+            halo_parttype_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float16)
+            halo_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
+            print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
 
     
     output_hdf5.close()
