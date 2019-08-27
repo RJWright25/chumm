@@ -663,12 +663,12 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
         allhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='int64')*haloid for ihalo,haloid in enumerate(base_halo_data[snap]['ID'])])
         
         #anyhalo==l1
-        fieldhalo_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostStructureID":allhalo_Particle_hosts},dtype=np.int64).sort_values(["ParticleIDs"])
-        fieldhalo_Particles_bytype={str(itype):np.array(fieldhalo_Particles[["ParticleIDs","HostStructureID"]].loc[fieldhalo_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
-        n_fieldhalo_particles=np.sum([len(fieldhalo_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
+        structure_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostStructureID":allhalo_Particle_hosts},dtype=np.int64).sort_values(["ParticleIDs"])
+        structure_Particles_bytype={str(itype):np.array(structure_Particles[["ParticleIDs","HostStructureID"]].loc[structure_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
+        n_structure_particles=np.sum([len(structure_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists for snap {snap} in {t2-t1} sec")
-        print(f"There are {n_fieldhalo_particles} particles in structure (L1)")
+        print(f"There are {np.sum(n_structure_particles)} particles in structure (L1)")
 
         # map IDs to indices from EAGLE DATA and initialise array
         
@@ -694,17 +694,16 @@ def gen_particle_history_serial(base_halo_data,snaps=[],verbose=1):
             print("Adding host indices ...")
             t1=time.time()
             ipart_switch=0
+            
+            all_Structure_IDs_itype=structure_Particles_bytype[str(itype)][:,0]
+            all_Structure_HostStructureID_itype=structure_Particles_bytype[str(itype)][:,1]
 
-            for field_particle_ID_and_host in fieldhalo_Particles_bytype[str(itype)]:
-                field_particle_ID=field_particle_ID_and_host[0]
-                field_particle_HostHalo=field_particle_ID_and_host[1]
+            all_Structure_IDs_itype_partindex=binary_search_1(sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"],elements=all_Structure_IDs_itype)
 
+            for ipart_switch, ipart_index in enumerate(all_Structure_IDs_itype_partindex):
                 if ipart_switch%100000==0:
-                    print(ipart_switch/len(fieldhalo_Particles_bytype[str(itype)])*100,f'% done adding host halos for {PartNames[itype]} particles')
-
-                sorted_index_temp_ID=binary_search_1(elements=[field_particle_ID],sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])[0]
-                Particle_History_Flags[str(itype)]["HostStructureID"][sorted_index_temp_ID]=int(field_particle_HostHalo)
-                ipart_switch=ipart_switch+1
+                    print(ipart_switch/len(all_Structure_IDs_itype_partindex)*100,f'% done adding host halos for {PartNames[itype]} particles')
+                Particle_History_Flags[str(itype)]["HostStructureID"][ipart_index]=np.int64(all_Structure_HostStructureID_itype[ipart_switch])
 
             t2=time.time()
             print(f"Added host halos in {t2-t1} sec for {PartNames[itype]} particles")
