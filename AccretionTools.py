@@ -969,7 +969,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                 print(f"Checking previous state of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
                 if not isubhalo:
-                    new_particle_masses=previous_structure                   
+                    new_previous_structure=previous_structure
                     print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
                     print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')
                 else:
