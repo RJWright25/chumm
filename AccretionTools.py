@@ -954,7 +954,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,test_run=False,halo_index
                         new_previous_structure=[]
                         for previous_halo_id in previous_structure:
                             print(previous_halo_id,grouphaloID)
-                            if previous_halo_id==grouphaloindex:
+                            if previous_halo_id==grouphaloID:
                                 new_previous_structure.append(-1)
                             else:
                                 new_previous_structure.append(previous_halo_id)
