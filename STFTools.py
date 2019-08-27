@@ -459,12 +459,11 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
     if verbose:
         print('Reading halo particle lists for snap = ',snap)
     
-    if halo_index_list==None:
-        halo_index_list=list(range(len(base_halo_data_snap["hostHaloID"])))
+    halo_index_list_for_load=list(range(len(base_halo_data_snap["hostHaloID"])))#always need to load all particle lists (in case we need to add subparticles)
 
     # particle data
     try:
-        part_data_temp=ReadParticleDataFile(base_halo_data_snap['VR_FilePath'],halo_index_list=halo_index_list,ibinary=base_halo_data_snap['VR_FileType'],iverbose=0,iparttypes=1,unbound=include_unbound)
+        part_data_temp=ReadParticleDataFile(base_halo_data_snap['VR_FilePath'],halo_index_list=halo_index_list_for_load,ibinary=base_halo_data_snap['VR_FileType'],iverbose=0,iparttypes=1,unbound=include_unbound)
         if part_data_temp==[]:
             part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
             print('Particle data not found for snap = ',snap)
@@ -503,7 +502,16 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
         if verbose==1:
             print('Finished appending FOF particle lists with substructure')
 
-    return part_data_temp
+        #just output the halos in halo index list
+    if halo_index_list==None:
+        return part_data_temp
+    else:
+        truncated_IDs=[part_data_temp["Particle_IDs"][ihalo] for ihalo in halo_index_list]
+        truncated_Types=[part_data_temp["Particle_Types"][ihalo] for ihalo in halo_index_list]
+        truncated_Npart=[part_data_temp["Npart"][ihalo] for ihalo in halo_index_list]
+        part_data_temp_truncated={"Particle_IDs":truncated_IDs,"Particle_Types":truncated_Types,"Npart":truncated_Npart}
+        return part_data_temp_truncated
+
 
 ########################### FIND BEST PROGENITOR FOR ACCRETION ###########################
 
