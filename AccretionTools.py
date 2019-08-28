@@ -471,7 +471,6 @@ def collate_acc_data(directory):
     i=0
     for ifile_hdf5 in acc_data_hdf5files:
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
-        ifile_halo_dict={ifile_halo_key:{} for ifile_halo in ifile_halo_keys}
         for ihalo_group in ifile_halo_keys:# for each halo 
             outfile_ihalo_group=collated_output_file.create_group(ihalo_group)
             ihalo_partkeys=list(ifile_hdf5[ihalo_group].keys())
