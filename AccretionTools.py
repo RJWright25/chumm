@@ -468,7 +468,10 @@ def collate_acc_data(directory):
     for attribute in list(acc_data_hdf5files_header.keys()):
         collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header[attribute],dtype=np.float16)
 
-    i=0
+    total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])
+    print(total_num_halos)
+    
+    print('Starting to collate files ...')
     for ifile_hdf5 in acc_data_hdf5files:
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
         for ihalo_group in ifile_halo_keys:# for each halo 
