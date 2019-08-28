@@ -458,12 +458,19 @@ def collate_acc_data(directory):
     acc_data_filelist=os.listdir(directory)
     acc_data_outfile_name='acc_data/'+acc_data_filelist[0].split('_ihalo')[0]+'.hdf5'
     print(f'Output file name: {acc_data_outfile_name}')
+    collated_output_file=h5py.File(acc_data_outfile_name,'w')
     
     acc_data_hdf5files=[h5py.File('acc_data/'+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     acc_data_hdf5files_header=dict(acc_data_hdf5files[0]['Header'].attrs)
 
-    acc_data_hdf5files_group_list=[list(acc_data_hdf5files[ifile].keys())[1:] for ifile in range(len(acc_data_hdf5files))]
-    print(acc_data_hdf5files_group_list)
+    collated_output_file_header=collated_output_file.create_group['Header']
+    for attribute in list(acc_data_hdf5files_header.attrs()):
+        collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header[attribute],dtype=np.float16)
+
+    for ifile_hdf5 in acc_data_hdf5files:
+        ifile_halo_keys=list(ifile_hdf5.keys())
+        print(ifile_halo_keys)
+
 
 def read_eagle_fromIDs(base_halo_data_snap,EAGLE_Snap=None,itype=0,ParticleIDs=[],datasets=[]):
 
