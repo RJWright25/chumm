@@ -478,13 +478,13 @@ def collate_acc_data(directory):
         for ihalo_group in ifile_halo_keys:# for each halo 
             outfile_ihalo_group=collated_output_file.create_group(ihalo_group)
             ihalo_partkeys=list(ifile_hdf5[ihalo_group].keys())
+            i=i+1
             for ihalo_partkey in ihalo_partkeys:#for each parttype
                 outfile_ihalo_partkey_group=outfile_ihalo_group.create_group(ihalo_partkey)
                 ihalo_partkey_datasets=list(ifile_hdf5[ihalo_group][ihalo_partkey].keys())
                 for ihalo_partkey_dataset in ihalo_partkey_datasets:#for each dataset
                     data=ifile_hdf5[ihalo_group][ihalo_partkey][ihalo_partkey_dataset].value
                     outfile_ihalo_partkey_group.create_dataset(ihalo_partkey_dataset,data=data)
-                    i=i+1
                     if i%2000==0:
                         print(i/total_num_halos*100,'% done')
     t2=time.time()
