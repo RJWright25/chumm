@@ -456,10 +456,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 def collate_acc_data(directory):
 
     acc_data_filelist=os.listdir(directory)
-    acc_data_outfile_name=acc_data_filelist[0].split('_ihalo')[0]+'.hdf5'
+    acc_data_outfile_name='acc_data/'+acc_data_filelist[0].split('_ihalo')[0]+'.hdf5'
     print(f'Output file name: {acc_data_outfile_name}')
     
-    acc_data_hdf5files=[h5py.File(acc_data_file,'r') for acc_data_file in acc_data_filelist]
+    acc_data_hdf5files=[h5py.File('acc_data/'+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     acc_data_hdf5files_header=acc_data_hdf5files[0]['Header'].value
     print(acc_data_hdf5files_header)
 
