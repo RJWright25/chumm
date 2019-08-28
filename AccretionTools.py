@@ -464,7 +464,7 @@ def read_eagle_fromIDs(base_halo_data_snap,EAGLE_Snap=None,itype=0,ParticleIDs=[
     EAGLE_datasets={dataset:EAGLE_Snap.read_dataset(itype,dataset) for dataset in datasets}
 
     #Load in the particle histories
-    part_histories=h5py.File("part_histories/PartHistory_"+str(base_halo_data_snap["Snap"]).zfill(3)+base_halo_data_snap["outname"]+".hdf5")
+    part_histories=h5py.File("part_histories/PartHistory_"+str(base_halo_data_snap["Snap"]).zfill(3)+'_'+base_halo_data_snap["outname"]+".hdf5",'r')
     sorted_IDs=part_histories["/PartType0/ParticleIDs"]
     sorted_IDs_indices=part_histories["PartType0/ParticleIndex"]
     history_indices=binary_search_1(elements=ParticleIDs,sorted_arrays=sorted_IDs)
