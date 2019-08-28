@@ -470,7 +470,7 @@ def collate_acc_data(directory):
 
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])
     print(total_num_halos)
-    
+
     print('Starting to collate files ...')
     for ifile_hdf5 in acc_data_hdf5files:
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
@@ -481,7 +481,6 @@ def collate_acc_data(directory):
                 outfile_ihalo_partkey_group=outfile_ihalo_group.create_group(ihalo_partkey)
                 ihalo_partkey_datasets=list(ifile_hdf5[ihalo_group][ihalo_partkey].keys())
                 for ihalo_partkey_dataset in ihalo_partkey_datasets:#for each dataset
-                    print(ihalo_group,ihalo_partkey,ihalo_partkey_dataset)
                     data=ifile_hdf5[ihalo_group][ihalo_partkey][ihalo_partkey_dataset].value
                     outfile_ihalo_partkey_group.create_dataset(ihalo_partkey_dataset,data=data)
 
