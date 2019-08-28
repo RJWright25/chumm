@@ -475,7 +475,7 @@ def collate_acc_data(directory):
             ihalo_group_data_partkeys=list(ifile_hdf5[ihalo_group].keys())
             ihalo_group_data_datasets=list(ifile_hdf5[ihalo_group][ihalo_group_data_partkeys[0]].keys())
             print(ihalo_group_data_datasets)
-            ihalo_group_data_dict={partkey:{dataset:ifile_hdf5[ihalo_group][partkey][dataset].value for dataset in list()} for partkey in ihalo_group_data_partkeys}
+            ihalo_group_data_dict={partkey:{dataset:ifile_hdf5[ihalo_group][partkey][dataset].value for dataset in ihalo_group_data_datasets} for partkey in ihalo_group_data_partkeys}
             print(ihalo_group_data_dict)
 
 
