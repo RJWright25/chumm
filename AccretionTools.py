@@ -488,10 +488,10 @@ def process_acc_data_serial(directory):
                 fidelity=ifile_hdf5[ihalo_group][ihalo_partkey]['Fidelity'].value
                 prevhost=ifile_hdf5[ihalo_group][ihalo_partkey]['PreviousHost'].value
 
-                outfile_ihalo_partkey_group.create_dataset('Masses',masses,dtype=np.float32)
-                outfile_ihalo_partkey_group.create_dataset('Fidelity',fidelity,dtype=np.float32)
-                outfile_ihalo_partkey_group.create_dataset('ParticleIDs',ids,dtype=np.int64)
-                outfile_ihalo_partkey_group.create_dataset('PreviousHost',prevhost,dtype=np.int32)
+                outfile_ihalo_partkey_group.create_dataset('Masses',data=masses,dtype=np.float32)
+                outfile_ihalo_partkey_group.create_dataset('Fidelity',data=fidelity,dtype=np.float32)
+                outfile_ihalo_partkey_group.create_dataset('ParticleIDs',data=ids,dtype=np.int64)
+                outfile_ihalo_partkey_group.create_dataset('PreviousHost',data=prevhost,dtype=np.int32)
 
                 npart=len(masses)
                 
