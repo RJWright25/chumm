@@ -471,11 +471,17 @@ def collate_acc_data(directory):
     i=0
     for ifile_hdf5 in acc_data_hdf5files:
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
-        for ihalo_group in ifile_halo_keys:
-            ihalo_group_data_partkeys=list(ifile_hdf5[ihalo_group].keys())
-            ihalo_group_data_datasets=list(ifile_hdf5[ihalo_group][ihalo_group_data_partkeys[0]].keys())
-            print(ifile_hdf5[ihalo_group][ihalo_group_data_partkeys[0]][ihalo_group_data_datasets[0]].value)
-
+        ifile_halo_dict={ifile_halo_key:{} for ifile_halo in ifile_halo_keys}
+        for ihalo_group in ifile_halo_keys:# for each halo 
+            outfile_ihalo_group=collated_output_file.create_group(ihalo_group)
+            ihalo_partkeys=list(ifile_hdf5[ihalo_group].keys())
+            for ihalo_partkey in ihalo_partkeys:#for each parttype
+                outfile_ihalo_partkey_group=outfile_ihalo_group.create_group(ihalo_partkey)
+                ihalo_partkey_datasets=list(ihalo_group_data_partkeys.keys())
+                for ihalo_partkey_dataset in ihalo_partkey_datasets:#for each dataset
+                    print(ihalo_group,ihalo_partkey,ihalo_partkey_dataset)
+                    data=ifile_hdf5[ihalo_group][ihalo_partkey][ihalo_partkey_dataset].value
+                    outfile_ihalo_partkey_group.create_dataset(ihalo_partkey_dataset,data=data)
 
 def read_eagle_fromIDs(base_halo_data_snap,EAGLE_Snap=None,itype=0,ParticleIDs=[],datasets=[]):
 
