@@ -460,9 +460,9 @@ def collate_acc_data(directory):
     print(f'Output file name: {acc_data_outfile_name}')
     
     acc_data_hdf5files=[h5py.File('acc_data/'+acc_data_file,'r') for acc_data_file in acc_data_filelist]
-    acc_data_hdf5files_header=acc_data_hdf5files[0]['Header']
-    print(dict(acc_data_hdf5files_header.attrs))
+    acc_data_hdf5files_header=dict(acc_data_hdf5files[0]['Header'].attrs)
 
+    print(list(acc_data_hdf5files[0].keys()))
 
 
 def read_eagle_fromIDs(base_halo_data_snap,EAGLE_Snap=None,itype=0,ParticleIDs=[],datasets=[]):
