@@ -233,7 +233,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     run_outname=base_halo_data[snap]['outname']
     if not os.path.exists('acc_data'):
         os.mkdir('acc_data')
-    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+f'_ihalo_'+str(halo_index_list_snap2[0]).zfill(6)+'_'+str(halo_index_list_snap2[-1]).zfill(6)+'.hdf5'
+    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+f'_ihalo_'+str(halo_index_list_snap2[0]).zfill(6)+'_'+str(halo_index_list_snap2[1])).zfill(6)+'.hdf5'
     
     output_hdf5=h5py.File(outfile_name,"w")
     header_hdf5=output_hdf5.create_group("Header")
@@ -257,8 +257,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     header_hdf5.attrs.create('snap1_z',data=z1,dtype=np.float16)
     header_hdf5.attrs.create('snap2_z',data=z2,dtype=np.float16)
     header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
+    header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
 
-    part_filetype=base_halo_data[snap]['Part_FileType']
 
     # Particle types from sim type
     PartNames=['gas','DM','','','star','BH']
@@ -351,7 +351,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
         ihalo_s3=halo_index_list_snap3[iihalo]
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]
-        
+
         if structuretype>10:
             isub=True
             ifield=False
@@ -449,8 +449,15 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             halo_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
             print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
 
-    
     output_hdf5.close()
 
+
+# def collate_accretion_data(directory)
+
+#     accdata_filelist=os.listdir(directory)
+#     accdata_hdf5files=[h5py.File(accdata_file,'r+') for accdata_file in accdata_filelist]
+#     name0=accdata_filelist[0]
+
+#     header=accdata_hdf5files[0]['Header']
 
 
