@@ -474,9 +474,7 @@ def collate_acc_data(directory):
         for ihalo_group in ifile_halo_keys:
             ihalo_group_data_partkeys=list(ifile_hdf5[ihalo_group].keys())
             ihalo_group_data_dict={partkey:dict(ifile_hdf5[ihalo_group][partkey]) for partkey in ihalo_group_data_partkeys}
-            collated_output_file[ihalo_group]=ihalo_group_data
-            print(dict(collated_output_file[ihalo_group]))
-
+            print(ihalo_group_data_dict)
 
 
 def read_eagle_fromIDs(base_halo_data_snap,EAGLE_Snap=None,itype=0,ParticleIDs=[],datasets=[]):
