@@ -493,7 +493,10 @@ def process_acc_data_serial(directory):
                 outfile_ihalo_partkey_group.create_dataset('ParticleIDs',data=ids,dtype=np.int64)
                 outfile_ihalo_partkey_group.create_dataset('PreviousHost',data=prevhost,dtype=np.int32)
 
-                npart=len(masses)
+                try:
+                    npart=len(masses)
+                except:
+                    npart=0
                 
                 if npart>0:
                     stable_mask=fidelity
