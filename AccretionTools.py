@@ -463,7 +463,7 @@ def collate_acc_data(directory):
     acc_data_hdf5files=[h5py.File('acc_data/'+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     acc_data_hdf5files_header=dict(acc_data_hdf5files[0]['Header'].attrs)
 
-    collated_output_file_header=collated_output_file.create_group['Header']
+    collated_output_file_header=collated_output_file.create_group('Header')
     for attribute in list(acc_data_hdf5files_header.attrs):
         collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header[attribute],dtype=np.float16)
 
