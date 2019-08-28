@@ -461,7 +461,7 @@ def collate_acc_data(directory):
     
     acc_data_hdf5files=[h5py.File('acc_data/'+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     acc_data_hdf5files_header=acc_data_hdf5files[0]['Header']
-    print(dict(acc_data_hdf5files_header))
+    print(list(acc_data_hdf5files_header.attrs))
 
 
 
