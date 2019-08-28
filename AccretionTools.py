@@ -452,12 +452,32 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     output_hdf5.close()
 
 
-# def collate_accretion_data(directory)
+def read_eagle_fromIDs(base_halo_data_snap,EAGLE_Snap=None,itype=0,ParticleIDs=[],datasets=[]):
 
-#     accdata_filelist=os.listdir(directory)
-#     accdata_hdf5files=[h5py.File(accdata_file,'r+') for accdata_file in accdata_filelist]
-#     name0=accdata_filelist[0]
+    #Load eagle snapshot if needed
+    if EAGLE_Snap==None:    
+        partdata_filepath=base_halo_data_snap["Part_FilePath"]
+        EAGLE_Snap=read_eagle.EagleSnapshot(partdata_filepath)
+        EAGLE_boxsize=base_halo_data_snap['SimulationInfo']['BoxSize_Comoving']
+        EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+    
+    EAGLE_datasets={dataset:EAGLE_Snap.read_dataset(itype,dataset) for dataset in datasets}
 
-#     header=accdata_hdf5files[0]['Header']
+    #Load in the particle histories
+    part_histories=h5py.File("part_histories/PartHistory_"+str(base_halo_data_snap["Snap"]).zfill(3)+base_halo_data_snap["outname"]+".hdf5")
+    sorted_IDs=part_histories["PartType"+str(itype)+"/ParticleIDs"].value
+    sorted_IDs_indices=part_histories["PartType"+str(itype)+"/ParticleIndex"]
+    history_indices=binary_search_1(elements=ParticleIDs,sorted_array=sorted_IDs)
+    output_datasets={dataset:[] for dataset in datasets}
 
-
+    for history_index in history_indices:
+        if history_index>=0:
+            particle_index=sorted_IDs_indices[history_index]
+            for dataset in datasets:
+                output_datasets[dataset].append(EAGLE_datasets[dataset][particle_index])
+        else:
+            for dataset in datasets:
+                output_datasets[dataset].append(np.nan)
+    
+    return output_datasets
+        

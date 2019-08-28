@@ -244,7 +244,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
     print('Done generating base halo data')
 
-    return halo_data_all
+    return halo_data_all_truncated
 
 ########################### ADD DETAILED HALO DATA ###########################
 
@@ -514,8 +514,8 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
                 truncated_Types.append(part_data_temp["Particle_Types"][int(ihalo)])
                 truncated_Npart.append(part_data_temp["Npart"][int(ihalo)])
             else:
-                truncated_IDs.append([])
-                truncated_Types.append([])
+                truncated_IDs.append(np.nan)
+                truncated_Types.append(np.nan)
                 truncated_Npart.append(np.nan)
         part_data_temp_truncated={"Particle_IDs":truncated_IDs,"Particle_Types":truncated_Types,"Npart":truncated_Npart}
         return part_data_temp_truncated
