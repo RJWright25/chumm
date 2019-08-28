@@ -259,7 +259,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
     header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
 
-
+    part_filetype=base_halo_data[snap]["Part_FileType"]
+    
     # Particle types from sim type
     PartNames=['gas','DM','','','star','BH']
     if part_filetype=='EAGLE':
