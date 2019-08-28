@@ -453,7 +453,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 
 
 
-def process_acc_data_serial(directory):
+def postprocess_acc_data_serial(directory):
 
     acc_data_filelist=os.listdir(directory)
     acc_data_outfile_name=acc_data_filelist[0].split('_ihalo')[0]+'.hdf5'
