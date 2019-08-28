@@ -260,7 +260,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
 
     part_filetype=base_halo_data[snap]["Part_FileType"]
-    
+
     # Particle types from sim type
     PartNames=['gas','DM','','','star','BH']
     if part_filetype=='EAGLE':
@@ -371,7 +371,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             print('Halo index: ',ihalo_s2,f' - field halo')
         if isub:
             print('Halo index: ',ihalo_s2,f' - sub halo')
-        if sub:
             print(f'Host halo at previous snap: {prev_grouphaloID}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
         print('**********************************')
