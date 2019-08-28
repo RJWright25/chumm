@@ -471,10 +471,11 @@ def collate_acc_data(directory):
     for ifile_hdf5 in acc_data_hdf5files:
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
         for ihalo_group in ifile_halo_keys:
-            i=i+1
-            ihalo_acc_data=dict(ifile_hdf5[ihalo_group].value)
-            if i==1:
-                print(ihalo_acc_data)
+            ihalo_group_data=ifile_hdf5[ihalo_group]
+            collated_output_file.create_group(ihalo_group)
+            collated_output_file[ihalo_group]=ihalo_group_data
+            print(dict(collated_output_file[ihalo_group]))
+
 
 
 def read_eagle_fromIDs(base_halo_data_snap,EAGLE_Snap=None,itype=0,ParticleIDs=[],datasets=[]):
