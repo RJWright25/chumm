@@ -371,7 +371,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             print('Halo index: ',ihalo_s2,f' - field halo')
         if isub:
             print('Halo index: ',ihalo_s2,f' - sub halo')
-            print(f'Host halo at previous snap: {prev_grouphaloID}')
+            print(f'Host halo at previous snap: {prev_hostHaloID}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
         print('**********************************')
 
