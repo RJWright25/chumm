@@ -469,9 +469,10 @@ def collate_acc_data(directory):
         collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header[attribute],dtype=np.float16)
 
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])
-    print(total_num_halos)
 
     print('Starting to collate files ...')
+    t1=time.time()
+    i=0
     for ifile_hdf5 in acc_data_hdf5files:
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
         for ihalo_group in ifile_halo_keys:# for each halo 
@@ -483,6 +484,11 @@ def collate_acc_data(directory):
                 for ihalo_partkey_dataset in ihalo_partkey_datasets:#for each dataset
                     data=ifile_hdf5[ihalo_group][ihalo_partkey][ihalo_partkey_dataset].value
                     outfile_ihalo_partkey_group.create_dataset(ihalo_partkey_dataset,data=data)
+                    i=i+1
+                    if i%2000==0:
+                        print(i/total_num_halos*100,'% done')
+    t2=time.time()
+    print(f'Finished collating files in {t2-t1} sec')
 
 def read_eagle_fromIDs(base_halo_data_snap,EAGLE_Snap=None,itype=0,ParticleIDs=[],datasets=[]):
 
