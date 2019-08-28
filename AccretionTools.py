@@ -472,7 +472,7 @@ def collate_acc_data(directory):
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
         for ihalo_group in ifile_halo_keys:
             i=i+1
-            ihalo_acc_data=dict(ifile_hdf5[ihalo_group].values)
+            ihalo_acc_data=dict(ifile_hdf5[ihalo_group].value)
             if i==1:
                 print(ihalo_acc_data)
 
