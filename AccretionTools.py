@@ -458,6 +458,7 @@ def collate_acc_data(directory):
     acc_data_filelist=os.listdir(directory)
     acc_data_outfile_name='acc_data/'+acc_data_filelist[0].split('_ihalo')[0]+'.hdf5'
     print(f'Output file name: {acc_data_outfile_name}')
+    
     collated_output_file=h5py.File(acc_data_outfile_name,'w')
     
     acc_data_hdf5files=[h5py.File('acc_data/'+acc_data_file,'r') for acc_data_file in acc_data_filelist]
@@ -471,7 +472,8 @@ def collate_acc_data(directory):
     for ifile_hdf5 in acc_data_hdf5files:
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
         for ihalo_group in ifile_halo_keys:
-            ihalo_group_data=ifile_hdf5[ihalo_group]
+            ihalo_group_data_partkeys=list(ifile_hdf5[ihalo_group].keys())
+            ihalo_group_data_dict={partkey:dict(ifile_hdf5[ihalo_group][partkey]) for partkey in ihalo_group_data_partkeys}
             collated_output_file[ihalo_group]=ihalo_group_data
             print(dict(collated_output_file[ihalo_group]))
 
