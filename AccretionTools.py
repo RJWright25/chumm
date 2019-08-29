@@ -181,7 +181,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
         The index in the base_halo_data for which to calculate accretion rates (should be actual snap index)
         We will retrieve particle data based on the flags at this index
     
-    halo_index_list : list
+    halo_index_list : dict
+        "iprocess": int
+        "indices: list of int
         List of the halo indices for which to calculate accretion rates. If 'None',
         find for all halos in the base_halo_data dictionary at the desired snapshot. 
 
@@ -214,13 +216,14 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     #Initialising halo index list
     if halo_index_list==None:
         halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
+        iprocess="none"
     else:
-        halo_index_list_snap2=halo_index_list
+        halo_index_list_snap2=halo_index_list["indices"]
+        iprocess=str(halo_index_list["iprocess"])
 
     #Assigning snap
     if snap==None:
         snap=len(base_halo_data)-1#if not given snap, just use the last one
-    
 
     snap1=snap-pre_depth
     snap2=snap
@@ -233,7 +236,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     run_outname=base_halo_data[snap]['outname']
     if not os.path.exists('acc_data'):
         os.mkdir('acc_data')
-    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+f'_ihalo_'+str(halo_index_list_snap2[0]).zfill(6)+'_'+str(halo_index_list_snap2[-1]).zfill(6)+'.hdf5'
+    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'p'+iprocess+'.hdf5'
     if os.path.exists(outfile_name):
         os.remove(outfile_name)
     output_hdf5=h5py.File(outfile_name,"w")
@@ -457,7 +460,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 def postprocess_acc_data_serial(directory):
 
     acc_data_filelist=os.listdir(directory)
-    acc_data_outfile_name=acc_data_filelist[0].split('_ihalo')[0]+'.hdf5'
+    acc_data_outfile_name=acc_data_filelist[0].split('ihalo')[0]+'.hdf5'
     print(f'Output file name: {acc_data_outfile_name}')
     
     collated_output_file=h5py.File('acc_data/'+acc_data_outfile_name,'w')
