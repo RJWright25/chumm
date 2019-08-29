@@ -671,8 +671,7 @@ def read_acc_rate_file(path,include_particles=False):
     for ihalo in range(total_num_halos):
         print(ihalo)
         print(list(hdf5file['/ihalo_'+str(0).zfill(6)+'/PartType0/'].keys()))
-        hdf5file=h5py.File(path)
-        gasacc.append(hdf5file['/ihalo_'+str(ihalo).zfill(6)+'/PartType0/All_CosmologicalDeltaM'].value)
+        gasacc.append(hdf5file['/ihalo_'+str(ihalo).zfill(6)+'/PartType0/All_CosmologicalDeltaM'])
         if ihalo%1000==0:
             print(f'At ihalo {ihalo}')
 
