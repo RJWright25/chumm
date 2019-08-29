@@ -523,7 +523,7 @@ def postprocess_acc_data_serial(path):
     """
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
-    acc_data_outfile_name=acc_data_filelist[0][-9:]+'.hdf5'
+    acc_data_outfile_name=acc_data_filelist[0][:-9]+'.hdf5'
     print(f'Output file name: {acc_data_outfile_name}')
     
     # Initialise output file
