@@ -666,8 +666,9 @@ def read_acc_rate_file(path,include_particles=False):
     """
     hdf5file=h5py.File(path)
     total_num_halos=hdf5file['/Header'].attrs['total_num_halos']
-    ex=hdf5file['ihalo_000020']
-    print(list(ex.keys()))
+
+    num_types=[len(list(hdf5file['ihalo_'+str(ihalo).zfill(6)].keys())) for ihalo in range(total_num_halos)]
+    print(num_types)
 
 
 ########################### READ EAGLE DATA FROM IDs ###########################
