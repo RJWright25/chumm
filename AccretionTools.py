@@ -33,10 +33,9 @@ from scipy.spatial import KDTree
 from pandas import DataFrame as df
 from os import path
 
-#  python tools 
+from GenPythonTools import *
 from VRPythonTools import *
 from STFTools import *
-from GenPythonTools import *
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
@@ -632,7 +631,7 @@ def postprocess_acc_data_serial(path):
 def read_eagle_from_IDs(base_halo_data_snap,itype=0,ParticleIDs=[],datasets=[]):
     """
 
-    read_eagle_from_IDs : function
+    read_eagle_from_IDs : function 
 	----------
 
     Return a dictionary of datasets (from 'datasets' argument) with the data ordered and specifically
@@ -694,3 +693,4 @@ def read_eagle_from_IDs(base_halo_data_snap,itype=0,ParticleIDs=[],datasets=[]):
     # Return the dictionary of particle data
     return output_datasets
         
+
