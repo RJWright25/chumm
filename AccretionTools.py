@@ -233,7 +233,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     run_outname=base_halo_data[snap]['outname']
     if not os.path.exists('acc_data'):
         os.mkdir('acc_data')
-    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+f'_ihalo_'+str(halo_index_list_snap2[0]).zfill(6)+'_'+str(halo_index_list_snap2[1]).zfill(6)+'.hdf5'
+    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+f'_ihalo_'+str(halo_index_list_snap2[0]).zfill(6)+'_'+str(halo_index_list_snap2[-1]).zfill(6)+'.hdf5'
     
     output_hdf5=h5py.File(outfile_name,"w")
     header_hdf5=output_hdf5.create_group("Header")
@@ -361,6 +361,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 prev_hostHaloID=base_halo_data[snap1]["hostHaloID"][prev_subhaloindex] #the host halo ID of this subhalo at the previous snapshot
             except:
                 prev_hostHaloID=np.nan
+                print("Couldn't find the progenitor group - not checking for CGM accretion")
         else:
             isub=False
             ifield=True
@@ -405,7 +406,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     new_particle_masses=[snap_2_masses[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
 
                 #add any other properties to check here...
-                x=1
 
                 #checking previous snap
                 print(f"Checking previous state of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
@@ -539,7 +539,6 @@ def postprocess_acc_data_serial(directory):
                     for new_output in new_outputs:
                         outfile_ihalo_partkey_group.create_dataset(new_output,data=0,dtype=np.float32)
             iihalo=iihalo+1
-
             if iihalo%500==0:
                 print(iihalo/total_num_halos*100,'% done')
     t2=time.time()
