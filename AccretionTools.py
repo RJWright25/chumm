@@ -469,10 +469,11 @@ def postprocess_acc_data_serial(directory):
         collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header[attribute],dtype=np.float16)
 
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])
+    new_outputs=["All_TotalDeltaM","All_TotalDeltaN","All_CosmologicalDeltaN",'All_CosmologicalDeltaM','All_CGMDeltaN','All_CGMDeltaM','All_ClumpyDeltaN','All_ClumpyDeltaM',"Stable_TotalDeltaM","Stable_TotalDeltaN","Stable_CosmologicalDeltaN",'Stable_CosmologicalDeltaM','Stable_CGMDeltaN','Stable_CGMDeltaM','Stable_ClumpyDeltaN','Stable_ClumpyDeltaM']
 
     print('Starting to collate files ...')
     t1=time.time()
-    i=0
+    iihalo=0
     for ifile_hdf5 in acc_data_hdf5files:
         ifile_halo_keys=list(ifile_hdf5.keys())[1:]
         for ihalo_group in ifile_halo_keys:# for each halo 
@@ -504,53 +505,43 @@ def postprocess_acc_data_serial(directory):
                     cgm_mask=prevhost==0
                     clumpy_mask=prevhost>0
 
-                    stable_masses=np.compress(stable_mask,masses)
-                    all_cosmological_masses=np.compress(cosmological_mask,masses)
-                    all_cgm_masses=np.compress(cgm_mask,masses)
-                    all_clumpy_masses=np.compress(clumpy_mask,masses)
-                    stable_cosmological_masses=np.compress(np.logical_and(stable_mask,cosmological_mask),masses)
-                    stable_cgm_masses=np.compress(np.logical_and(stable_mask,cgm_mask),masses)
-                    stable_clumpy_masses=np.compress(np.logical_and(stable_mask,clumpy_mask),masses)
+                    if not np.isfinite(np.sum(fidelity)):#if this is a nan halo
+                        for new_output in new_outputs:
+                            outfile_ihalo_partkey_group.create_dataset(new_output,data=np.nan,dtype=np.float32)
 
-                    outfile_ihalo_partkey_group.create_dataset('All_TotalDeltaN',data=npart,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_TotalDeltaM',data=np.sum(masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CosmologicalDeltaN',data=len(all_cosmological_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CosmologicalDeltaM',data=np.sum(all_cosmological_masses),dtype=np.float32)                   
-                    outfile_ihalo_partkey_group.create_dataset('All_CGMDeltaN',data=len(all_cgm_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CGMDeltaM',data=np.sum(all_cgm_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_ClumpyDeltaN',data=len(all_clumpy_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_ClumpyDeltaM',data=np.sum(all_clumpy_masses),dtype=np.float32)
-                    
-                    outfile_ihalo_partkey_group.create_dataset('Stable_TotalDeltaN',data=len(stable_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_TotalDeltaM',data=np.sum(stable_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CosmologicalDeltaN',data=len(stable_cosmological_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CosmologicalDeltaM',data=np.sum(stable_cosmological_masses),dtype=np.float32)                   
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CGMDeltaN',data=len(stable_cgm_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CGMDeltaM',data=np.sum(stable_cgm_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_ClumpyDeltaN',data=len(stable_clumpy_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_ClumpyDeltaM',data=np.sum(stable_clumpy_masses),dtype=np.float32)
+                    else:
+                        stable_masses=np.compress(stable_mask,masses)
+                        all_cosmological_masses=np.compress(cosmological_mask,masses)
+                        all_cgm_masses=np.compress(cgm_mask,masses)
+                        all_clumpy_masses=np.compress(clumpy_mask,masses)
+                        stable_cosmological_masses=np.compress(np.logical_and(stable_mask,cosmological_mask),masses)
+                        stable_cgm_masses=np.compress(np.logical_and(stable_mask,cgm_mask),masses)
+                        stable_clumpy_masses=np.compress(np.logical_and(stable_mask,clumpy_mask),masses)
 
-                else:
-                    outfile_ihalo_partkey_group.create_dataset('All_TotalDeltaN',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_TotalDeltaM',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CosmologicalDeltaN',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CosmologicalDeltaM',data=0,dtype=np.float32)                   
-                    outfile_ihalo_partkey_group.create_dataset('All_CGMDeltaN',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CGMDeltaM',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_ClumpyDeltaN',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_ClumpyDeltaM',data=0,dtype=np.float32)
-                    
-                    outfile_ihalo_partkey_group.create_dataset('Stable_TotalDeltaN',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_TotalDeltaM',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CosmologicalDeltaN',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CosmologicalDeltaM',data=0,dtype=np.float32)                   
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CGMDeltaN',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CGMDeltaM',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_ClumpyDeltaN',data=0,dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_ClumpyDeltaM',data=0,dtype=np.float32)
-            i=i+1
-            if i%500==0:
-                print(i/total_num_halos*100,'% done')
+                        outfile_ihalo_partkey_group.create_dataset('All_TotalDeltaM',data=np.sum(masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('All_CosmologicalDeltaN',data=len(all_cosmological_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('All_CosmologicalDeltaM',data=np.sum(all_cosmological_masses),dtype=np.float32)                   
+                        outfile_ihalo_partkey_group.create_dataset('All_CGMDeltaN',data=len(all_cgm_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('All_CGMDeltaM',data=np.sum(all_cgm_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('All_ClumpyDeltaN',data=len(all_clumpy_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('All_ClumpyDeltaM',data=np.sum(all_clumpy_masses),dtype=np.float32)
+                        
+                        outfile_ihalo_partkey_group.create_dataset('Stable_TotalDeltaN',data=len(stable_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('Stable_TotalDeltaM',data=np.sum(stable_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('Stable_CosmologicalDeltaN',data=len(stable_cosmological_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('Stable_CosmologicalDeltaM',data=np.sum(stable_cosmological_masses),dtype=np.float32)                   
+                        outfile_ihalo_partkey_group.create_dataset('Stable_CGMDeltaN',data=len(stable_cgm_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('Stable_CGMDeltaM',data=np.sum(stable_cgm_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('Stable_ClumpyDeltaN',data=len(stable_clumpy_masses),dtype=np.float32)
+                        outfile_ihalo_partkey_group.create_dataset('Stable_ClumpyDeltaM',data=np.sum(stable_clumpy_masses),dtype=np.float32)
+
+                else:#if no new particles
+                    for new_output in new_outputs:
+                        outfile_ihalo_partkey_group.create_dataset(new_output,data=0,dtype=np.float32)
+            iihalo=iihalo+1
+
+            if iihalo%500==0:
+                print(iihalo/total_num_halos*100,'% done')
     t2=time.time()
     print(f'Finished collating files in {t2-t1} sec')
 
