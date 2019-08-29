@@ -557,7 +557,7 @@ def postprocess_acc_data_serial(path):
     iihalo=0
     for ifile_hdf5 in acc_data_hdf5files:#for each output file
         ifile_halo_keys_all=list(ifile_hdf5.keys())[1:]#list the halo keys
-        ifile_halo_keys=[ifile_halo_key for  ifile_halo_key in ifile_halo_keys if ifile_halo_key.startswith('ihalo')]# just halos, not the header
+        ifile_halo_keys=[ifile_halo_key for  ifile_halo_key in ifile_halo_keys_all if ifile_halo_key.startswith('ihalo')]# just halos, not the header
         for ihalo_group in ifile_halo_keys:# for each halo 
             outfile_ihalo_group=collated_output_file.create_group(ihalo_group)
             ihalo_partkeys=list(ifile_hdf5[ihalo_group].keys())
