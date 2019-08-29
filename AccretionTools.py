@@ -486,30 +486,30 @@ def postprocess_acc_data_serial(path):
 
         verbose outputs
         ---------------
-        '/PartTypeX/ihalo_xxxxxx/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
-        '/PartTypeX/ihalo_xxxxxx/Masses': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
-        '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
-        '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
+        '/ihalo_xxxxxx/PartTypeX/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
+        '/ihalo_xxxxxx/PartTypeX/Masses': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
+        '/ihalo_xxxxxx/PartTypeX/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
+        '/ihalo_xxxxxx/PartTypeX/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
         
         summed outputs
         ---------------
-        '/PartTypeX/ihalo_xxxxxx/All_TotalDeltaN': Total number of particles of type X new to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/All_TotalDeltaM': Total mass of particles of type X new to the halo  (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/All_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/All_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/All_CGMDeltaN': Total number of CGM origin particles of type X new to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/All_CGMDeltaM': Total mass of CGM origin particles of type X new to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/All_ClumpyDeltaN': Total number of clumpy origin particles of type X new to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/All_ClumpyDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/All_TotalDeltaN': Total number of particles of type X new to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/All_TotalDeltaM': Total mass of particles of type X new to the halo  (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/All_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/All_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/All_CGMDeltaN': Total number of CGM origin particles of type X new to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/All_CGMDeltaM': Total mass of CGM origin particles of type X new to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/All_ClumpyDeltaN': Total number of clumpy origin particles of type X new to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/All_ClumpyDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: 1)
         
-        '/PartTypeX/ihalo_xxxxxx/Stable_TotalDeltaN': Total number of particles of type X new (and LOYAL) to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/Stable_TotalDeltaM': Total mass of particles of type X new (and LOYAL) to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/Stable_CosmologicalDeltaN': Total number of cosmological origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/Stable_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/Stable_CGMDeltaN': Total number of CGM origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/Stable_CGMDeltaM': Total mass of CGM origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/Stable_ClumpyDeltaN': Total number of clumpy origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/PartTypeX/ihalo_xxxxxx/Stable_ClumpyDeltaM': Total mass of clumpy origin particles of type X new (and LOYAL) to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/Stable_TotalDeltaN': Total number of particles of type X new (and LOYAL) to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/Stable_TotalDeltaM': Total mass of particles of type X new (and LOYAL) to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/Stable_CosmologicalDeltaN': Total number of cosmological origin particles of type X new (and LOYAL) to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/Stable_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new (and LOYAL) to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/Stable_CGMDeltaN': Total number of CGM origin particles of type X new (and LOYAL) to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/Stable_CGMDeltaM': Total mass of CGM origin particles of type X new (and LOYAL) to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/Stable_ClumpyDeltaN': Total number of clumpy origin particles of type X new (and LOYAL) to the halo (length: 1)
+        '/ihalo_xxxxxx/PartTypeX/Stable_ClumpyDeltaM': Total mass of clumpy origin particles of type X new (and LOYAL) to the halo (length: 1)
         
         Where there will be n_halos ihalo datasets. 
 
@@ -625,6 +625,48 @@ def postprocess_acc_data_serial(path):
     collated_output_file.close()
     print(f'Finished collating files in {t2-t1} sec')
     return None
+
+########################### READ ACCRETION DATA ###########################
+
+def read_acc_rate_file(path,include_particles=False):
+
+    """
+
+    read_acc_rate_file : function
+	----------
+
+    Read the accretion data from a certain file. 
+
+	Parameters
+	----------
+    path : string 
+        Indicates the file in which the accretion data is stored (nominally acc_data/AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}.hdf5)
+
+	Returns
+	----------
+    
+    accretion_data : dict
+        With fields:
+        "All_TotalDeltaM","All_TotalDeltaN",
+        "All_CosmologicalDeltaN",'All_CosmologicalDeltaM',
+        'All_CGMDeltaN','All_CGMDeltaM',
+        'All_ClumpyDeltaN','All_ClumpyDeltaM',
+        "Stable_TotalDeltaM","Stable_TotalDeltaN",
+        "Stable_CosmologicalDeltaN",'Stable_CosmologicalDeltaM',
+        'Stable_CGMDeltaN','Stable_CGMDeltaM',
+        'Stable_ClumpyDeltaN','Stable_ClumpyDeltaM'
+        And potentially:
+        "ParticleIDs"
+        "Fidelity"
+        "PreviousHost"
+        "Masses"
+
+    Each dictionary entry will be of length n_halos, and each of these entries will be a dictionar
+
+    """
+    hdf5file=h5py.File(path)
+    total_num_halos=hdf5file['/Header/total_num_halos'].value
+    print(total_num_halos)
 
 ########################### READ EAGLE DATA FROM IDs ###########################
 
