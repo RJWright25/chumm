@@ -117,14 +117,16 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     print('Reading halo data using VR python tools ...')
     #for each snap in the above lists we will generate halo data
     for snap in sim_snaps:
-        if not vr_list[snap].startswith('/'):
+        try:
+            vr_list[snap].startswith('/')
+            if verbose:
+                print(f'Searching for halo data at snap {snap} ...')
+                print(f'[File: {vr_list[snap]}]')
+        except:
             have_halo_data.append(False)
             if verbose:
                 print(f'No halo data for snap {snap} (not given a file)')
             continue
-        if verbose:
-            print(f'Searching for halo data at snap {snap} ...')
-            print(f'[File: {vr_list[snap]}]')
            
         #use VR python tools to load in halo data for this snap
         halo_data_snap=ReadPropertyFile(vr_list[snap],ibinary=vr_filetype,iseparatesubfiles=0,iverbose=0, desiredfields=base_fields, isiminfo=True, iunitinfo=True)
