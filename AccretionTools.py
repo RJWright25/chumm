@@ -354,7 +354,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     #outputs: IDs, Masses, Fidelity, PreviousHost
     #prev_host: -1: cosmological, 0: from CGM (highest level group) - this won't happen for groups/clusters, >0: from another halo/subhalo at the same level (that subhalo's ID)
         
-    for iihalo,ihalo_s2 in enumerate(halo_index_list):# for each halo at snap 2
+    for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
         # Create group for this halo in output file
         halo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
 
