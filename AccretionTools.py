@@ -237,7 +237,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
         iprocess="x"
     else:
         halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
-        iprocess=str(halo_index_list["iprocess"]) #the process for this index list (this is just used for the output file name)
+        iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
 
     # Assigning snap
     if snap==None:
@@ -256,7 +256,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
         os.mkdir('acc_data')
     run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
-    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'p'+iprocess+'.hdf5'
+    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'_p'+iprocess+'.hdf5'
     if os.path.exists(outfile_name):#if the accretion file already exists, get rid of it 
         os.remove(outfile_name)
     # Make header for accretion data  based on base halo data 
@@ -693,4 +693,3 @@ def read_eagle_from_IDs(base_halo_data_snap,itype=0,ParticleIDs=[],datasets=[]):
     # Return the dictionary of particle data
     return output_datasets
         
-
