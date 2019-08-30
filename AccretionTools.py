@@ -280,7 +280,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     header_hdf5.attrs.create('snap1_z',data=z1,dtype=np.float16)
     header_hdf5.attrs.create('snap2_z',data=z2,dtype=np.float16)
     header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
-    header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
 
     # Now find which simulation type we're dealing with
     part_filetype=base_halo_data[snap]["Part_FileType"]
@@ -454,13 +453,14 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
 
         else:#if halo not tracked, return np.nan for fidelity, ids, prevhost
-            print(f'Saving {PartNames[itype]} data for ihalo {ihalo_s2} (not tracked) to hdf5 ...')
-            halo_parttype_hdf5=halo_hdf5.create_group('PartType'+str(itype))
-            halo_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
-            halo_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
-            halo_parttype_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float16)
-            halo_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
-            print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
+            for itype in PartTypes:
+                print(f'Saving {PartNames[itype]} data for ihalo {ihalo_s2} (not tracked) to hdf5 ...')
+                halo_parttype_hdf5=halo_hdf5.create_group('PartType'+str(itype))
+                halo_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
+                halo_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
+                halo_parttype_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float16)
+                halo_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
+                print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
 
     #Close the output file, finish up
     output_hdf5.close()
