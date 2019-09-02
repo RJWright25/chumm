@@ -140,11 +140,10 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
            
         #use VR python tools to load in halo data for this snap
         halo_data_snap=ReadPropertyFile(vr_list[snap],ibinary=vr_filetype,iseparatesubfiles=0,iverbose=0, desiredfields=base_fields, isiminfo=True, iunitinfo=True)
-
+        halo_data_snap[0]["Snap"]=snap
         #if data is found
         if not halo_data_snap==[]:
             halo_data_all.append(halo_data_snap)#will be length n_valid_snaps
-            halo_data_all[snap][0]["Snap"]=snap
             have_halo_data.append(True)#will be length n_ALL_snaps
 
         #if data is not found
@@ -155,7 +154,6 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     # List of number of halos detected for each snap and list isolated data dictionary for each snap (in dictionaries)
     halo_data_counts=[item[1] for item in halo_data_all]#will be length n_valid_snaps
     halo_data_all=[item[0] for item in halo_data_all]#will be length n_valid_snaps
-
 
     # Use TreeFrog IDs and convert hostHaloIDs if we don't have the temporal IDval integrated
     for isnap,item in enumerate(halo_data_all):#for the valid snaps
