@@ -255,8 +255,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     # Initialising outputs
     if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
         os.mkdir('acc_data')
+    if not os.path.exists('acc_data/snap_'+str(snap2).zfill(3)):#create folder for outputs if doesn't already exist
+        os.mkdir('acc_data/snap_'+str(snap2).zfill(3))
+    
     run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
-    outfile_name='acc_data/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'_p'+iprocess+'.hdf5'
+    outfile_name=f'acc_data/snap_'+str(snap2).zfill(3)+'/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'_p'+iprocess+'.hdf5'
     if os.path.exists(outfile_name):#if the accretion file already exists, get rid of it 
         os.remove(outfile_name)
     # Make header for accretion data  based on base halo data 
@@ -482,34 +485,34 @@ def postprocess_acc_data_serial(path):
 	Returns
 	----------
     
-    AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}.hdf5: hdf5 file with datasets:
+    Combined_AccData.hdf5: hdf5 file with datasets:
 
         verbose outputs
         ---------------
-        '/ihalo_xxxxxx/PartTypeX/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
-        '/ihalo_xxxxxx/PartTypeX/Masses': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
-        '/ihalo_xxxxxx/PartTypeX/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
-        '/ihalo_xxxxxx/PartTypeX/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
+        '/PartTypeX/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: num_total_halos, each n_new_particles)
+        '/PartTypeX/Masses': ParticleID (in particle data for given type) of all accreted particles (length: num_total_halos, each n_new_particles)
+        '/PartTypeX/Fidelity': Whether this particle stayed at the given fidelity gap (length: num_total_halos, each n_new_particles)
+        '/PartTypeX/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: num_total_halos, each n_new_particles)
         
         summed outputs
         ---------------
-        '/ihalo_xxxxxx/PartTypeX/All_TotalDeltaN': Total number of particles of type X new to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/All_TotalDeltaM': Total mass of particles of type X new to the halo  (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/All_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/All_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/All_CGMDeltaN': Total number of CGM origin particles of type X new to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/All_CGMDeltaM': Total mass of CGM origin particles of type X new to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/All_ClumpyDeltaN': Total number of clumpy origin particles of type X new to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/All_ClumpyDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: 1)
+        '/PartTypeX/All_TotalDeltaN': Total number of particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_TotalDeltaM': Total mass of particles of type X new to the halo  (length: num_total_halos)
+        '/PartTypeX/All_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_CGMDeltaN': Total number of CGM origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_CGMDeltaM': Total mass of CGM origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_ClumpyDeltaN': Total number of clumpy origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_ClumpyDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
         
-        '/ihalo_xxxxxx/PartTypeX/Stable_TotalDeltaN': Total number of particles of type X new (and LOYAL) to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/Stable_TotalDeltaM': Total mass of particles of type X new (and LOYAL) to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/Stable_CosmologicalDeltaN': Total number of cosmological origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/Stable_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/Stable_CGMDeltaN': Total number of CGM origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/Stable_CGMDeltaM': Total mass of CGM origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/Stable_ClumpyDeltaN': Total number of clumpy origin particles of type X new (and LOYAL) to the halo (length: 1)
-        '/ihalo_xxxxxx/PartTypeX/Stable_ClumpyDeltaM': Total mass of clumpy origin particles of type X new (and LOYAL) to the halo (length: 1)
+        '/PartTypeX/Stable_TotalDeltaN': Total number of particles of type X new (and LOYAL) to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_TotalDeltaM': Total mass of particles of type X new (and LOYAL) to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_CosmologicalDeltaN': Total number of cosmological origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_CGMDeltaN': Total number of CGM origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_CGMDeltaM': Total mass of CGM origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_ClumpyDeltaN': Total number of clumpy origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_ClumpyDeltaM': Total mass of clumpy origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
         
         Where there will be n_halos ihalo datasets. 
 
@@ -521,15 +524,21 @@ def postprocess_acc_data_serial(path):
         'lt_ave'
     
     """
+    t1=time.time()
+
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
-    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if filename.startswith('Acc')]
-    acc_data_filelist=acc_data_filelist_trunc
-    acc_data_outfile_name='Combined_'+acc_data_filelist[0][:-9]+'.hdf5'
+    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if filename.startswith('AccretionData_snap')]
+    acc_data_filelist=sorted(acc_data_filelist_trunc)
+    acc_data_outfile_name='AccretionData_Combined_Test.hdf5'
+
+    if os.path.exists(path+acc_data_outfile_name):
+        print("Deleting existing combined data first")
+        os.remove(path+acc_data_outfile_name)
+
     print(f'Output file name: {acc_data_outfile_name}')
     
     # Initialise output file
-    print(path+acc_data_outfile_name)
     collated_output_file=h5py.File(path+acc_data_outfile_name,'w')
     
     # Open existing files in list structure
@@ -537,10 +546,15 @@ def postprocess_acc_data_serial(path):
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])#total number of halos from file
 
     # Copy over header information from first file
-    acc_data_hdf5files_header=dict(acc_data_hdf5files[0]['Header'].attrs)
+    acc_data_hdf5files_header=acc_data_hdf5files[0]['Header']
+    acc_data_hdf5files_header_attrs=list(acc_data_hdf5files_header.attrs)
     collated_output_file_header=collated_output_file.create_group('Header')
-    for attribute in list(acc_data_hdf5files_header.keys()):
-        collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header[attribute],dtype=np.float16)
+
+    print("Attributes of accretion calculation: ")
+    for attribute in acc_data_hdf5files_header_attrs:
+        collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header.attrs[attribute])
+        print(attribute,collated_output_file_header.attrs[attribute])
+
     collated_output_file_header.attrs.create('total_num_halos',data=total_num_halos)
 
     # Names of the new outputs
@@ -552,80 +566,74 @@ def postprocess_acc_data_serial(path):
     "Stable_CosmologicalDeltaN",'Stable_CosmologicalDeltaM',
     'Stable_CGMDeltaN','Stable_CGMDeltaM',
     'Stable_ClumpyDeltaN','Stable_ClumpyDeltaM']
+    verbose_outputs=["Fidelity","PreviousHost","Masses","ParticleIDs"]
 
-    # Loop through groups (halos), subgroups (particle types) and then each field and copy over to unified file
-    # In addition, calculate new summed outputs
-    print('Starting to collate files ...')
-    t1=time.time()
+    # Initialise all new outputs
+    itypes=[0,1,4,5]
+    new_outputs_keys_bytype=[f'PartType{itype}/'+field for field in new_outputs for itype in itypes]
+    verbose_outputs_keys_bytype=[f'PartType{itype}/'+field for field in verbose_outputs for itype in itypes]
+    summed_acc_data={field:(np.zeros(total_num_halos)+np.nan) for field in new_outputs_keys_bytype}
+    for particle_field in verbose_outputs_keys_bytype:
+        summed_acc_data[particle_field]=[np.nan for i in range(total_num_halos)]
+
     iihalo=0
-    for ifile_hdf5 in acc_data_hdf5files:#for each output file
-        ifile_halo_keys_all=list(ifile_hdf5.keys())[1:]#list the halo keys
-        ifile_halo_keys=[ifile_halo_key for  ifile_halo_key in ifile_halo_keys_all if ifile_halo_key.startswith('ihalo')]# just halos, not the header
-        for ihalo_group in ifile_halo_keys:# for each halo 
-            outfile_ihalo_group=collated_output_file.create_group(ihalo_group)
-            ihalo_partkeys=list(ifile_hdf5[ihalo_group].keys())
-            for ihalo_partkey in ihalo_partkeys:#for each parttype
-                outfile_ihalo_partkey_group=outfile_ihalo_group.create_group(ihalo_partkey)#subgroup for parttype
-            
-                # The output, verbose datasets from gen_accretion_data
-                masses=ifile_hdf5[ihalo_group][ihalo_partkey]['Masses'].value
-                ids=ifile_hdf5[ihalo_group][ihalo_partkey]['ParticleIDs'].value
-                fidelity=ifile_hdf5[ihalo_group][ihalo_partkey]['Fidelity'].value
-                prevhost=ifile_hdf5[ihalo_group][ihalo_partkey]['PreviousHost'].value
-
-                # Copy these outputs to our new file 
-                outfile_ihalo_partkey_group.create_dataset('Masses',data=masses,dtype=np.float32)
-                outfile_ihalo_partkey_group.create_dataset('Fidelity',data=fidelity,dtype=np.float32)
-                outfile_ihalo_partkey_group.create_dataset('ParticleIDs',data=ids,dtype=np.int64)
-                outfile_ihalo_partkey_group.create_dataset('PreviousHost',data=prevhost,dtype=np.int32)
-                
-                # If the halo was not tracked the fidelity/ other datasets will be np.nan, check sum to see if this is the case
-                if not np.isfinite(np.sum(fidelity)):#if this is a nan halo
-                    for new_output in new_outputs:#go through all the new summed outputs and set them to also nan
-                        outfile_ihalo_partkey_group.create_dataset(new_output,data=np.nan,dtype=np.float32)
-
-                # If the halo is valid and was tracked, continue with the calculations
-                else:
-                    # Create masks for new outputs
-                    stable_mask=fidelity#the particles which stayed
-                    cosmological_mask=prevhost<0#the particles of cosmological origin
-                    cgm_mask=prevhost==0#the particles of CGM origin
-                    clumpy_mask=prevhost>0#the particles of other origin
-
-                    # Compress the masses for combinations of the above masks
-                    all_masses=masses#all new masses
-                    stable_masses=np.compress(stable_mask,masses)#new masses which stayed
-                    all_cosmological_masses=np.compress(cosmological_mask,masses)#all new cosmological masses
-                    all_cgm_masses=np.compress(cgm_mask,masses)#all new cgm masses
-                    all_clumpy_masses=np.compress(clumpy_mask,masses)#all new clumpy masses
-                    stable_cosmological_masses=np.compress(np.logical_and(stable_mask,cosmological_mask),masses)#new cosmological masses that stayed
-                    stable_cgm_masses=np.compress(np.logical_and(stable_mask,cgm_mask),masses)#new cgm masses that stayed
-                    stable_clumpy_masses=np.compress(np.logical_and(stable_mask,clumpy_mask),masses)#clumpy masses that stayed
-
-                    # Write outputs ...
-                    outfile_ihalo_partkey_group.create_dataset('All_TotalDeltaM',data=np.sum(masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CosmologicalDeltaN',data=np.size(all_cosmological_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CosmologicalDeltaM',data=np.sum(all_cosmological_masses),dtype=np.float32)                   
-                    outfile_ihalo_partkey_group.create_dataset('All_CGMDeltaN',data=np.size(all_cgm_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_CGMDeltaM',data=np.sum(all_cgm_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_ClumpyDeltaN',data=np.size(all_clumpy_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('All_ClumpyDeltaM',data=np.sum(all_clumpy_masses),dtype=np.float32)
-                    
-                    outfile_ihalo_partkey_group.create_dataset('Stable_TotalDeltaN',data=np.size(stable_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_TotalDeltaM',data=np.sum(stable_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CosmologicalDeltaN',data=np.size(stable_cosmological_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CosmologicalDeltaM',data=np.sum(stable_cosmological_masses),dtype=np.float32)                   
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CGMDeltaN',data=np.size(stable_cgm_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_CGMDeltaM',data=np.sum(stable_cgm_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_ClumpyDeltaN',data=np.size(stable_clumpy_masses),dtype=np.float32)
-                    outfile_ihalo_partkey_group.create_dataset('Stable_ClumpyDeltaM',data=np.sum(stable_clumpy_masses),dtype=np.float32)
-
+    for ifile,acc_data_filetemp in enumerate(acc_data_hdf5files):
+        print(f"Reading from file {ifile}")
+        ihalo_group_list_all=list(acc_data_filetemp.keys())
+        ihalo_group_list=[ihalo_group for ihalo_group in ihalo_group_list_all if ihalo_group.startswith('ihalo')]
+        for ihalo_group in ihalo_group_list:
             iihalo=iihalo+1
-            if iihalo%500==0:
-                print(iihalo/total_num_halos*100,'% done')
+            ihalo=int(ihalo_group.split('_')[-1])
+            for itype in itypes:
+                # Load in the details of particles new to this halo
+                try:
+                    fidelities=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Fidelity'].value
+                    masses=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Masses'].value
+                    prevhosts=acc_data_filetemp[ihalo_group+f'/PartType{itype}/PreviousHost'].value
+                except:
+                    # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
+                    continue
+                
+                if not np.isfinite(np.sum(fidelities)):
+                    # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
+                    continue
 
-    t2=time.time()
+                # Define masks based on particle properties
+                stable_mask=fidelities>0
+                cosmological_mask=prevhosts<0
+                cgm_mask=prevhosts==0
+                clumpy_mask=prevhosts>0
+                stable_cosmological_mask=np.logical_and(stable_mask,cosmological_mask)
+                stable_cgm_mask=np.logical_and(stable_mask,cgm_mask)
+                stable_clumpy_mask=np.logical_and(stable_mask,clumpy_mask)
+
+                summed_acc_data[f'PartType{itype}/All_TotalDeltaN'][ihalo]=np.size(masses)
+                summed_acc_data[f'PartType{itype}/All_TotalDeltaM'][ihalo]=np.sum(masses)
+                summed_acc_data[f'PartType{itype}/All_CosmologicalDeltaN'][ihalo]=np.size(np.compress(cosmological_mask,masses))
+                summed_acc_data[f'PartType{itype}/All_CosmologicalDeltaM'][ihalo]=np.sum(np.compress(cosmological_mask,masses))
+                summed_acc_data[f'PartType{itype}/All_CGMDeltaN'][ihalo]=np.size(np.compress(cgm_mask,masses))
+                summed_acc_data[f'PartType{itype}/All_CGMDeltaM'][ihalo]=np.sum(np.compress(cgm_mask,masses))
+                summed_acc_data[f'PartType{itype}/All_ClumpyDeltaN'][ihalo]=np.size(np.compress(clumpy_mask,masses))
+                summed_acc_data[f'PartType{itype}/All_ClumpyDeltaM'][ihalo]=np.sum(np.compress(clumpy_mask,masses))
+                
+                summed_acc_data[f'PartType{itype}/Stable_TotalDeltaN'][ihalo]=np.size(np.compress(stable_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_TotalDeltaM'][ihalo]=np.sum(np.compress(stable_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_CosmologicalDeltaN'][ihalo]=np.size(np.compress(stable_cosmological_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_CosmologicalDeltaM'][ihalo]=np.sum(np.compress(stable_cosmological_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_CGMDeltaN'][ihalo]=np.size(np.compress(stable_cgm_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_CGMDeltaM'][ihalo]=np.sum(np.compress(stable_cgm_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_ClumpyDeltaN'][ihalo]=np.size(np.compress(stable_cgm_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_ClumpyDeltaM'][ihalo]=np.sum(np.compress(stable_cgm_mask,masses))
+
+
+    # Create groups for output
+    for itype in itypes:
+        collated_output_file_itype=collated_output_file.create_group(f'PartType{itype}')
+        for new_field in new_outputs:
+            collated_output_file_itype.create_dataset(name=new_field,data=summed_acc_data[f'PartType{itype}/'+new_field],dtype=np.float32)
+
     collated_output_file.close()
+    t2=time.time()
     print(f'Finished collating files in {t2-t1} sec')
     return None
 
@@ -667,10 +675,59 @@ def read_acc_rate_file(path,include_particles=False):
     Each dictionary entry will be of length n_halos, and each of these entries will be a dictionary
 
     """
-    print(path)
-    hdf5file=h5py.File(path)
-    print(list(hdf5file.keys()))
+    # Define output fields
+    acc_fields=["All_TotalDeltaM",
+    "All_CosmologicalDeltaN",
+    'All_CosmologicalDeltaM',
+    'All_CGMDeltaN',
+    'All_CGMDeltaM',
+    'All_ClumpyDeltaN',
+    'All_ClumpyDeltaM',
+    "Stable_TotalDeltaM",
+    "Stable_TotalDeltaN",
+    "Stable_CosmologicalDeltaN",
+    'Stable_CosmologicalDeltaM',
+    'Stable_CGMDeltaN',
+    'Stable_CGMDeltaM',
+    'Stable_ClumpyDeltaN',
+    'Stable_ClumpyDeltaM']
 
+    if include_particles:
+        acc_fields.extend(['PreviousHost','ParticleIDs','Masses','Fidelity'])
+
+    # Load collated file
+    hdf5file=h5py.File(path,'r')
+
+    # Load in metadata
+    acc_metadata=dict()
+    hdf5header_attrs=list(hdf5file['/Header'].attrs)
+    for attribute in hdf5header_attrs:
+        acc_metadata[attribute]=hdf5file['/Header'].attrs[attribute]
+
+    # Initialise output data
+    total_num_halos=acc_metadata['total_num_halos']
+    group_list=list(hdf5file.keys())
+    ihalo_group_list=[ihalo_name for ihalo_name in group_list if ihalo_name.startswith('ihalo')]
+    part_group_list=['PartType'+str(itype) for itype in [0,1,4,5]]
+    acc_data={itype+'/'+field:(np.zeros(total_num_halos)+np.nan) for field in acc_fields for itype in part_group_list}
+    
+    # Go through each halo and add data
+    count=0
+    for ihalo_name in ihalo_group_list:
+        count=count+1
+        ihalo=int(ihalo_name.split('_')[-1])
+        for itype_name in part_group_list:
+            ihalo_itype_datasets=[ihalo_name+'/'+itype_name+'/'+dataset for dataset in acc_fields]
+            for dataset in ihalo_itype_datasets:
+                try:
+                    acc_data[dataset[13:]][ihalo]=hdf5file[dataset]
+                except:
+                    pass
+                    # print(dataset+' dataset doesnt exist, skipping')
+        if count%1000==0:
+            print(np.round(count/total_num_halos*100,2),' % done loading in data')
+
+    return acc_metadata,acc_data
 
 
 ########################### READ EAGLE DATA FROM IDs ###########################

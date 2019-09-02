@@ -353,8 +353,11 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
         # Adding old halo data from V1 calcs
         print(f'Adding fields from base halo data')
         for field in fields_needed:
-            new_halo_data_snap[field]=base_halo_data[snap][field]
-        
+            if 'Mass_' in field and 'R_' not in field:
+                new_halo_data_snap[field]=base_halo_data[snap][field]*10**10
+            else:
+                new_halo_data_snap[field]=base_halo_data[snap][field]
+                
         # Add extra halo fields -- post-process velociraptor files   
         if n_halos_snap>0:
             if 'R_rel' in extra_halo_fields: #Relative radius to host
