@@ -668,8 +668,8 @@ def read_acc_rate_file(path,include_particles=False):
 
     """
     hdf5file=h5py.File(path)
-    header_attrs=list(hdf5file['/Header'].attrs)
-    print(header_attrs)
+    print(list(hdf5file.keys()))
+
 
 
 ########################### READ EAGLE DATA FROM IDs ###########################
