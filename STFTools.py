@@ -144,6 +144,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         #if data is found
         if not halo_data_snap==[]:
             halo_data_all.append(halo_data_snap)#will be length n_valid_snaps
+            halo_data_all[snap][0]["Snap"]=snap
             have_halo_data.append(True)#will be length n_ALL_snaps
 
         #if data is not found
@@ -155,12 +156,12 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     halo_data_counts=[item[1] for item in halo_data_all]#will be length n_valid_snaps
     halo_data_all=[item[0] for item in halo_data_all]#will be length n_valid_snaps
 
+
     # Use TreeFrog IDs and convert hostHaloIDs if we don't have the temporal IDval integrated
     for isnap,item in enumerate(halo_data_all):#for the valid snaps
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]#n_halos at this snap
         if item["ID"][0]<temporal_idval:#if the first ID is less than the temporal IDval then do the conversion
             #read in IDs from TreeFrog
-            print(isnap)
             treefile_compressed_isnap=tf_filelist[isnap]+'.tree'
             treefile_isnap=h5py.File(treefile_compressed_isnap,'r+')
             treefile_ids=treefile_isnap["/ID"].value
