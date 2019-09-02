@@ -667,6 +667,7 @@ def read_acc_rate_file(path,include_particles=False):
     Each dictionary entry will be of length n_halos, and each of these entries will be a dictionary
 
     """
+    print(path)
     hdf5file=h5py.File(path)
     print(list(hdf5file.keys()))
 
