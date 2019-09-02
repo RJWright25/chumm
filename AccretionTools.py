@@ -523,14 +523,17 @@ def postprocess_acc_data_serial(path):
     """
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
-    acc_data_outfile_name=acc_data_filelist[0][:-9]+'.hdf5'
+    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if filename.startswith('Acc')]
+    acc_data_filelist=acc_data_filelist_trunc
+    acc_data_outfile_name='Combined_'+acc_data_filelist[0][:-9]+'.hdf5'
     print(f'Output file name: {acc_data_outfile_name}')
     
     # Initialise output file
-    collated_output_file=h5py.File('acc_data/'+acc_data_outfile_name,'w')
+    print(path+acc_data_outfile_name)
+    collated_output_file=h5py.File(path+acc_data_outfile_name,'w')
     
     # Open existing files in list structure
-    acc_data_hdf5files=[h5py.File('acc_data/'+acc_data_file,'r') for acc_data_file in acc_data_filelist]
+    acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])#total number of halos from file
 
     # Copy over header information from first file
@@ -661,15 +664,12 @@ def read_acc_rate_file(path,include_particles=False):
         "PreviousHost"
         "Masses"
 
-    Each dictionary entry will be of length n_halos, and each of these entries will be a dictionar
+    Each dictionary entry will be of length n_halos, and each of these entries will be a dictionary
 
     """
     hdf5file=h5py.File(path)
-    total_num_halos=hdf5file['/Header'].attrs['total_num_halos']
-
-    num_types=np.array([len(list(hdf5file['ihalo_'+str(ihalo).zfill(6)].keys())) for ihalo in range(total_num_halos)])
-    badhalos=np.where(num_types<4)[0]
-    return badhalos
+    header_attrs=list(hdf5file['/Header'].attrs)
+    print(header_attrs)
 
 
 ########################### READ EAGLE DATA FROM IDs ###########################

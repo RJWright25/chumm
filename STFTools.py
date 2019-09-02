@@ -160,6 +160,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]#n_halos at this snap
         if item["ID"][0]<temporal_idval:#if the first ID is less than the temporal IDval then do the conversion
             #read in IDs from TreeFrog
+            print(isnap)
             treefile_compressed_isnap=tf_filelist[isnap]+'.tree'
             treefile_isnap=h5py.File(treefile_compressed_isnap,'r+')
             treefile_ids=treefile_isnap["/ID"].value
