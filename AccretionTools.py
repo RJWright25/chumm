@@ -427,6 +427,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     for new_star_ID in new_particle_IDs_itype_snap2:
                         old_star_index=binary_search_2(element=new_star_ID,sorted_array=Part_Histories_IDs_snap2[2])#search in stars list
                         if old_star_index>-10:
+                            pass
                             # print(f'Star {new_star_ID} was star at previous snap')
                         else:
                             print(f'Star {new_star_ID} was GAS at previous snap')
