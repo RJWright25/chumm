@@ -412,7 +412,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             # Now loop through each particle type and process accreted particle data 
             for iitype,itype in enumerate(PartTypes):
                 if itype==0 or itype==1:
-                    pass
+                    continue
                 # Finding particles of itype∂
                 print(f"Compressing for new particles of type {itype} ...")
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
