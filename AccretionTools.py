@@ -429,8 +429,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 t2=time.time()
                 print(f'Indexed new particles in {t2-t1} (WITH checking)')
 
-                print('number of particles not found (non-checked):',np.sum(np.logical_not(np.isfinite(new_particle_IDs_itype_snap2_historyindex))))
-                print('number of particles not found (checked):',np.sum(np.logical_not(np.isfinite(new_particle_IDs_itype_snap2_historyindex_checked))))
+                print('number of particles not found (non-checked):',np.sum(np.logical_not(np.array(new_particle_IDs_itype_snap2_historyindex)>-10)))
+                print('number of particles not found (checked):',np.sum(np.logical_not(np.array(new_particle_IDs_itype_snap2_historyindex_checked)>-10)))
                 # Retrieve relevant particle masses
                 print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 if itype==1:#if dm, just use the masstable value
