@@ -298,7 +298,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     
     # Assign the particle types we're considering 
     if part_filetype=='EAGLE':
-        PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
+        PartTypes=[0,1,4] #Gas, DM, Stars
         SimType='EAGLE'
     else:
         PartTypes=[0,1] #Gas, DM
@@ -411,50 +411,62 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 
             # Now loop through each particle type and process accreted particle data 
             for iitype,itype in enumerate(PartTypes):
-                if itype==1:
-                    continue
                 # Finding particles of itype∂
                 print(f"Compressing for new particles of type {itype} ...")
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)#compress for just the IDs of particles of this type
-
-                print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
-                t1=time.time()
-                new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
-                new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
-                t2=time.time()
-                print(f'Indexed new particles in {t2-t1} (without checking)')
-                new_particle_IDs_itype_snap2_historyindex_checked=[]
-                new_particle_IDs_itype_snap1_historyindex_checked=[]
-                t1=time.time()
+                new_particle_count=len(new_particle_IDs_itype_snap2)
                 lost=0
-                i=0
-                for new_ID in new_particle_IDs_itype_snap2:
-                    i=i+1
-                    if i%100==0:
-                        print(i/len(new_particle_IDs_itype_snap2)*100,'% checked...')
-                    snap2_index=binary_search_2(sorted_array=Part_Histories_IDs_snap2[iitype],element=new_ID)
-                    snap1_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],element=new_ID)
-                    if not snap1_index>-10:
-                        lost=lost+1
-                    new_particle_IDs_itype_snap2_historyindex_checked.append(snap2_index)#index of the new IDs in particle histories snap 2
-                    new_particle_IDs_itype_snap1_historyindex_checked.append(snap1_index)#index of the new IDs in particle histories snap 1
-                t2=time.time()
-                print(f'Indexed new particles in {t2-t1} (WITH checking)')
 
-                print('number of particles not found (non-checked):',np.sum(np.logical_not(np.array(new_particle_IDs_itype_snap2_historyindex)>-10)))
-                print('number of particles not found (checked):',lost)
+                print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
+                if new_particle_count>200 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
+                    t1=time.time()
+                    new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
+                    new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
+                    t2=time.time()
+                    print(f'Indexed new particles in {t2-t1}')
+                else:#otherwise the bisect search seems to work faster
+                    t1=time.time()
+                    new_particle_IDs_itype_snap2_historyindex=[]
+                    new_particle_IDs_itype_snap1_historyindex=[]
+                    for new_ID in new_particle_IDs_itype_snap2:
+                        snap2_index=binary_search_2(sorted_array=Part_Histories_IDs_snap2[iitype],element=new_ID)
+                        snap1_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],element=new_ID)
+                        if not snap1_index>-10:
+                            lost=lost+1
+                        new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
+                        new_particle_IDs_itype_snap1_historyindex.append(snap1_index)#index of the new IDs in particle histories snap 1
+                    t2=time.time()
+                print(f'Indexed new particles in {t2-t1} (using bisect)')
+                print('Number of particles not found (checked):',lost)
                 
                 # Retrieve relevant particle masses
                 print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 if itype==1:#if dm, just use the masstable value
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*PartData_Masses_Snap2[str(itype)][0]   
-                else:#otherwise, read explicitly
+                else:#otherwise, read explicitly (we read the current mass so doesn't matter if there's nans)
                     new_particle_masses=[PartData_Masses_Snap2[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
 
                 # Checking the previous state of the newly accreted particles
                 print(f"Checking previous state of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
-                previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
+                if not itype==4:#if not star, we can directly index the particles
+                    previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
+                else:# if is star, need to check prev gas particles as well
+                    previous_structure=[]
+                    for inewpart,history_index in enumerate(new_particle_IDs_itype_snap1_historyindex):
+                        if not history_index>-10:
+                            transformed_ID=new_particle_IDs_itype_snap2[inewpart]
+                            print(f'Finding gas particle previous structure instead of star, ID {transformed_ID}')
+                            old_gas_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[0],element=transformed_ID)
+                            if old_gas_index>-1:
+                                print(f'Found! Was gas at last snap, index {old_gas_index}')
+                                previous_structure.append(Part_Histories_HostStructure_snap1[0][old_gas_index])
+                            else:
+                                print('The transformed ID was not a gas ID at last snap.')
+                                previous_structure.append(np.nan)
+                        else:
+                            previous_structure.append(Part_Histories_HostStructure_snap1[iitype][history_index])
+
                 if not isub:#if a field halo, either cosmological accretion or from mergers ("clumpy")
                     new_previous_structure=previous_structure
                     print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
