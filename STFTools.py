@@ -350,15 +350,16 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
         print(f'Adding detailed halo data for snap ',snap,' where there are ',n_halos_snap,' halos')
         new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=vr_halo_fields, isiminfo=True, iunitinfo=True)[0]
 
+        for new_field in vr_halo_fields:
+            if 'Mass_' in new_field and 'R_' not in new_field:
+                print(f'Converting {new_field} values to physical')
+                new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10/base_halo_data_snap['SimulationInfo']['h_val']
+
+
         # Adding old halo data from V1 calcs
         print(f'Adding fields from base halo data')
         for field in fields_needed:
-            print(field)
-            if 'Mass_' in field:
-                print(field)
-                new_halo_data_snap[field]=base_halo_data[snap][field]*10**10/base_halo_data[snap]['SimulationInfo'][h_val]
-            else:
-                new_halo_data_snap[field]=base_halo_data[snap][field]
+            new_halo_data_snap[field]=base_halo_data[snap][field]
                 
         # Add extra halo fields -- post-process velociraptor files   
         if n_halos_snap>0:
