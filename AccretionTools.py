@@ -241,7 +241,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
         except:
             halo_index_list_snap2=halo_index_list
-    
+            print('Using iprocess x')
+            iprocess="x"
+
 
     # Assigning snap
     if snap==None:
