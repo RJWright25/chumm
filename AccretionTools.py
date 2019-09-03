@@ -437,7 +437,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                         new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
                         new_particle_IDs_itype_snap1_historyindex.append(snap1_index)#index of the new IDs in particle histories snap 1
                     t2=time.time()
-                print(f'Indexed new particles in {t2-t1} (using bisect)')
+                    print(f'Indexed new particles in {t2-t1} (using bisect)')
                 print('Number of particles not found (checked):',lost)
                 
                 # Retrieve relevant particle masses
