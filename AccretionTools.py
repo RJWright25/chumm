@@ -424,14 +424,16 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
                 else:#if stars
+                    igas=0
                     for new_star_ID in new_particle_IDs_itype_snap2:
                         old_star_index=binary_search_2(element=new_star_ID,sorted_array=Part_Histories_IDs_snap1[2])#search in stars list (checks to make sure the star is there)
                         if old_star_index>-10:
                             pass
                             # print(f'Star {new_star_ID} was star at previous snap')
                         else:
-                            print(f'Star {new_star_ID} was GAS at previous snap')
-
+                            igas=igas+1
+                            # print(f'Star {new_star_ID} was GAS at previous snap')
+                    print(f'{igas} out of {len(new_particle_IDs_itype_snap2)} accreted star particles were gas particles at last snap')
                     
                 # Retrieve relevant particle masses
                 print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
