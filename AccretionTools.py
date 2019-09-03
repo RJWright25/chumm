@@ -528,9 +528,10 @@ def postprocess_acc_data_serial(path):
 
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
-    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if filename.startswith('AccretionData_snap')]
-    acc_data_filelist=sorted(acc_data_filelist_trunc)
-    acc_data_outfile_name='AccretionData_Combined_Test.hdf5'
+    acc_data_filelist=sorted(acc_data_filelist)
+    acc_data_outfile_name=acc_data_filelist[3][:-9]+'_summed.hdf5'
+    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if not (filename == acc_data_outfile_name or 'DS' in filename)]
+    acc_data_filelist=acc_data_filelist_trunc
 
     if os.path.exists(path+acc_data_outfile_name):
         print("Deleting existing combined data first")
@@ -558,23 +559,28 @@ def postprocess_acc_data_serial(path):
     collated_output_file_header.attrs.create('total_num_halos',data=total_num_halos)
 
     # Names of the new outputs
-    new_outputs=["All_TotalDeltaM","All_TotalDeltaN",
-    "All_CosmologicalDeltaN",'All_CosmologicalDeltaM',
-    'All_CGMDeltaN','All_CGMDeltaM',
-    'All_ClumpyDeltaN','All_ClumpyDeltaM',
-    "Stable_TotalDeltaM","Stable_TotalDeltaN",
-    "Stable_CosmologicalDeltaN",'Stable_CosmologicalDeltaM',
-    'Stable_CGMDeltaN','Stable_CGMDeltaM',
-    'Stable_ClumpyDeltaN','Stable_ClumpyDeltaM']
-    verbose_outputs=["Fidelity","PreviousHost","Masses","ParticleIDs"]
+    new_outputs=["All_TotalDeltaM",
+    "All_TotalDeltaN",
+    "All_CosmologicalDeltaN",
+    'All_CosmologicalDeltaM',
+    'All_CGMDeltaN',
+    'All_CGMDeltaM',
+    'All_ClumpyDeltaN',
+    'All_ClumpyDeltaM',
+    "Stable_TotalDeltaM",
+    "Stable_TotalDeltaN",
+    "Stable_CosmologicalDeltaN",
+    'Stable_CosmologicalDeltaM',
+    'Stable_CGMDeltaN',
+    'Stable_CGMDeltaM',
+    'Stable_ClumpyDeltaN',
+    'Stable_ClumpyDeltaM',
+    ]
 
     # Initialise all new outputs
     itypes=[0,1,4,5]
     new_outputs_keys_bytype=[f'PartType{itype}/'+field for field in new_outputs for itype in itypes]
-    verbose_outputs_keys_bytype=[f'PartType{itype}/'+field for field in verbose_outputs for itype in itypes]
     summed_acc_data={field:(np.zeros(total_num_halos)+np.nan) for field in new_outputs_keys_bytype}
-    for particle_field in verbose_outputs_keys_bytype:
-        summed_acc_data[particle_field]=[np.nan for i in range(total_num_halos)]
 
     iihalo=0
     for ifile,acc_data_filetemp in enumerate(acc_data_hdf5files):
@@ -639,7 +645,7 @@ def postprocess_acc_data_serial(path):
 
 ########################### READ ACCRETION DATA ###########################
 
-def read_acc_rate_file(path,include_particles=False):
+def read_acc_rate_file(path):
 
     """
 
@@ -658,19 +664,23 @@ def read_acc_rate_file(path,include_particles=False):
     
     accretion_data : dict
         With fields:
-        "All_TotalDeltaM","All_TotalDeltaN",
-        "All_CosmologicalDeltaN",'All_CosmologicalDeltaM',
-        'All_CGMDeltaN','All_CGMDeltaM',
-        'All_ClumpyDeltaN','All_ClumpyDeltaM',
-        "Stable_TotalDeltaM","Stable_TotalDeltaN",
-        "Stable_CosmologicalDeltaN",'Stable_CosmologicalDeltaM',
-        'Stable_CGMDeltaN','Stable_CGMDeltaM',
-        'Stable_ClumpyDeltaN','Stable_ClumpyDeltaM'
-        And potentially:
-        "ParticleIDs"
-        "Fidelity"
-        "PreviousHost"
-        "Masses"
+        "PartTypeX/All_TotalDeltaM",
+        "PartTypeX/All_TotalDeltaN",
+        "PartTypeX/All_CosmologicalDeltaN",
+        "PartTypeX/All_CosmologicalDeltaM',
+        "PartTypeX/All_CGMDeltaN',
+        "PartTypeX/All_CGMDeltaM',
+        "PartTypeX/All_ClumpyDeltaN',
+        "PartTypeX/All_ClumpyDeltaM',
+        "PartTypeX/Stable_TotalDeltaM",
+        "PartTypeX/Stable_TotalDeltaN",
+        "PartTypeX/Stable_CosmologicalDeltaN",
+        "PartTypeX/Stable_CosmologicalDeltaM',
+        "PartTypeX/Stable_CGMDeltaN',
+        "PartTypeX/Stable_CGMDeltaM',
+        "PartTypeX/Stable_ClumpyDeltaN',
+        "PartTypeX/Stable_ClumpyDeltaM'
+        "PartTypeX/ifile'
 
     Each dictionary entry will be of length n_halos, and each of these entries will be a dictionary
 
@@ -690,11 +700,8 @@ def read_acc_rate_file(path,include_particles=False):
     'Stable_CGMDeltaN',
     'Stable_CGMDeltaM',
     'Stable_ClumpyDeltaN',
-    'Stable_ClumpyDeltaM']
-
-    if include_particles:
-        acc_fields.extend(['PreviousHost','ParticleIDs','Masses','Fidelity'])
-
+    'Stable_ClumpyDeltaM',
+    ]
     # Load collated file
     hdf5file=h5py.File(path,'r')
 
@@ -707,28 +714,12 @@ def read_acc_rate_file(path,include_particles=False):
     # Initialise output data
     total_num_halos=acc_metadata['total_num_halos']
     group_list=list(hdf5file.keys())
-    ihalo_group_list=[ihalo_name for ihalo_name in group_list if ihalo_name.startswith('ihalo')]
     part_group_list=['PartType'+str(itype) for itype in [0,1,4,5]]
-    acc_data={itype+'/'+field:(np.zeros(total_num_halos)+np.nan) for field in acc_fields for itype in part_group_list}
-    
-    # Go through each halo and add data
-    count=0
-    for ihalo_name in ihalo_group_list:
-        count=count+1
-        ihalo=int(ihalo_name.split('_')[-1])
-        for itype_name in part_group_list:
-            ihalo_itype_datasets=[ihalo_name+'/'+itype_name+'/'+dataset for dataset in acc_fields]
-            for dataset in ihalo_itype_datasets:
-                try:
-                    acc_data[dataset[13:]][ihalo]=hdf5file[dataset]
-                except:
-                    pass
-                    # print(dataset+' dataset doesnt exist, skipping')
-        if count%1000==0:
-            print(np.round(count/total_num_halos*100,2),' % done loading in data')
-
-    return acc_metadata,acc_data
-
+    acc_data={part_group:{} for part_group in part_group_list}
+    for part_group_name in part_group_list:
+        for dataset in acc_fields:
+            acc_data[part_group_name][dataset]=hdf5file[part_group_name+'/'+dataset].value
+    return acc_metadata, acc_data
 
 ########################### READ EAGLE DATA FROM IDs ###########################
 
