@@ -411,7 +411,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 
             # Now loop through each particle type and process accreted particle data 
             for iitype,itype in enumerate(PartTypes):
-                if itype==0 or itype==1:
+                if itype==1:
                     continue
                 # Finding particles of itype∂
                 print(f"Compressing for new particles of type {itype} ...")
@@ -443,7 +443,6 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 print(f'Indexed new particles in {t2-t1} (WITH checking)')
 
                 print('number of particles not found (non-checked):',np.sum(np.logical_not(np.array(new_particle_IDs_itype_snap2_historyindex)>-10)))
-                print('number of particles not found (checked):',np.sum(np.logical_not(np.array(new_particle_IDs_itype_snap2_historyindex_checked)>-10)))
                 print('number of particles not found (checked):',lost)
                 
                 # Retrieve relevant particle masses
