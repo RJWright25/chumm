@@ -353,7 +353,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
         # Adding old halo data from V1 calcs
         print(f'Adding fields from base halo data')
         for field in fields_needed:
-            if 'Mass_' in field and 'R_' not in field:
+            if 'Mass_' in field:
                 print(field)
                 new_halo_data_snap[field]=base_halo_data[snap][field]*10**10
             else:
