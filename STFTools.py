@@ -355,7 +355,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
         for field in fields_needed:
             if 'Mass_' in field:
                 print(field)
-                new_halo_data_snap[field]=base_halo_data[snap][field]*10**10
+                new_halo_data_snap[field]=base_halo_data[snap][field]*10**10/base_halo_data[snap]['SimulationInfo'][h_val]
             else:
                 new_halo_data_snap[field]=base_halo_data[snap][field]
                 
