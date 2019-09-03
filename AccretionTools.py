@@ -235,13 +235,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     if halo_index_list==None:
         halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
         iprocess="x"
-    elif type(halo_index_list[0])==list:
-        halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
-        print("Using process x")
-        iprocess="x"
     else:
-        halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
-        iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
+        try:
+            halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
+            iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
+        except:
+            halo_index_list_snap2=halo_index_list
+    
 
     # Assigning snap
     if snap==None:
