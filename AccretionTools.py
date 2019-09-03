@@ -433,7 +433,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     if not snap1_index>-10:
                         lost=lost+1
                     new_particle_IDs_itype_snap2_historyindex_checked.append(snap2_index)#index of the new IDs in particle histories snap 2
-                    new_particle_IDs_itype_snap1_historyindex_checked.append(snap1_index))#index of the new IDs in particle histories snap 1
+                    new_particle_IDs_itype_snap1_historyindex_checked.append(snap1_index)#index of the new IDs in particle histories snap 1
                 t2=time.time()
                 print(f'Indexed new particles in {t2-t1} (WITH checking)')
 
