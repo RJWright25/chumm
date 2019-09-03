@@ -427,7 +427,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 new_particle_IDs_itype_snap1_historyindex_checked=[]
                 t1=time.time()
                 lost=0
+                i=0
                 for new_ID in new_particle_IDs_itype_snap2:
+                    i=i+1
+                    if i%100==0:
+                    print(i/len(new_particle_IDs_itype_snap2)*100,'% checked...')
                     snap2_index=binary_search_2(sorted_array=Part_Histories_IDs_snap2[iitype],element=new_ID)
                     snap1_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],element=new_ID)
                     if not snap1_index>-10:
