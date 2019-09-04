@@ -571,6 +571,8 @@ def postprocess_acc_data_serial(path):
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
     acc_data_filelist=sorted(acc_data_filelist)
+    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if 'px' not in filename]
+    acc_data_filelist=acc_data_filelist_trunc
     acc_data_outfile_name=acc_data_filelist[3][:-9]+'_summed.hdf5'
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if not (filename == acc_data_outfile_name or 'DS' in filename)]
     acc_data_filelist=acc_data_filelist_trunc
@@ -587,7 +589,8 @@ def postprocess_acc_data_serial(path):
     # Open existing files in list structure
     acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])#total number of halos from file
-
+    print(f'Collating data for {total_num_halos} halos')
+    
     # Copy over header information from first file
     acc_data_hdf5files_header=acc_data_hdf5files[0]['Header']
     acc_data_hdf5files_header_attrs=list(acc_data_hdf5files_header.attrs)
