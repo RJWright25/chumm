@@ -134,7 +134,13 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
             t1=time.time()
             # Load new snap data
             if SimType=='EAGLE': 
-                Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
+                try:
+                    Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
+                    print(f'{PartNames[itype]} IDs loaded')
+                except:
+                    print(f'No {PartNames[itype]} IDs found')
+                    Particle_IDs_Unsorted_itype=[]
+
                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
             else:
                 h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
