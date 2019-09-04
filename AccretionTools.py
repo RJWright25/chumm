@@ -457,7 +457,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                         if not history_index>-10:
                             transformed_ID=new_particle_IDs_itype_snap2[inewpart]
                             print(f'Finding gas particle previous structure instead of star, ID {transformed_ID}')
-                            old_gas_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[0],element=transformed_ID)
+                            old_gas_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[0],element=transformed_ID)#search the snap 1 gas ID list for the particle
                             if old_gas_index>-1:
                                 print(f'Found! Was gas at last snap, index {old_gas_index}')
                                 previous_structure.append(Part_Histories_HostStructure_snap1[0][old_gas_index])
