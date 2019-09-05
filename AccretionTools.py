@@ -786,7 +786,6 @@ def get_particle_acc_data(snap,halo_index_list):
     accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile))])
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
     accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
-    print(accdata_halo_lists)
     desired_num_halos=len(halo_index_list)
     ihalo_files=np.ones(desired_num_halos)+np.nan
     
@@ -808,7 +807,7 @@ def get_particle_acc_data(snap,halo_index_list):
         print(iihalo,ihalo_files[iihalo])
         for parttype in parttypes:
             for field in partfields:
-                ihalo_itype_ifield=accdata_files[ihalo_files[iihalo]][ihalo_name+f'/PartType{parttype}/'+field].value
+                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/PartType{parttype}/'+field].value
                 particle_acc_data[f'/PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
 
     return particle_acc_data
