@@ -268,7 +268,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
         os.mkdir('acc_data')
     if not os.path.exists('acc_data/snap_'+str(snap2).zfill(3)):#create folder for outputs if doesn't already exist
-        os.mkdir('acc_data/snap_'+str(snap2).zfill(3))
+        try:
+            os.mkdir('acc_data/snap_'+str(snap2).zfill(3))
+        except:
+            pass
     
     run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
     outfile_name=f'acc_data/snap_'+str(snap2).zfill(3)+'/AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'_p'+iprocess+'.hdf5'
