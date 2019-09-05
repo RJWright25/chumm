@@ -808,7 +808,7 @@ def get_particle_acc_data(snap,halo_index_list):
         for parttype in parttypes:
             for field in partfields:
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/PartType{parttype}/'+field].value
-                particle_acc_data[f'/PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
+                particle_acc_data[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
 
     return particle_acc_data
 
