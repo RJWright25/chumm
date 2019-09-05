@@ -790,7 +790,7 @@ def get_particle_acc_data(snap,halo_index_list):
     ihalo_files=np.ones(desired_num_halos)+np.nan
     
     for iihalo,ihalo in enumerate(halo_index_list):
-        for ifile,ihalo_list in enumerate(accdata_halos):
+        for ifile,ihalo_list in enumerate(accdata_halo_lists):
             if ihalo in ihalo_list:
                 ihalo_files[iihalo]=ifile
                 print(f'Halo at index {ihalo} is in file {ifile}')
