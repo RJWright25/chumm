@@ -804,7 +804,7 @@ def get_particle_acc_data(snap,halo_index_list):
 
     for iihalo,ihalo in enumerate(halo_index_list):
         ihalo_name='ihalo_'+str(ihalo).zfill(6)
-        print(iihalo,ihalo_file)
+        print(iihalo,ihalo_files[iihalo])
         for parttype in parttypes:
             for field in partfields:
                 ihalo_itype_ifield=accdata_files[ihalo_files[iihalo]][ihalo_name+f'/PartType{parttype}/'+field].value
