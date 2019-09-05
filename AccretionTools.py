@@ -791,7 +791,7 @@ def get_particle_acc_data(snap,halo_index_list):
     
     for iihalo,ihalo in enumerate(halo_index_list):
         for ifile,ihalo_list in enumerate(accdata_halo_lists):
-            if ihalo in ihalo_list:
+            if f'ihalo_'+str(ihalo).zfill(6) in ihalo_list:
                 ihalo_files[iihalo]=ifile
                 print(f'Halo at index {ihalo} is in file {ifile}')
                 break
