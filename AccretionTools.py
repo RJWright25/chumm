@@ -797,7 +797,7 @@ def get_particle_acc_data(snap,halo_index_list):
     
     parttypes=[0,1,4]
     partfields=["Fidelity","ParticleIDs"]
-    particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes]}
+    particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes}
 
     for iihalo,ihalo in enumerate(halo_index_list):
         ihalo_file=ihalo_files[iihalo]
