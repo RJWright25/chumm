@@ -777,6 +777,7 @@ def read_acc_rate_file(path):
 
 def get_particle_acc_data(snap,halo_index_list):
 
+    halo_index_list=list(halo_index_list)
     directory='acc_data/snap+'+str(snap).zfill(3)
     accdata_filelist=os.listdir(directory)
     accdata_filelist_trunc=sorted([accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile))])
