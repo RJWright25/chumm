@@ -775,6 +775,58 @@ def read_acc_rate_file(path):
             acc_data[part_group_name][dataset]=hdf5file[part_group_name+'/'+dataset].value
     return acc_metadata, acc_data
 
+def get_particle_acc_data(snap,halo_index_list):
+
+    directory='acc_data/snap+'+str(snap).zfill(3)
+    accdata_filelist=os.listdir(directory)
+    accdata_filelist_trunc=sorted([accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile))])
+    accdata_files=[h5py.File(accdata_file) for accdata_file in accdata_filelist_trunc]
+    accdata_halo_lists=[list(accdata_file.keys() for accdata_file in accdata_files)]
+    desired_num_halos=len(halo_index_list)
+    ihalo_files=np.ones(desired_num_halos)+np.nan
+    
+    for iihalo,ihalo in enumerate(halo_index_list):
+        for ifile,ihalo_list in enumerate(accdata_halos):
+            if ihalo in ihalo_list:
+                ihalo_files[iihalo]=ifile
+                print(f'Halo at index {ihalo} is in file {ifile}')
+                break
+            else:
+                pass
+    
+    parttypes=[0,1,4]
+    partfields=["Fidelity","ParticleIDs"]
+    particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes]}
+
+    for iihalo,ihalo in enumerate(halo_index_list):
+        ihalo_file=ihalo_files[iihalo]
+        ihalo_name='ihalo_'+str(ihalo).zfill(6)
+        for parttype in parttypes:
+            for field in partfields:
+                ihalo_itype_ifield=ihalo_file[ihalo_name+f'/PartType{parttype}/'+field].value}
+                particle_acc_data[f'/PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
+
+    return particle_acc_data
+
+    
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ########################### READ EAGLE DATA FROM IDs ###########################
 
 def read_eagle_from_IDs(base_halo_data_snap,itype=0,ParticleIDs=[],datasets=[]):
