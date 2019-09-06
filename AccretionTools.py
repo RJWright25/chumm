@@ -519,7 +519,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     #Close the output file, finish up
     output_hdf5.close()
 
-########################### POSTPROCESS ACCRETION DATA ###########################
+########################### POSTPROCESS/SUM ACCRETION DATA ###########################
 
 def postprocess_acc_data_serial(path):
     """
@@ -697,7 +697,47 @@ def postprocess_acc_data_serial(path):
     print(f'Finished collating files in {t2-t1} sec')
     return None
 
-########################### READ ACCRETION DATA ###########################
+########################### READ VERBOSE ACC DATA ###########################
+
+def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"]):
+    if type(halo_index_list)==int:
+        halo_index_list=[halo_index_list]
+    else:
+        halo_index_list=list(halo_index_list)
+
+    directory='acc_data/snap_'+str(snap).zfill(3)+'/'
+    accdata_filelist=os.listdir(directory)
+    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile))])
+    accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
+    accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
+    desired_num_halos=len(halo_index_list)
+    ihalo_files=np.ones(desired_num_halos)+np.nan
+    
+    for iihalo,ihalo in enumerate(halo_index_list):
+        for ifile,ihalo_list in enumerate(accdata_halo_lists):
+            if f'ihalo_'+str(ihalo).zfill(6) in ihalo_list:
+                ihalo_files[iihalo]=ifile
+                print(f'Halo at index {ihalo} is in file {ifile}')
+                break
+            else:
+                pass
+    
+    parttypes=[0,1,4]
+    partfields=fields
+    particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes}
+    particle_acc_files=[]    
+    for iihalo,ihalo in enumerate(halo_index_list):
+        ihalo_name='ihalo_'+str(ihalo).zfill(6)
+        particle_acc_files.append(accdata_filelist_trunc[ihalo_files[ifile]])
+        print(iihalo,ihalo_files[iihalo])
+        for parttype in parttypes:
+            for field in partfields:
+                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/PartType{parttype}/'+field].value
+                particle_acc_data[f'/PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
+
+    return particle_acc_files,particle_acc_data
+ 
+########################### READ SUMMED ACC DATA ###########################
 
 def read_acc_rate_file(path):
 
@@ -775,65 +815,9 @@ def read_acc_rate_file(path):
             acc_data[part_group_name][dataset]=hdf5file[part_group_name+'/'+dataset].value
     return acc_metadata, acc_data
 
-def get_particle_acc_data(snap,halo_index_list):
-    if type(halo_index_list)==int:
-        halo_index_list=[halo_index_list]
-    else:
-        halo_index_list=list(halo_index_list)
+########################### ADD EAGLE DATA TO FILE FROM IDs ###########################
 
-    directory='acc_data/snap_'+str(snap).zfill(3)+'/'
-    accdata_filelist=os.listdir(directory)
-    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile))])
-    accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
-    accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
-    desired_num_halos=len(halo_index_list)
-    ihalo_files=np.ones(desired_num_halos)+np.nan
-    
-    for iihalo,ihalo in enumerate(halo_index_list):
-        for ifile,ihalo_list in enumerate(accdata_halo_lists):
-            if f'ihalo_'+str(ihalo).zfill(6) in ihalo_list:
-                ihalo_files[iihalo]=ifile
-                print(f'Halo at index {ihalo} is in file {ifile}')
-                break
-            else:
-                pass
-    
-    parttypes=[0,1,4]
-    partfields=["Fidelity","ParticleIDs"]
-    particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes}
-
-    for iihalo,ihalo in enumerate(halo_index_list):
-        ihalo_name='ihalo_'+str(ihalo).zfill(6)
-        print(iihalo,ihalo_files[iihalo])
-        for parttype in parttypes:
-            for field in partfields:
-                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/PartType{parttype}/'+field].value
-                particle_acc_data[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
-
-    return particle_acc_data
-
-    
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-########################### READ EAGLE DATA FROM IDs ###########################
-
-def read_eagle_from_IDs(base_halo_data_snap,itype=0,ParticleIDs=[],datasets=[]):
+def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list,datasets=[]):
     """
 
     read_eagle_from_IDs : function 
@@ -850,9 +834,8 @@ def read_eagle_from_IDs(base_halo_data_snap,itype=0,ParticleIDs=[],datasets=[]):
     itype : int 
         [0 (gas),1 (DM), 4 (stars), 5 (BH)]
         The particle type we want to read EAGLE data for. 
-        *** todo MAKE THIS A LIST AS PER BELOW *** (so we don't have to read the EAGLE snap multiple times for multiple halos)
 
-    particleIDs: list
+    particleIDs: list of lists
         The list of particle IDs for which we want to extract data for. 
         *** todo ALLOW FOR LISTS OF LISTS *** (so we don't have to read the EAGLE snap multiple times for multiple halos)
 
@@ -861,17 +844,16 @@ def read_eagle_from_IDs(base_halo_data_snap,itype=0,ParticleIDs=[],datasets=[]):
 
     Returns
 	----------
-    output_datasets : dict
-        Dictionary of the different datasets requested. 
-        *** todo MAKE THE OUTPUT A LIST OF DICTIONARIES *** (so we don't have to read the EAGLE snap multiple times for multiple halos)
+        Requested datasets saved to file. 
 
     """
     # Load the relevant EAGLE snapshot
-  
+    
     partdata_filepath=base_halo_data_snap["Part_FilePath"]
     EAGLE_Snap=read_eagle.EagleSnapshot(partdata_filepath)
     EAGLE_boxsize=base_halo_data_snap['SimulationInfo']['BoxSize_Comoving']
     EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+    halo_index_list=halo_index_list["indices"]
 
     # Read the relevant datasets
     EAGLE_datasets={dataset:EAGLE_Snap.read_dataset(itype,dataset) for dataset in datasets}
@@ -881,20 +863,40 @@ def read_eagle_from_IDs(base_halo_data_snap,itype=0,ParticleIDs=[],datasets=[]):
     sorted_IDs=part_histories["PartType"+str(itype)+"/ParticleIDs"].value
     sorted_IDs_indices=part_histories["PartType"+str(itype)+"/ParticleIndex"]
 
+    # Load in the lists of particle IDs
+    print("Getting particle ID lists for desired halos...")
+    particle_acc_files,Particle_IDs=get_particle_acc_data(snap = base_halo_data_snap["Snap"],halo_index_list=halo_index_list,fields=['ParticleIDs'])
+    print("Done getting particle ID lists for desired halos...")
+
     # Find the indices of our particleIDs in the particle histories
-    history_indices=np.searchsorted(v=ParticleIDs,a=sorted_IDs)
-    
-    # Find the data for each particle here
-    output_datasets={dataset:[] for dataset in datasets}#initialise outputs
-    for history_index in history_indices:#for each index in the histories (i.e. every particle)
-        if history_index>=0:#if we have a valid index (i.e. not np.nan)
-            particle_index=sorted_IDs_indices[history_index]#identify the index in the eagle snapshots
-            for dataset in datasets:#for each dataset, add the data for this particle
-                output_datasets[dataset].append(EAGLE_datasets[dataset][particle_index])
-        else:#if the index was invalid, just record np.nan for all the datasets for this particle
-            for dataset in datasets:
-                output_datasets[dataset].append(np.nan)
-    
-    # Return the dictionary of particle data
-    return output_datasets
-        
+    for iihalo,ihalo in enumerate(halo_index_list):
+        print(iihalo/len(halo_index_list)*100,'%')
+        output_datasets={dataset:[] for dataset in datasets}
+        Particle_IDs_ihalo=Particle_IDs[iihalo]
+        Npart_ihalo=len(Particle_IDs)
+        if Npart_ihalo>200:
+            history_indices=np.searchsorted(v=ParticleIDs,a=sorted_IDs)
+        else:
+            history_indices=[]
+            for ipart_ID in Particle_IDs_ihalo
+                history_indices.append(binary_search_2(sorted_array=sorted_IDs,element=ipart_ID))
+
+        for history_index in history_indices:#for each index in the histories (i.e. every particle)
+            if history_index>=0:#if we have a valid index (i.e. not np.nan)
+                particle_index=sorted_IDs_indices[history_index]#identify the index in the eagle snapshots
+                for dataset in datasets:#for each dataset, add the data for this particle
+                    output_datasets[dataset].append(EAGLE_datasets[dataset][particle_index])
+            else:
+                for dataset in datasets:#for each dataset, add the data for this particle
+                    output_datasets[dataset].append(np.nan)
+
+        ihalo_itype_group=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+"/PartType{itype}"]
+
+        for dataset in datasets:
+            ihalo_itype_group.create_dataset(dataset,data=output_datasets[dataset],dtype=np.float32)
+
+
+
+
+
+
