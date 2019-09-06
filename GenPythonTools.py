@@ -24,6 +24,12 @@ import numpy as np
 import pickle as pickle
 from bisect import bisect_left
 
+def flatten(listoflists):
+    output=[]
+    for sublist in listoflists:
+        output.extend(list(sublist))
+    return output
+
 
 def gen_mp_indices(indices,n):
     """
