@@ -887,6 +887,7 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
     print("Getting particle ID lists for desired halos...")
     t1=time.time()
     particle_acc_files,ParticleIDs=get_particle_acc_data(snap = base_halo_data_snap["Snap"],halo_index_list=halo_index_list,fields=['ParticleIDs'])
+    print(ParticleIDs)
     ParticleIDs=ParticleIDs["ParticleIDs"]
     t2=time.time()
     print(f'Done in {t2-t1}')
