@@ -681,11 +681,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 halo_parttype_hdf5=halo_hdf5.create_group('PartType'+str(itype))
                 halo_parttype_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs_itype_snap2,dtype=np.int64)
                 halo_parttype_hdf5.create_dataset('Masses',data=new_particle_masses,dtype=np.float64)
-                halo_parttype_hdf5.create_dataset('Fidelity',data=new_particle_stayed_snap3,dtype=np.int8)
+                halo_parttype_hdf5.create_dataset('Fidelity',data=new_particle_stayed_snap3,dtype=np.uint8)
                 halo_parttype_hdf5.create_dataset('PreviousHost',data=new_previous_structure,dtype=np.int32)
                 if itype==0 or itype==1:
-                    halo_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_parthistory_L1,dtype=np.int32)
-                    halo_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_parthistory_L2,dtype=np.int32)
+                    halo_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_parthistory_L1,dtype=np.uint8)
+                    halo_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_parthistory_L2,dtype=np.uint8)
 
                 print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
 
@@ -699,8 +699,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 halo_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
                 print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
                 if itype==0 or itype==1:
-                    halo_parttype_hdf5.create_dataset('Processed_L1',data=np.nan,dtype=np.int32)
-                    halo_parttype_hdf5.create_dataset('Processed_L2',data=np.nan,dtype=np.int32)
+                    halo_parttype_hdf5.create_dataset('Processed_L1',data=np.nan,dtype=np.float16)
+                    halo_parttype_hdf5.create_dataset('Processed_L2',data=np.nan,dtype=np.float16)
 
     #Close the output file, finish up
     output_hdf5.close()
@@ -807,6 +807,8 @@ def postprocess_acc_data_serial(path):
     'All_CGMDeltaM',
     'All_ClumpyDeltaN',
     'All_ClumpyDeltaM',
+    'All_UnprocessedDeltaN',
+    'All_UnprocessedDeltaM',
     "Stable_TotalDeltaM",
     "Stable_TotalDeltaN",
     "Stable_CosmologicalDeltaN",
@@ -815,6 +817,8 @@ def postprocess_acc_data_serial(path):
     'Stable_CGMDeltaM',
     'Stable_ClumpyDeltaN',
     'Stable_ClumpyDeltaM',
+    'Stable_UnprocessedDeltaN',
+    'Stable_UnprocessedDeltaM',
     ]
 
     # Initialise all new outputs
@@ -836,6 +840,12 @@ def postprocess_acc_data_serial(path):
                     fidelities=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Fidelity'].value
                     masses=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Masses'].value
                     prevhosts=acc_data_filetemp[ihalo_group+f'/PartType{itype}/PreviousHost'].value
+                    if itype==0 or itype==1:
+                        processed_l1=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Processed_L1'].value
+                        processed_l2=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Processed_L2'].value
+                    else:
+                        processed_l1=np.ones(len(masses))#stars/bh will always be processed at some level
+                        processed_l2=np.ones(len(masses))#stars/bh will always be processed at lowest level
                 except:
                     # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
                     continue
@@ -846,12 +856,18 @@ def postprocess_acc_data_serial(path):
 
                 # Define masks based on particle properties
                 stable_mask=fidelities>0
+
                 cosmological_mask=prevhosts<0
                 cgm_mask=prevhosts==0
                 clumpy_mask=prevhosts>0
+                primordial_mask=processed_l1>0
+                recycled_mask=np.logical_and(np.logical_or(cgm_mask,cosmological_mask),np.logical_not(primordial_mask))
+
                 stable_cosmological_mask=np.logical_and(stable_mask,cosmological_mask)
                 stable_cgm_mask=np.logical_and(stable_mask,cgm_mask)
                 stable_clumpy_mask=np.logical_and(stable_mask,clumpy_mask)
+                stable_primordial_mask=np.logical_and(stable_mask,primordial_mask)
+                stable_recycled_mask=np.logical_and(stable_mask,recycled_mask)
 
                 summed_acc_data[f'PartType{itype}/All_TotalDeltaN'][ihalo]=np.size(masses)
                 summed_acc_data[f'PartType{itype}/All_TotalDeltaM'][ihalo]=np.sum(masses)
@@ -861,7 +877,11 @@ def postprocess_acc_data_serial(path):
                 summed_acc_data[f'PartType{itype}/All_CGMDeltaM'][ihalo]=np.sum(np.compress(cgm_mask,masses))
                 summed_acc_data[f'PartType{itype}/All_ClumpyDeltaN'][ihalo]=np.size(np.compress(clumpy_mask,masses))
                 summed_acc_data[f'PartType{itype}/All_ClumpyDeltaM'][ihalo]=np.sum(np.compress(clumpy_mask,masses))
-                
+                summed_acc_data[f'PartType{itype}/All_PrimordialDeltaN'][ihalo]=np.size(np.compress(primordial_mask,masses))
+                summed_acc_data[f'PartType{itype}/All_PrimordialDeltaM'][ihalo]=np.sum(np.compress(primordial_mask,masses))
+                summed_acc_data[f'PartType{itype}/All_RecycledDeltaN'][ihalo]=np.size(np.compress(recycled_mask,masses))
+                summed_acc_data[f'PartType{itype}/All_RecycledDeltaM'][ihalo]=np.sum(np.compress(recycled_mask,masses))
+
                 summed_acc_data[f'PartType{itype}/Stable_TotalDeltaN'][ihalo]=np.size(np.compress(stable_mask,masses))
                 summed_acc_data[f'PartType{itype}/Stable_TotalDeltaM'][ihalo]=np.sum(np.compress(stable_mask,masses))
                 summed_acc_data[f'PartType{itype}/Stable_CosmologicalDeltaN'][ihalo]=np.size(np.compress(stable_cosmological_mask,masses))
@@ -870,7 +890,10 @@ def postprocess_acc_data_serial(path):
                 summed_acc_data[f'PartType{itype}/Stable_CGMDeltaM'][ihalo]=np.sum(np.compress(stable_cgm_mask,masses))
                 summed_acc_data[f'PartType{itype}/Stable_ClumpyDeltaN'][ihalo]=np.size(np.compress(stable_clumpy_mask,masses))
                 summed_acc_data[f'PartType{itype}/Stable_ClumpyDeltaM'][ihalo]=np.sum(np.compress(stable_clumpy_mask,masses))
-
+                summed_acc_data[f'PartType{itype}/Stable_PrimordialDeltaN'][ihalo]=np.size(np.compress(stable_primordial_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_PrimordialDeltaM'][ihalo]=np.sum(np.compress(stable_primordial_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_RecycledDeltaN'][ihalo]=np.size(np.compress(stable_recycled_mask,masses))
+                summed_acc_data[f'PartType{itype}/Stable_RecycledDeltaM'][ihalo]=np.sum(np.compress(stable_recycled_mask,masses))
 
     # Create groups for output
     for itype in itypes:
@@ -885,7 +908,7 @@ def postprocess_acc_data_serial(path):
 
 ########################### READ VERBOSE ACC DATA ###########################
 
-def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"],itype=None):
+def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs","Processed_L1","Processed_L2"],itype=None):
     if type(halo_index_list)==int:
         halo_index_list=[halo_index_list]
     else:
@@ -912,7 +935,7 @@ def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"]
     print(f'Done in {t2-t1}')
     
     if itype==None:
-        parttypes=[0,1,4]
+        parttypes=[0,1]
     else:
         parttypes=[itype]
     partfields=fields
