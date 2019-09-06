@@ -254,7 +254,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         if isnap==0:#initialise our arrays
             current_IDs_gas=infile_file["PartType0/ParticleIDs"].value
             current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
-            n_part_gas_now=len(n_part_gas_now)
+            n_part_gas_now=len(current_IDs_gas)
             n_part_gas_prev=n_part_gas_now
             gas_flags_L1=np.array(np.zeros(n_part_gas_now),dtype=np.int32)
             gas_flags_L2=np.array(np.zeros(n_part_gas_now),dtype=np.int32)
