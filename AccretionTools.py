@@ -898,7 +898,7 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
         print(iihalo/len(halo_index_list)*100,'%')
         output_datasets={dataset:[] for dataset in datasets}
         ParticleIDs_halo=ParticleIDs[iihalo]
-        Npart_ihalo=len(ParticleIDs_halo)
+        Npart_ihalo=np.size(ParticleIDs_halo)
         if Npart_ihalo>200:
             history_indices=np.searchsorted(v=ParticleIDs_halo,a=sorted_IDs)
         else:
