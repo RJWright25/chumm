@@ -616,6 +616,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 print('Number of particles not found (checked):',lost)
                 
                 #Retrieve particle processing histories
+                print(f'Retrieving particle processing histories of particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)}...')
                 if itype==0 or itype==1:
                     ihalo_parthistory_L1=[]
                     ihalo_parthistory_L2=[]
@@ -627,6 +628,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                         else:
                             ihalo_parthistory_L1.append(np.nan)
                             ihalo_parthistory_L2.append(np.nan)
+                print(f'Found particle processing histories of particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)}...')
 
                 # Retrieve relevant particle masses
                 print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
