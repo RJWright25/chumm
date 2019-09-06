@@ -74,14 +74,14 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
         snaps=list(range(len(base_halo_data)))
 
     # Find which snaps are valid/not padded and which aren't 
-    try:
-        valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
-        valid_snaps=np.compress(valid_snaps,snaps)
-        run_outname=base_halo_data[valid_snaps[0]]['outname']
 
-    except:
-        print("Couldn't validate snaps")
-        return []
+    valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
+    valid_snaps=np.compress(valid_snaps,snaps)
+    run_outname=base_halo_data[valid_snaps[0]]['outname']
+
+    # except:
+    #     print("Couldn't validate snaps")
+    #     return []
 
     # Standard names of particle types
     PartNames=['gas','DM','','','star','BH']
