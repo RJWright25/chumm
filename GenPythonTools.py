@@ -27,6 +27,8 @@ from bisect import bisect_left
 def flatten(listoflists):
     output=[]
     for sublist in listoflists:
+        if np.size(sublist)==1:
+            sublist=[sublist]
         output.extend(list(sublist))
     return output
 
