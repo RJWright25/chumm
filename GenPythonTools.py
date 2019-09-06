@@ -28,8 +28,7 @@ def flatten(listoflists):
     output=[]
     for sublist in listoflists:
         if not (type(sublist)==list or type(sublist)==np.ndarray):
-            sublist=np.nan
-            output.extend([np.nan])
+            pass
         else:
             output.extend(list(sublist))
     return output
