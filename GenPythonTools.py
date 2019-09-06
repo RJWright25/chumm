@@ -27,8 +27,11 @@ from bisect import bisect_left
 def flatten(listoflists):
     output=[]
     for sublist in listoflists:
-
-        output.extend(list(sublist))
+        if not (type(sublist)==list or type(sublist)==np.ndarray):
+            sublist=np.nan
+            output.append(np.nan)
+        else:
+            output.extend(list(sublist))
     return output
 
 
