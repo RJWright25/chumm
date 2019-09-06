@@ -240,7 +240,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         for ipart in indices_in_structure:
             iipart=iipart+1
             if iipart%10000==0:
-                print(iipart/len(indices_in_structure)*100,'% done adding flags for DM particles')
+                print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for DM particles')
             DM_flags_L1[ipart]=DM_flags_L1[ipart]+1
             host_ID=current_hosts_DM[ipart]
             if host_ID in halo_l2_IDs:
@@ -252,7 +252,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         except:
             infile_file["PartType1"]['Processed_L1'][:]=DM_flags_L1
             infile_file["PartType1"]['Processed_L2'][:]=DM_flags_L2
-            
+
         t2=time.time()
         print(f'Finished with DM for snap {snap_abs} in {t2-t1}')
 
@@ -299,7 +299,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             for ipart_prevID, ipart_L1_level in particles_prev_processed_L1:
                 ipart_L1=ipart_L1+1
                 if ipart_L1%10000==0:
-                    print(f'{ipart_L1/len(particles_prev_processed_L1)}% done with carrying over L1 flags')
+                    print(f'{np.round(ipart_L1/len(particles_prev_processed_L1),2)}% done with carrying over L1 flags')
                 ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
                 if ipart_currentindex>-1:#if particle found
                     gas_flags_L1[ipart_currentindex]=ipart_L1_level
@@ -311,12 +311,11 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             for ipart_prevID, ipart_L2_level in particles_prev_processed_L2:
                 ipart_L2=ipart_L2+1
                 if ipart_L2%10000==0:
-                    print(f'{ipart_L2/len(particles_prev_processed_L2)}% done with carrying over L2 flags')
+                    print(f'{np.round(ipart_L2/len(particles_prev_processed_L2),2)}% done with carrying over L2 flags')
                 ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
                 if ipart_currentindex>-1:#if particle found
                     gas_flags_L2[ipart_currentindex]=ipart_L2_level
                 else:
-                    print(f"Gas particle {ipart_prevID} disappeared, neglecting")
                     pass
 
 
@@ -326,18 +325,22 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             for ipart in indices_in_structure:
                 iipart=iipart+1
                 if iipart%10000==0:
-                    print(iipart/len(indices_in_structure)*100,'% done adding flags for gas particles')
+                    print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
                 if host_ID in halo_l2_IDs:
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
 
+        try:
+            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,dtype=np.int32)
+            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,dtype=np.int32)
+        except:
+            infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
+            infile_file["PartType0"]['Processed_L2'][:]=gas_flags_L2
 
-        infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,dtype=np.int32)
-        infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,dtype=np.int32)
         t2=time.time()
-
         print(f'Finished with Gas for snap {snap_abs} in {t2-t1}')
 
+        infile_file.close()
 
 
 
