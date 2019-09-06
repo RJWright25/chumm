@@ -850,7 +850,7 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
         Requested datasets saved to file. 
 
     """
-        if halo_index_list==None:
+    if halo_index_list==None:
         halo_index_list=list(range(base_halo_data_snap["Count"]))
     elif type(halo_index_list)==list:
         pass
