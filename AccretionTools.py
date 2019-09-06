@@ -227,7 +227,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         print(f'Done in {t2-t1}')
 
         ##### DARK MATTER
-        print(f'Processing DM Data for snap {snap}...')
+        print(f'Processing DM Data for snap {snap_abs}...')
         t1=time.time()
         current_hosts_DM=infile_file["PartType1/HostStructure"].value##ordered by ID
         if isnap==0:#initialise our arrays
@@ -244,10 +244,10 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,dtype=np.int32)
         infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,dtype=np.int32)
         t2=time.time()
-        print(f'Finished with DM for snap {snap} in {t2-t1}')
+        print(f'Finished with DM for snap {snap_abs} in {t2-t1}')
 
         ##### GAS
-        print(f'Processing gas Data for snap {snap}...')
+        print(f'Processing gas Data for snap {snap_abs}...')
         t1=time.time()
         
         if isnap==0:#initialise our arrays
@@ -322,7 +322,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,dtype=np.int32)
         t2=time.time()
 
-        print(f'Finished with Gas for snap {snap} in {t2-t1}')
+        print(f'Finished with Gas for snap {snap_abs} in {t2-t1}')
 
 
 
