@@ -33,7 +33,6 @@ def flatten(listoflists):
             output.extend(list(sublist))
     return output
 
-
 def gen_mp_indices(indices,n):
     """
 
