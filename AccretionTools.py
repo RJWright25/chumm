@@ -288,7 +288,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             ipart_L1=0
             for ipart_prevID, ipart_L1_level in particles_prev_processed_L1:
                 ipart_L1=ipart_L1+1
-                if ipart_L1%1000=0:
+                if ipart_L1%1000==0:
                     print(f'{ipart_L1/len(particles_prev_processed_L1)}% done with carrying over L1 flags')
                 ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
                 if ipart_currentindex>-1:#if particle found
@@ -300,7 +300,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             ipart_L2=1
             for ipart_prevID, ipart_L2_level in particles_prev_processed_L2:
                 ipart_L2=ipart_L2+1
-                if ipart_L2%1000=0:
+                if ipart_L2%1000==0:
                     print(f'{ipart_L2/len(particles_prev_processed_L2)}% done with carrying over L2 flags')
                 ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
                 if ipart_currentindex>-1:#if particle found
@@ -321,7 +321,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,dtype=np.int32)
         infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,dtype=np.int32)
         t2=time.time()
-        
+
         print(f'Finished with Gas for snap {snap} in {t2-t1}')
 
 
