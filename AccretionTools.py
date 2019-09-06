@@ -913,7 +913,7 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
             else:
                 for dataset in datasets:#for each dataset, add the data for this particle
                     output_datasets[dataset].append(np.nan)
-        print(particle_acc_files[iihalo])
+        print(list(h5py.File(particle_acc_files[iihalo],'r+').keys()))
         ihalo_itype_group=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/PartType{itype}"]
 
         for dataset in datasets:
