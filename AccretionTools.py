@@ -886,7 +886,8 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
     # Load in the lists of particle IDs
     print("Getting particle ID lists for desired halos...")
     t1=time.time()
-    particle_acc_files,Particle_IDs=get_particle_acc_data(snap = base_halo_data_snap["Snap"],halo_index_list=halo_index_list,fields=['ParticleIDs'])
+    particle_acc_files,ParticleIDs=get_particle_acc_data(snap = base_halo_data_snap["Snap"],halo_index_list=halo_index_list,fields=['ParticleIDs'])
+    ParticleIDs=ParticleIDs["ParticleIDs"]
     t2=time.time()
     print(f'Done in {t2-t1}')
 
@@ -895,10 +896,10 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
     for iihalo,ihalo in enumerate(halo_index_list):
         print(iihalo/len(halo_index_list)*100,'%')
         output_datasets={dataset:[] for dataset in datasets}
-        Particle_IDs_ihalo=Particle_IDs[iihalo]
-        Npart_ihalo=len(Particle_IDs)
+        ParticleIDs_halo=ParticleIDs[iihalo]
+        Npart_ihalo=len(ParticleIDs_halo)
         if Npart_ihalo>200:
-            history_indices=np.searchsorted(v=ParticleIDs,a=sorted_IDs)
+            history_indices=np.searchsorted(v=ParticleIDs_halo,a=sorted_IDs)
         else:
             history_indices=[]
             for ipart_ID in Particle_IDs_ihalo:
