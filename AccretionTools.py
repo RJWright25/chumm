@@ -719,7 +719,6 @@ def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"]
         for ifile,ihalo_list in enumerate(accdata_halo_lists):
             if f'ihalo_'+str(ihalo).zfill(6) in ihalo_list:
                 ihalo_files[iihalo]=ifile
-                print(f'Halo at index {ihalo} is in file {ifile}')
                 break
             else:
                 pass
@@ -733,6 +732,9 @@ def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"]
     partfields=fields
     particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes}
     particle_acc_files=[]    
+
+    print('Now retrieving halo data from file ...')
+    t1=time.time()
     for iihalo,ihalo in enumerate(halo_index_list):
         ihalo_name='ihalo_'+str(ihalo).zfill(6)
         ifile=ihalo_files[iihalo]
@@ -741,6 +743,8 @@ def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"]
             for field in partfields:
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/PartType{parttype}/'+field].value
                 particle_acc_data[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
+    t2=time.time()
+    print(f'Done in {t2-t1}')
 
     return particle_acc_files,particle_acc_data
  
