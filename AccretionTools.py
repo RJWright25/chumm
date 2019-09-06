@@ -699,7 +699,7 @@ def postprocess_acc_data_serial(path):
 
 ########################### READ VERBOSE ACC DATA ###########################
 
-def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"]):
+def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"],itype=None):
     if type(halo_index_list)==int:
         halo_index_list=[halo_index_list]
     else:
@@ -726,7 +726,10 @@ def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs"]
     t2=time.time()
     print(f'Done in {t2-t1}')
     
-    parttypes=[0,1,4]
+    if itype==None:
+        parttypes=[0,1,4]
+    else:
+        parttypes=[itype]
     partfields=fields
     particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes}
     particle_acc_files=[]    
@@ -905,7 +908,7 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
             history_indices=[]
             if Npart_ihalo==1:
                 ParticleIDs_halo=[ParticleIDs_halo]
-                
+
             for ipart_ID in ParticleIDs_halo:
                 history_indices.append(binary_search_2(sorted_array=sorted_IDs,element=ipart_ID))
 
