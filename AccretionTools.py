@@ -217,7 +217,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
     for isnap,history_filename in enumerate(ordered_parthistory_files):
         
-        infile_file=h5py.File(history_filename,'r+')
+        infile_file=h5py.File(path+'/'+history_filename,'r+')
         snap_abs=int(history_filename.split('_')[1])
 
         print(f"Arranging halo data for snap {snap_abs}...")
