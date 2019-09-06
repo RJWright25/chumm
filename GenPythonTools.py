@@ -28,7 +28,10 @@ def flatten(listoflists):
     output=[]
     for sublist in listoflists:
         if not (type(sublist)==list or type(sublist)==np.ndarray):
-            pass
+            if not sublist>10:
+                pass
+            else:
+                sublist.append(np.nan)
         else:
             output.extend(list(sublist))
     return output
