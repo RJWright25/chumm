@@ -115,7 +115,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 	"""
 
-    base_fields=['ID','hostHaloID','Structuretype']#default halo fields
+    base_fields=['ID','hostHaloID','Structuretype',"numSubStruct"]#default halo fields
 
     # File lists
     part_list=partdata_filelist#particle data filepaths -- padded with None for snaps we don't have
