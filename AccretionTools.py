@@ -741,7 +741,11 @@ def postprocess_acc_data_serial(path):
         '/PartTypeX/All_CGMDeltaM': Total mass of CGM origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_ClumpyDeltaN': Total number of clumpy origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_ClumpyDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
-        
+        '/PartTypeX/All_PrimordialDeltaN': Total number of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_PrimordialDeltaM': Total mass of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_RecycledDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_RecycledDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+
         '/PartTypeX/Stable_TotalDeltaN': Total number of particles of type X new (and LOYAL) to the halo (length: num_total_halos)
         '/PartTypeX/Stable_TotalDeltaM': Total mass of particles of type X new (and LOYAL) to the halo (length: num_total_halos)
         '/PartTypeX/Stable_CosmologicalDeltaN': Total number of cosmological origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
@@ -750,8 +754,10 @@ def postprocess_acc_data_serial(path):
         '/PartTypeX/Stable_CGMDeltaM': Total mass of CGM origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
         '/PartTypeX/Stable_ClumpyDeltaN': Total number of clumpy origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
         '/PartTypeX/Stable_ClumpyDeltaM': Total mass of clumpy origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
-        
-        Where there will be n_halos ihalo datasets. 
+        '/PartTypeX/Stable_PrimordialDeltaN': Total number of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_PrimordialDeltaM': Total mass of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_RecycledDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_RecycledDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
 
         '/Header' contains attributes: 
         't1'
@@ -759,6 +765,7 @@ def postprocess_acc_data_serial(path):
         'dt'
         'z_ave'
         'lt_ave'
+        etc
     
     """
     t1=time.time()
@@ -807,8 +814,10 @@ def postprocess_acc_data_serial(path):
     'All_CGMDeltaM',
     'All_ClumpyDeltaN',
     'All_ClumpyDeltaM',
-    'All_UnprocessedDeltaN',
-    'All_UnprocessedDeltaM',
+    'All_PrimordialDeltaN',
+    'All_PrimordialDeltaM',
+    'All_RecycledDeltaN',
+    'All_RecycledDeltaM',   
     "Stable_TotalDeltaM",
     "Stable_TotalDeltaN",
     "Stable_CosmologicalDeltaN",
@@ -817,8 +826,10 @@ def postprocess_acc_data_serial(path):
     'Stable_CGMDeltaM',
     'Stable_ClumpyDeltaN',
     'Stable_ClumpyDeltaM',
-    'Stable_UnprocessedDeltaN',
-    'Stable_UnprocessedDeltaM',
+    'Stable_PrimordialDeltaN',
+    'Stable_PrimordialDeltaM',
+    'Stable_RecycledDeltaN',
+    'Stable_RecycledDeltaM', 
     ]
 
     # Initialise all new outputs
