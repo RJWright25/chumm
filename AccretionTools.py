@@ -238,6 +238,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         indices_in_structure=np.where(current_hosts_DM>0)[0]
         for ipart in indices_in_structure:
             DM_flags_L1[ipart]=DM_flags_L1[ipart]+1
+            host_ID=current_hosts_DM[ipart]
             if host_ID in halo_l2_IDs:
                 DM_flags_L2[ipart]=DM_flags_L2[ipart]+1
         
