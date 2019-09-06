@@ -878,7 +878,7 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list,datasets
             history_indices=np.searchsorted(v=ParticleIDs,a=sorted_IDs)
         else:
             history_indices=[]
-            for ipart_ID in Particle_IDs_ihalo
+            for ipart_ID in Particle_IDs_ihalo:
                 history_indices.append(binary_search_2(sorted_array=sorted_IDs,element=ipart_ID))
 
         for history_index in history_indices:#for each index in the histories (i.e. every particle)
