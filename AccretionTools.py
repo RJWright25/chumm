@@ -918,8 +918,10 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
         ihalo_itype_group=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/PartType{itype}"]
 
         for dataset in datasets:
-            ihalo_itype_group.create_dataset(dataset,data=output_datasets[dataset],dtype=np.float32)
-
+            try:
+                ihalo_itype_group.create_dataset(dataset,data=output_datasets[dataset],dtype=np.float32)
+            except:
+                ihalo_itype_group[dataset][:]=output_datasets[dataset]
 
 
 
