@@ -817,7 +817,7 @@ def read_acc_rate_file(path):
 
 ########################### ADD EAGLE DATA TO FILE FROM IDs ###########################
 
-def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list,datasets=[]):
+def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,datasets=[]):
     """
 
     read_eagle_from_IDs : function 
@@ -853,7 +853,13 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list,datasets
     EAGLE_Snap=read_eagle.EagleSnapshot(partdata_filepath)
     EAGLE_boxsize=base_halo_data_snap['SimulationInfo']['BoxSize_Comoving']
     EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-    halo_index_list=halo_index_list["indices"]
+    
+    if halo_index_list==None:
+        halo_index_list=list(range(base_halo_data_snap["Count"]))
+    elif type(halo_index_list)==list:
+        pass
+    else:
+        halo_index_list=halo_index_list["indices"]
 
     # Read the relevant datasets
     EAGLE_datasets={dataset:EAGLE_Snap.read_dataset(itype,dataset) for dataset in datasets}
