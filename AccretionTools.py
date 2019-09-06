@@ -628,6 +628,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                         else:
                             ihalo_parthistory_L1.append(np.nan)
                             ihalo_parthistory_L2.append(np.nan)
+
+                    print(ihalo_parthistory_L1)
                 print(f'Found particle processing histories of particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)}...')
 
                 # Retrieve relevant particle masses
