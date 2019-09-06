@@ -247,8 +247,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 DM_flags_L2[ipart]=DM_flags_L2[ipart]+1
         
         try:
-            infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,dtype=np.int32)
-            infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,dtype=np.int32)
+            infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,compression='gzip',dtype=np.int32)
+            infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,compression='gzip',dtype=np.int32)
         except:
             infile_file["PartType1"]['Processed_L1'][:]=DM_flags_L1
             infile_file["PartType1"]['Processed_L2'][:]=DM_flags_L2
@@ -331,22 +331,18 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
 
         try:
-            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,dtype=np.int32)
-            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,dtype=np.int32)
+            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.int32)
+            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.int32)
         except:
-            infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
-            infile_file["PartType0"]['Processed_L2'][:]=gas_flags_L2
+            del infile_file["PartType0"]['Processed_L1']
+            del infile_file["PartType0"]['Processed_L2']
+            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.int32)
+            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.int32)
 
         t2=time.time()
         print(f'Finished with Gas for snap {snap_abs} in {t2-t1}')
 
         infile_file.close()
-
-
-
-        
-
-
 
 ########################### GENERATE ACCRETION DATA ###########################
 
@@ -394,6 +390,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
         '/PartTypeX/ihalo_xxxxxx/Masses': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
+        '/PartTypeX/ihalo_xxxxxx/Processed_L1': How many snaps has this particle been part of any structure in the past. 
+        '/PartTypeX/ihalo_xxxxxx/Processed_L2': How many snaps has this particle been part of halos with no substructure in the past. 
             ....etc
 
         Where there will be n_halos ihalo datasets. 
@@ -513,6 +511,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     Part_Histories_IDs_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
     Part_Histories_Index_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
     Part_Histories_HostStructure_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
+    Part_Histories_Processed_L1_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L1'] for parttype in [0,1]]
+    Part_Histories_Processed_L2_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L2'] for parttype in [0,1]]
     print(f'Done retrieving & organising particle histories for snap = {snap1}')
 
     #Load in particle histories: snap 2
@@ -615,6 +615,19 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     print(f'Indexed new particles in {t2-t1} (using bisect)')
                 print('Number of particles not found (checked):',lost)
                 
+                #Retrieve particle processing histories
+                if itype==0 or itype==1:
+                    ihalo_parthistory_L1=[]
+                    ihalo_parthistory_L2=[]
+
+                    for ipart_historyindex in new_particle_IDs_itype_snap1_historyindex:
+                        if ipart_historyindex>-1:
+                            ihalo_parthistory_L1.append(Part_Histories_Processed_L1_snap1[iitype][ipart_historyindex])
+                            ihalo_parthistory_L2.append(Part_Histories_Processed_L2_snap1[iitype][ipart_historyindex])
+                        else:
+                            ihalo_parthistory_L1.append(np.nan)
+                            ihalo_parthistory_L2.append(np.nan)
+
                 # Retrieve relevant particle masses
                 print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 if itype==1:#if dm, just use the masstable value
@@ -670,6 +683,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 halo_parttype_hdf5.create_dataset('Masses',data=new_particle_masses,dtype=np.float64)
                 halo_parttype_hdf5.create_dataset('Fidelity',data=new_particle_stayed_snap3,dtype=np.int8)
                 halo_parttype_hdf5.create_dataset('PreviousHost',data=new_previous_structure,dtype=np.int32)
+                if itype==0 or itype==1:
+                    halo_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_parthistory_L1,dtype=np.int32)
+                    halo_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_parthistory_L2,dtype=np.int32)
+
                 print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
 
         else:#if halo not tracked, return np.nan for fidelity, ids, prevhost
@@ -681,6 +698,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 halo_parttype_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float16)
                 halo_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
                 print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
+                if itype==0 or itype==1:
+                    halo_parttype_hdf5.create_dataset('Processed_L1',data=np.nan,dtype=np.int32)
+                    halo_parttype_hdf5.create_dataset('Processed_L2',data=np.nan,dtype=np.int32)
 
     #Close the output file, finish up
     output_hdf5.close()
