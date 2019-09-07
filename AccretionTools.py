@@ -232,8 +232,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         current_hosts_DM=infile_file["PartType1/HostStructure"].value##ordered by ID
         if isnap==0:#initialise our arrays
             n_part_DM=len(current_hosts_DM)
-            DM_flags_L1=np.array(np.zeros(n_part_DM),dtype=np.int32)
-            DM_flags_L2=np.array(np.zeros(n_part_DM),dtype=np.int32)
+            DM_flags_L1=np.array(np.zeros(n_part_DM),dtype=np.int8)
+            DM_flags_L2=np.array(np.zeros(n_part_DM),dtype=np.int8)
 
         indices_in_structure=np.where(current_hosts_DM>0)[0]
         iipart=0
@@ -247,8 +247,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 DM_flags_L2[ipart]=DM_flags_L2[ipart]+1
         
         try:
-            infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,compression='gzip',dtype=np.int32)
-            infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,compression='gzip',dtype=np.int32)
+            infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,compression='gzip',dtype=np.int8)
+            infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,compression='gzip',dtype=np.int8)
         except:
             infile_file["PartType1"]['Processed_L1'][:]=DM_flags_L1
             infile_file["PartType1"]['Processed_L2'][:]=DM_flags_L2
@@ -264,8 +264,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
             n_part_gas_now=len(current_IDs_gas)
             n_part_gas_prev=n_part_gas_now
-            gas_flags_L1=np.array(np.zeros(n_part_gas_now)+0.001,dtype=np.int32)
-            gas_flags_L2=np.array(np.zeros(n_part_gas_now)+0.001,dtype=np.int32)
+            gas_flags_L1=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
+            gas_flags_L2=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
         else:
             prev_IDs_gas=current_IDs_gas
             prev_hosts_gas=current_hosts_gas
@@ -273,7 +273,9 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
             n_part_gas_now=len(current_IDs_gas)
             n_part_gas_prev=len(prev_IDs_gas)
+        
         delta_particles=n_part_gas_prev-n_part_gas_now
+        
         if delta_particles<1:
             print("No change in gas particle count since last snap (i.e. first snap)")
             indices_in_structure=np.where(current_hosts_gas>0)[0]
@@ -289,15 +291,12 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             print(f"Gas particle count changed by {delta_particles} - carrying over old information")
             gas_flags_L1_old=gas_flags_L1
             gas_flags_L2_old=gas_flags_L2
-            gas_flags_L1=np.array(np.zeros(n_part_gas_now)+0.001,dtype=np.int32)
-            gas_flags_L2=np.array(np.zeros(n_part_gas_now)+0.001,dtype=np.int32)
-
-            print('Sum of L1 flags before carrying over:',np.sum(gas_flags_L1))
-            print('Sum of L2 flags before carrying over:',np.sum(gas_flags_L2))
+            gas_flags_L1=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
+            gas_flags_L2=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
 
             print('Finding old processed particles ...')
-            particles_prev_processed_L1=[(prev_IDs_gas[ipart],prev_hosts_gas[ipart]) for ipart in np.where(gas_flags_L1_old>0)[0]]
-            particles_prev_processed_L2=[(prev_IDs_gas[ipart],prev_hosts_gas[ipart]) for ipart in np.where(gas_flags_L2_old>0)[0]]
+            particles_prev_processed_L1=[(prev_IDs_gas[ipart],gas_flags_L1_old[ipart]) for ipart in np.where(gas_flags_L1_old>0)[0]]
+            particles_prev_processed_L2=[(prev_IDs_gas[ipart],gas_flags_L2_old[ipart]) for ipart in np.where(gas_flags_L2_old>0)[0]]
             
             ipart_L1=0
             for ipart_prevID, ipart_L1_level in particles_prev_processed_L1:
@@ -334,8 +333,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
 
         try:
-            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.int32)
-            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.int32)
+            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.int8)
+            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.int8)
         except:
             infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
             infile_file["PartType0"]['Processed_L2'][:]=gas_flags_L2
