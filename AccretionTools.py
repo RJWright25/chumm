@@ -239,7 +239,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         iipart=0
         for ipart in indices_in_structure:
             iipart=iipart+1
-            if iipart%10000==0:
+            if iipart%100000==0:
                 print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for DM particles')
             DM_flags_L1[ipart]=DM_flags_L1[ipart]+1
             host_ID=current_hosts_DM[ipart]
@@ -280,7 +280,12 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         if delta_particles<1:
             print("No change in gas particle count since last snap (i.e. first snap), just adding flags accordingly")
             indices_in_structure=np.where(current_hosts_gas>0)[0]
+            iipart=0
             for ipart in indices_in_structure:
+                iipart=iipart+1
+                if iipart%100000==0:
+                    print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
+            DM_flags_L1[ipart]=DM_flags_L1[ipart]+1
                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
                 if host_ID in halo_l2_IDs:
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
@@ -291,8 +296,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             gas_flags_L1=np.array(np.zeros(n_part_gas_now)+0.001,dtype=np.int32)
             gas_flags_L2=np.array(np.zeros(n_part_gas_now)+0.001,dtype=np.int32)
 
-            print(np.sum(gas_flags_L1))
-            print(np.sum(gas_flags_L2))
+            print('Sum of L1 flags before carrying over:',np.sum(gas_flags_L1))
+            print('Sum of L2 flags before carrying over:',np.sum(gas_flags_L2))
 
             print('Finding old processed particles ...')
             particles_prev_processed_L1=[(prev_IDs_gas[ipart],prev_hosts_gas[ipart]) for ipart in np.where(gas_flags_L1_old>0)[0]]
@@ -301,20 +306,19 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             ipart_L1=0
             for ipart_prevID, ipart_L1_level in particles_prev_processed_L1:
                 ipart_L1=ipart_L1+1
-                if ipart_L1%10000==0:
-                    print(f'{np.round(ipart_L1/len(particles_prev_processed_L1),2)}% done with carrying over L1 flags')
+                if ipart_L1%100000==0:
+                    print(f'{np.round(ipart_L1/len(particles_prev_processed_L1)*100,2)}% done with carrying over L1 flags for gas')
                 ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
                 if ipart_currentindex>-1:#if particle found
                     gas_flags_L1[ipart_currentindex]=ipart_L1_level
                 else:
-                    print(f"Gas particle {ipart_prevID} disappeared, neglecting")
                     pass
             
             ipart_L2=1
             for ipart_prevID, ipart_L2_level in particles_prev_processed_L2:
                 ipart_L2=ipart_L2+1
-                if ipart_L2%10000==0:
-                    print(f'{np.round(ipart_L2/len(particles_prev_processed_L2),2)}% done with carrying over L2 flags')
+                if ipart_L2%100000==0:
+                    print(f'{np.round(ipart_L2/len(particles_prev_processed_L2)*100,2)}% done with carrying over L2 flags')
                 ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
                 if ipart_currentindex>-1:#if particle found
                     gas_flags_L2[ipart_currentindex]=ipart_L2_level
