@@ -330,12 +330,13 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 if host_ID in halo_l2_IDs:
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
 
-            try:
-                infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,dtype=np.int32)
-                infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,dtype=np.int32)
-            except:
-                infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
-                infile_file["PartType0"]['Processed_L2'][:]=gas_flags_L2
+        try:
+            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,dtype=np.int32)
+            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,dtype=np.int32)
+        except:
+            infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
+            infile_file["PartType0"]['Processed_L2'][:]=gas_flags_L2
+            
         t2=time.time()
         print(f'Finished with Gas for snap {snap_abs} in {t2-t1}')
 
