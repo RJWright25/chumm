@@ -259,7 +259,6 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         ##### GAS
         print(f'Processing gas Data for snap {snap_abs}...')
         t1=time.time()
-        
         if isnap==0:#initialise our arrays
             current_IDs_gas=infile_file["PartType0/ParticleIDs"].value
             current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
@@ -274,11 +273,9 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
             n_part_gas_now=len(current_IDs_gas)
             n_part_gas_prev=len(prev_IDs_gas)
-            
         delta_particles=n_part_gas_prev-n_part_gas_now
-
         if delta_particles<1:
-            print("No change in gas particle count since last snap (i.e. first snap), just adding flags accordingly")
+            print("No change in gas particle count since last snap (i.e. first snap)")
             indices_in_structure=np.where(current_hosts_gas>0)[0]
             iipart=0
             for ipart in indices_in_structure:
