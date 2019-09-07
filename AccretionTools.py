@@ -288,8 +288,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             print(f"Gas particle count changed by {delta_particles} - carrying over old information")
             gas_flags_L1_old=gas_flags_L1
             gas_flags_L2_old=gas_flags_L2
-            gas_flags_L1=np.array(np.zeros(n_part_DM)+0.001,dtype=np.int32)
-            gas_flags_L2=np.array(np.zeros(n_part_DM)+0.001,dtype=np.int32)
+            gas_flags_L1=np.array(np.zeros(n_part_gas_now)+0.001,dtype=np.int32)
+            gas_flags_L2=np.array(np.zeros(n_part_gas_now)+0.001,dtype=np.int32)
 
             print('Finding old processed particles ...')
             particles_prev_processed_L1=[(prev_IDs_gas[ipart],prev_hosts_gas[ipart]) for ipart in np.where(gas_flags_L1_old>0)[0]]
