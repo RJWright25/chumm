@@ -282,7 +282,6 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 iipart=iipart+1
                 if iipart%100000==0:
                     print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
-            DM_flags_L1[ipart]=DM_flags_L1[ipart]+1
                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
                 if host_ID in halo_l2_IDs:
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
