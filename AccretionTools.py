@@ -923,7 +923,7 @@ def postprocess_acc_data_serial(path):
 
 ########################### READ VERBOSE ACC DATA ###########################
 
-def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs","Processed_L1","Processed_L2"],itype=None):
+def get_particle_acc_data(snap,halo_index_list,path='',fields=["Fidelity","ParticleIDs","Processed_L1","Processed_L2"],itype=None):
     if type(halo_index_list)==int:
         halo_index_list=[halo_index_list]
     else:
@@ -931,7 +931,11 @@ def get_particle_acc_data(snap,halo_index_list,fields=["Fidelity","ParticleIDs",
     
     print('Indexing halos ...')
     t1=time.time()
-    directory='acc_data/snap_'+str(snap).zfill(3)+'/'
+    if path=='':
+        directory='acc_data/snap_'+str(snap).zfill(3)+'/'
+    else:
+        directory=path+'/acc_data/snap_'+str(snap).zfill(3)+'/'
+
     accdata_filelist=os.listdir(directory)
     accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile))])
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
