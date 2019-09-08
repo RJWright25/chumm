@@ -222,6 +222,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
         print(f"Arranging halo data for snap {snap_abs}...")
         t1=time.time()
+        print(snap_abs)
         halo_l2_IDs=set([base_halo_data[snap_abs]["ID"][ihalo] for ihalo in np.where(base_halo_data[snap_abs]["numSubStruct"]==0)[0]])# no substructure
         t2=time.time()
         print(f'Done in {t2-t1}')
@@ -332,7 +333,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 if host_ID in halo_l2_IDs:
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
         print('About to save: L1!=L2?', np.sum(gas_flags_L2!=gas_flags_L1))
-        
+
         try:
             infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.int8)
             infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.int8)
