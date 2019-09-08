@@ -301,7 +301,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             ipart_L1=0
             for ipart_prevID, ipart_L1_level in particles_prev_processed_L1:
                 ipart_L1=ipart_L1+1
-                if ipart_L1%100000==0:
+                if ipart_L1%100000==0:  
                     print(f'{np.round(ipart_L1/len(particles_prev_processed_L1)*100,2)}% done with carrying over L1 flags for gas')
                 ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
                 if ipart_currentindex>-1:#if particle found
@@ -331,7 +331,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
                 if host_ID in halo_l2_IDs:
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
-
+        print('About to save: L1!=L2?', np.sum(gas_flags_L2!=gas_flags_L1))
+        
         try:
             infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.int8)
             infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.int8)
