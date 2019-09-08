@@ -222,8 +222,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
         print(f"Arranging halo data for snap {snap_abs}...")
         t1=time.time()
-        print(snap_abs)
         halo_l2_IDs=set([base_halo_data[snap_abs]["ID"][ihalo] for ihalo in np.where(base_halo_data[snap_abs]["numSubStruct"]==0)[0]])# no substructure
+        print(halo_l2_IDs)
         t2=time.time()
         print(f'Done in {t2-t1}')
 
@@ -283,6 +283,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             iipart=0
             for ipart in indices_in_structure:
                 iipart=iipart+1
+                host_ID=current_hosts_gas[ipart]
                 if iipart%100000==0:
                     print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
@@ -327,6 +328,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             iipart=0
             for ipart in indices_in_structure:
                 iipart=iipart+1
+                host_ID=current_hosts_gas[ipart]
                 if iipart%10000==0:
                     print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
