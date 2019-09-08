@@ -223,7 +223,6 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         print(f"Arranging halo data for snap {snap_abs}...")
         t1=time.time()
         halo_l2_IDs=set([base_halo_data[snap_abs]["ID"][ihalo] for ihalo in np.where(base_halo_data[snap_abs]["numSubStruct"]==0)[0]])# no substructure
-        print(halo_l2_IDs)
         t2=time.time()
         print(f'Done in {t2-t1}')
 
