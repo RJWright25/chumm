@@ -926,7 +926,7 @@ def postprocess_acc_data_serial(path):
 
 ########################### READ VERBOSE ACC DATA ###########################
 
-def get_particle_acc_data(snap,halo_index_list,path='',fields=["Fidelity","ParticleIDs","Processed_L1","Processed_L2"],itype=None):
+def get_particle_acc_data(snap,halo_index_list,path='',fields=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],itype=None):
     if type(halo_index_list)==int:
         halo_index_list=[halo_index_list]
     else:
