@@ -1165,6 +1165,7 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
             history_indices_snap1=np.searchsorted(v=ParticleIDs_halo,a=sorted_IDs_snap1)
         else:
             history_indices_snap2=[]
+            history_indices_snap1=[]
             if Npart_ihalo==1:
                 ParticleIDs_halo=[ParticleIDs_halo]
             for ipart_ID in ParticleIDs_halo:
