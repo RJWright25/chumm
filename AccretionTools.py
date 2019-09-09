@@ -1059,7 +1059,7 @@ def read_acc_rate_file(path):
 
 ########################### ADD EAGLE DATA TO FILE FROM IDs ###########################
 
-def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,datasets=[]):
+def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,datasets=[]):
     """
 
     read_eagle_from_IDs : function 
@@ -1070,8 +1070,8 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
 
 	Parameters
 	----------
-    base_halo_data_snap : dict
-        The base halo data dictionary for this snap (encodes particle data filepath, snap, particle histories).
+    base_halo_data: dict
+        The base halo data dictionary (encodes particle data filepath, snap, particle histories).
 
     itype : int 
         [0 (gas),1 (DM), 4 (stars), 5 (BH)]
@@ -1090,71 +1090,98 @@ def add_eagle_particle_data(base_halo_data_snap,itype=0,halo_index_list=None,dat
 
     """
     if halo_index_list==None:
-        halo_index_list=list(range(base_halo_data_snap["Count"]))
+        halo_index_list=list(range(base_halo_data[snap]["Count"]))
     elif type(halo_index_list)==list:
         pass
     else:
         halo_index_list=halo_index_list["indices"]
     
     # Load the relevant EAGLE snapshot
-    print('Loading & slicing EAGLE snapshot ...')
+    print('Loading & slicing EAGLE snapshots ...')
     t1=time.time()
-    partdata_filepath=base_halo_data_snap["Part_FilePath"]
-    EAGLE_Snap=read_eagle.EagleSnapshot(partdata_filepath)
-    EAGLE_boxsize=base_halo_data_snap['SimulationInfo']['BoxSize_Comoving']
-    EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+    partdata_filepath_snap2=base_halo_data[snap]["Part_FilePath"]
+    partdata_filepath_snap1=base_halo_data[snap-1]["Part_FilePath"]
+    EAGLE_Snap_2=read_eagle.EagleSnapshot(partdata_filepath_snap2)
+    EAGLE_Snap_1=read_eagle.EagleSnapshot(partdata_filepath_snap1)
+    EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
+    EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+    EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
     t2=time.time()
     print(f'Done in {t2-t1}')
 
     # Read the relevant datasets
-    print("Grabbing EAGLE datasets ...")
+    print("Grabbing EAGLE datasets for snap 2...")
     t1=time.time()
-    EAGLE_datasets={dataset:EAGLE_Snap.read_dataset(itype,dataset) for dataset in datasets}
+    EAGLE_datasets_snap2={dataset:EAGLE_Snap_2.read_dataset(itype,dataset) for dataset in datasets}
+    t2=time.time()
+    print(f'Done in {t2-t1}')
+
+    # Read the relevant datasets
+    print("Grabbing EAGLE datasets for snap 1...")
+    t1=time.time()
+    EAGLE_datasets_snap1={dataset:EAGLE_Snap_1.read_dataset(itype,dataset) for dataset in datasets}
     t2=time.time()
     print(f'Done in {t2-t1}')
 
     # Load in the particle histories
-    print("Grabbing particle histories ...")
+    print("Grabbing particle histories for previous snap ...")
     t1=time.time()
-    part_histories=h5py.File("part_histories/PartHistory_"+str(base_halo_data_snap["Snap"]).zfill(3)+'_'+base_halo_data_snap["outname"]+".hdf5",'r')
-    sorted_IDs=part_histories["PartType"+str(itype)+"/ParticleIDs"].value
-    sorted_IDs_indices=part_histories["PartType"+str(itype)+"/ParticleIndex"]
+    part_histories_snap1=h5py.File("part_histories/PartHistory_"+str(base_halo_data[snap-1]["Snap"]).zfill(3)+'_'+base_halo_data[snap]["outname"]+".hdf5",'r')
+    sorted_IDs_snap1=part_histories_snap1["PartType"+str(itype)+"/ParticleIDs"].value
+    sorted_IDs_snap1_indices=part_histories_snap1["PartType"+str(itype)+"/ParticleIndex"].value
+    t2=time.time()
+    print(f'Done in {t2-t1}')
+
+    # Load in the particle histories
+    print("Grabbing particle histories for snap 2 ...")
+    t1=time.time()
+    part_histories_snap1=h5py.File("part_histories/PartHistory_"+str(base_halo_data[snap]["Snap"]).zfill(3)+'_'+base_halo_data[snap]["outname"]+".hdf5",'r')
+    sorted_IDs_snap2=part_histories_snap2["PartType"+str(itype)+"/ParticleIDs"].value
+    sorted_IDs_snap2_indices=part_histories_snap2["PartType"+str(itype)+"/ParticleIndex"].value
     t2=time.time()
     print(f'Done in {t2-t1}')
 
     # Load in the lists of particle IDs
     print("Getting particle ID lists for desired halos...")
     t1=time.time()
-    particle_acc_files,ParticleIDs=get_particle_acc_data(snap = base_halo_data_snap["Snap"],halo_index_list=halo_index_list,fields=['ParticleIDs'])
+    particle_acc_files,ParticleIDs=get_particle_acc_data(snap = base_halo_data[snap]["Snap"],halo_index_list=halo_index_list,fields=['ParticleIDs'])
     ParticleIDs=ParticleIDs[f"PartType{itype}"]["ParticleIDs"]
     t2=time.time()
     print(f'Done in {t2-t1}')
 
     # Find the indices of our particleIDs in the particle histories
+    prev_datasets=['Prev_'+idataset for idataset in datasets]
+
     print("Getting particle indices in history for desired halos...")
     for iihalo,ihalo in enumerate(halo_index_list):
         print(iihalo/len(halo_index_list)*100,'%')
         output_datasets={dataset:[] for dataset in datasets}
+        for prev_dataset in prev_datasets:
+            output_datasets[prev_dataset]=[]
         ParticleIDs_halo=ParticleIDs[iihalo]
         Npart_ihalo=np.size(ParticleIDs_halo)
         if Npart_ihalo>200:
-            history_indices=np.searchsorted(v=ParticleIDs_halo,a=sorted_IDs)
+            history_indices_snap2=np.searchsorted(v=ParticleIDs_halo,a=sorted_IDs_snap2)
+            history_indices_snap1=np.searchsorted(v=ParticleIDs_halo,a=sorted_IDs_snap1)
         else:
-            history_indices=[]
+            history_indices_snap2=[]
             if Npart_ihalo==1:
                 ParticleIDs_halo=[ParticleIDs_halo]
-
             for ipart_ID in ParticleIDs_halo:
-                history_indices.append(binary_search_2(sorted_array=sorted_IDs,element=ipart_ID))
+                history_indices_snap2.append(binary_search_2(sorted_array=sorted_IDs_snap2,element=ipart_ID))
+                history_indices_snap1.append(binary_search_2(sorted_array=sorted_IDs_snap1,element=ipart_ID))
 
-        for history_index in history_indices:#for each index in the histories (i.e. every particle)
+        for history_index_snap1,history_index_snap2 in zip(history_indices_snap1,history_indices_snap2):#for each index in the histories (i.e. every particle)
             if history_index>=0:#if we have a valid index (i.e. not np.nan)
                 particle_index=sorted_IDs_indices[history_index]#identify the index in the eagle snapshots
-                for dataset in datasets:#for each dataset, add the data for this particle
-                    output_datasets[dataset].append(EAGLE_datasets[dataset][particle_index])
+                for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
+                    output_datasets[dataset].append(EAGLE_datasets_snap2[dataset][history_index_snap2])
+                    output_datasets[prev_dataset].append(EAGLE_datasets_snap1[dataset][history_index_snap1])
+
             else:
-                for dataset in datasets:#for each dataset, add the data for this particle
+                for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
                     output_datasets[dataset].append(np.nan)
+                    output_datasets[prev_dataset].append(np.nan)
 
         ihalo_itype_group=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/PartType{itype}"]
 
