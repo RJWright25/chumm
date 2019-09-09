@@ -1135,7 +1135,7 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
     # Load in the particle histories
     print("Grabbing particle histories for snap 2 ...")
     t1=time.time()
-    part_histories_snap1=h5py.File("part_histories/PartHistory_"+str(base_halo_data[snap]["Snap"]).zfill(3)+'_'+base_halo_data[snap]["outname"]+".hdf5",'r')
+    part_histories_snap2=h5py.File("part_histories/PartHistory_"+str(base_halo_data[snap]["Snap"]).zfill(3)+'_'+base_halo_data[snap]["outname"]+".hdf5",'r')
     sorted_IDs_snap2=part_histories_snap2["PartType"+str(itype)+"/ParticleIDs"].value
     sorted_IDs_snap2_indices=part_histories_snap2["PartType"+str(itype)+"/ParticleIndex"].value
     t2=time.time()
