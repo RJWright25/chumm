@@ -1151,7 +1151,6 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
 
     # Find the indices of our particleIDs in the particle histories
     prev_datasets=['Prev_'+idataset for idataset in datasets]
-    print(prev_datasets)
 
     print("Getting particle indices in history for desired halos...")
     for iihalo,ihalo in enumerate(halo_index_list):
@@ -1178,7 +1177,6 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
                 particle_index_snap2=sorted_IDs_snap2_indices[history_index_snap2]#identify the index in the eagle snapshots
                 particle_index_snap1=sorted_IDs_snap1_indices[history_index_snap1]#identify the index in the eagle snapshots
                 for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
-                    print(prev_dataset,dataset)
                     output_datasets[dataset].append(EAGLE_datasets_snap2[dataset][particle_index_snap2])
                     output_datasets[prev_dataset].append(EAGLE_datasets_snap1[dataset][particle_index_snap1])
             else:
@@ -1188,7 +1186,8 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
 
         ihalo_itype_group=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/PartType{itype}"]
 
-        for dataset in datasets:
+        datasets_all=list(output_datasets.keys())
+        for dataset in datasets_all:
             try:
                 ihalo_itype_group.create_dataset(dataset,data=output_datasets[dataset],dtype=np.float32)
             except:
