@@ -1172,12 +1172,12 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
                 history_indices_snap1.append(binary_search_2(sorted_array=sorted_IDs_snap1,element=ipart_ID))
 
         for history_index_snap1,history_index_snap2 in zip(history_indices_snap1,history_indices_snap2):#for each index in the histories (i.e. every particle)
-            if history_index>=0:#if we have a valid index (i.e. not np.nan)
-                particle_index=sorted_IDs_indices[history_index]#identify the index in the eagle snapshots
+            if history_index_snap1>=0 and history_index_snap2>=0:#if we have a valid index (i.e. not np.nan)
+                particle_index_snap2=sorted_IDs_snap2_indices[history_index_snap2]#identify the index in the eagle snapshots
+                particle_index_snap1=sorted_IDs_snap1_indices[history_index_snap1]#identify the index in the eagle snapshots
                 for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
-                    output_datasets[dataset].append(EAGLE_datasets_snap2[dataset][history_index_snap2])
-                    output_datasets[prev_dataset].append(EAGLE_datasets_snap1[dataset][history_index_snap1])
-
+                    output_datasets[dataset].append(EAGLE_datasets_snap2[dataset][particle_index_snap2])
+                    output_datasets[prev_dataset].append(EAGLE_datasets_snap1[dataset][particle_index_snap1])
             else:
                 for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
                     output_datasets[dataset].append(np.nan)
