@@ -495,6 +495,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     PartData_Masses_Snap2[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10 #read the particle masses directly
                     PartData_IDs_Snap2[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"ParticleIDs") #read the particle IDs directly
                 except:
+                    print('No particles of this type were found.')
                     PartData_Masses_Snap2[str(itype)]=[]
                     PartData_IDs_Snap2[str(itype)]=[]
             else:#for DM, find particle data file and save 
