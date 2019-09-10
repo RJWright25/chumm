@@ -491,8 +491,12 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
         PartData_IDs_Snap2=dict()
         for itype in PartTypes:
             if not itype==1:#everything except DM
-                PartData_Masses_Snap2[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10 #read the particle masses directly
-                PartData_IDs_Snap2[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"ParticleIDs") #read the particle IDs directly
+                try:
+                    PartData_Masses_Snap2[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10 #read the particle masses directly
+                    PartData_IDs_Snap2[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"ParticleIDs") #read the particle IDs directly
+                except:
+                    PartData_Masses_Snap2[str(itype)]=[]
+                    PartData_IDs_Snap2[str(itype)]=[]
             else:#for DM, find particle data file and save 
                 hdf5file=h5py.File(base_halo_data[snap2]['Part_FilePath'])#hdf5 file
                 dm_mass=hdf5file['Header'].attrs['MassTable'][1]*10**10
@@ -940,7 +944,7 @@ def get_particle_acc_data(snap,halo_index_list,path='',fields=["Fidelity","Parti
         directory=path+'/acc_data/snap_'+str(snap).zfill(3)+'/'
 
     accdata_filelist=os.listdir(directory)
-    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile))])
+    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
     accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
     desired_num_halos=len(halo_index_list)
