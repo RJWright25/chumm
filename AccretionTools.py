@@ -922,6 +922,7 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
                 if convert_DM_to_physical:
                     for field in list(summed_acc_data.keys()):
                         if field.startswith('PartType1') and field.endswith('DeltaM'):
+                            print(f'Converting {field} to physical Msun ...')
                             summed_acc_data[field]=summed_acc_data[field]/0.6777#EAGLE hubble parameter
 
 
