@@ -773,6 +773,7 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
     
     """
     t1=time.time()
+    print(f'Summing accretion data from path: {path}')
 
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
