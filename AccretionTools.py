@@ -735,14 +735,6 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
 	----------
     
     Combined_AccData.hdf5: hdf5 file with datasets:
-
-        verbose outputs
-        ---------------
-        '/PartTypeX/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: num_total_halos, each n_new_particles)
-        '/PartTypeX/Masses': ParticleID (in particle data for given type) of all accreted particles (length: num_total_halos, each n_new_particles)
-        '/PartTypeX/Fidelity': Whether this particle stayed at the given fidelity gap (length: num_total_halos, each n_new_particles)
-        '/PartTypeX/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: num_total_halos, each n_new_particles)
-        
         summed outputs
         ---------------
         '/PartTypeX/All_TotalDeltaN': Total number of particles of type X new to the halo (length: num_total_halos)
@@ -883,7 +875,7 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
                 cosmological_mask=prevhosts<0
                 cgm_mask=prevhosts==0
                 clumpy_mask=prevhosts>0
-                primordial_mask=processed_l1>0
+                primordial_mask=processed_l1==0
                 recycled_mask=np.logical_and(np.logical_or(cgm_mask,cosmological_mask),np.logical_not(primordial_mask))
 
                 stable_cosmological_mask=np.logical_and(stable_mask,cosmological_mask)
