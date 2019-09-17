@@ -898,7 +898,7 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
                 summed_acc_data[f'PartType{itype}/Stable_RecycledDeltaN'][ihalo]=np.size(np.compress(stable_recycled_mask,masses))
                 if itype==1 and convert_DM_to_physical:
                     if ihalo%1000==0:
-                        print('Converting DM to physical...')
+                        print('Converting DM masses to physical...')
                     h_val=0.6777
                     summed_acc_data[f'PartType{itype}/All_TotalDeltaM'][ihalo]=np.sum(masses)/h_val
                     summed_acc_data[f'PartType{itype}/All_CosmologicalDeltaM'][ihalo]=np.sum(np.compress(cosmological_mask,masses))/h_val
