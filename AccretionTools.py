@@ -390,7 +390,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}_px.hdf5: hdf5 file with datasets
 
         '/PartTypeX/ihalo_xxxxxx/ParticleID': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
-        '/PartTypeX/ihalo_xxxxxx/Masses': ParticleID (in particle data for given type) of all accreted particles (length: n_new_particles)
+        '/PartTypeX/ihalo_xxxxxx/Masses': Mass (in particle data for given type) of all accreted particles (length: n_new_particles) - for DM this is not converted to physical
         '/PartTypeX/ihalo_xxxxxx/Fidelity': Whether this particle stayed at the given fidelity gap (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/PreviousHost': Which structure was this particle host to (-1 if not in any fof object) (length: n_new_particles)
         '/PartTypeX/ihalo_xxxxxx/Processed_L1': How many snaps has this particle been part of any structure in the past. 
@@ -719,7 +719,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 
 ########################### POSTPROCESS/SUM ACCRETION DATA ###########################
 
-def postprocess_acc_data_serial(path):
+def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
     """
 
     postprocess_acc_data_serial : function
@@ -892,6 +892,7 @@ def postprocess_acc_data_serial(path):
                 stable_primordial_mask=np.logical_and(stable_mask,primordial_mask)
                 stable_recycled_mask=np.logical_and(stable_mask,recycled_mask)
 
+
                 summed_acc_data[f'PartType{itype}/All_TotalDeltaN'][ihalo]=np.size(masses)
                 summed_acc_data[f'PartType{itype}/All_TotalDeltaM'][ihalo]=np.sum(masses)
                 summed_acc_data[f'PartType{itype}/All_CosmologicalDeltaN'][ihalo]=np.size(np.compress(cosmological_mask,masses))
@@ -917,6 +918,12 @@ def postprocess_acc_data_serial(path):
                 summed_acc_data[f'PartType{itype}/Stable_PrimordialDeltaM'][ihalo]=np.sum(np.compress(stable_primordial_mask,masses))
                 summed_acc_data[f'PartType{itype}/Stable_RecycledDeltaN'][ihalo]=np.size(np.compress(stable_recycled_mask,masses))
                 summed_acc_data[f'PartType{itype}/Stable_RecycledDeltaM'][ihalo]=np.sum(np.compress(stable_recycled_mask,masses))
+                
+                if convert_DM_to_physical:
+                    for field in list(summed_acc_data.keys()):
+                        if field.startswith('PartType1') and field.endswith('DeltaM'):
+                            summed_acc_data[field]=summed_acc_data[field]/0.6777#EAGLE hubble parameter
+
 
     # Create groups for output
     for itype in itypes:
@@ -1027,13 +1034,18 @@ def read_acc_rate_file(path):
 
     """
     # Define output fields
-    acc_fields=["All_TotalDeltaM",
+    new_outputs=["All_TotalDeltaM",
+    "All_TotalDeltaN",
     "All_CosmologicalDeltaN",
     'All_CosmologicalDeltaM',
     'All_CGMDeltaN',
     'All_CGMDeltaM',
     'All_ClumpyDeltaN',
     'All_ClumpyDeltaM',
+    'All_PrimordialDeltaN',
+    'All_PrimordialDeltaM',
+    'All_RecycledDeltaN',
+    'All_RecycledDeltaM',   
     "Stable_TotalDeltaM",
     "Stable_TotalDeltaN",
     "Stable_CosmologicalDeltaN",
@@ -1042,6 +1054,10 @@ def read_acc_rate_file(path):
     'Stable_CGMDeltaM',
     'Stable_ClumpyDeltaN',
     'Stable_ClumpyDeltaM',
+    'Stable_PrimordialDeltaN',
+    'Stable_PrimordialDeltaM',
+    'Stable_RecycledDeltaN',
+    'Stable_RecycledDeltaM', 
     ]
     # Load collated file
     hdf5file=h5py.File(path,'r')
