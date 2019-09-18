@@ -35,6 +35,7 @@ from os import path
 
 # VELOCIraptor python tools 
 from VRPythonTools import *
+from GenPythonTools import flatten
 
 ########################### CREATE BASE HALO DATA ###########################
 
@@ -410,6 +411,111 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
         halo_data_file.close()
     return new_halo_data
 
+########################### COMPRESS DETAILED HALO DATA ###########################
+
+def compress_halo_data(detailed_halo_data,fields=[]):
+        
+    """
+    
+    compress_halo_data : function
+	----------
+
+    Compress halo data list of dicts for desired fields. 
+
+    Parameters
+    ----------
+
+    detailed_halo_data : list of dicts
+
+        List (for each snap) of dictionaries containing full halo data generated from gen_detailed_halo_data. 
+
+    fields : list of str
+
+        List of dictionary keys for halo properties (from velociraptor) to be saved to the compressed halo data. 
+
+    Returns
+    --------
+
+    B4_HaloData_outname.dat : list of dict
+
+    A list (for each snap desired) of dictionaries which contain halo data with the desired fields, which by default will always contain:
+        'ID'
+        'hostHaloID'
+        'Snap'
+        'Head'
+        'Tail'
+        'SimulationInfo'
+            'h_val'
+            'Hubble_unit'
+            'Omega_Lambda'
+            'ScaleFactor'
+            'z'
+            'LookbackTime'
+        'UnitInfo'
+        'VR_FilePath'
+        'VR_FileType'
+        'Part_FilePath'
+        'Part_FileType'
+        'outname'
+        
+        And any extras -- defaults:
+        "Mass_tot"
+        "Mass_gas"
+        "Mass_200crit"
+        "Mass_200mean"
+        "Npart"
+        
+        """
+
+    #process fields to include defaults + those desired
+    default_fields=['ID',
+    'hostHaloID',
+    'Snap',
+    'Head',
+    'Tail',
+    'SimulationInfo',
+    'UnitInfo',
+    'outname',
+    "Mass_tot",
+    "M_gas",
+    "Mass_200crit",
+    "Mass_200mean",
+    "N_part"]
+
+    fields_compound=np.unique(flatten([default_fields,fields]))
+    fields=fields_compound
+
+    no_snaps=len(detailed_halo_data)
+    snap_mask=[len(detailed_halo_data_snap)>5 for detailed_halo_data_snap in detailed_halo_data]
+
+    output_halo_data=[{field:[] for field in fields} for isnap in range(no_snaps)]
+    outname=detailed_halo_data[-1]['outname']
+
+    for snap, detailed_halo_data_snap in enumerate(detailed_halo_data):
+        if snap_mask[snap]:
+            print(f'Processing halo data for snap {snap} ({outname}) ...')
+            for field in fields:
+                print(f'Field: {field}')
+                try:
+                    output_halo_data[snap][field]=detailed_halo_data_snap[field]
+                except:
+                    pass
+        else:
+            output_halo_data[snap]=detailed_halo_data_snap
+    
+    file_outname=f'B4_HaloData_{outname}.dat'
+    if os.path.exists(file_outname):
+        os.remove(file_outname)
+    dump_pickle(path=file_outname)
+    return output_halo_data
+
+    
+
+
+
+
+
+
 ########################### RETRIEVE PARTICLE LISTS ###########################
 
 def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=True,add_subparts_to_fofs=False):
@@ -593,5 +699,4 @@ def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
             if idepth==depth-1:
                 return index_idepth
     return index_idepth
-
 
