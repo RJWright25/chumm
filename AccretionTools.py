@@ -23,16 +23,13 @@
 import os
 import numpy as np
 import h5py
-import pickle
 import astropy.units as u
 import read_eagle
 import time
 
-from astropy.cosmology import FlatLambdaCDM,z_at_value
-from scipy.spatial import KDTree
 from pandas import DataFrame as df
-from os import path
 
+# VELOCIraptor python tools etc
 from GenPythonTools import *
 from VRPythonTools import *
 from STFTools import *
@@ -938,149 +935,7 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
     print(f'Finished collating files in {t2-t1} sec')
     return None
 
-########################### READ VERBOSE ACC DATA ###########################
-
-def get_particle_acc_data(snap,halo_index_list,path='',fields=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],itype=None):
-    if type(halo_index_list)==int:
-        halo_index_list=[halo_index_list]
-    else:
-        halo_index_list=list(halo_index_list)
-    
-    print('Indexing halos ...')
-    t1=time.time()
-    if path=='':
-        directory='acc_data/snap_'+str(snap).zfill(3)+'/'
-    else:
-        directory=path+'/acc_data/snap_'+str(snap).zfill(3)+'/'
-
-    accdata_filelist=os.listdir(directory)
-    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
-    accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
-    accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
-    desired_num_halos=len(halo_index_list)
-    ihalo_files=np.ones(desired_num_halos)+np.nan
-    
-    for iihalo,ihalo in enumerate(halo_index_list):
-        for ifile,ihalo_list in enumerate(accdata_halo_lists):
-            if f'ihalo_'+str(ihalo).zfill(6) in ihalo_list:
-                ihalo_files[iihalo]=ifile
-                break
-            else:
-                pass
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-    
-    if itype==None:
-        parttypes=[0,1]
-    else:
-        parttypes=[itype]
-    partfields=fields
-    particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes}
-    particle_acc_files=[]    
-
-    print('Now retrieving halo data from file ...')
-    t1=time.time()
-    for iihalo,ihalo in enumerate(halo_index_list):
-        ihalo_name='ihalo_'+str(ihalo).zfill(6)
-        ifile=ihalo_files[iihalo]
-        particle_acc_files.append(accdata_filelist_trunc[int(ifile)])
-        for parttype in parttypes:
-            for field in partfields:
-                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/PartType{parttype}/'+field].value
-                particle_acc_data[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-
-    return particle_acc_files,particle_acc_data
- 
-########################### READ SUMMED ACC DATA ###########################
-
-def read_acc_rate_file(path):
-
-    """
-
-    read_acc_rate_file : function
-	----------
-
-    Read the accretion data from a certain file. 
-
-	Parameters
-	----------
-    path : string 
-        Indicates the file in which the accretion data is stored (nominally acc_data/AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}.hdf5)
-
-	Returns
-	----------
-    
-    accretion_data : dict
-        With fields:
-        "PartTypeX/All_TotalDeltaM",
-        "PartTypeX/All_TotalDeltaN",
-        "PartTypeX/All_CosmologicalDeltaN",
-        "PartTypeX/All_CosmologicalDeltaM',
-        "PartTypeX/All_CGMDeltaN',
-        "PartTypeX/All_CGMDeltaM',
-        "PartTypeX/All_ClumpyDeltaN',
-        "PartTypeX/All_ClumpyDeltaM',
-        "PartTypeX/Stable_TotalDeltaM",
-        "PartTypeX/Stable_TotalDeltaN",
-        "PartTypeX/Stable_CosmologicalDeltaN",
-        "PartTypeX/Stable_CosmologicalDeltaM',
-        "PartTypeX/Stable_CGMDeltaN',
-        "PartTypeX/Stable_CGMDeltaM',
-        "PartTypeX/Stable_ClumpyDeltaN',
-        "PartTypeX/Stable_ClumpyDeltaM'
-        "PartTypeX/ifile'
-
-    Each dictionary entry will be of length n_halos, and each of these entries will be a dictionary
-
-    """
-    # Define output fields
-    new_outputs=["All_TotalDeltaM",
-    "All_TotalDeltaN",
-    "All_CosmologicalDeltaN",
-    'All_CosmologicalDeltaM',
-    'All_CGMDeltaN',
-    'All_CGMDeltaM',
-    'All_ClumpyDeltaN',
-    'All_ClumpyDeltaM',
-    'All_PrimordialDeltaN',
-    'All_PrimordialDeltaM',
-    'All_RecycledDeltaN',
-    'All_RecycledDeltaM',   
-    "Stable_TotalDeltaM",
-    "Stable_TotalDeltaN",
-    "Stable_CosmologicalDeltaN",
-    'Stable_CosmologicalDeltaM',
-    'Stable_CGMDeltaN',
-    'Stable_CGMDeltaM',
-    'Stable_ClumpyDeltaN',
-    'Stable_ClumpyDeltaM',
-    'Stable_PrimordialDeltaN',
-    'Stable_PrimordialDeltaM',
-    'Stable_RecycledDeltaN',
-    'Stable_RecycledDeltaM', 
-    ]
-    # Load collated file
-    hdf5file=h5py.File(path,'r')
-
-    # Load in metadata
-    acc_metadata=dict()
-    hdf5header_attrs=list(hdf5file['/Header'].attrs)
-    for attribute in hdf5header_attrs:
-        acc_metadata[attribute]=hdf5file['/Header'].attrs[attribute]
-
-    # Initialise output data
-    total_num_halos=acc_metadata['total_num_halos']
-    group_list=list(hdf5file.keys())
-    part_group_list=['PartType'+str(itype) for itype in [0,1,4,5]]
-    acc_data={part_group:{} for part_group in part_group_list}
-    for part_group_name in part_group_list:
-        for dataset in acc_fields:
-            acc_data[part_group_name][dataset]=hdf5file[part_group_name+'/'+dataset].value
-    return acc_metadata, acc_data
-
-########################### ADD EAGLE DATA TO FILE FROM IDs ###########################
+########################### ADD EAGLE DATA TO ACC DATA ###########################
 
 def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,datasets=[]):
     """
@@ -1216,7 +1071,145 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
             except:
                 ihalo_itype_group[dataset][:]=output_datasets[dataset]
 
+########################### READ ALL ACC DATA ###########################
 
+def get_particle_acc_data(snap,halo_index_list,path='',fields=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],itype=None):
+    if type(halo_index_list)==int:
+        halo_index_list=[halo_index_list]
+    else:
+        halo_index_list=list(halo_index_list)
+    
+    print('Indexing halos ...')
+    t1=time.time()
+    if path=='':
+        directory='acc_data/snap_'+str(snap).zfill(3)+'/'
+    else:
+        directory=path+'/acc_data/snap_'+str(snap).zfill(3)+'/'
 
+    accdata_filelist=os.listdir(directory)
+    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
+    accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
+    accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
+    desired_num_halos=len(halo_index_list)
+    ihalo_files=np.ones(desired_num_halos)+np.nan
+    
+    for iihalo,ihalo in enumerate(halo_index_list):
+        for ifile,ihalo_list in enumerate(accdata_halo_lists):
+            if f'ihalo_'+str(ihalo).zfill(6) in ihalo_list:
+                ihalo_files[iihalo]=ifile
+                break
+            else:
+                pass
+    t2=time.time()
+    print(f'Done in {t2-t1}')
+    
+    if itype==None:
+        parttypes=[0,1]
+    else:
+        parttypes=[itype]
+    partfields=fields
+    particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes}
+    particle_acc_files=[]    
 
+    print('Now retrieving halo data from file ...')
+    t1=time.time()
+    for iihalo,ihalo in enumerate(halo_index_list):
+        ihalo_name='ihalo_'+str(ihalo).zfill(6)
+        ifile=ihalo_files[iihalo]
+        particle_acc_files.append(accdata_filelist_trunc[int(ifile)])
+        for parttype in parttypes:
+            for field in partfields:
+                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/PartType{parttype}/'+field].value
+                particle_acc_data[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
+    t2=time.time()
+    print(f'Done in {t2-t1}')
+
+    return particle_acc_files,particle_acc_data
+ 
+########################### READ SUMMED ACC DATA ###########################
+
+def get_summed_acc_data(path):
+
+    """
+
+    read_acc_rate_file : function
+	----------
+
+    Read the accretion data from a certain file. 
+
+	Parameters
+	----------
+    path : string 
+        Indicates the file in which the accretion data is stored (nominally acc_data/AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}.hdf5)
+
+	Returns
+	----------
+    
+    accretion_data : dict
+        With fields:
+        "PartTypeX/All_TotalDeltaM",
+        "PartTypeX/All_TotalDeltaN",
+        "PartTypeX/All_CosmologicalDeltaN",
+        "PartTypeX/All_CosmologicalDeltaM',
+        "PartTypeX/All_CGMDeltaN',
+        "PartTypeX/All_CGMDeltaM',
+        "PartTypeX/All_ClumpyDeltaN',
+        "PartTypeX/All_ClumpyDeltaM',
+        "PartTypeX/Stable_TotalDeltaM",
+        "PartTypeX/Stable_TotalDeltaN",
+        "PartTypeX/Stable_CosmologicalDeltaN",
+        "PartTypeX/Stable_CosmologicalDeltaM',
+        "PartTypeX/Stable_CGMDeltaN',
+        "PartTypeX/Stable_CGMDeltaM',
+        "PartTypeX/Stable_ClumpyDeltaN',
+        "PartTypeX/Stable_ClumpyDeltaM'
+        "PartTypeX/ifile'
+
+    Each dictionary entry will be of length n_halos, and each of these entries will be a dictionary
+
+    """
+    # Define output fields
+    new_outputs=["All_TotalDeltaM",
+    "All_TotalDeltaN",
+    "All_CosmologicalDeltaN",
+    'All_CosmologicalDeltaM',
+    'All_CGMDeltaN',
+    'All_CGMDeltaM',
+    'All_ClumpyDeltaN',
+    'All_ClumpyDeltaM',
+    'All_PrimordialDeltaN',
+    'All_PrimordialDeltaM',
+    'All_RecycledDeltaN',
+    'All_RecycledDeltaM',   
+    "Stable_TotalDeltaM",
+    "Stable_TotalDeltaN",
+    "Stable_CosmologicalDeltaN",
+    'Stable_CosmologicalDeltaM',
+    'Stable_CGMDeltaN',
+    'Stable_CGMDeltaM',
+    'Stable_ClumpyDeltaN',
+    'Stable_ClumpyDeltaM',
+    'Stable_PrimordialDeltaN',
+    'Stable_PrimordialDeltaM',
+    'Stable_RecycledDeltaN',
+    'Stable_RecycledDeltaM', 
+    ]
+    # Load collated file
+    hdf5file=h5py.File(path,'r')
+
+    # Load in metadata
+    acc_metadata=dict()
+    hdf5header_attrs=list(hdf5file['/Header'].attrs)
+    for attribute in hdf5header_attrs:
+        acc_metadata[attribute]=hdf5file['/Header'].attrs[attribute]
+
+    # Initialise output data
+    total_num_halos=acc_metadata['total_num_halos']
+    group_list=list(hdf5file.keys())
+    part_group_list=['PartType'+str(itype) for itype in [0,1,4,5]]
+    acc_data={part_group:{} for part_group in part_group_list}
+    for part_group_name in part_group_list:
+        for dataset in acc_fields:
+            acc_data[part_group_name][dataset]=hdf5file[part_group_name+'/'+dataset].value
+    return acc_metadata, acc_data
 

@@ -25,17 +25,12 @@ import numpy as np
 import h5py
 import pickle
 import astropy.units as u
-import read_eagle
 import time
-
 from astropy.cosmology import FlatLambdaCDM,z_at_value
-from scipy.spatial import KDTree
-from pandas import DataFrame as df
-from os import path
 
-# VELOCIraptor python tools 
+# VELOCIraptor python tools etc
 from VRPythonTools import *
-from GenPythonTools import flatten
+from GenPythonTools import *
 
 ########################### CREATE BASE HALO DATA ###########################
 
@@ -352,10 +347,10 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
 
         # Read new halo data
         print(f'Adding detailed halo data for snap ',snap,' where there are ',n_halos_snap,' halos')
-        new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=vr_halo_fields, isiminfo=True, iunitinfo=True)[0]
+        new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=fields_needed, isiminfo=True, iunitinfo=True)[0]
 
         for new_field in vr_halo_fields:
-            if 'Mass_' in new_field and 'R_' not in new_field:
+            if ('Mass_' in new_field or 'M_' in new_field) and 'R_' not in new_field:
                 print(f'Converting {new_field} values to physical')
                 new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10/base_halo_data_snap['SimulationInfo']['h_val']
 
@@ -506,15 +501,8 @@ def compress_halo_data(detailed_halo_data,fields=[]):
     file_outname=f'B4_HaloData_{outname}.dat'
     if os.path.exists(file_outname):
         os.remove(file_outname)
-    dump_pickle(path=file_outname)
+    dump_pickle(path=file_outname,data=output_halo_data)
     return output_halo_data
-
-    
-
-
-
-
-
 
 ########################### RETRIEVE PARTICLE LISTS ###########################
 
