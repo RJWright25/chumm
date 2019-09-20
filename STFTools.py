@@ -321,7 +321,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
     print(np.array(vr_halo_fields))
 
     new_halo_data=[]
-    base_fields=list(base_halo_data[snap_try].keys())
+    base_fields=list(base_halo_data[-1].keys())
     fields_needed_from_prop=np.compress(np.logical_not(np.in1d(vr_halo_fields,base_fields)),vr_halo_fields)
 
     print('Will also collect the following fields from base halo data:')
