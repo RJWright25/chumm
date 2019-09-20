@@ -253,7 +253,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 ########################### ADD DETAILED HALO DATA ###########################
 
-def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]):
+def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=[]):
     
     """
     
@@ -310,31 +310,22 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
     no_snaps_tot=len(base_halo_data)
 
     # If we're not given vr halo fields, find all of the available data fields
-    if vr_halo_fields==[]:
-        snap_try=-1
-        found=False
-        print('Not explicitly given extra halo fields, using all halo fields from last available snap')
-        while found==False and snap_try>-200: # Loop to find the keys in the last halo data file
-            print(f'Searching for fields at snap = {no_snaps_tot+snap_try}')
-            try:
-                property_filename=base_halo_data[snap_try]['VR_FilePath']+".properties.0"
-                property_file=h5py.File(property_filename)
-                all_props=list(property_file.keys())
-                vr_halo_fields=all_props
-                found=True
-                print(f'Found data at snap = {no_snaps_tot+snap_try}')
-            except:
-                snap_try=snap_try-1
-                print(f"Didn't find data at snap = {no_snaps_tot+snap_try+1}")
+    if vr_halo_fields==None:
+        property_filename=base_halo_data[-1]['VR_FilePath']+".properties.0"
+        property_file=h5py.File(property_filename)
+        all_props=list(property_file.keys())
+        vr_halo_fields=all_props
+        
+
     print('Adding the following fields from properties file:')
     print(np.array(vr_halo_fields))
 
     new_halo_data=[]
     base_fields=list(base_halo_data[snap_try].keys())
-    fields_needed=np.compress(np.logical_not(np.in1d(base_fields,vr_halo_fields)),base_fields)
+    fields_needed_from_prop=np.compress(np.logical_not(np.in1d(vr_halo_fields,base_fields)),vr_halo_fields)
 
     print('Will also collect the following fields from base halo data:')
-    print(np.array(fields_needed))
+    print(np.array(base_fields))
 
     # Loop through each snap and add the extra fields
     for snap,base_halo_data_snap in enumerate(base_halo_data):
@@ -348,7 +339,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
 
         # Read new halo data
         print(f'Adding detailed halo data for snap ',snap,' where there are ',n_halos_snap,' halos')
-        new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=fields_needed, isiminfo=True, iunitinfo=True)[0]
+        new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=fields_needed_from_prop, isiminfo=True, iunitinfo=True)[0]
 
         for new_field in vr_halo_fields:
             if ('Mass_' in new_field or 'M_' in new_field) and 'R_' not in new_field:
@@ -358,7 +349,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=[],extra_halo_fields=[]
 
         # Adding old halo data from V1 calcs
         print(f'Adding fields from base halo data')
-        for field in fields_needed:
+        for field in base_fields:
             new_halo_data_snap[field]=base_halo_data[snap][field]
                 
         # Add extra halo fields -- post-process velociraptor files   
