@@ -341,11 +341,8 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         print(f'Adding detailed halo data for snap ',snap,' where there are ',n_halos_snap,' halos')
         new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=fields_needed_from_prop, isiminfo=True, iunitinfo=True)[0]
 
-        for new_field in fields_needed_from_prop:
-            if ('Mass_' in new_field) and 'R_' not in new_field:
-                print(f'Converting {new_field} values to physical')
-                new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10/base_halo_data_snap['SimulationInfo']['h_val']
-            elif ('M_' in new_field) and 'R_' not in new_field:
+        for new_field in list(new_halo_data_snap.keys()):
+            if 'Mass_' in new_field and 'R_' not in new_field:
                 print(f'Converting {new_field} values to physical')
                 new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10/base_halo_data_snap['SimulationInfo']['h_val']
 
