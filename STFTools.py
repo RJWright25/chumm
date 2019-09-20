@@ -27,6 +27,7 @@ import pickle
 import astropy.units as u
 import time
 from astropy.cosmology import FlatLambdaCDM,z_at_value
+from os import path
 
 # VELOCIraptor python tools etc
 from VRPythonTools import *
