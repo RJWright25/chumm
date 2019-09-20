@@ -389,7 +389,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
     
     # Save data to file (remove if path already exists)
     print('Saving full halo data to file ...')
-    outfilename='B3_HaloData_'+base_halo_data[snap_try]['outname']+'.dat'
+    outfilename='B3_HaloData_'+base_halo_data[-1]['outname']+'.dat'
     if path.exists(outfilename):
         print('Overwriting existing B3 halo data ...')
         os.remove(outfilename)
