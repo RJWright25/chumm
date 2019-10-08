@@ -610,24 +610,29 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 # out_particle_count=len(out_particle_IDs_itype_snap1)
                 lost=0
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
-                t1_findhi=time.time()
-                if new_particle_count>200 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
+                t1_findhi_ss=time.time()
+                if not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
                     print('Using np.searchsorted to index particles')
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
-                else:#otherwise the bisect search seems to work faster
-                    print('Using bisect to index particles')
-                    new_particle_IDs_itype_snap2_historyindex=[]
-                    new_particle_IDs_itype_snap1_historyindex=[]
-                    for new_ID in new_particle_IDs_itype_snap2:
-                        snap2_index=binary_search_2(sorted_array=Part_Histories_IDs_snap2[iitype],element=new_ID)
-                        snap1_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],element=new_ID)
-                        if not snap1_index>-10:
-                            lost=lost+1
-                        new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
-                        new_particle_IDs_itype_snap1_historyindex.append(snap1_index)#index of the new IDs in particle histories snap 1
-                t2_findhi=time.time()
-                print(f'Indexed new particles in {t2_findhi-t1_findhi}')
+                    ss=True
+                t2_findhi_ss=time.time()
+
+                #otherwise the bisect search seems to work faster
+                print('Using bisect to index particles')
+                t1_findhi_b=time.time()
+                new_particle_IDs_itype_snap2_historyindex=[]
+                new_particle_IDs_itype_snap1_historyindex=[]
+                for new_ID in new_particle_IDs_itype_snap2:
+                    snap2_index=binary_search_2(sorted_array=Part_Histories_IDs_snap2[iitype],element=new_ID)
+                    snap1_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],element=new_ID)
+                    if not snap1_index>-10:
+                        lost=lost+1
+                    new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
+                    new_particle_IDs_itype_snap1_historyindex.append(snap1_index)#index of the new IDs in particle histories snap 1
+                t2_findhi_b=time.time()
+
+                # print(f'Indexed new particles in {t2_findhi-t1_findhi}')
 
                 #Retrieve particle processing histories
                 t1_findph=time.time()
@@ -716,9 +721,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 
                 t2_save=time.time()
                 t2=time.time()
-                print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2} in {t2-t1} sec!')
+                print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2} in {t2-t1} sec! (num new part = {new_particle_count})')
                 print(f'Typing took {t2_typing-t1_typing} sec')
-                print(f'Finding history index took {t2_findhi-t1_findhi} sec')
+                print(f'Finding history index (ss) took {t2_findhi_ss-t1_findhi_ss} sec')
+                print(f'Finding history index (bi) took {t2_findhi_b-t1_findhi_b} sec')
                 print(f'Finding processing history took {t2_findph-t1_findph} sec')
                 print(f'Finding masses took {t2_findmass-t1_findmass} sec')
                 print(f'Finding previous host took {t2_findps-t1_findps} sec')
