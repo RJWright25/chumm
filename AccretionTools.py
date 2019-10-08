@@ -612,10 +612,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
                 t1_findhi=time.time()
                 if new_particle_count>200 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
+                    print('Using np.searchsorted to index particles')
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
-                    print(f'Indexed new particles in {t2-t1}')
                 else:#otherwise the bisect search seems to work faster
+                    print('Using bisect to index particles')
                     new_particle_IDs_itype_snap2_historyindex=[]
                     new_particle_IDs_itype_snap1_historyindex=[]
                     for new_ID in new_particle_IDs_itype_snap2:
@@ -625,9 +626,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                             lost=lost+1
                         new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
                         new_particle_IDs_itype_snap1_historyindex.append(snap1_index)#index of the new IDs in particle histories snap 1
-                    print(f'Indexed new particles in {t2-t1} (using bisect)')
-                print('Number of particles not found (checked):',lost)
                 t2_findhi=time.time()
+                print(f'Indexed new particles in {t2_findhi-t1_findhi}')
 
                 #Retrieve particle processing histories
                 t1_findph=time.time()
