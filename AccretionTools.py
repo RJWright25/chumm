@@ -616,6 +616,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
                     ss=True
+                else:
+                    ss=False
                 t2_findhi_ss=time.time()
 
                 #otherwise the bisect search seems to work faster
@@ -723,7 +725,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 t2=time.time()
                 print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2} in {t2-t1} sec! (num new part = {new_particle_count})')
                 print(f'Typing took {t2_typing-t1_typing} sec')
-                print(f'Finding history index (ss) took {t2_findhi_ss-t1_findhi_ss} sec')
+                if ss:
+                    print(f'Finding history index (ss) took {t2_findhi_ss-t1_findhi_ss} sec')
                 print(f'Finding history index (bi) took {t2_findhi_b-t1_findhi_b} sec')
                 print(f'Finding processing history took {t2_findph-t1_findph} sec')
                 print(f'Finding masses took {t2_findmass-t1_findmass} sec')
