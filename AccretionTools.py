@@ -594,26 +594,28 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             # out_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
 
             # Now loop through each particle type and process accreted particle data 
+
             for iitype,itype in enumerate(PartTypes):
-                # Finding particles of itype∂
+                t1=time.time()
+                # Finding particles of itype
+                t1_typing=time.time()
                 print(f"Compressing for new particles of type {itype} ...")
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)#compress for just the IDs of particles of this type
                 new_particle_count=len(new_particle_IDs_itype_snap2)
+                t2_typing=time.time()
 
                 # out_particle_mask_itype=np.logical_and(out_particle_IDs_mask_snap1,snap1_Types_temp==itype)
                 # out_particle_IDs_itype_snap1=np.compress(out_particle_mask_itype,snap1_IDs_temp)#compress for just the IDs of particles of this type
                 # out_particle_count=len(out_particle_IDs_itype_snap1)
                 lost=0
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
+                t1_findhi=time.time()
                 if new_particle_count>200 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
-                    t1=time.time()
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
-                    t2=time.time()
                     print(f'Indexed new particles in {t2-t1}')
                 else:#otherwise the bisect search seems to work faster
-                    t1=time.time()
                     new_particle_IDs_itype_snap2_historyindex=[]
                     new_particle_IDs_itype_snap1_historyindex=[]
                     for new_ID in new_particle_IDs_itype_snap2:
@@ -623,11 +625,12 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                             lost=lost+1
                         new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
                         new_particle_IDs_itype_snap1_historyindex.append(snap1_index)#index of the new IDs in particle histories snap 1
-                    t2=time.time()
                     print(f'Indexed new particles in {t2-t1} (using bisect)')
                 print('Number of particles not found (checked):',lost)
-                
+                t2_findhi=time.time()
+
                 #Retrieve particle processing histories
+                t1_findph=time.time()
                 print(f'Retrieving particle processing histories of particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)}...')
                 if itype==0 or itype==1:
                     ihalo_parthistory_L1=[]
@@ -640,17 +643,20 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                         else:
                             ihalo_parthistory_L1.append(np.nan)
                             ihalo_parthistory_L2.append(np.nan)
-
+                t2_findph=time.time()
                 print(f'Found particle processing histories of particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)}...')
 
                 # Retrieve relevant particle masses
+                t1_findmass=time.time()
                 print(f"Retrieving mass of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 if itype==1:#if dm, just use the masstable value
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*PartData_Masses_Snap2[str(itype)][0]   
                 else:#otherwise, read explicitly (we read the current mass so doesn't matter if there's nans)
                     new_particle_masses=[PartData_Masses_Snap2[str(itype)][Part_Histories_Index_snap2[iitype][history_index]] for history_index in new_particle_IDs_itype_snap2_historyindex]
+                t2_findmass=time.time()
 
                 # Checking the previous state of the newly accreted particles
+                t1_findps=time.time()
                 print(f"Checking previous state of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 if not itype==4:#if not star, we can directly index the particles
                     previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
@@ -669,7 +675,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                                 previous_structure.append(np.nan)
                         else:
                             previous_structure.append(Part_Histories_HostStructure_snap1[iitype][history_index])
+                t2_findps=time.time()
 
+                t1_print=time.time()
                 if not isub:#if a field halo, either cosmological accretion or from mergers ("clumpy")
                     new_previous_structure=previous_structure
                     print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')
@@ -685,13 +693,17 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     print(f'Cosmological {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100}%')#cosmological if prevhost==-1
                     print(f'CGM {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100}%')#CGM if prevhost==0
                     print(f'Clumpy {PartNames[itype]} accretion: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}%')#clumpy if prevhost>0
-                
+                t2_print=time.time()
+
                 # Checking the future state of the newly accreted particles
+                t1_findfs=time.time()
                 print(f"Checking which accreted particles stayed in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
                 new_particle_stayed_snap3=[int(ipart in snap3_IDs_temp) for ipart in new_particle_IDs_itype_snap2]#if the particle is in the descendant halo at snap3, set fidelity of particle to 1
                 print(f'Done, {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100}% stayed')
+                t2_findfs=time.time()
 
                 # Saving data for this parttype of the halo to file 
+                t1_save=time.time()
                 print(f'Saving {PartNames[itype]} data for ihalo {ihalo_s2} to hdf5 ...')
                 halo_parttype_hdf5=halo_hdf5.create_group('PartType'+str(itype))
                 halo_parttype_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs_itype_snap2,dtype=np.int64)
@@ -701,8 +713,18 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 if itype==0 or itype==1:
                     halo_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_parthistory_L1,dtype=np.uint8)
                     halo_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_parthistory_L2,dtype=np.uint8)
-
-                print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2}!')
+                
+                t2_save=time.time()
+                t2=time.time()
+                print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2} in {t2-t1} sec!')
+                print(f'Typing took {t2_typing-t1_typing} sec')
+                print(f'Finding history index took {t2_findhi-t1_findhi} sec')
+                print(f'Finding processing history took {t2_findph-t1_findph} sec')
+                print(f'Finding masses took {t2_findmass-t1_findmass} sec')
+                print(f'Finding previous host took {t2_findps-t1_findps} sec')
+                print(f'Printing/summing data took {t2_print-t1_print} sec')
+                print(f'Finding future state took {t2_findfs-t1_findfs} sec')
+                print(f'Saving data took {t2_save-t1_save} sec')
 
         else:#if halo not tracked, return np.nan for fidelity, ids, prevhost
             for itype in PartTypes:
