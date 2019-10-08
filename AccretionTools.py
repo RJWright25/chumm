@@ -585,9 +585,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             snap2_Types_temp=snap_2_halo_particles['Particle_Types'][iihalo]# Types of particles in the halo at the current snap
             snap3_IDs_temp=set(snap_3_halo_particles['Particle_IDs'][iihalo])# Set of IDs in the halo at the subsequent snapshot (to compare with)
 
-            # Returns mask for s2 of particles which were not in s1
+            # Returns mask for s2 of particles which are in s2 but not in s1
             print(f"Finding new particles to ihalo {ihalo_s2} ...")
             new_particle_IDs_mask_snap2=np.in1d(snap2_IDs_temp,snap1_IDs_temp,invert=True)
+            
+            # # Returns mask for s1 of particles which are in s1 but not in s2
+            # print(f"Finding particles which left ihalo {ihalo_s2} ...")
+            # out_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
 
             # Now loop through each particle type and process accreted particle data 
             for iitype,itype in enumerate(PartTypes):
@@ -596,8 +600,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)#compress for just the IDs of particles of this type
                 new_particle_count=len(new_particle_IDs_itype_snap2)
-                lost=0
 
+                # out_particle_mask_itype=np.logical_and(out_particle_IDs_mask_snap1,snap1_Types_temp==itype)
+                # out_particle_IDs_itype_snap1=np.compress(out_particle_mask_itype,snap1_IDs_temp)#compress for just the IDs of particles of this type
+                # out_particle_count=len(out_particle_IDs_itype_snap1)
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
                 if new_particle_count>200 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
                     t1=time.time()
@@ -1169,7 +1175,7 @@ def get_summed_acc_data(path):
 
     """
     # Define output fields
-    new_outputs=["All_TotalDeltaM",
+    acc_fields=["All_TotalDeltaM",
     "All_TotalDeltaN",
     "All_CosmologicalDeltaN",
     'All_CosmologicalDeltaM',
