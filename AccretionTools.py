@@ -622,7 +622,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     new_particle_IDs_itype_snap1_historyindex=[]
                     for new_ID in new_particle_IDs_itype_snap2:
                         if not itype==4:#don't need to check presence of particles
-                            snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID,lo=0,)
+                            snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID,lo=0)
                             snap1_index=bisect_left(Part_Histories_IDs_snap1[iitype],new_ID,lo=0)
                         else:
                             snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID,lo=0)#must be in this list
