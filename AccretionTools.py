@@ -604,6 +604,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                 # out_particle_mask_itype=np.logical_and(out_particle_IDs_mask_snap1,snap1_Types_temp==itype)
                 # out_particle_IDs_itype_snap1=np.compress(out_particle_mask_itype,snap1_IDs_temp)#compress for just the IDs of particles of this type
                 # out_particle_count=len(out_particle_IDs_itype_snap1)
+                lost=0
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
                 if new_particle_count>200 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
                     t1=time.time()
