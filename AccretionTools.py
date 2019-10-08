@@ -590,8 +590,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
             new_particle_IDs_mask_snap2=np.isin(snap2_IDs_temp,snap1_IDs_temp,assume_unique=True,invert=True)
             
             # # Returns mask for s1 of particles which are in s1 but not in s2
-            # print(f"Finding particles which left ihalo {ihalo_s2} ...")
-            # out_particle_IDs_mask_snap1=np.in1d(snap1_IDs_temp,snap2_IDs_temp,invert=True)
+            print(f"Finding particles which left ihalo {ihalo_s2} ...")
+            out_particle_IDs_mask_snap1=np.isin(snap1_IDs_temp,snap2_IDs_temp,assume_unique=True,invert=True)
 
             # Now loop through each particle type and process accreted particle data 
 
