@@ -587,7 +587,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 
             # Returns mask for s2 of particles which are in s2 but not in s1
             print(f"Finding new particles to ihalo {ihalo_s2} ...")
-            new_particle_IDs_mask_snap2=np.in1d(snap2_IDs_temp,snap1_IDs_temp,assume_unique=True,invert=True)
+            new_particle_IDs_mask_snap2=np.isin(snap2_IDs_temp,snap1_IDs_temp,assume_unique=True,invert=True)
             
             # # Returns mask for s1 of particles which are in s1 but not in s2
             # print(f"Finding particles which left ihalo {ihalo_s2} ...")
