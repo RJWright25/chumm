@@ -685,7 +685,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                 # Retrieve relevant particle masses
                 t1_findmass=time.time()
-                print(f"Retrieving mass of accreted and outflow particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
+                print(f"Retrieving mass of accreted and outflow particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(out_particle_IDs_itype_snap1)} ...")
                 if itype==1:#if dm, just use the masstable value
                     new_particle_masses=np.ones(len(new_particle_IDs_itype_snap2))*PartData_Masses_Snap2[str(itype)][0]   
                     out_particle_masses=np.ones(len(out_particle_IDs_itype_snap1))*PartData_Masses_Snap1[str(itype)][0]   
@@ -732,11 +732,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     host_index_s3=find_descen_index(base_halo_data,host_index_s2,snap2,depth=1)#find the progenitor halo of the original group
                     host_ID_s3=base_halo_data[snap3]['ID'][host_index_s3]
                     
-                    host_particle_list_exclusive_s2=set(snap_2_halo_particles_nosubpart["ParticleIDs"][host_index_s2])
-                    host_particle_list_withsubhalos_s2=set(snap_2_halo_particles_withsubpart["ParticleIDs"][host_index_s2])
+                    host_particle_list_exclusive_s2=set(snap_2_halo_particles_nosubpart_all["ParticleIDs"][host_index_s2])
+                    host_particle_list_withsubhalos_s2=set(snap_2_halo_particles_withsubpar_allt["ParticleIDs"][host_index_s2])
                     if host_index_s3>0:
-                        host_particle_list_exclusive_s3=set(snap_3_halo_particles_nosubpart["ParticleIDs"][host_index_s3])
-                        host_particle_list_withsubhalos_s3=set(snap_3_halo_particles_withsubpart["ParticleIDs"][host_index_s3])
+                        host_particle_list_exclusive_s3=set(snap_3_halo_particles_nosubpart_all["ParticleIDs"][host_index_s3])
+                        host_particle_list_withsubhalos_s3=set(snap_3_halo_particles_withsubpart_all["ParticleIDs"][host_index_s3])
                     else:
                         host_particle_list_exclusive_s3=[]
                         host_particle_list_withsubhalos_s3=[]
