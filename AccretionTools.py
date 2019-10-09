@@ -731,6 +731,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     host_index_s2=np.where(host_ID_s2==base_halo_data[snap2]['ID'])[0]
                     host_index_s3=find_descen_index(base_halo_data,host_index_s2,snap2,depth=1)#find the progenitor halo of the original group
                     host_ID_s3=base_halo_data[snap3]['ID'][host_index_s3]
+                    print(host_index_s2)
                     
                     host_particle_list_exclusive_s2=set(snap_2_halo_particles_nosubpart_all["Particle_IDs"][host_index_s2])
                     host_particle_list_withsubhalos_s2=set(snap_2_halo_particles_withsubpar_allt["Particle_IDs"][host_index_s2])
