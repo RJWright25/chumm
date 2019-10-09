@@ -652,7 +652,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         new_particle_IDs_itype_snap2_historyindex[inew_ID]=snap2_index#index of the new IDs in particle histories snap 2
                         new_particle_IDs_itype_snap1_historyindex[inew_ID]=snap1_index#index of the new IDs in particle histories snap 1
 
-                print(f"Finding relative particle index of outflow particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
+                print(f"Finding relative particle index of outflow particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {out_particle_count} ...")
                 t1_findhi=time.time()
                 if out_particle_count>250 and not itype==4:#if we have a large number of outflow particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
                     print('Using np.searchsorted to index particles')#only need snap 1 index here, not going to check histories (just masses)
@@ -732,11 +732,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     host_index_s3=find_descen_index(base_halo_data,host_index_s2,snap2,depth=1)#find the progenitor halo of the original group
                     host_ID_s3=base_halo_data[snap3]['ID'][host_index_s3]
                     
-                    host_particle_list_exclusive_s2=set(snap_2_halo_particles_nosubpart_all["ParticleIDs"][host_index_s2])
-                    host_particle_list_withsubhalos_s2=set(snap_2_halo_particles_withsubpar_allt["ParticleIDs"][host_index_s2])
+                    host_particle_list_exclusive_s2=set(snap_2_halo_particles_nosubpart_all["Particle_IDs"][host_index_s2])
+                    host_particle_list_withsubhalos_s2=set(snap_2_halo_particles_withsubpar_allt["Particle_IDs"][host_index_s2])
                     if host_index_s3>0:
-                        host_particle_list_exclusive_s3=set(snap_3_halo_particles_nosubpart_all["ParticleIDs"][host_index_s3])
-                        host_particle_list_withsubhalos_s3=set(snap_3_halo_particles_withsubpart_all["ParticleIDs"][host_index_s3])
+                        host_particle_list_exclusive_s3=set(snap_3_halo_particles_nosubpart_all["Particle_IDs"][host_index_s3])
+                        host_particle_list_withsubhalos_s3=set(snap_3_halo_particles_withsubpart_all["Particle_IDs"][host_index_s3])
                     else:
                         host_particle_list_exclusive_s3=[]
                         host_particle_list_withsubhalos_s3=[]
@@ -753,7 +753,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     elif out_ID in host_particle_list_withsubhalos_s2:
                         indices_othersubhalos_s2=np.where(base_halo_data[snap2]['hostHaloID']==host_ID_s2)[0]
                         num_othersubhalos_s2=len(indices_othersubhalos_s2)
-                        particlelists_othersubhalos_s2=[set(snap_2_halo_particles_withsubpart_all["ParticleIDs"][isubhalo_other]) for isubhalo_other in indices_othersubhalos_s2]
+                        particlelists_othersubhalos_s2=[set(snap_2_halo_particles_withsubpart_all["Particle_IDs"][isubhalo_other]) for isubhalo_other in indices_othersubhalos_s2]
                         which_othersubhalo_s2=np.where([out_ID in particlelist_othersubhalos_s2 for particlelist_othersubhalos_s2 in particlelists_othersubhalos_s2])[0]
                         index_othersubhalo_s2=indices_othersubhalos_s2[which_othersubhalo_s2]
                         ID_othersubhalo_s2=base_halo_data[snap2]['ID'][index_othersubhalo_s2]
@@ -769,7 +769,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     elif out_ID in host_particle_list_withsubhalos_s3:
                         indices_othersubhalos_s3=np.where(base_halo_data[snap3]['hostHaloID']==host_ID_s3)[0]
                         num_othersubhalos_s3=len(indices_othersubhalos_s3)
-                        particlelists_othersubhalos_s3=[set(snap_3_halo_particles_withsubpart_all["ParticleIDs"][isubhalo_other]) for isubhalo_other in indices_othersubhalos_s3]
+                        particlelists_othersubhalos_s3=[set(snap_3_halo_particles_withsubpart_all["Particle_IDs"][isubhalo_other]) for isubhalo_other in indices_othersubhalos_s3]
                         which_othersubhalo_s3=np.where([out_ID in particlelist_othersubhalos_s3 for particlelist_othersubhalos_s3 in particlelists_othersubhalos_s3])[0]
                         index_othersubhalo_s3=indices_othersubhalos_s3[which_othersubhalo_s3]
                         ID_othersubhalo_s3=base_halo_data[snap3]['ID'][index_othersubhalo_s3]
