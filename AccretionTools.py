@@ -518,6 +518,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     Part_Histories_HostStructure_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
     Part_Histories_Processed_L1_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L1'] for parttype in [0,1]]
     Part_Histories_Processed_L2_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L2'] for parttype in [0,1]]
+    Part_Histories_npart_snap1=[len(Part_Histories_IDs_snap1_itype) for Part_Histories_IDs_snap1_itype in Part_Histories_IDs_snap1]
+
     print(f'Done retrieving & organising particle histories for snap = {snap1}')
 
     #Load in particle histories: snap 2
@@ -526,6 +528,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     Part_Histories_IDs_snap2=[Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes]
     Part_Histories_Index_snap2=[Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
     Part_Histories_HostStructure_snap2=[Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
+    Part_Histories_npart_snap2=[len(Part_Histories_IDs_snap2_itype) for Part_Histories_IDs_snap2_itype in Part_Histories_IDs_snap2]
     print(f'Done retrieving & organising particle histories for snap = {snap2}')
 
     #Load in particle lists from VR
@@ -620,9 +623,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     print('Using bisect to index particles')
                     new_particle_IDs_itype_snap2_historyindex=[]
                     new_particle_IDs_itype_snap1_historyindex=[]
+                    
                     for new_ID in new_particle_IDs_itype_snap2:
                         if not itype==4:#don't need to check presence of particles
-                            snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID,lo=0)
+                            snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID,lo=0,hi=len())
                             snap1_index=bisect_left(Part_Histories_IDs_snap1[iitype],new_ID,lo=0)
                         else:
                             snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID,lo=0)#must be in this list
