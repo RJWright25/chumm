@@ -702,7 +702,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     out_particle_masses=np.zeros(len(out_particle_IDs_itype_snap1_historyindex))
                     for inewpart,history_index in enumerate(new_particle_IDs_itype_snap2_historyindex):
                         new_particle_masses[inewpart]=PartData_Masses_Snap2[str(itype)][Part_Histories_Index_snap2[iitype][history_index]]
-                    for ioutpart,history_index in out_particle_IDs_itype_snap1_historyindex:
+                    for ioutpart,history_index in enumerate(out_particle_IDs_itype_snap1_historyindex):
                         out_particle_masses[ioutpart]=PartData_Masses_Snap1[str(itype)][Part_Histories_Index_snap1[iitype][history_index]]
                 t2_findmass=time.time()
 
