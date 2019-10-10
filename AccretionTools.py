@@ -591,6 +591,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             prev_hostHaloID=np.nan
 
         # Print halo data for outputs 
+        print()
         print('**********************************')
         if ifield:
             print('Halo index: ',ihalo_s2,f' - field halo')
