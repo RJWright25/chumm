@@ -578,7 +578,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         ihalo_s1=halo_index_list_snap1[iihalo]#find progenitor
         ihalo_s3=halo_index_list_snap3[iihalo]#find descendant
         idhalo_s1=base_halo_data[snap1]['ID'][ihalo_s1]
-        idhalo_s3=base_halo_data[snap1]['ID'][ihalo_s3]
+        idhalo_s3=base_halo_data[snap3]['ID'][ihalo_s3]
         
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)#track if have both progenitor and descendant
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]#structure type
