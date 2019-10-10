@@ -831,8 +831,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 halo_out_parttype_hdf5.create_dataset('ParticleIDs',data=out_particle_IDs_itype_snap1,dtype=np.int64)
                 halo_out_parttype_hdf5.create_dataset('Masses',data=out_particle_masses,dtype=np.float64)
                 halo_out_parttype_hdf5.create_dataset('Destination_S2',data=destination_s2,dtype=np.int32)
+                print(destination_s3)
                 halo_out_parttype_hdf5.create_dataset('Destination_S3',data=destination_s3,dtype=np.int32)
-                
                 t2_save=time.time()
                 t2=time.time()
                 print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2} in {t2-t1} sec!')
