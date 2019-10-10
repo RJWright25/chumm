@@ -574,6 +574,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         # Find halo progenitor and descendants 
         ihalo_s1=halo_index_list_snap1[iihalo]#find progenitor
         ihalo_s3=halo_index_list_snap3[iihalo]#find descendant
+        idhalo_s1=base_halo_data[snap1]['ID'][ihalo_s1]
+        idhalo_s3=base_halo_data[snap1]['ID'][ihalo_s3]
+        
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)#track if have both progenitor and descendant
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]#structure type
 
@@ -602,7 +605,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         if isub:
             print('Halo index: ',ihalo_s2,f' - sub halo')
             print(f'Host halo at previous snap: {prev_hostHaloID}')
-        print(f'Progenitor: {base_halo_data[snap1]['ID'][ihalo_s1]} | Descendant: {base_halo_data[snap3]['ID'][ihalo_s3]}')
+        print(f'Progenitor: {idhalo_s1} | Descendant: {idhalo_s3}')
         print('**********************************************')
         print()
 
