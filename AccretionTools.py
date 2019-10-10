@@ -682,7 +682,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                             snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID)
                             snap1_index=bisect_left(Part_Histories_IDs_snap1[iitype],new_ID)
                         else:
-                            snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID,lo=0)
+                            snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID)
                             snap1_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],element=new_ID)
 
                         new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
