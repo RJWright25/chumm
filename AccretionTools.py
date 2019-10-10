@@ -798,7 +798,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     new_previous_structure=previous_structure
                     print('-- INFLOW --')
                     print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(new_particle_masses)):.2e} Msun')
-                    print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3):.2f}%')
+                    print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100:.2f}%')
                     print(f'Accretion from field: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100:.2f}%')
                     print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100:.2f}%')#clumpy if prevhost>0
                     print('-- OUTFLOW --')
@@ -815,7 +815,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     new_previous_structure=np.array(new_previous_structure)
                     print('-- INFLOW --')
                     print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(new_particle_masses)):.2e} Msun')
-                    print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3):.2f}%')
+                    print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100:.2f}%')
                     print(f'Accretion from field: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100:.2f}%')
                     print(f'Accretion from CGM: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100:.2f}%')#CGM if prevhost==0
                     print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100:.2f}%')#clumpy if prevhost>0
