@@ -713,7 +713,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     # if not star, we can directly index the particles: the gas list will be LONGER
                     # at the previous snapshot, meaning that new_particle_IDs_itype_snap1_historyindex will not contain nans
                     previous_structure=np.zeros(len(new_particle_IDs_itype_snap1_historyindex))
-                    formed_ataccretion=np.zeros(len(formed_ataccretion))
+                    formed_ataccretion=np.zeros(len(new_particle_IDs_itype_snap1_historyindex))
                     for inewpart,history_index in enumerate(new_particle_IDs_itype_snap1_historyindex):
                         previous_structure[inewpart]=Part_Histories_HostStructure_snap1[iitype][history_index]
                 else:# if is star, need to check prev gas particles as well
