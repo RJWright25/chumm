@@ -770,7 +770,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         indices_othersubhalos_s3=np.where(base_halo_data[snap3]['hostHaloID']==host_ID_s3)[0]
                         num_othersubhalos_s3=len(indices_othersubhalos_s3)
                         particlelists_othersubhalos_s3=[set(snap_3_halo_particles_withsubpart_all["Particle_IDs"][isubhalo_other]) for isubhalo_other in indices_othersubhalos_s3]
-                        which_othersubhalo_s3=np.where([out_ID in particlelist_othersubhalos_s3 for particlelist_othersubhalos_s3 in particlelists_othersubhalos_s3])[0]
+                        which_othersubhalo_s3=np.where([out_ID in particlelist_othersubhalos_s3 for particlelist_othersubhalos_s3 in particlelists_othersubhalos_s3])[0][0]
                         index_othersubhalo_s3=indices_othersubhalos_s3[which_othersubhalo_s3]
                         ID_othersubhalo_s3=base_halo_data[snap3]['ID'][index_othersubhalo_s3]
                         destination_s3.append(ID_othersubhalo_s3)
