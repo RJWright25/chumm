@@ -410,6 +410,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     """
 
     # Initialising halo index list
+    t1_io=time.time()
+
     if halo_index_list==None:
         halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
         iprocess="x"
@@ -537,7 +539,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     Part_Histories_Processed_L1_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L1'] for parttype in [0,1]]
     Part_Histories_Processed_L2_snap1=[Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L2'] for parttype in [0,1]]
     Part_Histories_npart_snap1=[len(Part_Histories_IDs_snap1_itype) for Part_Histories_IDs_snap1_itype in Part_Histories_IDs_snap1]
-    print(f'Done retrieving & organising particle histories for snap = {snap1}')
 
     #Load in particle histories: snap 2
     print(f'Retrieving & organising particle histories for snap = {snap2} ...')
@@ -546,7 +547,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     Part_Histories_Index_snap2=[Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes]
     Part_Histories_HostStructure_snap2=[Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes]
     Part_Histories_npart_snap2=[len(Part_Histories_IDs_snap2_itype) for Part_Histories_IDs_snap2_itype in Part_Histories_IDs_snap2]
-    print(f'Done retrieving & organising particle histories for snap = {snap2}')
 
     #Load in particle lists from VR
     print('Retrieving VR halo particle lists ...')
@@ -559,6 +559,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     snap_3_halo_particles_withsubpart_all=get_particle_lists(base_halo_data[snap3],include_unbound=True,add_subparts_to_fofs=True)
 
     print('Done loading VR halo particle lists')
+    t2_io=time.time()
+
+    print('*********************************************************')
+    print(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
+    print('*********************************************************')
 
     count=0        
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
@@ -866,15 +871,15 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 t2_save=time.time()
                 t2=time.time()
 
-                # print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2} in {t2-t1} sec!')
-                # print(f'Typing took {t2_typing-t1_typing} sec')
-                # print(f'Finding history index took {t2_findhi-t1_findhi} sec')
-                # print(f'Finding processing history took {t2_findph-t1_findph} sec')
-                # print(f'Finding masses took {t2_findmass-t1_findmass} sec')
-                # print(f'Finding previous host took {t2_findps-t1_findps} sec')
-                # print(f'Printing/summing data took {t2_print-t1_print} sec')
-                # print(f'Finding future state took {t2_findfs-t1_findfs} sec')
-                # print(f'Saving data took {t2_save-t1_save} sec')
+                print(f'Done with inflow/outflow for {PartNames[itype]} particles in and around ihalo {ihalo_s2} in {t2-t1} sec')
+                print(f'Typing took {t2_typing-t1_typing} sec')
+                print(f'Finding history index took {t2_findhi-t1_findhi} sec')
+                print(f'Finding processing history took {t2_findph-t1_findph} sec')
+                print(f'Finding masses took {t2_findmass-t1_findmass} sec')
+                print(f'Finding previous host took {t2_findps-t1_findps} sec')
+                print(f'Printing/summing data took {t2_print-t1_print} sec')
+                print(f'Finding future state took {t2_findfs-t1_findfs} sec')
+                print(f'Saving data took {t2_save-t1_save} sec')
 
         else:#if halo not tracked, return np.nan for fidelity, ids, prevhost
             for itype in PartTypes:
