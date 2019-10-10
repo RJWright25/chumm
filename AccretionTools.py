@@ -933,13 +933,26 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         print(f'Done with halo {base_halo_data[snap2]["ID"][ihalo_s2]}!')
         print()
         print('-- PERFORMANCE --')
-        print(f'Total particles in: {len(new_particle_IDs_itype_snap2)}, total particles out: {len(out_particle_IDs_itype_snap1)}')
-        print(f'Total time spent on halo: {t2_halo-t1_halo} sec')
+        print(f'Total particles in: {np.sum(np.array(new_particle_IDs_mask_snap2))}, total particles out: {np.sum(np.array(out_particle_IDs_mask_snap1))}')
+        print(f'Total time spent on halo: {(t2_halo-t1_halo):.2f} sec')
+        print(f'Total time spent on finding inflow particles: {(t2_new-t1_new):.2f} sec - {(t2_new-t1_new)/((t2_halo-t1_halo))*100:.2f} % of halo time')
+        print(f'Total time spent on finding outflow particles: {(t2_out-t1_out):.2f} sec - {(t2_out-t1_out)/((t2_halo-t1_halo))*100:.2f} % of halo time')
         for iitype,itype in enumerate(PartTypes):
             itype_time=t2_itype[iitype]-t1_itype[iitype]
-            print(f'Total time on {PartNames[iitype]} particles: {itype_time:.2f} sec')
-            print(f'| Typing | Indexing IDs | Histories | Masses | Previous Host | Printing | Inflow Fate | Outflow Fate | Saving |')
-            print(f'|{(t2_typing[iitype]-t1_typing[iitype])/itype_time*100:.1f}|{(t2_findhi[iitype]-t1_findhi[iitype])/itype_time*100:.1f}|{(t2_findph[iitype]-t1_findph[iitype])/itype_time*100:.1f}|{(t2_findmass[iitype]-t1_findmass[iitype])/itype_time*100:.1f}|{(t2_findps[iitype]-t1_findps[iitype])/itype_time*100:.1f}|{(t2_print[iitype]-t1_print[iitype])/itype_time*100:.1f}|{(t2_findinfs[iitype]-t1_findinfs[iitype])/itype_time*100:.1f}|{(t2_findoutfs[iitype]-t1_findoutfs[iitype])/itype_time*100:.1f}|{(t2_save[iitype]-t1_save[iitype])/itype_time*100:.1f}|')
+            print(f'Total time on {PartNames[itype]} particles: {itype_time:.2f} sec ({itype_time/(t2_halo-t1_halo)*100:.2f} % of halo time)')
+            print(f'Breakdown of time on {PartNames[itype]} particles ...')
+            performance_dict={}
+            performance_dict['Typing']=(t2_typing[iitype]-t1_typing[iitype])/itype_time*100
+            performance_dict['Indexing']=(t2_findhi[iitype]-t1_findhi[iitype])/itype_time*100
+            performance_dict['Histories']=(t2_findph[iitype]-t1_findph[iitype])/itype_time*100
+            performance_dict['Masses']=(t2_findmass[iitype]-t1_findmass[iitype])/itype_time*100
+            performance_dict['PrevHost']=(t2_ps[iitype]-t1_ps[iitype])/itype_time*100
+            performance_dict['Printing']=(t2_print[iitype]-t1_print[iitype])/itype_time*100
+            performance_dict['Inflow_Fate']=(t2_findinfs[iitype]-t1_findinfs[iitype])/itype_time*100
+            performance_dict['Outflow_Fate']=(t2_findoutfs[iitype]-t1_findoutfs[iitype])/itype_time*100
+            performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])/itype_time*100
+            performance_dict=df(performance_dict)
+            print(performance_dict)
         print('----------------')
         print()
 
