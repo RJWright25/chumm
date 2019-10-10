@@ -946,7 +946,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             performance_dict['Indexing']=(t2_findhi[iitype]-t1_findhi[iitype])/itype_time*100
             performance_dict['Histories']=(t2_findph[iitype]-t1_findph[iitype])/itype_time*100
             performance_dict['Masses']=(t2_findmass[iitype]-t1_findmass[iitype])/itype_time*100
-            performance_dict['PrevHost']=(t2_ps[iitype]-t1_ps[iitype])/itype_time*100
+            performance_dict['PrevHost']=(t2_findps[iitype]-t1_findps[iitype])/itype_time*100
             performance_dict['Printing']=(t2_print[iitype]-t1_print[iitype])/itype_time*100
             performance_dict['Inflow_Fate']=(t2_findinfs[iitype]-t1_findinfs[iitype])/itype_time*100
             performance_dict['Outflow_Fate']=(t2_findoutfs[iitype]-t1_findoutfs[iitype])/itype_time*100
