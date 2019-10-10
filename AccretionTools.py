@@ -619,14 +619,18 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             # Now loop through each particle type and process accreted particle data 
             for iitype,itype in enumerate(PartTypes):
                 t1=time.time()#Time the full loop for this halo and particle type
+                
+                print('--------------------')
+                print(f'{PartNames[itype]} particles')
+                print('--------------------')
 
                 # Finding particles of itype
-                print(f"Extracting new particles of type {itype} from halo list at snap 2 ...")
+                # print(f"Extracting new particles of type {itype} from halo list at snap 2 ...")
                 t1_typing=time.time()
                 new_particle_mask_itype=np.logical_and(new_particle_IDs_mask_snap2,snap2_Types_temp==itype)# Mask for particles in halo list at snap 2 which arrived and are of the correct type
                 new_particle_IDs_itype_snap2=np.compress(new_particle_mask_itype,snap2_IDs_temp)# Compress snap 2 list with above mask
                 new_particle_count=len(new_particle_IDs_itype_snap2)# Count number of new particles
-                print(f"Extracting outflow particles of type {itype} from halo list at snap 1 ...")
+                # print(f"Extracting outflow particles of type {itype} from halo list at snap 1 ...")
                 out_particle_mask_itype=np.logical_and(out_particle_IDs_mask_snap1,snap1_Types_temp==itype)# Mask for particles in halo list at snap 1 which outflowed and are of the correct type
                 out_particle_IDs_itype_snap1=np.compress(out_particle_mask_itype,snap1_IDs_temp)# Compress snap 1 list with above mask
                 out_particle_count=len(out_particle_IDs_itype_snap1)# Count number of outflow particles
@@ -636,11 +640,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
                 t1_findhi=time.time()
                 if new_particle_count>250 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
-                    print('Using np.searchsorted to index inflow particles ...')
+                    # print('Using np.searchsorted to index inflow particles ...')
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
                 else:#otherwise the bisect search seems to work faster
-                    print('Using bisect to index inflow particles ...')
+                    # print('Using bisect to index inflow particles ...')
                     new_particle_IDs_itype_snap2_historyindex=np.nan+np.zeros(len(new_particle_IDs_itype_snap2))
                     new_particle_IDs_itype_snap1_historyindex=np.nan+np.zeros(len(new_particle_IDs_itype_snap2))
                     
@@ -658,10 +662,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 # Use the above outflow IDs and find their index in particle histories 
                 print(f"Finding relative particle index of outflow particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {out_particle_count} ...")
                 if out_particle_count>250 and not itype==4:#if we have a large number of outflow particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
-                    print('Using np.searchsorted to index particles')#only need snap 1 index here, not going to check histories (just masses)
+                    # print('Using np.searchsorted to index particles')#only need snap 1 index here, not going to check histories (just masses)
                     out_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=out_particle_IDs_itype_snap1)#index of the outflowed IDs in particle histories snap 1
                 else:#otherwise the bisect search seems to work faster
-                    print('Using bisect to index particles')
+                    # print('Using bisect to index particles')
                     out_particle_IDs_itype_snap1_historyindex=np.nan+np.zeros(len(out_particle_IDs_itype_snap1))
                     for iout_ID,out_ID in enumerate(out_particle_IDs_itype_snap1):
                         snap1_index=bisect_left(Part_Histories_IDs_snap1[iitype],out_ID,lo=0,hi=len(Part_Histories_IDs_snap1[iitype]))
@@ -699,7 +703,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 # Checking the previous state of the newly accreted particles
                 # print(f"Checking previous state of accreted particles in halo {ihalo_s2} of type {PartNames[itype]} ...")
                 t1_findps=time.time()
-                if not itype==4:#if not star, we can directly index the particles
+                if not itype==4:#if not star
+                    # if not star, we can directly index the particles: the gas list will be LONGER
+                    # at the previous snapshot, meaning that new_particle_IDs_itype_snap1_historyindex will not contain nans
                     previous_structure=[Part_Histories_HostStructure_snap1[iitype][history_index] for history_index in new_particle_IDs_itype_snap1_historyindex]
                 else:# if is star, need to check prev gas particles as well
                     previous_structure=[]
@@ -793,7 +799,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(new_particle_masses)):.2e} Msun')
                     print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3):.2f}%')
                     print(f'Accretion from field: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100:.2f}%')
-                    print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}:.2f%')#clumpy if prevhost>0
+                    print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100:.2f}%')#clumpy if prevhost>0
                     print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(out_particle_masses)):.2e} Msun')
                     print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s2)==1)/len(destination_s3)*100:.2f}%')
                     
@@ -809,7 +815,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3):.2f}%')
                     print(f'Accretion from field: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100:.2f}%')
                     print(f'Accretion from CGM: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100:.2f}%')#CGM if prevhost==0
-                    print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100}:.2f%')#clumpy if prevhost>0
+                    print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100:.2f}%')#clumpy if prevhost>0
                     print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(out_particle_masses)):.2e} Msun')
                     print(f'Outflow particles in CGM at snap 2: {np.sum(np.array(destination_s2)==0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles outside of group at snap 2: {np.sum(np.array(destination_s2)<0)/len(destination_s2)*100:.2f}%')
