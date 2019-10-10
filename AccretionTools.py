@@ -822,8 +822,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     print('-- OUTFLOW --')
                     print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(out_particle_masses)):.2e} Msun')
                     print(f'Outflow particles in CGM at snap 2: {np.sum(np.array(destination_s2)==0)/len(destination_s2)*100:.2f}%')
+                    print(f'Outflow particles in other subhalos at snap 2: {np.sum(np.array(destination_s2)>0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles outside of group at snap 2: {np.sum(np.array(destination_s2)<0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles in CGM at snap 3: {np.sum(np.array(destination_s3)==0)/len(destination_s3)*100:.2f}%')
+                    print(f'Outflow particles in other subhalos at snap 3: {np.sum(np.array(destination_s3)>0)/len(destination_s3)*100:.2f}%')
                     print(f'Outflow particles outside of group at snap 3: {np.sum(np.array(destination_s2)<0)/len(destination_s3)*100:.2f}%')
                     print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s3)==1)/len(destination_s3)*100:.2f}%')
 
