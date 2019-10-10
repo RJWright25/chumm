@@ -942,15 +942,15 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print(f'Total time on {PartNames[itype]} particles: {itype_time:.2f} sec ({itype_time/(t2_halo-t1_halo)*100:.2f} % of halo time)')
             print(f'Breakdown of time on {PartNames[itype]} particles ...')
             performance_dict={}
-            performance_dict['Typing']=(t2_typing[iitype]-t1_typing[iitype])/itype_time*100
+            # performance_dict['Typing']=(t2_typing[iitype]-t1_typing[iitype])/itype_time*100
             performance_dict['Indexing']=(t2_findhi[iitype]-t1_findhi[iitype])/itype_time*100
             performance_dict['Histories']=(t2_findph[iitype]-t1_findph[iitype])/itype_time*100
             performance_dict['Masses']=(t2_findmass[iitype]-t1_findmass[iitype])/itype_time*100
             performance_dict['PrevHost']=(t2_findps[iitype]-t1_findps[iitype])/itype_time*100
-            performance_dict['Printing']=(t2_print[iitype]-t1_print[iitype])/itype_time*100
+            # performance_dict['Printing']=(t2_print[iitype]-t1_print[iitype])/itype_time*100
             performance_dict['Inflow_Fate']=(t2_findinfs[iitype]-t1_findinfs[iitype])/itype_time*100
             performance_dict['Outflow_Fate']=(t2_findoutfs[iitype]-t1_findoutfs[iitype])/itype_time*100
-            performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])/itype_time*100
+            # performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])/itype_time*100
             performance_dict=df(performance_dict,index=[0])
             print(performance_dict)
         print('----------------')
