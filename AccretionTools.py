@@ -796,12 +796,14 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 t1_print=time.time()
                 if not isub:#if a field halo, either cosmological accretion or from mergers ("clumpy")
                     new_previous_structure=previous_structure
+                    print('-- INFLOW --')
                     print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(new_particle_masses)):.2e} Msun')
                     print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3):.2f}%')
                     print(f'Accretion from field: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100:.2f}%')
                     print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100:.2f}%')#clumpy if prevhost>0
+                    print('-- OUTFLOW --')
                     print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(out_particle_masses)):.2e} Msun')
-                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s2)==1)/len(destination_s3)*100:.2f}%')
+                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s3)==1)/len(destination_s3)*100:.2f}%')
                     
                 else:#if subhalo, could be from CGM 
                     new_previous_structure=[]
@@ -811,17 +813,19 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         else:
                             new_previous_structure.append(previous_halo_id)
                     new_previous_structure=np.array(new_previous_structure)
+                    print('-- INFLOW --')
                     print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(new_particle_masses)):.2e} Msun')
                     print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3):.2f}%')
                     print(f'Accretion from field: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100:.2f}%')
                     print(f'Accretion from CGM: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100:.2f}%')#CGM if prevhost==0
                     print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100:.2f}%')#clumpy if prevhost>0
+                    print('-- OUTFLOW --')
                     print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(out_particle_masses)):.2e} Msun')
                     print(f'Outflow particles in CGM at snap 2: {np.sum(np.array(destination_s2)==0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles outside of group at snap 2: {np.sum(np.array(destination_s2)<0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles in CGM at snap 3: {np.sum(np.array(destination_s3)==0)/len(destination_s3)*100:.2f}%')
                     print(f'Outflow particles outside of group at snap 3: {np.sum(np.array(destination_s2)<0)/len(destination_s3)*100:.2f}%')
-                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s2)==1)/len(destination_s3)*100:.2f}%')
+                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s3)==1)/len(destination_s3)*100:.2f}%')
 
                 t2_print=time.time()
 
@@ -848,15 +852,15 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 t2_save=time.time()
                 t2=time.time()
 
-                print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2} in {t2-t1} sec!')
-                print(f'Typing took {t2_typing-t1_typing} sec')
-                print(f'Finding history index took {t2_findhi-t1_findhi} sec')
-                print(f'Finding processing history took {t2_findph-t1_findph} sec')
-                print(f'Finding masses took {t2_findmass-t1_findmass} sec')
-                print(f'Finding previous host took {t2_findps-t1_findps} sec')
-                print(f'Printing/summing data took {t2_print-t1_print} sec')
-                print(f'Finding future state took {t2_findfs-t1_findfs} sec')
-                print(f'Saving data took {t2_save-t1_save} sec')
+                # print(f'Done with {PartNames[itype]} for ihalo {ihalo_s2} in {t2-t1} sec!')
+                # print(f'Typing took {t2_typing-t1_typing} sec')
+                # print(f'Finding history index took {t2_findhi-t1_findhi} sec')
+                # print(f'Finding processing history took {t2_findph-t1_findph} sec')
+                # print(f'Finding masses took {t2_findmass-t1_findmass} sec')
+                # print(f'Finding previous host took {t2_findps-t1_findps} sec')
+                # print(f'Printing/summing data took {t2_print-t1_print} sec')
+                # print(f'Finding future state took {t2_findfs-t1_findfs} sec')
+                # print(f'Saving data took {t2_save-t1_save} sec')
 
         else:#if halo not tracked, return np.nan for fidelity, ids, prevhost
             for itype in PartTypes:
