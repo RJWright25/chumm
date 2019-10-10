@@ -765,7 +765,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 # Checking the future state of the newly accreted particles
                 t1_findfs=time.time()
                 # print(f"Checking which accreted particles stayed in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
-                new_particle_stayed_snap3=np.zeros(len(new_particle_stayed_snap3))
+                new_particle_stayed_snap3=np.zeros(len(new_particle_IDs_itype_snap2))
                 for iipart, ipart in enumerate(new_particle_IDs_itype_snap2):
                     if ipart in snap3_IDs_temp_set:
                         new_particle_stayed_snap3[iipart]=1
