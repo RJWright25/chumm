@@ -933,11 +933,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         print(f'Done with halo {base_halo_data[snap2]["ID"][ihalo_s2]}!')
         print()
         print('-- PERFORMANCE --')
-        print(f'Total particles in: {}, total particles out: {}')
+        print(f'Total particles in: {len(new_particle_IDs_itype_snap2)}, total particles out: {len(out_particle_IDs_itype_snap1)}')
         print(f'Total time spent on halo: {t2_halo-t1_halo} sec')
         for iitype,itype in enumerate(PartTypes):
             itype_time=t2_itype[iitype]-t1_itype[iitype]
-            print(f'Total time on {PartNames[]}: {itype_time:.2f} sec')
+            print(f'Total time on {PartNames[iitype]} particles: {itype_time:.2f} sec')
             print(f'| Typing | Indexing IDs | Histories | Masses | Previous Host | Printing | Inflow Fate | Outflow Fate | Saving |')
             print(f'|{(t2_typing[iitype]-t1_typing[iitype])/itype_time*100:.1f}|{(t2_findhi[iitype]-t1_findhi[iitype])/itype_time*100:.1f}|{(t2_findph[iitype]-t1_findph[iitype])/itype_time*100:.1f}|{(t2_findmass[iitype]-t1_findmass[iitype])/itype_time*100:.1f}|{(t2_findps[iitype]-t1_findps[iitype])/itype_time*100:.1f}|{(t2_print[iitype]-t1_print[iitype])/itype_time*100:.1f}|{(t2_findinfs[iitype]-t1_findinfs[iitype])/itype_time*100:.1f}|{(t2_findoutfs[iitype]-t1_findoutfs[iitype])/itype_time*100:.1f}|{(t2_save[iitype]-t1_save[iitype])/itype_time*100:.1f}|')
         print('----------------')
