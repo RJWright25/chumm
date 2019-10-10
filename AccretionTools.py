@@ -600,6 +600,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print(f'Host halo at previous snap: {prev_hostHaloID}')
         print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
         print('**********************************')
+        print()
 
         # If this halo is going to be tracked (and is not a subsubhalo) then we continue
         if ihalo_tracked and structuretype<25:# if we found both the progenitor and the descendent (and it's not a subsubhalo)
