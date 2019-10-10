@@ -674,8 +674,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
                 else:#otherwise the bisect search seems to work faster
                     # print('Using bisect to index inflow particles ...')
-                    new_particle_IDs_itype_snap2_historyindex=np.nan+np.zeros(len(new_particle_IDs_itype_snap2))
-                    new_particle_IDs_itype_snap1_historyindex=np.nan+np.zeros(len(new_particle_IDs_itype_snap2))
+                    new_particle_IDs_itype_snap2_historyindex=[]
+                    new_particle_IDs_itype_snap1_historyindex=[]
                     
                     for inew_ID,new_ID in enumerate(new_particle_IDs_itype_snap2):
                         if not itype==4:#don't need to check presence of particles
@@ -685,8 +685,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                             snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID,lo=0,hi=len(Part_Histories_IDs_snap2[iitype]))
                             snap1_index=binary_search_2(sorted_array=Part_Histories_IDs_snap1[iitype],element=new_ID)
 
-                        new_particle_IDs_itype_snap2_historyindex[inew_ID]=snap2_index#index of the new IDs in particle histories snap 2
-                        new_particle_IDs_itype_snap1_historyindex[inew_ID]=snap1_index#index of the new IDs in particle histories snap 1
+                        new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
+                        new_particle_IDs_itype_snap1_historyindex.append(snap1_index)#index of the new IDs in particle histories snap 1
                 
                 # Use the above outflow IDs and find their index in particle histories 
                 print(f"Finding relative particle index of outflow particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {out_particle_count} ...")
