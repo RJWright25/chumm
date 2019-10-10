@@ -951,7 +951,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             performance_dict['Inflow_Fate']=(t2_findinfs[iitype]-t1_findinfs[iitype])/itype_time*100
             performance_dict['Outflow_Fate']=(t2_findoutfs[iitype]-t1_findoutfs[iitype])/itype_time*100
             performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])/itype_time*100
-            performance_dict=df(performance_dict)
+            performance_dict=df(performance_dict,index=[0])
             print(performance_dict)
         print('----------------')
         print()
