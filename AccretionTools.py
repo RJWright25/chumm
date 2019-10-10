@@ -558,9 +558,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     snap_3_halo_particles_nosubpart_all=get_particle_lists(base_halo_data[snap3],include_unbound=True,add_subparts_to_fofs=False)
     snap_3_halo_particles_withsubpart_all=get_particle_lists(base_halo_data[snap3],include_unbound=True,add_subparts_to_fofs=True)
 
-    print('Done loading VR halo particle lists')
     t2_io=time.time()
-
+    print()
     print('*********************************************************')
     print(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
     print('*********************************************************')
@@ -597,14 +596,14 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
         # Print halo data for outputs 
         print()
-        print('**********************************')
+        print('**********************************************')
         if ifield:
             print('Halo index: ',ihalo_s2,f' - field halo')
         if isub:
             print('Halo index: ',ihalo_s2,f' - sub halo')
             print(f'Host halo at previous snap: {prev_hostHaloID}')
-        print(f'Progenitor: {ihalo_s1} | Descendant: {ihalo_s3}')
-        print('**********************************')
+        print(f'Progenitor: {basehalodata[snap1]['ID'][ihalo_s1]} | Descendant: {basehalodata[snap3]['ID'][ihalo_s3]}')
+        print('**********************************************')
         print()
 
         # If this halo is going to be tracked (and is not a subsubhalo) then we continue
@@ -842,7 +841,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     print(f'Outflow particles in other subhalos at snap 2: {np.sum(np.array(destination_s2)>0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles outside of group at snap 2: {np.sum(np.array(destination_s2)<0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles in CGM at snap 3: {np.sum(np.array(destination_s3)==0)/len(destination_s3)*100:.2f}%')
-                    print(f'Outflow particles in other subhalos at snap 3: {np.sum(np.array(destination_s3)>0)/len(destination_s3)*100:.2f}%')
+                    print(f'Outflow particles in other subhalos at snap 3: {np.sum(np.array(destination_s3)>1)/len(destination_s3)*100:.2f}%')
                     print(f'Outflow particles outside of group at snap 3: {np.sum(np.array(destination_s3)<0)/len(destination_s3)*100:.2f}%')
                     print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s3)==1)/len(destination_s3)*100:.2f}%')
 
@@ -870,7 +869,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 halo_out_parttype_hdf5.create_dataset('Destination_S3',data=destination_s3,dtype=np.int32)
                 t2_save=time.time()
                 t2=time.time()
-
+                
+                
+                print('-- PERFORMANCE --')
                 print(f'Done with inflow/outflow for {PartNames[itype]} particles in and around ihalo {ihalo_s2} in {t2-t1} sec')
                 print(f'Typing took {t2_typing-t1_typing} sec')
                 print(f'Finding history index took {t2_findhi-t1_findhi} sec')
