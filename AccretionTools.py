@@ -487,9 +487,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         PartTypes=[0,1] #Gas, DM
         constant_mass={str(0):True,str(1):True}
 
-    # Read in particle IDs and masses
+    # Read in particle masses
     h_val=base_halo_data[snap2]['SimulationInfo']['h_val']
-
     if part_filetype=='EAGLE':# if an EAGLE snapshot
         print('Reading in EAGLE snapshot data ...')
         varying_mass=True
@@ -497,23 +496,17 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
         EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
         Part_Data_Masses_Snap1=dict();Part_Data_IDs_Snap1=dict()
-        
         for itype in PartTypes:
             if not itype==1:#everything except DM
                 try:
                     Part_Data_Masses_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10 #CHECK THIS
-                    # Part_Data_IDs_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"ParticleIDs") #read the particle IDs directly
                 except:
                     print('No particles of this type were found.')
                     Part_Data_Masses_Snap1[str(itype)]=[]
-                    Part_Data_IDs_Snap1[str(itype)]=[]
             else:#for DM, find particle data file and save 
                 hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])#hdf5 file
                 Part_Data_Masses_Snap1[str(itype)]=hdf5file['Header'].attrs['MassTable'][1]*10**10/h_val #CHECK THIS
-                # Part_Data_IDs_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"ParticleIDs")
-
         print('Done reading in EAGLE snapshot data')
-       
     else:#assuming constant mass
         constant_mass=True
         Part_Data_Masses_Snap1=dict()
