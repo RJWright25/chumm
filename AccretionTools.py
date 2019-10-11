@@ -824,8 +824,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 print(f'Retrieving masses and fate of outflow particles...')
                 t1_outflow.append(time.time())
                 
-                ihalo_itype_snap1_inflow_masses=[]
-            
+                ihalo_itype_snap1_outflow_masses=[]
                 for iipart_historyindex,ipart_historyindex in enumerate(out_particle_IDs_itype_snap1_historyindex):
                     #All these indices will be valid as we took the list of particles from snap 1 directly 
                         # Mass
