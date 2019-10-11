@@ -732,7 +732,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         # Find index in particle history
                         ipart_transformed_ID=new_particle_IDs_itype_snap1_historyindex[iipart_historyindex]
                         ipart_transformed_historyindex=binary_search(items=[ipart_transformed_ID],sorted_list=Part_Histories_IDs_snap1['0'])[0]#search for this ID in the gas list
-                        ipart_transformed_partdataindex=Part_Histories_Index_snap1['0'][ipart_transformed_history_index]#index in gas particle data
+                        ipart_transformed_partdataindex=Part_Histories_Index_snap1['0'][ipart_transformed_historyindex]#index in gas particle data
 
                         # Mass
                         ipart_snap1_mass=Part_Data_Masses_Snap1['0'][ipart_transformed_partdata_index]
