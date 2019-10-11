@@ -730,7 +730,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ihalo_itype_snap1_inflow_transformed.append(1)#DID NOT find index at snap 1 - transformation from gas at snap 1 to star at snap 2
                         
                         # Find index in particle history
-                        ipart_transformed_ID=new_particle_IDs_itype_snap1_historyindex[iipart_historyindex]
+                        ipart_transformed_ID=new_particle_IDs_itype_snap1[iipart_historyindex]
                         ipart_transformed_historyindex=bisect_left(a=Part_Histories_IDs_snap1['0'],x=ipart_transformed_ID)#search for this ID in the gas list
                         ipart_transformed_partdataindex=Part_Histories_Index_snap1['0'][ipart_transformed_historyindex]#index in gas particle data
 
@@ -740,7 +740,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                         #sanity check of mass
                         ipart_snap1_EAGLEID=Part_Data_IDs_Snap1['0'][ipart_transformed_partdataindex]
-                        ipart_snap1_expectedID=new_particle_IDs_itype_snap1_historyindex[iipart_historyindex]
+                        ipart_snap1_expectedID=ipart_transformed_ID
                         print(f'Expected ID: {ipart_snap1_expectedID}, ID from partdata: {ipart_snap1_EAGLEID} - transformed')
 
                         # Processing history
