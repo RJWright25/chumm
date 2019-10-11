@@ -682,10 +682,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                         # Mass
                         if constant_mass[str(itype)]:# If this particle type has a constant mass
-                            ipart_snap1_mass=PartData_Masses_Snap1[str(itype)]
+                            ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)]
                         else:
                             ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
-                            ipart_snap1_mass=PartData_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
+                            ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
                             ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
 
                         #sanity check of mass
@@ -720,7 +720,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ipart_transformed_partdataindex=Part_Histories_Index_snap1['0'][ipart_transformed_history_index]#index in gas particle data
 
                         # Mass
-                        ipart_snap1_mass=PartData_Masses_Snap1['0'][ipart_transformed_partdata_index]
+                        ipart_snap1_mass=Part_Data_Masses_Snap1['0'][ipart_transformed_partdata_index]
                         ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
 
                         #sanity check of mass
@@ -819,7 +819,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                             ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)]
                         else:
                             ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
-                            ipart_snap1_mass=PartData_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
+                            ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
                             ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
                         
                 # Checking the destination of outflow particles (don't need particle histories for this)
