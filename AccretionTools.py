@@ -726,7 +726,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                                 ipart_snap1_prevhost=0#set previous host to ZERO if from CGM
                         ihalo_itype_snap1_inflow_structure.append(ipart_snap1_prevhost)
 
-                    else: # the particle
+                    else: # the particle was transformed
                         ihalo_itype_snap1_inflow_transformed.append(1)#DID NOT find index at snap 1 - transformation from gas at snap 1 to star at snap 2
                         
                         # Find index in particle history
