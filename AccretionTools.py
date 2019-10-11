@@ -735,11 +735,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ipart_transformed_partdataindex=Part_Histories_Index_snap1['0'][ipart_transformed_historyindex]#index in gas particle data
 
                         # Mass
-                        ipart_snap1_mass=Part_Data_Masses_Snap1['0'][ipart_transformed_partdata_index]
+                        ipart_snap1_mass=Part_Data_Masses_Snap1['0'][ipart_transformed_partdataindex]
                         ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
 
                         #sanity check of mass
-                        ipart_snap1_EAGLEID=Part_Data_IDs_Snap1['0'][ipart_transformed_partdata_index]
+                        ipart_snap1_EAGLEID=Part_Data_IDs_Snap1['0'][ipart_transformed_partdataindex]
                         ipart_snap1_expectedID=new_particle_IDs_itype_snap1_historyindex[iipart_historyindex]
                         print(f'Expected ID: {ipart_snap1_expectedID}, ID from partdata: {ipart_snap1_EAGLEID} - transformed')
 
