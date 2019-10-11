@@ -530,7 +530,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     Part_Histories_HostStructure_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes}
     Part_Histories_Processed_L1_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L1'] for parttype in [0,1]}
     Part_Histories_Processed_L2_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L2'] for parttype in [0,1]}
-    Part_Histories_npart_snap1={str(parttype):len(Part_Histories_IDs_snap1[parttype]) for parttype in parttypes}
+    Part_Histories_npart_snap1={str(parttype):len(Part_Histories_IDs_snap1[parttype]) for parttype in PartTypes}
 
     #Load in particle lists from VR
     print('Retrieving VR halo particle lists ...')
