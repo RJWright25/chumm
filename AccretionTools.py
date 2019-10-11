@@ -690,7 +690,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                         #sanity check of mass
                         ipart_snap1_EAGLEID=Part_Data_IDs_Snap1[str(itype)][ipart_snap1_partdataindex]
-                        ipart_snap1_expectedID=new_particle_IDs_itype_snap1_historyindex[iipart_historyindex]
+                        ipart_snap1_expectedID=new_particle_IDs_itype_snap1[iipart_historyindex]
                         if ipart_snap1_expectedID !=ipart_snap1_EAGLEID:
                             print(f'Expected ID: {ipart_snap1_expectedID}, ID from partdata: {ipart_snap1_EAGLEID}')
 
@@ -703,7 +703,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                             #sanity check of PH
                             ipart_snap1_PHID=Part_Histories_IDs_snap1[str(itype)][ipart_historyindex]
-                            ipart_snap1_expectedID=new_particle_IDs_itype_snap1_historyindex[iipart_historyindex]
+                            ipart_snap1_expectedID=new_particle_IDs_itype_snap1[iipart_historyindex]
                             if ipart_snap1_expectedID!=ipart_snap1_PHID:
                                 print(f'Expected ID: {ipart_snap1_expectedID}, ID from PH: {ipart_snap1_PHID}')
 
