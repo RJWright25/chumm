@@ -590,7 +590,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         if ifield:
             print('Halo index: ',ihalo_s2,f' - field halo')
         if isub:
-
             print('Halo index: ',ihalo_s2,f' - sub halo')
             print(f'Host halo at previous snap: {prev_hostgroupID}')
         print(f'Progenitor: {idhalo_s1} | Descendant: {idhalo_s3}')
@@ -915,13 +914,13 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 else:
 
                     print('-- INFLOW --')
-                    print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(new_particle_masses)):.2e} Msun')
-                    print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100:.2f}%')
-                    print(f'Accretion from field: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100:.2f}%')
-                    print(f'Accretion from CGM: {np.sum(np.array(new_previous_structure)==0)/len(new_previous_structure)*100:.2f}%')#CGM if prevhost==0
-                    print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100:.2f}%')#clumpy if prevhost>0
+                    print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(ihalo_itype_snap1_inflow_masses)):.2e} Msun')
+                    print(f'Particles that stayed in halo at snap 3: {np.sum(ihalo_itype_snap1_inflow_fidelity)/len(ihalo_itype_snap1_inflow_fidelity)*100:.2f}%')
+                    print(f'Accretion from field: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)<0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')
+                    print(f'Accretion from CGM: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)==0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')#CGM if prevhost==0
+                    print(f'Accretion from other halos: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)>0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')#clumpy if prevhost>0
                     print('-- OUTFLOW --')
-                    print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(out_particle_masses)):.2e} Msun')
+                    print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(ihalo_itype_snap1_outflow_masses)):.2e} Msun')
                     print(f'Outflow particles in CGM at snap 2: {np.sum(np.array(destination_s2)==0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles in other subhalos at snap 2: {np.sum(np.array(destination_s2)>0)/len(destination_s2)*100:.2f}%')
                     print(f'Outflow particles outside of group at snap 2: {np.sum(np.array(destination_s2)<0)/len(destination_s2)*100:.2f}%')
