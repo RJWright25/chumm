@@ -670,8 +670,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 t1_findhi.append(time.time())
 
                 ########################################################################################################################################
-                dump_pickle(data=out_particle_IDs_itype_snap1,path=f'./out_ids_{PartNames[itype]}_25.dat')
-
                 if new_particle_count>250 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
                     # print('Using np.searchsorted to index inflow particles ...')
                     
