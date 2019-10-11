@@ -142,22 +142,29 @@ def dump_pickle(data,path):
         picklefile.close()
     return data
 
-def binary_search_1(elements,sorted_array):
+def binary_search(items,sorted_list,algorithm=None,check_entries=False):
     """
 
-    binary_search_1 : function
+    binary_search : function
 	----------
 
-    Search a sorted array for the desired elements and return their indices 
-    (if the elements are at their expected position) - uses np.searchsorted
+    Search a sorted array for the desired elements and return their expected indices in the sorted list.
+    Will return np.nan if check_entries is True and the element at the expected index is not the desired item. 
 
 	Parameters
 	----------
-    elements : list or list-like
+    items : list or list-like
         The elements to search for in sorted_array.  
 
-    sorted_array : list list-like
+    sorted_list : list list-like
         The array in which to search for the elements. Must be sorted in ascending order. 
+
+    algorithm : int 
+        0: np.searchsorted
+        1: bisect in list comprehension
+
+    check_entries : bool
+        Ensure the entries in the sorted list are indeed the desired entries.
 
 
     Returns
@@ -168,52 +175,29 @@ def binary_search_1(elements,sorted_array):
     in sorted array (in order of each element in elements)
 
     """
-
-    expected_indices=np.searchsorted(sorted_array,elements)
-    expected_indices_checked=[]
-    for ielement,expected_index in enumerate(expected_indices):
-        element_at_expected_index=sorted_array[expected_index]
-        if element_at_expected_index==elements[ielement]:
-            expected_indices_checked.append(expected_index)
+    hi=len(sorted_list)
+    if algorithm==None:
+        if hi>250:
+            a1=True
         else:
-            expected_indices_checked.append(np.nan)
-    return expected_indices_checked
+            a1=False
+    elif algorithm==1:
+        a1=True
+    else:
+        a1=False
 
-def binary_search_2(element,sorted_array, lo=0, hi=None):   
-    """
-
-    binary_search_2 : function
-	----------
-
-    Search a sorted array for the desired element and return its index 
-    (if the element is at its expected position) - uses bisect package
-
-	Parameters
-	----------
-    elements : list or list-like
-        The elements to search for in sorted_array.  
-
-    sorted_array : list list-like
-        The array in which to search for the elements. Must be sorted in ascending order. 
+    if a1:
+        indices=list(np.searchsorted(a=sorted_list,v=items))
+    else:
+        indices=[bisect_left(sorted_list,item,lo=0,hi=hi) for item in items]
 
 
-    Returns
-	----------
-    index : list
+    if check_entries:
+        incorrect_indices=np.where([sorted_list[index]!=items[iindex] for iindex,index in enumerate(indices)])[0]
+        count=len(incorrect_indices)
+        for incorrect_index in incorrect_indices:
+            indices[incorrect_index]=np.nan
 
-    The index (or np.nan if element not found) of each element
-    in sorted array (in order of each element in elements)
-    
-    """
+        print(f'{100-count/len(indices)*100:.2f}% of entries were correct')
 
-    hi = hi if hi is not None else len(sorted_array) # hi defaults to len(a)   
-    expected_index = bisect_left(sorted_array,element,lo,hi)         # find insertion position
-    try:
-        element_at_expected_index=sorted_array[expected_index]
-        if element_at_expected_index==element:
-            return expected_index
-        else:
-            return np.nan
-    except:
-        return np.nan
-
+    return indices
