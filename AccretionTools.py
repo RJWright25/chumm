@@ -658,7 +658,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2,sorted_list=Part_Histories_IDs_snap1[str(itype)])
                 else:
                     new_particle_IDs_itype_snap1_historyindex=[]
-                    
+
                 #indexing outflow particle IDs (these are taken at snap1, so we don't need to check at all)
                 print(f"Finding relative particle index of outflow particles: n = {out_particle_count} ...")
                 out_particle_IDs_itype_snap1_historyindex=binary_search(items=out_particle_IDs_itype_snap1,sorted_list=Part_Histories_IDs_snap1[str(itype)])
@@ -695,16 +695,16 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         # Mass
                         if constant_mass[str(itype)]:# If this particle type has a constant mass
                             ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)]
+                            #sanity check of mass
+                            ipart_snap1_EAGLEID=Part_Data_IDs_Snap1[str(itype)][ipart_snap1_partdataindex]
+                            ipart_snap1_expectedID=new_particle_IDs_itype_snap2[iipart_historyindex]
+                            if ipart_snap1_expectedID !=ipart_snap1_EAGLEID:
+                                print(f'Expected ID: {ipart_snap1_expectedID}, ID from partdata: {ipart_snap1_EAGLEID}')
                         else:
                             ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
                             ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
                         ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
 
-                        #sanity check of mass
-                        ipart_snap1_EAGLEID=Part_Data_IDs_Snap1[str(itype)][ipart_snap1_partdataindex]
-                        ipart_snap1_expectedID=new_particle_IDs_itype_snap2[iipart_historyindex]
-                        if ipart_snap1_expectedID !=ipart_snap1_EAGLEID:
-                            print(f'Expected ID: {ipart_snap1_expectedID}, ID from partdata: {ipart_snap1_EAGLEID}')
 
                         # Processing history
                         if itype==0 or itype==1: #Gas or DM
