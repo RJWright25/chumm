@@ -502,7 +502,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             if not itype==1:#everything except DM
                 try:
                     Part_Data_Masses_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10 #CHECK THIS
-                    Part_Data_IDs_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"ParticleIDs") #read the particle IDs directly
+                    # Part_Data_IDs_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"ParticleIDs") #read the particle IDs directly
                 except:
                     print('No particles of this type were found.')
                     Part_Data_Masses_Snap1[str(itype)]=[]
@@ -510,7 +510,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             else:#for DM, find particle data file and save 
                 hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])#hdf5 file
                 Part_Data_Masses_Snap1[str(itype)]=hdf5file['Header'].attrs['MassTable'][1]*10**10/h_val #CHECK THIS
-                Part_Data_IDs_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"ParticleIDs")
+                # Part_Data_IDs_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"ParticleIDs")
 
         print('Done reading in EAGLE snapshot data')
        
@@ -698,11 +698,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         else:# If this particle type has a varying mass
                             ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
                             ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
-                            #sanity check of mass
-                            ipart_snap1_EAGLEID=Part_Data_IDs_Snap1[str(itype)][ipart_snap1_partdataindex]
-                            ipart_snap1_expectedID=new_particle_IDs_itype_snap2[iipart_historyindex]
-                            if ipart_snap1_expectedID !=ipart_snap1_EAGLEID:
-                                print(f'Expected ID: {ipart_snap1_expectedID}, ID from partdata: {ipart_snap1_EAGLEID}')
+
                         ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
 
 
@@ -712,12 +708,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                             ipart_snap1_history_L2=Part_Histories_Processed_L2_snap1[str(itype)][ipart_historyindex]
                             ihalo_itype_snap1_inflow_history_L1.append(ipart_snap1_history_L1)
                             ihalo_itype_snap1_inflow_history_L2.append(ipart_snap1_history_L1)
-
-                            #sanity check of PH
-                            ipart_snap1_PHID=Part_Histories_IDs_snap1[str(itype)][ipart_historyindex]
-                            ipart_snap1_expectedID=new_particle_IDs_itype_snap2[iipart_historyindex]
-                            if ipart_snap1_expectedID!=ipart_snap1_PHID:
-                                print(f'Expected ID: {ipart_snap1_expectedID}, ID from PH: {ipart_snap1_PHID}')
 
                         # Previous host
                         ipart_snap1_prevhost=Part_Histories_HostStructure_snap1[str(itype)][ipart_historyindex]
@@ -738,22 +728,12 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ipart_snap1_mass=Part_Data_Masses_Snap1['0'][ipart_transformed_partdataindex]
                         ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
 
-                        #sanity check of mass
-                        ipart_snap1_EAGLEID=Part_Data_IDs_Snap1['0'][ipart_transformed_partdataindex]
-                        ipart_snap1_expectedID=ipart_transformed_ID
-                        print(f'Expected ID: {ipart_snap1_expectedID}, ID from partdata: {ipart_snap1_EAGLEID} - transformed')
-
                         # Processing history
                         if itype==0 or itype==1: #Gas or DM
                             ipart_snap1_history_L1=Part_Histories_Processed_L1_snap1['0'][ipart_transformed_historyindex]
                             ipart_snap1_history_L2=Part_Histories_Processed_L2_snap1['0'][ipart_transformed_historyindex]
                             ihalo_itype_snap1_inflow_history_L1.append(ipart_snap1_history_L1)
                             ihalo_itype_snap1_inflow_history_L2.append(ipart_snap1_history_L2)
-
-                            #sanity check of PH
-                            ipart_snap1_PHID=Part_Histories_IDs_snap1['0'][ipart_transformed_historyindex]
-                            ipart_snap1_expectedID=new_particle_IDs_itype_snap1_historyindex[iipart_historyindex]
-                            print(f'Expected ID: {ipart_snap1_expectedID}, ID from PH: {ipart_snap1_PHID} - transformed')
 
                         # Previous host
                         ipart_snap1_prevhost=Part_Histories_HostStructure_snap1['0'][ipart_transformed_historyindex]
