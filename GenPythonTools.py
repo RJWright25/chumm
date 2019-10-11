@@ -197,7 +197,9 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False):
         count=len(incorrect_indices)
         for incorrect_index in incorrect_indices:
             indices[incorrect_index]=np.nan
-
-        print(f'{100-count/len(indices)*100:.2f}% of entries were correct')
+        try:
+            print(f'{100-count/len(indices)*100:.2f}% of entries were correct')
+        else:
+            
 
     return indices
