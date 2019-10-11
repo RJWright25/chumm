@@ -496,6 +496,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         EAGLE_boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
         EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
         EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+        Part_Data_IDs_Snap1=dict();PartData_IDs_Snap1=dict()
         Part_Data_Masses_Snap1=dict();PartData_IDs_Snap1=dict()
         
         for itype in PartTypes:
