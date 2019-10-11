@@ -575,7 +575,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 current_hostID=base_halo_data[snap2]["hostHaloID"][ihalo_s2]
                 current_hostindex=np.where(current_hostID==base_halo_data[snap2]["ID"])[0][0]
                 prev_hostindex=find_progen_index(base_halo_data,index2=current_hostindex,snap2=snap2,depth=1) #host index at previous snapshot 
-                prev_hostHaloID=base_halo_data[snap1]["ID"][prev_hostindex] #the host halo ID of this subhalo at the previous snapshot
+                prev_hostgroupID=base_halo_data[snap1]["ID"][prev_hostindex] #the host halo ID of this subhalo at the previous snapshot
             except:#if can't find progenitor, don't try to compare for CGM accretion
                 prev_hostHaloID=np.nan
                 print("Couldn't find the progenitor group - not checking for CGM accretion")
@@ -590,6 +590,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         if ifield:
             print('Halo index: ',ihalo_s2,f' - field halo')
         if isub:
+
             print('Halo index: ',ihalo_s2,f' - sub halo')
             print(f'Host halo at previous snap: {prev_hostgroupID}')
         print(f'Progenitor: {idhalo_s1} | Descendant: {idhalo_s3}')
