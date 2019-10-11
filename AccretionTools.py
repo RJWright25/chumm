@@ -591,7 +591,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print('Halo index: ',ihalo_s2,f' - field halo')
         if isub:
             print('Halo index: ',ihalo_s2,f' - sub halo')
-            print(f'Host halo at previous snap: {prev_hostHaloID}')
+            print(f'Host halo at previous snap: {prev_hostgroupID}')
         print(f'Progenitor: {idhalo_s1} | Descendant: {idhalo_s3}')
         print('**********************************************')
         print()
@@ -663,13 +663,14 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                 ############## INFLOW PARTICLE PROCESSING ##############
 
-                print(f'Retrieving histories (prev processing, prev host, masses) of inflow particles...')
+                print(f'Retrieving histories (prev processing, prev host, masses) and checking fidelity of inflow particles...')
                 t1_inflow.append(time.time())
 
                 ihalo_itype_snap1_inflow_history_L1=[]
                 ihalo_itype_snap1_inflow_history_L2=[]
                 ihalo_itype_snap1_inflow_masses=[]
                 ihalo_itype_snap1_inflow_structure=[]
+                ihalo_itype_snap1_inflow_fidelity=[]
                 ihalo_itype_snap1_inflow_transformed=[]
 
                 for iipart_historyindex,ipart_historyindex in enumerate(new_particle_IDs_itype_snap1_historyindex):
@@ -677,8 +678,15 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     # we have to be careful with star particles - we have their index in ipart_historyindex IF they were a star at the previous snap, otherwise np.nan
 
                     if ipart_historyindex>=0: #if our calculated index is valid at snap1, just use this index
-
+                        
                         ihalo_itype_snap1_inflow_transformed.append(0)#found index at snap 1 - no transformation from snap 1 to snap 2
+                        
+                        # Fidelity
+                        ID=new_particle_IDs_itype_snap2[iipart_historyindex]
+                        if ID in snap3_IDs_temp_set:#if still in halo at snap 3
+                            ihalo_itype_snap1_inflow_transformed.append(1)
+                        else:
+                            ihalo_itype_snap1_inflow_transformed.append(0)
 
                         # Mass
                         if constant_mass[str(itype)]:# If this particle type has a constant mass
@@ -686,7 +694,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         else:
                             ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
                             ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
-                            ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
+                        ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
 
                         #sanity check of mass
                         ipart_snap1_EAGLEID=Part_Data_IDs_Snap1[str(itype)][ipart_snap1_partdataindex]
@@ -709,6 +717,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                         # Previous host
                         ipart_snap1_prevhost=Part_Histories_HostStructure_snap1[str(itype)][ipart_historyindex]
+                        if isub:
+                            if ipart_snap1_prevhost==prev_hostgroupID:
+                                ipart_snap1_prevhost=0#set previous host to ZERO if from CGM
                         ihalo_itype_snap1_inflow_structure.append(ipart_snap1_prevhost)
 
                     else: # the particle
@@ -742,6 +753,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                         # Previous host
                         ipart_snap1_prevhost=Part_Histories_HostStructure_snap1['0'][ipart_transformed_historyindex]
+                        if isub:
+                            if ipart_snap1_prevhost==prev_hostgroupID:
+                                ipart_snap1_prevhost=0#set previous host to ZERO if from CGM
                         ihalo_itype_snap1_inflow_structure.append(ipart_snap1_prevhost)
 
                 t2_inflow.append(time.time())
@@ -820,7 +834,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         else:
                             ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
                             ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
-                            ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
+                        ihalo_itype_snap1_outflow_masses.append(ipart_snap1_mass)
                         
                 # Checking the destination of outflow particles (don't need particle histories for this)
                 destination_s2=[]
@@ -847,10 +861,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 
                 # Checking the future state of the newly accreted particles
                 # print(f"Checking which accreted particles stayed in halo {ihalo_s2} of type {PartNames[itype]}: n = {len(new_particle_IDs_itype_snap2)} ...")
-                new_particle_stayed_snap3=np.zeros(len(new_particle_IDs_itype_snap2))
-                for iipart, ipart in enumerate(new_particle_IDs_itype_snap2):
-                    if ipart in snap3_IDs_temp_set:
-                        new_particle_stayed_snap3[iipart]=1
+
 
                 # Iterate through all the outflow particle IDs and find their destination at snap2 and snap3
                 destination_s2=np.zeros(len(out_particle_IDs_itype_snap1))-1
@@ -888,24 +899,16 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                 t1_print.append(time.time())
                 if not isub:#if a field halo, either cosmological accretion or from mergers ("clumpy")
-                    new_previous_structure=previous_structure
                     print('-- INFLOW --')
-                    print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(new_particle_masses)):.2e} Msun')
-                    print(f'Particles that stayed in halo at snap 3: {np.sum(new_particle_stayed_snap3)/len(new_particle_stayed_snap3)*100:.2f}%')
-                    print(f'Accretion from field: {np.sum(np.array(new_previous_structure)<0)/len(new_previous_structure)*100:.2f}%')
-                    print(f'Accretion from other halos: {np.sum(np.array(new_previous_structure)>0)/len(new_previous_structure)*100:.2f}%')#clumpy if prevhost>0
+                    print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(ihalo_itype_snap1_inflow_masses)):.2e} Msun')
+                    print(f'Particles that stayed in halo at snap 3: {np.sum(ihalo_itype_snap1_inflow_fidelity)/len(ihalo_itype_snap1_inflow_fidelity)*100:.2f}%')
+                    print(f'Accretion from field: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)<0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')
+                    print(f'Accretion from other halos: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)>0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')#clumpy if prevhost>0
                     print('-- OUTFLOW --')
-                    print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(out_particle_masses)):.2e} Msun')
+                    print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(ihalo_itype_snap1_outflow_masses)):.2e} Msun')
                     print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s3)==1)/len(destination_s3)*100:.2f}%')
                     
-                else:#if subhalo, could be from CGM -- check this
-                    new_previous_structure=np.zeros(len(previous_structure))
-                    for inewpart,previous_halo_id in enumerate(previous_structure):#check if the previous host structure was the enclosing group
-                        if previous_halo_id==prev_hostHaloID:
-                            new_previous_structure[inewpart]=0#if so, previous host structure is 0
-                        else:
-                            new_previous_structure[inewpart]=previous_halo_id
-                    new_previous_structure=np.array(new_previous_structure)
+                else:
 
                     print('-- INFLOW --')
                     print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(new_particle_masses)):.2e} Msun')
@@ -923,30 +926,31 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     print(f'Outflow particles outside of group at snap 3: {np.sum(np.array(destination_s3)<0)/len(destination_s3)*100:.2f}%')
                     print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s3)==1)/len(destination_s3)*100:.2f}%')
 
+                t2_print.append(time.time())
 
                 # Saving INFLOW data for this parttype of the halo to file 
                 t1_save.append(time.time())
-                # print(f'Saving {PartNames[itype]} data for ihalo {ihalo_s2} to hdf5 ...')
+
                 halo_in_parttype_hdf5=halo_in_hdf5.create_group('PartType'+str(itype))
                 halo_in_parttype_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs_itype_snap2,dtype=np.int64)
-                halo_in_parttype_hdf5.create_dataset('Masses',data=new_particle_masses,dtype=np.float64)
-                halo_in_parttype_hdf5.create_dataset('Fidelity',data=new_particle_stayed_snap3,dtype=np.uint8)
-                halo_in_parttype_hdf5.create_dataset('PreviousHost',data=new_previous_structure,dtype=np.int32)
+                halo_in_parttype_hdf5.create_dataset('Masses',data=ihalo_itype_snap1_inflow_masses,dtype=np.float64)
+                halo_in_parttype_hdf5.create_dataset('Fidelity',data=ihalo_itype_snap1_inflow_fidelity,dtype=np.uint8)
+                halo_in_parttype_hdf5.create_dataset('PreviousHost',data=ihalo_itype_snap1_inflow_structure,dtype=np.int32)
                 if itype==0 or itype==1:
-                    halo_in_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_parthistory_L1,dtype=np.uint8)
-                    halo_in_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_parthistory_L2,dtype=np.uint8)
+                    halo_in_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_itype_snap1_inflow_history_L1,dtype=np.uint8)
+                    halo_in_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_itype_snap1_inflow_history_L2,dtype=np.uint8)
                 if itype==4:
-                    halo_in_parttype_hdf5.create_dataset('SF_Accretion',data=formed_ataccretion,dtype=np.uint8)
+                    halo_in_parttype_hdf5.create_dataset('Transformed',data=ihalo_itype_snap1_inflow_transformed,dtype=np.uint8)
 
                 # Saving OUTFLOW data for this parttype of the halo to file 
                 halo_out_parttype_hdf5=halo_out_hdf5.create_group('PartType'+str(itype))
                 halo_out_parttype_hdf5.create_dataset('ParticleIDs',data=out_particle_IDs_itype_snap1,dtype=np.int64)
-                halo_out_parttype_hdf5.create_dataset('Masses',data=out_particle_masses,dtype=np.float64)
+                halo_out_parttype_hdf5.create_dataset('Masses',data=ihalo_itype_snap1_outflow_masses,dtype=np.float64)
                 halo_out_parttype_hdf5.create_dataset('Destination_S2',data=destination_s2,dtype=np.int32)
                 halo_out_parttype_hdf5.create_dataset('Destination_S3',data=destination_s3,dtype=np.int32)
+                
                 t2_save.append(time.time())
                 t2_itype.append(time.time())
-            
 
         else:#if halo not tracked, return np.nan for fidelity, ids, prevhost
             for itype in PartTypes:
@@ -968,7 +972,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 halo_out_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float64)
                 halo_out_parttype_hdf5.create_dataset('Destination_S2',data=np.nan,dtype=np.int32)
                 halo_out_parttype_hdf5.create_dataset('Destination_S3',data=np.nan,dtype=np.int32)
-
+                
         t2_halo=time.time()
 
 
@@ -987,13 +991,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print(f'Breakdown of time on {PartNames[itype]} particles ...')
             performance_dict={}
             performance_dict['Indexing']=(t2_indexing[iitype]-t1_indexing[iitype])/itype_time*100
-            performance_dict['Inflow']=(t2_history[iitype]-t1_history[iitype])/itype_time*100
-            performance_dict['Outflow']=(t2_findmass[iitype]-t1_findmass[iitype])/itype_time*100
-            performance_dict['PrevHost']=(t2_findps[iitype]-t1_findps[iitype])/itype_time*100
-            # performance_dict['Printing']=(t2_print[iitype]-t1_print[iitype])/itype_time*100
-            performance_dict['Inflow_Fate']=(t2_findinfs[iitype]-t1_findinfs[iitype])/itype_time*100
-            performance_dict['Outflow_Fate']=(t2_findoutfs[iitype]-t1_findoutfs[iitype])/itype_time*100
-            # performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])/itype_time*100
+            performance_dict['Inflow']=(t2_inflow[iitype]-t1_inflow[iitype])/itype_time*100
+            performance_dict['Outflow']=(t2_outflow[iitype]-t1_outflow[iitype])/itype_time*100
+            performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])/itype_time*100
             performance_dict=df(performance_dict,index=[0])
             print(performance_dict)
         print('----------------')
