@@ -695,14 +695,14 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         # Mass
                         if constant_mass[str(itype)]:# If this particle type has a constant mass
                             ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)]
+                        else:# If this particle type has a varying mass
+                            ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
+                            ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
                             #sanity check of mass
                             ipart_snap1_EAGLEID=Part_Data_IDs_Snap1[str(itype)][ipart_snap1_partdataindex]
                             ipart_snap1_expectedID=new_particle_IDs_itype_snap2[iipart_historyindex]
                             if ipart_snap1_expectedID !=ipart_snap1_EAGLEID:
                                 print(f'Expected ID: {ipart_snap1_expectedID}, ID from partdata: {ipart_snap1_EAGLEID}')
-                        else:
-                            ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
-                            ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
                         ihalo_itype_snap1_inflow_masses.append(ipart_snap1_mass)
 
 
