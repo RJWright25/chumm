@@ -668,15 +668,20 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 # Use the above inflow IDs and find their index in particle histories 
                 print(f"Finding relative particle index of accreted particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {new_particle_count} ...")
                 t1_findhi.append(time.time())
+
+                ########################################################################################################################################
+                dump_pickle(data=Part_Histories_IDs_snap2[iitype],path=f'./ordered_ids_{PartNames[itype]}.dat')
+                dump_pickle(data=new_particle_IDs_itype_snap2,path=f'./new_ids_{PartNames[itype]}_25.dat')
+
                 if new_particle_count>250 and not itype==4:#if we have a large number of new particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
                     # print('Using np.searchsorted to index inflow particles ...')
+                    
                     new_particle_IDs_itype_snap2_historyindex=np.searchsorted(a=Part_Histories_IDs_snap2[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 2
                     new_particle_IDs_itype_snap1_historyindex=np.searchsorted(a=Part_Histories_IDs_snap1[iitype],v=new_particle_IDs_itype_snap2)#index of the new IDs in particle histories snap 1
                 else:#otherwise the bisect search seems to work faster
                     # print('Using bisect to index inflow particles ...')
                     new_particle_IDs_itype_snap2_historyindex=[]
                     new_particle_IDs_itype_snap1_historyindex=[]
-                    
                     for inew_ID,new_ID in enumerate(new_particle_IDs_itype_snap2):
                         if not itype==4:#don't need to check presence of particles
                             snap2_index=bisect_left(Part_Histories_IDs_snap2[iitype],new_ID)
@@ -687,7 +692,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                         new_particle_IDs_itype_snap2_historyindex.append(snap2_index)#index of the new IDs in particle histories snap 2
                         new_particle_IDs_itype_snap1_historyindex.append(snap1_index)#index of the new IDs in particle histories snap 1
-                
+                ########################################################################################################################################
                 # Use the above outflow IDs and find their index in particle histories 
                 print(f"Finding relative particle index of outflow particles in halo {ihalo_s2} of type {PartNames[itype]}: n = {out_particle_count} ...")
                 if out_particle_count>250 and not itype==4:#if we have a large number of outflow particles and not searching for star IDs it's worth using the non-checked algorithm (i.e. np.searchsorted)
@@ -699,7 +704,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     for iout_ID,out_ID in enumerate(out_particle_IDs_itype_snap1):
                         snap1_index=bisect_left(Part_Histories_IDs_snap1[iitype],out_ID,lo=0,hi=len(Part_Histories_IDs_snap1[iitype]))
                         out_particle_IDs_itype_snap1_historyindex[iout_ID]=snap1_index#index of the new IDs in particle histories snap 1
-                
+                ########################################################################################################################################
+
                 t2_findhi.append(time.time())
 
                 # Retrieve particle processing histories for inflow particles
