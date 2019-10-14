@@ -917,10 +917,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print(f'Total time on {PartNames[itype]} particles: {itype_time:.2f} sec ({itype_time/(t2_halo-t1_halo)*100:.2f} % of halo time)')
             print(f'Breakdown of time on {PartNames[itype]} particles ...')
             performance_dict={}
-            performance_dict['Indexing']=(t2_indexing[iitype]-t1_indexing[iitype])/itype_time*100
-            performance_dict['Inflow']=(t2_inflow[iitype]-t1_inflow[iitype])/itype_time*100
-            performance_dict['Outflow']=(t2_outflow[iitype]-t1_outflow[iitype])/itype_time*100
-            performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])/itype_time*100
+            performance_dict['Indexing']=(t2_indexing[iitype]-t1_indexing[iitype])
+            performance_dict['Inflow']=(t2_inflow[iitype]-t1_inflow[iitype])
+            performance_dict['Outflow']=(t2_outflow[iitype]-t1_outflow[iitype])
+            performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])
             performance_dict=df(performance_dict,index=[0])
             print(performance_dict)
             performance_ihalo.append(performance_dict)
@@ -928,10 +928,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         
         with open(fname_log,"a") as progress_file:
             progress_file.write(" \n")
-            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo} out of {num_halos_thisprocess} for this process - {iihalo/num_halos_thisprocess*100:.2f})\n")
+            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo} out of {num_halos_thisprocess} for this process - {iihalo/num_halos_thisprocess*100:.2f})% done\n")
             progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")
             progress_file.write(f"Particles out = {np.sum(out_particle_IDs_mask_snap1)}\n")
             for iitype,itype in enumerate(PartTypes):
+                print(f'PartType{itype} timings (sec)')
                 progress_file.write(performance_ihalo[iitype].to_string())
                 progress_file.write(" \n")
 
