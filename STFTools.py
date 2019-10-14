@@ -306,6 +306,11 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         AND ANY EXTRAS from vr_property_fields
 
 	"""
+    
+    fname_log="halodata_progress.log"
+    if os.path.exists(fname_log):
+        os.remove(fname_log)
+
     # Take number of total snapshots from length of input base halo data 
     no_snaps_tot=len(base_halo_data)
 
@@ -326,6 +331,8 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
 
     print('Will also collect the following fields from base halo data:')
     print(np.array(base_fields))
+
+    
 
     # Loop through each snap and add the extra fields
     for snap,base_halo_data_snap in enumerate(base_halo_data):
@@ -404,7 +411,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         new_halo_data.append(new_halo_data_snap)
         t2=time.time()
 
-        with open(f"halodata_progress.log","a") as progress_file:
+        with open(fname_log,"a") as progress_file:
             progress_file.write(f"Done with snap {snap} of {len(base_halo_data)}: num halos = {len(base_halo_data_snap['ID'])}, took {t2-t1} sec \n")
 
 

@@ -408,7 +408,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
     
     """
-
+    
+    
     # Initialising halo index list
     t1_io=time.time()
 
@@ -423,7 +424,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             halo_index_list_snap2=halo_index_list
             print('Using iprocess x')
             iprocess="x"
-
+    
+    fname_log=f"acc_data/progress_snap_{str(snap).zfill(3)}_p{iprocess}.log"
 
     # Assigning snap
     if snap==None:
@@ -924,7 +926,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             performance_ihalo.append(performance_dict)
         halos_done=halos_done+1
         
-        with open(f"acc_data/progress_snap_{str(snap).zfill(3)}_p{iprocess}.log","a") as progress_file:
+        with open(fname_log,"a") as progress_file:
             progress_file.write(" \n")
             progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo} out of {num_halos_thisprocess} for this process - {iihalo/num_halos_thisprocess*100:.2f})\n")
             progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")
