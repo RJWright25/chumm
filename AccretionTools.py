@@ -928,11 +928,12 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         
         with open(fname_log,"a") as progress_file:
             progress_file.write(" \n")
-            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo} out of {num_halos_thisprocess} for this process - {iihalo/num_halos_thisprocess*100:.2f}% done)\n")
+            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo+1} out of {num_halos_thisprocess} for this process - {iihalo/num_halos_thisprocess*100:.2f}% done)\n")
             progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")
             progress_file.write(f"Particles out = {np.sum(out_particle_IDs_mask_snap1)}\n")
             for iitype,itype in enumerate(PartTypes):
-                progress_file.write(f'PartType{itype} timings (sec):\n')
+                progress_file.write(f'PartType{itype} timings (sec):')
+                progress_file.write(" \n")
                 progress_file.write(performance_ihalo[iitype].to_string())
                 progress_file.write(" \n")
 
