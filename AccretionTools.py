@@ -543,7 +543,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
     count=0
     halos_done=0
-
+    num_halos_thisprocess=len(halo_index_list_snap2)
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
         
         t1_halo=time.time()
