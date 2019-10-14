@@ -176,8 +176,9 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False):
 
     """
     hi=len(sorted_list)
+    n_items=len(items)
     if algorithm==None:
-        if hi>250:
+        if n_items>250:
             a1=True
         else:
             a1=False
