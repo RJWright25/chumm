@@ -426,6 +426,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             iprocess="x"
     
     fname_log=f"acc_data/progress_snap_{str(snap).zfill(3)}_p{iprocess}.log"
+    if os.path.exists(fname_log):
+        os.remove(fname_log)
 
     # Assigning snap
     if snap==None:
