@@ -401,8 +401,8 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         
         #Append our new halo data to the running list
         new_halo_data.append(new_halo_data_snap)
-        with open(f"halodata_progress.txt","a") as progress_file:
-            progress_file.write(" \n")
+        with open(f"detailedhalodata_progress.log","a") as progress_file:
+            progress_file.write(f"Done with snap {snap} of {len(base_halo_data)}\n")
 
 
     # Save data to file (remove if path already exists)
