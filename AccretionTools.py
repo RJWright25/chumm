@@ -923,7 +923,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         
         halos_done=halos_done+1
         
-        with open(f"acc_data/progress_snap_{str(snap).zfill(3)}_p{iprocess}","a") as progress_file:
+        with open(f"acc_data/progress_snap_{str(snap).zfill(3)}_p{iprocess}.log","a") as progress_file:
             progress_file.write(" \n")
             progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo} out of {num_halos_thisprocess} for this process - {iihalo/num_halos_thisprocess*100:.2f})\n")
             progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")

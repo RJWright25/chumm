@@ -401,7 +401,10 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         
         #Append our new halo data to the running list
         new_halo_data.append(new_halo_data_snap)
-    
+        with open(f"halodata_progress.txt","a") as progress_file:
+            progress_file.write(" \n")
+
+
     # Save data to file (remove if path already exists)
     print('Saving full halo data to file ...')
     outfilename='B3_HaloData_'+base_halo_data[-1]['outname']+'.dat'
