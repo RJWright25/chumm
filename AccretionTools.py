@@ -543,8 +543,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
     count=0
     halos_done=0
-    num_halos_thisprocess=len(halo_index_list_snap2)
-    progress=[]
+
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
         
         t1_halo=time.time()
@@ -923,9 +922,14 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print(performance_dict)
         
         halos_done=halos_done+1
-        progress.append(halos_done/num_halos_thisprocess*100)
-        np.savetxt(fname="accdata_progress.txt",X=progress)
         
+        with open(f"acc_data/progress_snap_{str(snap).zfill(3)}_p{iprocess}","a") as progress_file:
+            progress_file.write(" \n")
+            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo} out of {num_halos_thisprocess} for this process - {iihalo/num_halos_thisprocess*100:.2f})\n")
+            progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")
+            progress_file.write(f"Particles out = {np.sum(out_particle_IDs_mask_snap1)}\n")
+            progress_file.write(" \n")
+
         print('----------------')
         print()
 
