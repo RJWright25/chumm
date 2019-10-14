@@ -156,7 +156,7 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
             ipart_switch=0
             all_Structure_IDs_itype=structure_Particles_bytype[str(itype)][:,0]
             all_Structure_HostStructureID_itype=structure_Particles_bytype[str(itype)][:,1]
-            all_Structure_IDs_itype_partindex=binary_search_1(sorted_array=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"],elements=all_Structure_IDs_itype)
+            all_Structure_IDs_itype_partindex=binary_search(sorted_list=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"],items=all_Structure_IDs_itype)
             for ipart_switch, ipart_index in enumerate(all_Structure_IDs_itype_partindex):#for each particle in structure, add its host structure to the array (if not in structure, HostStructure=-1)
                 if ipart_switch%100000==0:
                     print(ipart_switch/len(all_Structure_IDs_itype_partindex)*100,f'% done adding host halos for {PartNames[itype]} particles')
@@ -301,7 +301,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 ipart_L1=ipart_L1+1
                 if ipart_L1%100000==0:  
                     print(f'{np.round(ipart_L1/len(particles_prev_processed_L1)*100,2)}% done with carrying over L1 flags for gas')
-                ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
+                ipart_currentindex=binary_search(items=[ipart_prevID],sorted_list=current_IDs_gas,check_entries=True)[0]
                 if ipart_currentindex>-1:#if particle found
                     gas_flags_L1[ipart_currentindex]=ipart_L1_level
                 else:
@@ -312,7 +312,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 ipart_L2=ipart_L2+1
                 if ipart_L2%100000==0:
                     print(f'{np.round(ipart_L2/len(particles_prev_processed_L2)*100,2)}% done with carrying over L2 flags')
-                ipart_currentindex=binary_search_2(element=ipart_prevID,sorted_array=current_IDs_gas)
+                ipart_currentindex=binary_search(items=[ipart_prevID],sorted_list=current_IDs_gas,check_entries=True)[0]
                 if ipart_currentindex>-1:#if particle found
                     gas_flags_L2[ipart_currentindex]=ipart_L2_level
                 else:
@@ -933,7 +933,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             progress_file.write(f"Particles out = {np.sum(out_particle_IDs_mask_snap1)}\n")
             for iitype,itype in enumerate(PartTypes):
                 progress_file.write(f'PartType{itype} timings (sec):')
-                progress_file.write(performance_ihalo[iitype].to_string())
+                progress_file.write(performance_ihalo[iitype].to_string()+'\n')
                 progress_file.write(" \n")
 
         print('----------------')
@@ -1285,17 +1285,9 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
             output_datasets[prev_dataset]=[]
         ParticleIDs_halo=ParticleIDs[iihalo]
         Npart_ihalo=np.size(ParticleIDs_halo)
-        if Npart_ihalo>200:
-            history_indices_snap2=np.searchsorted(v=ParticleIDs_halo,a=sorted_IDs_snap2)
-            history_indices_snap1=np.searchsorted(v=ParticleIDs_halo,a=sorted_IDs_snap1)
-        else:
-            history_indices_snap2=[]
-            history_indices_snap1=[]
-            if Npart_ihalo==1:
-                ParticleIDs_halo=[ParticleIDs_halo]
-            for ipart_ID in ParticleIDs_halo:
-                history_indices_snap2.append(binary_search_2(sorted_array=sorted_IDs_snap2,element=ipart_ID))
-                history_indices_snap1.append(binary_search_2(sorted_array=sorted_IDs_snap1,element=ipart_ID))
+        
+        history_indices_snap2=binary_search(items=sorted_IDs_snap2,ParticleIDs_halo,check_entries=True)
+        history_indices_snap1=binary_search(items=sorted_IDs_snap1,ParticleIDs_halo,check_entries=True)
 
         for history_index_snap1,history_index_snap2 in zip(history_indices_snap1,history_indices_snap2):#for each index in the histories (i.e. every particle)
             if history_index_snap1>=0 and history_index_snap2>=0:#if we have a valid index (i.e. not np.nan)
