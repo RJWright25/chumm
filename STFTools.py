@@ -329,6 +329,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
 
     # Loop through each snap and add the extra fields
     for snap,base_halo_data_snap in enumerate(base_halo_data):
+        t1=time.time()    
         # First check if we have a padded snapshot
         if len(base_halo_data_snap.keys())<4: 
             print(f'Skipping padded snap ',snap)
@@ -401,9 +402,10 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         
         #Append our new halo data to the running list
         new_halo_data.append(new_halo_data_snap)
+        t2=time.time()
 
         with open(f"halodata_progress.log","a") as progress_file:
-            progress_file.write(f"Done with snap {snap} of {len(base_halo_data)}: num halos = {len(base_halo_data_snap['ID'])} \n")
+            progress_file.write(f"Done with snap {snap} of {len(base_halo_data)}: num halos = {len(base_halo_data_snap['ID'])}, took {t2-t1} sec \n")
 
 
     # Save data to file (remove if path already exists)
