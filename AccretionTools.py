@@ -930,8 +930,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")
             progress_file.write(f"Particles out = {np.sum(out_particle_IDs_mask_snap1)}\n")
             for iitype,itype in enumerate(PartTypes):
-
-            progress_file.write(" \n")
+                progress_file.write(performance_dict[iitype])
+                progress_file.write(" \n")
 
         print('----------------')
         print()
