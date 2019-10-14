@@ -1286,8 +1286,8 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
         ParticleIDs_halo=ParticleIDs[iihalo]
         Npart_ihalo=np.size(ParticleIDs_halo)
         
-        history_indices_snap2=binary_search(items=sorted_IDs_snap2,ParticleIDs_halo,check_entries=True)
-        history_indices_snap1=binary_search(items=sorted_IDs_snap1,ParticleIDs_halo,check_entries=True)
+        history_indices_snap2=binary_search(items=sorted_IDs_snap2,sorted_list=ParticleIDs_halo,check_entries=True)
+        history_indices_snap1=binary_search(items=sorted_IDs_snap1,sorrted_list=ParticleIDs_halo,check_entries=True)
 
         for history_index_snap1,history_index_snap2 in zip(history_indices_snap1,history_indices_snap2):#for each index in the histories (i.e. every particle)
             if history_index_snap1>=0 and history_index_snap2>=0:#if we have a valid index (i.e. not np.nan)
