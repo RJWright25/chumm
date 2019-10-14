@@ -201,3 +201,36 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False):
 
 
     return indices
+
+def rank_list(items):
+    """
+
+    rank_list : function
+	----------
+
+    Take a list and return a list with the corresponding ranking of the element in the list. 
+
+    e.g. items=[0,1,2,3,4,5]
+        ranks=[5,4,3,2,1,0] - 0 is the highest
+
+	Parameters
+	----------
+    items : list or list-like
+        The elements to rank.  
+
+    Returns
+	----------
+    ranks : np.ndarray
+
+    A list of the rank of each element in items. 
+
+    """
+
+    items=np.array(items)
+    ranks=[]
+    for item in items:
+        num_elements_greater=int(np.sum(item<items))
+        ranks.append(num_elements_greater)
+    ranks=np.array(ranks)
+    return ranks
+

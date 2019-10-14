@@ -1302,7 +1302,7 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
 
 ########################### READ ALL ACC DATA ###########################
 
-def get_particle_acc_data(snap,halo_index_list,path='',fields=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],itype=None):
+def get_particle_acc_data(snap,halo_index_list,path='',fields_in=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],fields_out=['Particle_IDs','Masses',"Destination_S2","Destination_S3"],itype=None):
     if type(halo_index_list)==int:
         halo_index_list=[halo_index_list]
     else:
