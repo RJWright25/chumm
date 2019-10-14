@@ -772,7 +772,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                     host_particle_list_exclusive_s2=set(snap_2_halo_particles_nosubpart_all["Particle_IDs"][host_index_s2])
                     host_particle_list_withsubhalos_s2=set(snap_2_halo_particles_withsubpart_all["Particle_IDs"][host_index_s2])
-                    
+
                     if host_index_s3>0:
                         host_particle_list_exclusive_s3=set(snap_3_halo_particles_nosubpart_all["Particle_IDs"][host_index_s3])
                         host_particle_list_withsubhalos_s3=set(snap_3_halo_particles_withsubpart_all["Particle_IDs"][host_index_s3])
@@ -927,7 +927,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
 ########################### POSTPROCESS/SUM ACCRETION DATA ###########################
 
-def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
+def postprocess_acc_data_serial(path):
     """
 
     postprocess_acc_data_serial : function
@@ -945,6 +945,7 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
     Combined_AccData.hdf5: hdf5 file with datasets:
         summed outputs
         ---------------
+        In group '/Inflow':
         '/PartTypeX/All_TotalDeltaN': Total number of particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_TotalDeltaM': Total mass of particles of type X new to the halo  (length: num_total_halos)
         '/PartTypeX/All_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: num_total_halos)
@@ -970,6 +971,8 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
         '/PartTypeX/Stable_PrimordialDeltaM': Total mass of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/Stable_RecycledDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/Stable_RecycledDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+
+
 
         '/Header' contains attributes: 
         't1'
@@ -1019,7 +1022,8 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
     collated_output_file_header.attrs.create('total_num_halos',data=total_num_halos)
 
     # Names of the new outputs
-    new_outputs=["All_TotalDeltaM",
+    new_outputs_inflow=[
+    "All_TotalDeltaM",
     "All_TotalDeltaN",
     "All_CosmologicalDeltaN",
     'All_CosmologicalDeltaM',
@@ -1045,9 +1049,22 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
     'Stable_RecycledDeltaM', 
     ]
 
+    new_outputs_outflow=[
+    "All_TotalDeltaM_Out",
+    "All_TotalDeltaN_Out",
+    "All_FieldDeltaM_Out",
+    "All_FieldDeltaN_Out",
+    "All_CGMDeltaM_Out",
+    "All_CGMDeltaN_Out",
+    "All_OtherSubDeltaM_Out",
+    "All_OtherSubDeltaN_Out",
+    "All_ReaccretedN_Out",#at snap 3
+    "All_ReaccretedM_Out"]#at snap 3
+
+
     # Initialise all new outputs
     itypes=[0,1,4,5]
-    new_outputs_keys_bytype=[f'PartType{itype}/'+field for field in new_outputs for itype in itypes]
+    new_outputs_keys_bytype=[f'/Inflow/PartType{itype}/'+field for field in new_outputs_inflow for itype in itypes]
     summed_acc_data={field:(np.zeros(total_num_halos)+np.nan) for field in new_outputs_keys_bytype}
 
     iihalo=0
@@ -1061,19 +1078,28 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
             for itype in itypes:
                 # Load in the details of particles new to this halo
                 try:
-                    fidelities=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Fidelity'].value
-                    masses=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Masses'].value
-                    prevhosts=acc_data_filetemp[ihalo_group+f'/PartType{itype}/PreviousHost'].value
+                    fidelities=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Fidelity'].value
+                    masses=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Masses'].value
+                    prevhosts=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/PreviousHost'].value
                     if itype==0 or itype==1:
-                        processed_l1=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Processed_L1'].value
-                        processed_l2=acc_data_filetemp[ihalo_group+f'/PartType{itype}/Processed_L2'].value
+                        processed_l1=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Processed_L1'].value
+                        processed_l2=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Processed_L2'].value
                     else:
                         processed_l1=np.ones(len(masses))#stars/bh will always be processed at some level
                         processed_l2=np.ones(len(masses))#stars/bh will always be processed at lowest level
                 except:
                     # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
                     continue
-                
+
+                #Load in the details of particles which left this halo
+                try:
+                    masses_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Masses'].value
+                    destination_s2_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Destination_S2'].value
+                    destination_s2_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Destination_S3'].value
+                except:
+                    # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
+                    continue
+
                 if not np.isfinite(np.sum(fidelities)):
                     # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
                     continue
@@ -1093,54 +1119,46 @@ def postprocess_acc_data_serial(path,convert_DM_to_physical=False):
                 stable_primordial_mask=np.logical_and(stable_mask,primordial_mask)
                 stable_recycled_mask=np.logical_and(stable_mask,recycled_mask)
 
-                summed_acc_data[f'PartType{itype}/All_TotalDeltaN'][ihalo]=np.size(masses)
-                summed_acc_data[f'PartType{itype}/All_CosmologicalDeltaN'][ihalo]=np.size(np.compress(cosmological_mask,masses))
-                summed_acc_data[f'PartType{itype}/All_CGMDeltaN'][ihalo]=np.size(np.compress(cgm_mask,masses))
-                summed_acc_data[f'PartType{itype}/All_ClumpyDeltaN'][ihalo]=np.size(np.compress(clumpy_mask,masses))
-                summed_acc_data[f'PartType{itype}/All_PrimordialDeltaN'][ihalo]=np.size(np.compress(primordial_mask,masses))
-                summed_acc_data[f'PartType{itype}/All_RecycledDeltaN'][ihalo]=np.size(np.compress(recycled_mask,masses))
-                summed_acc_data[f'PartType{itype}/Stable_TotalDeltaN'][ihalo]=np.size(np.compress(stable_mask,masses))
-                summed_acc_data[f'PartType{itype}/Stable_CosmologicalDeltaN'][ihalo]=np.size(np.compress(stable_cosmological_mask,masses))
-                summed_acc_data[f'PartType{itype}/Stable_CGMDeltaN'][ihalo]=np.size(np.compress(stable_cgm_mask,masses))
-                summed_acc_data[f'PartType{itype}/Stable_ClumpyDeltaN'][ihalo]=np.size(np.compress(stable_clumpy_mask,masses))
-                summed_acc_data[f'PartType{itype}/Stable_PrimordialDeltaN'][ihalo]=np.size(np.compress(stable_primordial_mask,masses))
-                summed_acc_data[f'PartType{itype}/Stable_RecycledDeltaN'][ihalo]=np.size(np.compress(stable_recycled_mask,masses))
-                if itype==1 and convert_DM_to_physical:
-                    if ihalo%1000==0:
-                        print('Converting DM masses to physical...')
-                    h_val=0.6777
-                    summed_acc_data[f'PartType{itype}/All_TotalDeltaM'][ihalo]=np.sum(masses)/h_val
-                    summed_acc_data[f'PartType{itype}/All_CosmologicalDeltaM'][ihalo]=np.sum(np.compress(cosmological_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/All_CGMDeltaM'][ihalo]=np.sum(np.compress(cgm_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/All_ClumpyDeltaM'][ihalo]=np.sum(np.compress(clumpy_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/All_PrimordialDeltaM'][ihalo]=np.sum(np.compress(primordial_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/All_RecycledDeltaM'][ihalo]=np.sum(np.compress(recycled_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/Stable_TotalDeltaM'][ihalo]=np.sum(np.compress(stable_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/Stable_CosmologicalDeltaM'][ihalo]=np.sum(np.compress(stable_cosmological_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/Stable_CGMDeltaM'][ihalo]=np.sum(np.compress(stable_cgm_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/Stable_ClumpyDeltaM'][ihalo]=np.sum(np.compress(stable_clumpy_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/Stable_PrimordialDeltaM'][ihalo]=np.sum(np.compress(stable_primordial_mask,masses))/h_val
-                    summed_acc_data[f'PartType{itype}/Stable_RecycledDeltaM'][ihalo]=np.sum(np.compress(stable_recycled_mask,masses))/h_val
-                else:
-                    summed_acc_data[f'PartType{itype}/All_TotalDeltaM'][ihalo]=np.sum(masses)
-                    summed_acc_data[f'PartType{itype}/All_CosmologicalDeltaM'][ihalo]=np.sum(np.compress(cosmological_mask,masses))
-                    summed_acc_data[f'PartType{itype}/All_CGMDeltaM'][ihalo]=np.sum(np.compress(cgm_mask,masses))
-                    summed_acc_data[f'PartType{itype}/All_ClumpyDeltaM'][ihalo]=np.sum(np.compress(clumpy_mask,masses))
-                    summed_acc_data[f'PartType{itype}/All_PrimordialDeltaM'][ihalo]=np.sum(np.compress(primordial_mask,masses))
-                    summed_acc_data[f'PartType{itype}/All_RecycledDeltaM'][ihalo]=np.sum(np.compress(recycled_mask,masses))
-                    summed_acc_data[f'PartType{itype}/Stable_TotalDeltaM'][ihalo]=np.sum(np.compress(stable_mask,masses))
-                    summed_acc_data[f'PartType{itype}/Stable_CosmologicalDeltaM'][ihalo]=np.sum(np.compress(stable_cosmological_mask,masses))
-                    summed_acc_data[f'PartType{itype}/Stable_CGMDeltaM'][ihalo]=np.sum(np.compress(stable_cgm_mask,masses))
-                    summed_acc_data[f'PartType{itype}/Stable_ClumpyDeltaM'][ihalo]=np.sum(np.compress(stable_clumpy_mask,masses))
-                    summed_acc_data[f'PartType{itype}/Stable_PrimordialDeltaM'][ihalo]=np.sum(np.compress(stable_primordial_mask,masses))
-                    summed_acc_data[f'PartType{itype}/Stable_RecycledDeltaM'][ihalo]=np.sum(np.compress(stable_recycled_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/All_TotalDeltaN'][ihalo]=np.size(masses)
+                summed_acc_data[f'Inflow/PartType{itype}/All_CosmologicalDeltaN'][ihalo]=np.size(np.compress(cosmological_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/All_CGMDeltaN'][ihalo]=np.size(np.compress(cgm_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/All_ClumpyDeltaN'][ihalo]=np.size(np.compress(clumpy_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/All_PrimordialDeltaN'][ihalo]=np.size(np.compress(primordial_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/All_RecycledDeltaN'][ihalo]=np.size(np.compress(recycled_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/Stable_TotalDeltaN'][ihalo]=np.size(np.compress(stable_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/Stable_CosmologicalDeltaN'][ihalo]=np.size(np.compress(stable_cosmological_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/Stable_CGMDeltaN'][ihalo]=np.size(np.compress(stable_cgm_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/Stable_ClumpyDeltaN'][ihalo]=np.size(np.compress(stable_clumpy_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/Stable_PrimordialDeltaN'][ihalo]=np.size(np.compress(stable_primordial_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/Stable_RecycledDeltaN'][ihalo]=np.size(np.compress(stable_recycled_mask,masses))
 
-    # Create groups for output
+                outfield_mask=(destination_s2_out==-1)
+                outsub_mask=(destination_s2_out>1)
+                outcgm_mask=destination_s2_out==0
+                reaccreted_mask=destination_s3_out==1
+
+                summed_acc_data[f'Outflow/PartType{itype}/All_TotalDeltaN_Out'][ihalo]=np.size(masses_out)
+                summed_acc_data[f'Outflow/PartType{itype}/All_TotalDeltaM_Out'][ihalo]=np.sum(masses_out)
+                summed_acc_data[f'Outflow/PartType{itype}/All_FieldDeltaN_Out'][ihalo]=np.size(np.compress(outfield_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_FieldDeltaM_Out'][ihalo]=np.sum(np.compress(outfield_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_CGMDeltaN_Out'][ihalo]=np.size(np.compress(outcgm_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_CGMDeltaM_Out'][ihalo]=np.sum(np.compress(outcgm_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_OtherSubDeltaN_Out'][ihalo]=np.size(np.compress(outsub_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_OtherSubDeltaM_Out'][ihalo]=np.sum(np.compress(outsub_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_ReaccretedN_Out'][ihalo]=np.size(np.compress(reaccreted_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_ReaccretedM_Out'][ihalo]=np.sum(np.compress(reaccreted_mask,masses_out))
+
+
+
     for itype in itypes:
-        collated_output_file_itype=collated_output_file.create_group(f'PartType{itype}')
-        for new_field in new_outputs:
-            collated_output_file_itype.create_dataset(name=new_field,data=summed_acc_data[f'PartType{itype}/'+new_field],dtype=np.float32)
-
+        collated_output_file_inflow=collated_output_file.create_group('Inflow')
+        collated_output_file_inflow_itype=collated_output_file_inflow.create_group(f'PartType{itype}')
+        collated_output_file_outflow=collated_output_file.create_group('Outflow')
+        collated_output_file_outflow_itype=collated_output_file_outflow.create_group(f'PartType{itype}')
+        for new_field in new_outputs_inflow:
+            collated_output_file_inflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'Inflow/PartType{itype}/'+new_field],dtype=np.float32)
+        for new_field in new_outputs_outflow:
+            collated_output_file_outflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'Outflow/PartType{itype}/'+new_field],dtype=np.float32)
     collated_output_file.close()
     t2=time.time()
     print(f'Finished collating files in {t2-t1} sec')
