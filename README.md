@@ -2,7 +2,7 @@
 
 Tools to calculate accretion rates to halos in cosmological galaxy formation simulations.
 
-############################# To use on cluster, add lines: #############################
+## Usage in python
 
 sys.path.append('/home/rwright/CHUMM/')
 
