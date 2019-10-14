@@ -541,7 +541,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     print(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
     print('*********************************************************')
 
-    count=0        
+    count=0
+    halos_done=0
+    num_halos_thisprocess=len(halo_index_list_snap2)
+    progress=[]
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
         
         t1_halo=time.time()
@@ -918,6 +921,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])/itype_time*100
             performance_dict=df(performance_dict,index=[0])
             print(performance_dict)
+        
+        halos_done=halos_done+1
+        progress.append(halos_done/num_halos_thisprocess*100)
+        np.savetxt(fname="accdata_progress.txt",X=progress)
+        
         print('----------------')
         print()
 
@@ -1336,8 +1344,10 @@ def get_particle_acc_data(snap,halo_index_list,path='',fields_in=["Fidelity","Pa
         parttypes=[0,1]
     else:
         parttypes=[itype]
-    partfields=fields
-    particle_acc_data={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields} for itype in parttypes}
+    partfields_in=fields_in
+    partfields_out=fields_out
+    particle_acc_data_in={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_in} for itype in parttypes}
+    particle_acc_data_out={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_out} for itype in parttypes}
     particle_acc_files=[]    
 
     print('Now retrieving halo data from file ...')
@@ -1347,9 +1357,14 @@ def get_particle_acc_data(snap,halo_index_list,path='',fields_in=["Fidelity","Pa
         ifile=ihalo_files[iihalo]
         particle_acc_files.append(accdata_filelist_trunc[int(ifile)])
         for parttype in parttypes:
-            for field in partfields:
-                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/PartType{parttype}/'+field].value
-                particle_acc_data[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
+            for field in partfields_in:
+                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{parttype}/'+field].value
+                particle_acc_data_in[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
+            for field in partfields_out:
+                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Outflow/PartType{parttype}/'+field].value
+                particle_acc_data_out[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
+
+    particle_acc_data={"Inflow":particle_acc_data_in,"Outflow":particle_acc_data_out}
     t2=time.time()
     print(f'Done in {t2-t1}')
 
