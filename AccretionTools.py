@@ -932,8 +932,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")
             progress_file.write(f"Particles out = {np.sum(out_particle_IDs_mask_snap1)}\n")
             for iitype,itype in enumerate(PartTypes):
-                progress_file.write(f'PartType{itype} timings (sec):')
-                progress_file.write(performance_ihalo[iitype].to_string()+'\n')
+                progress_file.write(f'PartType{itype} timings (sec):\n')
+                progress_file.write(performance_ihalo[iitype].to_string())
                 progress_file.write(" \n")
 
         print('----------------')
