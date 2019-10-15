@@ -626,6 +626,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             t1_indexing=[];t2_indexing=[]
             t1_inflow=[];t2_inflow=[]
             t1_outflow=[];t2_outflow=[]
+            t1_destination=[];t2_destination=[]
             t1_print=[];t2_print=[]
             t1_save=[];t2_save=[]
 
@@ -651,6 +652,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                 # Use the above inflow IDs and find their index in particle histories                 
                 t1_indexing.append(time.time())
+                
                 ################################ this is the bottleneck in the code
                 #indexing inflow particle IDs
                 print(f"Finding relative particle index of accreted particles: n = {new_particle_count} ...")
@@ -666,6 +668,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 print(f"Finding relative particle index of outflow particles: n = {out_particle_count} ...")
                 out_particle_IDs_itype_snap1_historyindex=binary_search(items=out_particle_IDs_itype_snap1,sorted_list=Part_Histories_IDs_snap1[str(itype)])
                 ################################ this is the bottleneck in the code
+
                 t2_indexing.append(time.time())
 
                 ############## INFLOW PARTICLE PROCESSING ##############
@@ -794,6 +797,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 # Checking the future state of the newly accreted particles
                 destination_s2=np.zeros(len(out_particle_IDs_itype_snap1))-1
                 destination_s3=np.zeros(len(out_particle_IDs_itype_snap1))-1
+                
+                t1_destination.append(time.time())
                 for ioutpart,out_ID in enumerate(out_particle_IDs_itype_snap1):
                     #Snap 2
                     if out_ID in host_particle_list_exclusive_s2:
@@ -820,6 +825,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         index_othersubhalo_s3=indices_othersubhalos_s3[which_othersubhalo_s3]
                         ID_othersubhalo_s3=base_halo_data[snap3]['ID'][index_othersubhalo_s3]
                         destination_s3[ioutpart]=ID_othersubhalo_s3
+
+                t2_destination.append(time.time())
                 t2_outflow.append(time.time())
 
 
@@ -922,6 +929,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             performance_dict['Indexing']=(t2_indexing[iitype]-t1_indexing[iitype])
             performance_dict['Inflow']=(t2_inflow[iitype]-t1_inflow[iitype])
             performance_dict['Outflow']=(t2_outflow[iitype]-t1_outflow[iitype])
+            performance_dict['Destination']=(t2_destination[iitype]-t1_destination[iitype])
             performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])
             performance_dict=df(performance_dict,index=[0])
             print(performance_dict)
