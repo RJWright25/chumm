@@ -1096,8 +1096,9 @@ def postprocess_acc_data_serial(path,test=False):
     itypes=[0,1,4,5]
     new_outputs_keys_bytype=[f'Inflow/PartType{itype}/'+field for field in new_outputs_inflow for itype in itypes]
     summed_acc_data={field:(np.zeros(total_num_halos)+np.nan) for field in new_outputs_keys_bytype}
-    print(summed_acc_data)
-
+    for outfield in new_outputs_outflow:
+        summed_acc_data[outfield]=np.zeros(total_num_halos)+np.nan
+        
     iihalo=0
     for ifile,acc_data_filetemp in enumerate(acc_data_hdf5files):
         print(f"Reading from file {ifile}: {acc_data_filetemp}")
