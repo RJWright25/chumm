@@ -1211,7 +1211,6 @@ def postprocess_acc_data_serial(path,test=False):
     collated_output_file_outflow=collated_output_file.create_group('Outflow')
 
     for itype in itypes:
-        print(list(collated_output_file.keys()))
         collated_output_file_inflow_itype=collated_output_file_inflow.create_group(f'PartType{itype}')
         collated_output_file_outflow_itype=collated_output_file_outflow.create_group(f'PartType{itype}')
         for new_field in new_outputs_inflow:
