@@ -530,6 +530,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     Part_Histories_npart_snap1={str(parttype):len(Part_Histories_IDs_snap1[str(parttype)]) for parttype in PartTypes}
 
     #Load in particle histories: snap 2
+    print(f'Retrieving & organising particle histories for snap = {snap2} ...')
     Part_Histories_File_snap2=h5py.File("part_histories/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
     Part_Histories_IDs_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes}
     Part_Histories_HostStructure_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes}
@@ -833,7 +834,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(ihalo_itype_snap1_outflow_masses)):.2e} Msun')
                     print(f'Outflow particles in other halos at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination)>0)/len(ihalo_itype_snap2_outflow_destination)*100:.2f}%')
                     print(f'Outflow particles in field at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination)<0)/len(ihalo_itype_snap2_outflow_destination)*100:.2f}%')
-                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(destination_s3)==1)/len(destination_s3)*100:.2f}%')
+                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(ihalo_itype_snap3_outflow_recycled)==1)/len(ihalo_itype_snap3_outflow_recycled)*100:.2f}%')
                     
                 else:
 
