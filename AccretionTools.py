@@ -862,7 +862,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 halo_in_parttype_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs_itype_snap2,dtype=np.int64)
                 halo_in_parttype_hdf5.create_dataset('Masses',data=ihalo_itype_snap1_inflow_masses,dtype=np.float64)
                 halo_in_parttype_hdf5.create_dataset('Fidelity',data=ihalo_itype_snap1_inflow_fidelity,dtype=np.uint8)
-                halo_in_parttype_hdf5.create_dataset('PreviousHost',data=ihalo_itype_snap1_inflow_structure,dtype=np.int32)
+                halo_in_parttype_hdf5.create_dataset('PreviousHost',data=ihalo_itype_snap1_inflow_structure,dtype=np.int64)
                 if itype==0 or itype==1:
                     halo_in_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_itype_snap1_inflow_history_L1,dtype=np.uint8)
                     halo_in_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_itype_snap1_inflow_history_L2,dtype=np.uint8)
@@ -873,7 +873,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 halo_out_parttype_hdf5=halo_out_hdf5.create_group('PartType'+str(itype))
                 halo_out_parttype_hdf5.create_dataset('ParticleIDs',data=out_particle_IDs_itype_snap1,dtype=np.int64)
                 halo_out_parttype_hdf5.create_dataset('Masses',data=ihalo_itype_snap1_outflow_masses,dtype=np.float64)
-                halo_out_parttype_hdf5.create_dataset('Destination',data=ihalo_itype_snap2_outflow_destination,dtype=np.int32)
+                halo_out_parttype_hdf5.create_dataset('Destination',data=ihalo_itype_snap2_outflow_destination,dtype=np.int64)
                 halo_out_parttype_hdf5.create_dataset('Recycled',data=ihalo_itype_snap3_outflow_recycled,dtype=np.uint8)
                 if itype==0:
                     halo_out_parttype_hdf5.create_dataset('Transformed',data=ihalo_itype_snap2_outflow_transformed,dtype=np.uint8)
@@ -896,12 +896,12 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 
                 # Saving OUTFLOW data for this parttype of the halo to file 
                 halo_out_parttype_hdf5=halo_out_hdf5.create_group('PartType'+str(itype))
-                halo_out_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.int64)
-                halo_out_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float64)
-                halo_out_parttype_hdf5.create_dataset('Destination',data=np.nan,dtype=np.int32)
-                halo_out_parttype_hdf5.create_dataset('Recycled',data=np.nan,dtype=np.int32)
+                halo_out_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
+                halo_out_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
+                halo_out_parttype_hdf5.create_dataset('Destination',data=np.nan,dtype=np.float16)
+                halo_out_parttype_hdf5.create_dataset('Recycled',data=np.nan,dtype=np.float16)
                 if itype==0:
-                    halo_out_parttype_hdf5.create_dataset('Transformed',data=ihalo_itype_snap2_outflow_transformed,dtype=np.uint8)
+                    halo_out_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
                 
         t2_halo=time.time()
 
@@ -1104,7 +1104,6 @@ def postprocess_acc_data_serial(path):
                 # Load in the details of particles new to this halo
                 try:
                     fidelities=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Fidelity'].value
-                    print(fidelities)
                     masses=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Masses'].value
                     prevhosts=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/PreviousHost'].value
                     if itype==0 or itype==1:
