@@ -188,7 +188,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
     postprocess_particle_history_serial : function
 	----------
 
-    Process the existing particle histories to generate a flag for each particle at each snao as to whether it had been processed at any time UP TO this snap. 
+    Process the existing particle histories to generate a flag for each particle at each snap as to whether it had been processed at any time UP TO this snap. 
 
 	Parameters
 	----------
@@ -244,8 +244,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 DM_flags_L2[ipart]=DM_flags_L2[ipart]+1
         
         try:
-            infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,compression='gzip',dtype=np.int8)
-            infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,compression='gzip',dtype=np.int8)
+            infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,compression='gzip',dtype=np.uint8)
+            infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,compression='gzip',dtype=np.uint8)
         except:
             infile_file["PartType1"]['Processed_L1'][:]=DM_flags_L1
             infile_file["PartType1"]['Processed_L2'][:]=DM_flags_L2
@@ -333,8 +333,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         print('About to save: L1!=L2?', np.sum(gas_flags_L2!=gas_flags_L1))
 
         try:
-            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.int8)
-            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.int8)
+            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.uint8)
+            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.uint8)
         except:
             infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
             infile_file["PartType0"]['Processed_L2'][:]=gas_flags_L2
