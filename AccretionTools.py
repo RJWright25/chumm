@@ -1094,7 +1094,7 @@ def postprocess_acc_data_serial(path):
 
     iihalo=0
     for ifile,acc_data_filetemp in enumerate(acc_data_hdf5files):
-        print(f"Reading from file {ifile}")
+        print(f"Reading from file {ifile}: {acc_data_filetemp}")
         ihalo_group_list_all=list(acc_data_filetemp.keys())
         ihalo_group_list=[ihalo_group for ihalo_group in ihalo_group_list_all if ihalo_group.startswith('ihalo')]
         for ihalo_group in ihalo_group_list:
