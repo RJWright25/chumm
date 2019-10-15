@@ -1014,7 +1014,7 @@ def postprocess_acc_data_serial(path,test=False):
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
     acc_data_filelist=sorted(acc_data_filelist)
-    if not Test:
+    if not test:
         acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename))]
     else:
         acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' in filename) and ('FOF' in filename))]
