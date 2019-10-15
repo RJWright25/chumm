@@ -620,13 +620,15 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             t1_new=time.time()
             new_particle_IDs_mask_snap2=np.isin(snap2_IDs_temp,snap1_IDs_temp,assume_unique=True,invert=True)
             t2_new=time.time()
-            
+            print(f"n(in) = {np.sum(new_particle_IDs_mask_snap2)} ...")
+
             # # Returns mask for s1 of particles which are in s1 but not in s2
             print(f"Finding particles which left ihalo {ihalo_s2} ...")
             t1_out=time.time()
             out_particle_IDs_mask_snap1=np.isin(snap1_IDs_temp,snap2_IDs_temp,assume_unique=True,invert=True)
             t2_out=time.time()
-            
+            print(f"n(out) = {np.sum(out_particle_IDs_mask_snap1)} ...")
+
             t1_itype=[];t2_itype=[]
             t1_typing=[];t2_typing=[]
             t1_indexing_in=[];t2_indexing_in=[]
