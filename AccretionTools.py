@@ -109,7 +109,7 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
             t2=time.time()
-        print(f"Loaded and sliced EAGLE data from snapshot {snap} in {t2-t1} sec")
+            print(f"Loaded and sliced EAGLE data from snapshot {snap} in {t2-t1} sec")
 
         # Load the Halo particle lists for this snapshot for each particle type
         t1=time.time()
