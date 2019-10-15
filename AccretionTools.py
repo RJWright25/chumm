@@ -1019,7 +1019,7 @@ def postprocess_acc_data_serial(path,test=False):
     else:
         acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' in filename) and ('FOF' in filename))]
     acc_data_filelist=acc_data_filelist_trunc
-    acc_data_outfile_name=acc_data_filelist[3][:-9]+'_summed.hdf5'
+    acc_data_outfile_name=acc_data_filelist[0][:-9]+'_summed.hdf5'
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if not (filename == acc_data_outfile_name or 'DS' in filename)]
     acc_data_filelist=acc_data_filelist_trunc
 
