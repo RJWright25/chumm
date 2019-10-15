@@ -715,8 +715,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         
                         ihalo_itype_snap1_inflow_transformed.append(0)#found index at snap 1 - no transformation from snap 1 to snap 2
                         
-
-
                         # Mass
                         if constant_mass[str(itype)]:# If this particle type has a constant mass
                             ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)]
@@ -1042,7 +1040,7 @@ def postprocess_acc_data_serial(path,test=False):
     acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])#total number of halos from file
     if test:
-        total_num_halos=10**6
+        total_num_halos=10**3
     print(f'Collating data for {total_num_halos} halos')
     
     # Copy over header information from first file
