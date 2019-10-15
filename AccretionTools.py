@@ -933,6 +933,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             performance_dict['Inflow']=(t2_inflow[iitype]-t1_inflow[iitype])
             performance_dict['Outflow']=(t2_outflow[iitype]-t1_outflow[iitype])
             performance_dict['Destination']=(t2_destination[iitype]-t1_destination[iitype])
+            performance_dict['OtherSubParts']=(t2_othersubparts[iitype]-t1_othersubparts[iitype])
             performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])
             performance_dict=df(performance_dict,index=[0])
             print(performance_dict)
