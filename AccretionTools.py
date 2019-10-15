@@ -953,7 +953,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
 ########################### POSTPROCESS/SUM ACCRETION DATA ###########################
 
-def postprocess_acc_data_serial(path):
+def postprocess_acc_data_serial(path,test=False):
     """
 
     postprocess_acc_data_serial : function
@@ -1014,7 +1014,10 @@ def postprocess_acc_data_serial(path):
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
     acc_data_filelist=sorted(acc_data_filelist)
-    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename))]
+    if not Test:
+        acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename))]
+    else:
+        acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' in filename) and ('FOF' in filename))]
     acc_data_filelist=acc_data_filelist_trunc
     acc_data_outfile_name=acc_data_filelist[3][:-9]+'_summed.hdf5'
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if not (filename == acc_data_outfile_name or 'DS' in filename)]
