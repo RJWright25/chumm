@@ -1014,6 +1014,8 @@ def postprocess_acc_data_serial(path,test=False):
     """
     t1=time.time()
     print(f'Summing accretion data from path: {path}')
+    if not path.endswith('/'):
+        path=path+'/'
 
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
