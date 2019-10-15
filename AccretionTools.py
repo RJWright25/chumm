@@ -702,17 +702,20 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 ihalo_itype_snap1_inflow_transformed=[]
 
                 for iipart_historyindex,ipart_historyindex in enumerate(new_particle_IDs_itype_snap1_historyindex):
+                    
+                    # Fidelity
+                    ID=new_particle_IDs_itype_snap2[iipart_historyindex]
+                    if ID in snap3_IDs_temp_set:#if still in halo at snap 3
+                        ihalo_itype_snap1_inflow_fidelity.append(1)
+                    else:
+                        ihalo_itype_snap1_inflow_fidelity.append(0)
+                
                     # we have to be careful with star particles - we have their index in ipart_historyindex IF they were a star at the previous snap, otherwise np.nan
                     if ipart_historyindex>=0: #if our calculated index is valid at snap1, just use this index
                         
                         ihalo_itype_snap1_inflow_transformed.append(0)#found index at snap 1 - no transformation from snap 1 to snap 2
                         
-                        # Fidelity
-                        ID=new_particle_IDs_itype_snap2[iipart_historyindex]
-                        if ID in snap3_IDs_temp_set:#if still in halo at snap 3
-                            ihalo_itype_snap1_inflow_fidelity.append(1)
-                        else:
-                            ihalo_itype_snap1_inflow_fidelity.append(0)
+
 
                         # Mass
                         if constant_mass[str(itype)]:# If this particle type has a constant mass
@@ -764,6 +767,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                                 ipart_snap1_prevhost=0#set previous host to ZERO if from CGM
                         ihalo_itype_snap1_inflow_structure.append(ipart_snap1_prevhost)
 
+
+
                 t2_inflow.append(time.time())
 
                 ############## OUTFLOW PARTICLE PROCESSING ##############    
@@ -807,6 +812,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ihalo_itype_snap2_outflow_transformed.append(1)
                         ipart_transformed_historyindex=bisect_left(a=Part_Histories_IDs_snap1['4'],x=ipart_transformed_ID)#search for this ID in the gas list
                         ipart_transformed_ID_athistoryindex=Part_Histories_IDs_snap1['4'][ipart_transformed_historyindex]
+                        
                         if ipart_transformed_ID!=ipart_transformed_ID_athistoryindex:
                             print(f"Couldn't find outflow particle {ipart_transformed_ID} at snap 2 - not in star list")
                             ipart_snap2_destination=np.nan
@@ -817,10 +823,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                             if isub:
                                 if ipart_snap2_destination==current_hostgroupID:
                                     ipart_snap2_destination=0
-                            
-                            #Find mass
-                            
-                                    
+                                                                
                         ihalo_itype_snap2_outflow_destination.append(ipart_snap2_destination)
 
                 t2_outflow.append(time.time())
