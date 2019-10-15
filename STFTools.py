@@ -306,8 +306,12 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         AND ANY EXTRAS from vr_property_fields
 
 	"""
-    
-    fname_log="halodata_progress.log"
+
+    if not os.path.exists('job_logs'):
+        os.mkdir('job_logs')
+
+    fname_log="job_logs/halodata_progress.log"
+
     if os.path.exists(fname_log):
         os.remove(fname_log)
 
