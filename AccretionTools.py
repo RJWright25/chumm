@@ -425,7 +425,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print('Using iprocess x')
             iprocess="x"
     
-    fname_log=f"acc_data/progress_snap_{str(snap).zfill(3)}_p{iprocess}.log"
+    fname_log=f"job_logs/progress_accdata_snap_{str(snap).zfill(3)}_p{iprocess}.log"
     if os.path.exists(fname_log):
         os.remove(fname_log)
 
@@ -710,9 +710,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         # Fidelity
                         ID=new_particle_IDs_itype_snap2[iipart_historyindex]
                         if ID in snap3_IDs_temp_set:#if still in halo at snap 3
-                            ihalo_itype_snap1_inflow_transformed.append(1)
+                            ihalo_itype_snap1_inflow_fidelity.append(1)
                         else:
-                            ihalo_itype_snap1_inflow_transformed.append(0)
+                            ihalo_itype_snap1_inflow_fidelity.append(0)
 
                         # Mass
                         if constant_mass[str(itype)]:# If this particle type has a constant mass
