@@ -1027,6 +1027,8 @@ def postprocess_acc_data_serial(path,test=False):
         acc_data_outfile_name=acc_data_filelist[0][:-8]+'_summed.hdf5'
     else:
         acc_data_outfile_name=acc_data_filelist[0][:-9]+'_summed.hdf5'
+
+    print(f'Output: {acc_data_outfile_name}')
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if not (filename == acc_data_outfile_name or 'DS' in filename)]
     acc_data_filelist=acc_data_filelist_trunc
 
