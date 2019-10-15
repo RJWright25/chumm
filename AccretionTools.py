@@ -503,13 +503,13 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         for itype in PartTypes:
             if not itype==1:#everything except DM
                 try:
-                    Part_Data_Masses_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10/h_val #CHECK THIS
+                    Part_Data_Masses_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10/h_val #CHECK THIS√
                 except:
                     print('No particles of this type were found.')
                     Part_Data_Masses_Snap1[str(itype)]=[]
             else:#for DM, find particle data file and save 
                 hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])#hdf5 file
-                Part_Data_Masses_Snap1[str(itype)]=hdf5file['Header'].attrs['MassTable'][1]*10**10/h_val #CHECK THIS
+                Part_Data_Masses_Snap1[str(itype)]=hdf5file['Header'].attrs['MassTable'][1]*10**10/h_val #CHECK THIS√
         print('Done reading in EAGLE snapshot data')
     else:#assuming constant mass
         constant_mass=True
@@ -629,11 +629,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             
             t1_itype=[];t2_itype=[]
             t1_typing=[];t2_typing=[]
-            t1_indexing=[];t2_indexing=[]
+            t1_indexing_in=[];t2_indexing_in=[]
+            t1_indexing_out=[];t2_indexing_out=[]
             t1_inflow=[];t2_inflow=[]
             t1_outflow=[];t2_outflow=[]
-            t1_destination=[];t2_destination=[]
-            t1_othersubparts=[];t2_othersubparts=[]
             t1_print=[];t2_print=[]
             t1_save=[];t2_save=[]
 
@@ -658,11 +657,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 t2_typing.append(time.time())
 
                 # Use the above inflow IDs and find their index in particle histories                 
-                t1_indexing.append(time.time())
                 
                 ################################ this is the bottleneck in the code
                 #indexing inflow particle IDs
                 print(f"Finding relative particle index of accreted particles: n = {new_particle_count} ...")
+                t1_indexing_in.append(time.time())
                 if new_particle_count>0:
                     if itype == 4:#if not stars, we don't need to check if the IDs from snap 2 are actually present at snap 1
                         new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2,sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=True)
@@ -670,9 +669,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2,sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=False)
                 else:
                     new_particle_IDs_itype_snap1_historyindex=[]
+                t2_indexing_in.append(time.time())
 
                 #indexing outflow particle IDs (these are taken at snap1, so we don't need to check at all)
                 print(f"Finding relative particle index of outflow particles: n = {out_particle_count} ... (both snap 1 and snap 2)")
+                t1_indexing_out.append(time.time())
                 if out_particle_count>0:
                     out_particle_IDs_itype_snap1_historyindex=binary_search(items=out_particle_IDs_itype_snap1,sorted_list=Part_Histories_IDs_snap1[str(itype)])#don't need to check snap 1
                     if itype==0:#if gas, we need to check whether they've been converted to stars at snap 2
@@ -682,10 +683,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 else:
                     out_particle_IDs_itype_snap1_historyindex=[]
                     out_particle_IDs_itype_snap2_historyindex=[]
+                t2_indexing_out.append(time.time())
 
                 ################################ this is the bottleneck in the code
-
-                t2_indexing.append(time.time())
 
                 ############## INFLOW PARTICLE PROCESSING ##############
 
@@ -919,7 +919,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print(f'Total time on {PartNames[itype]} particles: {itype_time:.2f} sec ({itype_time/(t2_halo-t1_halo)*100:.2f} % of halo time)')
             print(f'Breakdown of time on {PartNames[itype]} particles ...')
             performance_dict={}
-            performance_dict['Indexing']=(t2_indexing[iitype]-t1_indexing[iitype])
+            performance_dict['Indexing_in']=(t2_indexing_in[iitype]-t1_indexing_in[iitype])
+            performance_dict['Indexing_out']=(t2_indexing_out[iitype]-t1_indexing_out[iitype])
             performance_dict['Inflow']=(t2_inflow[iitype]-t1_inflow[iitype])
             performance_dict['Outflow']=(t2_outflow[iitype]-t1_outflow[iitype])
             performance_dict['Saving']=(t2_save[iitype]-t1_save[iitype])
@@ -931,10 +932,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         with open(fname_log,"a") as progress_file:
             progress_file.write(" \n")
             progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo+1} out of {num_halos_thisprocess} for this process - {iihalo/num_halos_thisprocess*100:.2f}% done)\n")
+            progress_file.write(f"ihalo {ihalo_s2} ({iihalo+1} took {t2_halo-t1_halo} sec\n")
             progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")
             progress_file.write(f"Particles out = {np.sum(out_particle_IDs_mask_snap1)}\n")
             for iitype,itype in enumerate(PartTypes):
-                progress_file.write(f'PartType{itype} timings (sec):')
+                progress_file.write(f'PartType{itype} [n(in)= {new_particle_count}, n(out)={out_particle_count}] timings (sec):')
                 progress_file.write(" \n")
                 progress_file.write(performance_ihalo[iitype].to_string())
                 progress_file.write(" \n")
@@ -978,8 +980,8 @@ def postprocess_acc_data_serial(path):
         '/PartTypeX/All_ClumpyDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_PrimordialDeltaN': Total number of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_PrimordialDeltaM': Total mass of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/All_RecycledDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/All_RecycledDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_ProcessedCosmologicalDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_ProcessedCosmologicalDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
 
         '/PartTypeX/Stable_TotalDeltaN': Total number of particles of type X new (and LOYAL) to the halo (length: num_total_halos)
         '/PartTypeX/Stable_TotalDeltaM': Total mass of particles of type X new (and LOYAL) to the halo (length: num_total_halos)
@@ -991,9 +993,8 @@ def postprocess_acc_data_serial(path):
         '/PartTypeX/Stable_ClumpyDeltaM': Total mass of clumpy origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
         '/PartTypeX/Stable_PrimordialDeltaN': Total number of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/Stable_PrimordialDeltaM': Total mass of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_RecycledDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_RecycledDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
-
+        '/PartTypeX/Stable_ProcessedCosmologicalDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_ProcessedCosmologicalDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
 
 
         '/Header' contains attributes: 
