@@ -425,7 +425,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print('Using iprocess x')
             iprocess="x"
     
-    fname_log=f"job_logs/progress_accdata_snap_{str(snap).zfill(3)}_p{iprocess}.log"
+    fname_log=f"job_logs/accdata_progress_snap_{str(snap).zfill(3)}_p{iprocess}.log"
     if os.path.exists(fname_log):
         os.remove(fname_log)
 
