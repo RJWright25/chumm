@@ -627,6 +627,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             t1_inflow=[];t2_inflow=[]
             t1_outflow=[];t2_outflow=[]
             t1_destination=[];t2_destination=[]
+            t1_othersubparts=[];t2_othersubparts=[]
             t1_print=[];t2_print=[]
             t1_save=[];t2_save=[]
 
@@ -770,6 +771,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 destination_s2=[]
                 destination_s3=[]
                 
+                t1_othersubparts.append(time.time())
                 if isub:# If a subhalo, we want to retrieve the particle information from the host halo at snap 2 and snap 3
                     host_ID_s2=base_halo_data[snap2]['hostHaloID'][ihalo_s2]
                     try:
@@ -793,7 +795,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     host_particle_list_withsubhalos_s2=[]
                     host_particle_list_exclusive_s3=[]
                     host_particle_list_withsubhalos_s3=[]
-                
+                t2_othersubparts.append(time.time())
+
                 # Checking the future state of the newly accreted particles
                 destination_s2=np.zeros(len(out_particle_IDs_itype_snap1))-1
                 destination_s3=np.zeros(len(out_particle_IDs_itype_snap1))-1
