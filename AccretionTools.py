@@ -1035,6 +1035,8 @@ def postprocess_acc_data_serial(path,test=False):
     # Open existing files in list structure
     acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])#total number of halos from file
+    if test:
+        total_num_halos=10**6
     print(f'Collating data for {total_num_halos} halos')
     
     # Copy over header information from first file
