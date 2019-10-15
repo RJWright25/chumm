@@ -1104,6 +1104,7 @@ def postprocess_acc_data_serial(path):
                 # Load in the details of particles new to this halo
                 try:
                     fidelities=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Fidelity'].value
+                    print(fidelities)
                     masses=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Masses'].value
                     prevhosts=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/PreviousHost'].value
                     if itype==0 or itype==1:
