@@ -950,7 +950,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 progress_file.write(" \n")
                 progress_file.write(performance_ihalo[iitype].to_string())
                 progress_file.write(" \n")
-
+        progress_file.close()
+        
         print('----------------')
         print()
 
