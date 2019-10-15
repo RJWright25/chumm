@@ -1207,12 +1207,12 @@ def postprocess_acc_data_serial(path,test=False):
                 summed_acc_data[f'Outflow/PartType{itype}/All_RecycledDeltaM_Out'][ihalo]=np.sum(np.compress(reaccreted_mask,masses_out))
 
 
+    collated_output_file_inflow=collated_output_file.create_group('Inflow')
+    collated_output_file_outflow=collated_output_file.create_group('Outflow')
 
     for itype in itypes:
         print(list(collated_output_file.keys()))
-        collated_output_file_inflow=collated_output_file.create_group('Inflow')
         collated_output_file_inflow_itype=collated_output_file_inflow.create_group(f'PartType{itype}')
-        collated_output_file_outflow=collated_output_file.create_group('Outflow')
         collated_output_file_outflow_itype=collated_output_file_outflow.create_group(f'PartType{itype}')
         for new_field in new_outputs_inflow:
             collated_output_file_inflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'Inflow/PartType{itype}/'+new_field],dtype=np.float32)
