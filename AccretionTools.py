@@ -817,6 +817,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                             if isub:
                                 if ipart_snap2_destination==current_hostgroupID:
                                     ipart_snap2_destination=0
+                            
+                            #Find mass
+                            
                                     
                         ihalo_itype_snap2_outflow_destination.append(ipart_snap2_destination)
 
