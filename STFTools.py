@@ -320,11 +320,10 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
 
     for isnap in isnaps:
         base_halo_data_snap=base_halo_data[isnap]
-        snap=base_halo_data_snap["Snap"]
+        snap=isnap
         fname_log=f"job_logs/halodata_progress_{str(snap).zfill(3)}.log"
         if os.path.exists(fname_log):
             os.remove(fname_log)
-
         try:
             outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
         except:
@@ -430,13 +429,14 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
 
         t2=time.time()
 
-        with open(fname_log,"a") as progress_file:
-            progress_file.write(f"Done with snap {snap}: num halos = {len(base_halo_data_snap['ID'])} ({np.sum(base_halo_data_snap['hostHaloID']>0)} subhalos), took {t2-t1:.2f} sec \n")
-            progress_file.close()
+        # with open(fname_log,"a") as progress_file:
+        #     progress_file.write(f"Done with snap {snap}: num halos = {len(base_halo_data_snap['ID'])} ({np.sum(base_halo_data_snap['hostHaloID']>0)} subhalos), took {t2-t1:.2f} sec \n")
+        #     progress_file.close()
 
         # Save data to file
         print(f'Saving halo data for snap {snap} to file ...')
         dump_pickle(data=new_halo_data_snap, path=outfilename)
+    
     return None
 
 def postprocess_detailed_halo_data(path=None):
