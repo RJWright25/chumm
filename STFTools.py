@@ -253,11 +253,11 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 ########################### ADD DETAILED HALO DATA ###########################
 
-def gen_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_halo_fields=[]):
+def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_halo_fields=[]):
     
     """
     
-    gen_detailed_halo_data_snap : function
+    add_detailed_halo_data_snap : function
 	----------
 
     Add detailed halo data to base halo data from property files.
