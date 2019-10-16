@@ -433,6 +433,31 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,outname=
     dump_pickle(data=new_halo_data_snap, path=outfilename)
     return new_halo_data_snap
 
+
+
+def postprocess_detailed_halo_data(path=None):
+
+    if path==None:
+        path='halo_data/'
+    
+    if not path.endswith('/')
+        path=path+'/'
+    
+    halo_data_files=sorted(os.listdir(path))
+    halo_data_files_wdir=[path+halo_data_file for halo_data_file in halo_data_files]
+    outfilename=halo_data_files[-1][:-7]+'.dat'
+    print('Will save to: ',outfilename)
+    print(f'Number of halo data snaps: {len(halo_data_files_wdir)}')
+    
+    full_halo_data=[[] for i in range(len(halo_data_files_wdir))]
+    for isnap,halo_data_file in enumerate(halo_data_files_wdir):
+        print(f'Adding data for isnap {isnap}')
+        halo_data_snap=open_pickle(halo_data_file)
+        full_halo_data[isnap]=halo_data_snap
+        
+    dump_pickle(data=full_halo_data,path=outfilename)
+    return full_halo_data
+
 ########################### COMPRESS DETAILED HALO DATA ###########################
 
 def compress_halo_data(detailed_halo_data,fields=[]):
