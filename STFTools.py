@@ -153,24 +153,25 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     halo_data_all=[item[0] for item in halo_data_all]#will be length n_valid_snaps
 
     # Use TreeFrog IDs and convert hostHaloIDs if we don't have the temporal IDval integrated
-    for isnap,item in enumerate(halo_data_all):#for the valid snaps
+    for isnap,halo_data_snap in enumerate(halo_data_all):#for the valid snaps
         halo_data_all[isnap]['Count']=halo_data_counts[isnap]#n_halos at this snap
         snap=halo_data_all[isnap]['Snap']
-        try:
-            if item["ID"][0]<temporal_idval:#if the first ID is less than the temporal IDval then do the conversion
-                #read in IDs from TreeFrog
-                treefile_compressed_isnap=tf_filelist[snap]+'.tree'
-                treefile_isnap=h5py.File(treefile_compressed_isnap,'r+')
-                treefile_ids=treefile_isnap["/ID"].value
-                halo_data_all[isnap]["ID"]=treefile_ids
-                treefile_isnap.close()
-            if item["hostHaloID"][0]<temporal_idval:#if the first hostHaloID is less than the temporal IDval then do the conversion
-                #read in IDs from TreeFrog
-                for ihalo,hosthaloid in enumerate(halo_data_all[isnap]["hostHaloID"]):
-                    if hosthaloid<0:
-                        halo_data_all[isnap]["hostHaloID"][ihalo]=-1
-                    else:
-                        halo_data_all[isnap]["hostHaloID"][ihalo]=np.int64(isnap*temporal_idval)+hosthaloid
+        if halo_data_snap["ID"][0]<temporal_idval:#if the first ID is less than the temporal IDval then do the conversion
+            #read in IDs from TreeFrog
+            treefile_compressed_isnap=tf_filelist[snap]+'.tree'
+            treefile_isnap=h5py.File(treefile_compressed_isnap,'r+')
+            treefile_ids=treefile_isnap["/ID"].value
+            halo_data_all[isnap]["ID"]=treefile_ids
+            treefile_isnap.close()
+
+        hosthaloIDs=halo_data_snap["hostHaloID"][0]
+        if np.nanmax(hosthaloIDs)<temporal_idval:
+            #read in IDs from TreeFrog
+            for ihalo,hosthaloid in enumerate(halo_data_all[isnap]["hostHaloID"]):
+                if hosthaloid<0:
+                    halo_data_all[isnap]["hostHaloID"][ihalo]=-1
+                else:
+                    halo_data_all[isnap]["hostHaloID"][ihalo]=np.int64(isnap*temporal_idval)+hosthaloid+1
         except:
             pass
 
