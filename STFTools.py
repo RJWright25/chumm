@@ -319,13 +319,9 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
     print(f'iprocess {iprocess} has snaps {isnaps}')
 
     for isnap in isnaps:
-        if isnap==20:
-            print('WE HAVE SNAP 20')
         base_halo_data_snap=base_halo_data[isnap]
-        snap=isnap
-        fname_log=f"job_logs/halodata_progress_{str(snap).zfill(3)}.log"
-        if os.path.exists(fname_log):
-            os.remove(fname_log)
+        snap=base_halo_data_snap["Snap"]
+
         try:
             outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
         except:
@@ -349,7 +345,7 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
                 print(f'Skipping padded snap ',snap)
                 new_halo_data_snap=base_halo_data_snap
                 dump_pickle(data=new_halo_data_snap, path=outfilename)
-                return new_halo_data_snap
+                continue
         
                 
         print('Adding the following fields from properties file:')
@@ -430,10 +426,6 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
             print('Skipping adding the extra halo fields for this snap (insufficient halo count)')
 
         t2=time.time()
-
-        # with open(fname_log,"a") as progress_file:
-        #     progress_file.write(f"Done with snap {snap}: num halos = {len(base_halo_data_snap['ID'])} ({np.sum(base_halo_data_snap['hostHaloID']>0)} subhalos), took {t2-t1:.2f} sec \n")
-        #     progress_file.close()
 
         # Save data to file
         print(f'Saving halo data for snap {snap} to file ...')
