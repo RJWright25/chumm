@@ -435,7 +435,7 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
             progress_file.close()
 
         # Save data to file
-        print('Saving full halo data to file ...')
+        print(f'Saving halo data for snap {snap} to file ...')
         dump_pickle(data=new_halo_data_snap, path=outfilename)
         return new_halo_data_snap
 
@@ -449,13 +449,12 @@ def postprocess_detailed_halo_data(path=None):
     
     halo_data_files=sorted(os.listdir(path))
     halo_data_files_wdir=[path+halo_data_file for halo_data_file in halo_data_files]
-    outfilename=halo_data_files[-1][:-7]+'.dat'
-    print('Will save to: ',outfilename)
+    outfilename=halo_data_files[-1][:-8]+'.dat'
+    print('Will save full halo data to: ',outfilename)
     print(f'Number of halo data snaps: {len(halo_data_files_wdir)}')
-    
     full_halo_data=[[] for i in range(len(halo_data_files_wdir))]
     for isnap,halo_data_file in enumerate(halo_data_files_wdir):
-        print(f'Adding data for isnap {isnap}')
+        print(f'Adding to full halo data for isnap {isnap}')
         halo_data_snap=open_pickle(halo_data_file)
         full_halo_data[isnap]=halo_data_snap
         
