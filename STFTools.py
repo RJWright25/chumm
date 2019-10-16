@@ -319,6 +319,8 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
     if not os.path.exists('halo_data'):
         os.mkdir('halo_data')
 
+    outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
+
     # If we're not given vr halo fields, find all of the available data fields
     if vr_halo_fields==None:
         try:
@@ -327,7 +329,6 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
             property_file=h5py.File(property_filename)
             all_props=list(property_file.keys())
             vr_halo_fields=all_props
-            outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
             if path.exists(outfilename):
                 print('Will overwrite existing B3 halo data ...')
                 os.remove(outfilename)
