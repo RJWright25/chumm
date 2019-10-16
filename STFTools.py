@@ -311,6 +311,9 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
         os.mkdir('job_logs')
 
     isnaps=snap_indices['indices']
+    iprocess=snap_indices['iprocess']
+    print(f'iprocess {iprocess} has snaps {isnaps}')
+
     for isnap in isnaps:
         base_halo_data_snap=base_halo_data[snap]
         snap=base_halo_data_snap["Snap"]
