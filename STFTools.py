@@ -309,6 +309,11 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
     t1=time.time()
     if not os.path.exists('job_logs'):
         os.mkdir('job_logs')
+    if os.path.exists(fname_log):
+        os.remove(fname_log)
+    
+    if not os.path.exists('halo_data'):
+        os.mkdir('halo_data')
 
     isnaps=snap_indices['indices']
     iprocess=snap_indices['iprocess']
@@ -316,14 +321,8 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
 
     for isnap in isnaps:
         base_halo_data_snap=base_halo_data[isnap]
-        snap=base_halo_data_snap["Snap"]
+        snap=isnap
         fname_log=f"job_logs/halodata_progress_{str(snap).zfill(3)}.log"
-
-        if os.path.exists(fname_log):
-            os.remove(fname_log)
-        
-        if not os.path.exists('halo_data'):
-            os.mkdir('halo_data')
 
         try:
             outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
