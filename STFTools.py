@@ -315,7 +315,7 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
     print(f'iprocess {iprocess} has snaps {isnaps}')
 
     for isnap in isnaps:
-        base_halo_data_snap=base_halo_data[snap]
+        base_halo_data_snap=base_halo_data[isnap]
         snap=base_halo_data_snap["Snap"]
         fname_log=f"job_logs/halodata_progress_{str(snap).zfill(3)}.log"
 
