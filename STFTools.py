@@ -341,7 +341,7 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,outname=
         except:
             print(f'Skipping padded snap ',snap)
             new_halo_data_snap=base_halo_data_snap
-            pickle.dump(data=new_halo_data_snap, path=outfilename)
+            pickle_dump(data=new_halo_data_snap, path=outfilename)
             return new_halo_data_snap
     
             
