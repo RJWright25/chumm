@@ -450,6 +450,9 @@ def postprocess_detailed_halo_data(path=None):
     halo_data_files=sorted(os.listdir(path))
     halo_data_files_wdir=[path+halo_data_file for halo_data_file in halo_data_files]
     outfilename=halo_data_files[-1][:-8]+'.dat'
+    if os.path.exists(outfilename):
+        print('Removing existing detailed halo data ...')
+        os.remove(outfilename)
     print('Will save full halo data to: ',outfilename)
     print(f'Number of halo data snaps: {len(halo_data_files_wdir)}')
     full_halo_data=[[] for i in range(len(halo_data_files_wdir))]
