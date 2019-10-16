@@ -319,8 +319,6 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
     if not os.path.exists('halo_data'):
         os.mkdir('halo_data')
 
-
-
     # If we're not given vr halo fields, find all of the available data fields
     if vr_halo_fields==None:
         try:
@@ -336,9 +334,9 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
         except:
             print(f'Skipping padded snap ',snap)
             new_halo_data_snap=base_halo_data_snap
-            pickle.dump(data=new_halo_data_snap, path=halo_data_file)
+            pickle.dump(data=new_halo_data_snap, path=outfilename)
             return new_halo_data_snap
-            exit
+    
             
     print('Adding the following fields from properties file:')
     print(np.array(vr_halo_fields))
