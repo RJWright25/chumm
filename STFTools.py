@@ -385,6 +385,7 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
                     hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
                     if not hostID_temp==-1:
                         #if we have a subhalo 
+                        print(hostID_temp)
                         hostindex_temp=np.where(new_halo_data_snap['ID']==hostID_temp)[0][0]
                         host_radius=new_halo_data_snap['R_200crit'][hostindex_temp]
                         host_xyz=np.array([new_halo_data_snap['Xc'][hostindex_temp],new_halo_data_snap['Yc'][hostindex_temp],new_halo_data_snap['Zc'][hostindex_temp]])
