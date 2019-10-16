@@ -338,6 +338,7 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
             new_halo_data_snap=base_halo_data_snap
             pickle.dump(data=new_halo_data_snap, path=halo_data_file)
             return new_halo_data_snap
+            exit
             
     print('Adding the following fields from properties file:')
     print(np.array(vr_halo_fields))
