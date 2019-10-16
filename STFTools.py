@@ -253,11 +253,11 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 ########################### ADD DETAILED HALO DATA ###########################
 
-def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=[]):
+def gen_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_halo_fields=[]):
     
     """
     
-    gen_detailed_halo_data : function
+    gen_detailed_halo_data_snap : function
 	----------
 
     Add detailed halo data to base halo data from property files.
@@ -265,9 +265,9 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
     Parameters
     ----------
 
-    base_halo_data : list of dicts
+    base_halo_data_snap : list of dicts
 
-        List (for each snap) of dictionaries containing basic halo data generated from gen_base_halo_data. 
+        Dictionary for a snap containing basic halo data generated from gen_base_halo_data. 
 
     vr_halo_fields : list of str
 
@@ -275,12 +275,12 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
 
     extra_halo_fields : list of str
 
-        List of keys to add to halo data. Currently just supports 'R_rel', 'N_Peers'.
+        List of keys to add to halo data. Currently just supports 'R_rel', 'N_Peers', 'Subhalo_rank'
 
     Returns
     --------
 
-    V3_HaloData_outname.dat : list of dict
+    V3_HaloData_outname_snap.dat : list of dict
 
     A list (for each snap desired) of dictionaries which contain halo data with the following fields:
         'ID'
@@ -306,128 +306,124 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         AND ANY EXTRAS from vr_property_fields
 
 	"""
-
+    t1=time.time()
     if not os.path.exists('job_logs'):
         os.mkdir('job_logs')
 
-    fname_log="job_logs/halodata_progress.log"
+    snap=base_halo_data_snap["Snap"]
+    fname_log=f"job_logs/halodata_progress_{str(snap).zfill(3)}.log"
 
     if os.path.exists(fname_log):
         os.remove(fname_log)
+    
+    if not os.path.exists('halo_data'):
+        os.mkdir('halo_data')
 
-    # Take number of total snapshots from length of input base halo data 
-    no_snaps_tot=len(base_halo_data)
+    outfilename='halo_data/B3_HaloData_'+base_halo_data[-1]['outname']+f'_{str(snap).zfill(3)}.dat'
+    if path.exists(outfilename):
+        print('Will overwrite existing B3 halo data ...')
+        os.remove(outfilename)
 
     # If we're not given vr halo fields, find all of the available data fields
     if vr_halo_fields==None:
-        property_filename=base_halo_data[-1]['VR_FilePath']+".properties.0"
-        property_file=h5py.File(property_filename)
-        all_props=list(property_file.keys())
-        vr_halo_fields=all_props
-        
-
+        try:
+            print('Grabbing detailed halo data for snap',snap)
+            property_filename=base_halo_data_snap['VR_FilePath']+".properties.0"
+            property_file=h5py.File(property_filename)
+            all_props=list(property_file.keys())
+            vr_halo_fields=all_props
+        except:
+            print(f'Skipping padded snap ',snap)
+            new_halo_data_snap=base_halo_data_snap
+            pickle.dump(data=new_halo_data_snap, path=halo_data_file)
+            return new_halo_data_snap
+            
     print('Adding the following fields from properties file:')
     print(np.array(vr_halo_fields))
 
-    new_halo_data=[]
-    base_fields=list(base_halo_data[-1].keys())
+    base_fields=list(base_halo_data_snap.keys())
     fields_needed_from_prop=np.compress(np.logical_not(np.in1d(vr_halo_fields,base_fields)),vr_halo_fields)
 
     print('Will also collect the following fields from base halo data:')
     print(np.array(base_fields))
 
     # Loop through each snap and add the extra fields
-    for snap,base_halo_data_snap in enumerate(base_halo_data):
-        t1=time.time()    
-        # First check if we have a padded snapshot
-        if len(base_halo_data_snap.keys())<4: 
-            print(f'Skipping padded snap ',snap)
-            new_halo_data.append(base_halo_data_snap)#append the base halo data for padded snaps
-            continue
+    t1=time.time()    
+    n_halos_snap=len(base_halo_data[snap]['ID'])#number of halos at this snap
 
-        n_halos_snap=len(base_halo_data[snap]['ID'])#number of halos at this snap
+    # Read new halo data
+    print(f'Adding detailed halo data for snap ',snap,' where there are ',n_halos_snap,' halos')
+    new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=fields_needed_from_prop, isiminfo=True, iunitinfo=True)[0]
 
-        # Read new halo data
-        print(f'Adding detailed halo data for snap ',snap,' where there are ',n_halos_snap,' halos')
-        new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=fields_needed_from_prop, isiminfo=True, iunitinfo=True)[0]
+    for new_field in list(new_halo_data_snap.keys()):
+        if ('ass_' in new_field or 'M_' in new_field) and 'R_' not in new_field and 'rhalfmass' not in new_field:
+            print(f'Converting {new_field} values to physical')
+            new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10/base_halo_data_snap['SimulationInfo']['h_val']
 
-        for new_field in list(new_halo_data_snap.keys()):
-            if ('ass_' in new_field or 'M_' in new_field) and 'R_' not in new_field and 'rhalfmass' not in new_field:
-                print(f'Converting {new_field} values to physical')
-                new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10/base_halo_data_snap['SimulationInfo']['h_val']
+    # Adding old halo data from V1 calcs
+    print(f'Adding fields from base halo data')
+    for field in base_fields:
+        new_halo_data_snap[field]=base_halo_data[snap][field]
+    print('Done adding base fields')
+            
+    # Add extra halo fields -- post-process velociraptor files   
+    if n_halos_snap>0:
+        if 'R_rel' in extra_halo_fields: #Relative radius to host
+            print('Adding R_rel information for subhalos')
+            new_halo_data_snap['R_rel']=np.zeros(n_halos_snap)+np.nan #initialise to nan if field halo
+            for ihalo in range(n_halos_snap):
+                hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
+                if not hostID_temp==-1:
+                    #if we have a subhalo 
+                    hostindex_temp=np.where(new_halo_data_snap['ID']==hostID_temp)[0][0]
+                    host_radius=new_halo_data_snap['R_200crit'][hostindex_temp]
+                    host_xyz=np.array([new_halo_data_snap['Xc'][hostindex_temp],new_halo_data_snap['Yc'][hostindex_temp],new_halo_data_snap['Zc'][hostindex_temp]])
+                    sub_xy=np.array([new_halo_data_snap['Xc'][ihalo],new_halo_data_snap['Yc'][ihalo],new_halo_data_snap['Zc'][ihalo]])
+                    group_centric_r=np.sqrt(np.sum((host_xyz-sub_xy)**2))
+                    r_rel_temp=group_centric_r/host_radius
+                    new_halo_data_snap['R_rel'][ihalo]=r_rel_temp
+            print('Done with R_rel')
 
-        # Adding old halo data from V1 calcs
-        print(f'Adding fields from base halo data')
-        for field in base_fields:
-            new_halo_data_snap[field]=base_halo_data[snap][field]
-        print('Done adding base fields')
-                
-        # Add extra halo fields -- post-process velociraptor files   
-        if n_halos_snap>0:
-            if 'R_rel' in extra_halo_fields: #Relative radius to host
-                print('Adding R_rel information for subhalos')
-                new_halo_data_snap['R_rel']=np.zeros(n_halos_snap)+np.nan #initialise to nan if field halo
-                for ihalo in range(n_halos_snap):
-                    hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
-                    if not hostID_temp==-1:
-                        #if we have a subhalo 
-                        hostindex_temp=np.where(new_halo_data_snap['ID']==hostID_temp)[0][0]
-                        host_radius=new_halo_data_snap['R_200crit'][hostindex_temp]
-                        host_xyz=np.array([new_halo_data_snap['Xc'][hostindex_temp],new_halo_data_snap['Yc'][hostindex_temp],new_halo_data_snap['Zc'][hostindex_temp]])
-                        sub_xy=np.array([new_halo_data_snap['Xc'][ihalo],new_halo_data_snap['Yc'][ihalo],new_halo_data_snap['Zc'][ihalo]])
-                        group_centric_r=np.sqrt(np.sum((host_xyz-sub_xy)**2))
-                        r_rel_temp=group_centric_r/host_radius
-                        new_halo_data_snap['R_rel'][ihalo]=r_rel_temp
-                print('Done with R_rel')
-
-            if 'N_peers' in extra_halo_fields: #Number of peer subhalos
-                print('Adding N_peers information for subhalos')
-                new_halo_data_snap['N_peers']=np.zeros(len(new_halo_data_snap['ID']))+np.nan #initialise to nan if field halo
-                for ihalo in range(n_halos_snap):
-                    hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
-                    if not hostID_temp==-1:
-                        #if we have a subhalo
-                        N_peers=np.sum(new_halo_data_snap['hostHaloID']==hostID_temp)-1
-                        new_halo_data_snap['N_peers'][ihalo]=N_peers           
-                print('Done with N_peers')
-
-            if 'Subhalo_rank' in extra_halo_fields:# mass ordered rank for subhalos in a group/cluster
-                new_halo_data_snap['Subhalo_rank']=np.zeros(len(new_halo_data_snap['ID']))+np.nan
-                processed_hostIDs=[]
-                for ihalo in range(n_halos_snap):
-                    hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
+        if 'N_peers' in extra_halo_fields: #Number of peer subhalos
+            print('Adding N_peers information for subhalos')
+            new_halo_data_snap['N_peers']=np.zeros(len(new_halo_data_snap['ID']))+np.nan #initialise to nan if field halo
+            for ihalo in range(n_halos_snap):
+                hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
+                if not hostID_temp==-1:
                     #if we have a subhalo
-                    if not hostID_temp==-1:
-                        if hostID_temp not in processed_hostIDs:
-                            processed_hostIDs.append(hostID_temp)
-                            mass=new_halo_data_snap['Mass_200crit'][ihalo]
-                            peer_indices=np.where(new_halo_data_snap['hostHaloID']==hostID_temp)[0]
-                            peer_ranks=rank_list([new_halo_data_snap['Mass_200crit'][ihalo_peer] for ihalo_peer in peer_indices])
-                            for ipeer_index,peer_index in enumerate(peer_indices):
-                                new_halo_data_snap["Subhalo_rank"][peer_index]=peer_ranks[ipeer_index]
-                print('Done with Subhalo_rank')
+                    N_peers=np.sum(new_halo_data_snap['hostHaloID']==hostID_temp)-1
+                    new_halo_data_snap['N_peers'][ihalo]=N_peers           
+            print('Done with N_peers')
 
-        else: #if insufficient halos at snap
-            print('Skipping adding the extra halo fields for this snap (insufficient halo count)')
-        
-        #Append our new halo data to the running list
-        new_halo_data.append(new_halo_data_snap)
-        t2=time.time()
+        if 'Subhalo_rank' in extra_halo_fields:# mass ordered rank for subhalos in a group/cluster
+            new_halo_data_snap['Subhalo_rank']=np.zeros(len(new_halo_data_snap['ID']))+np.nan
+            processed_hostIDs=[]
+            for ihalo in range(n_halos_snap):
+                hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
+                #if we have a subhalo
+                if not hostID_temp==-1:
+                    if hostID_temp not in processed_hostIDs:
+                        processed_hostIDs.append(hostID_temp)
+                        mass=new_halo_data_snap['Mass_200crit'][ihalo]
+                        peer_indices=np.where(new_halo_data_snap['hostHaloID']==hostID_temp)[0]
+                        peer_ranks=rank_list([new_halo_data_snap['Mass_200crit'][ihalo_peer] for ihalo_peer in peer_indices])
+                        for ipeer_index,peer_index in enumerate(peer_indices):
+                            new_halo_data_snap["Subhalo_rank"][peer_index]=peer_ranks[ipeer_index]
+            print('Done with Subhalo_rank')
 
-        with open(fname_log,"a") as progress_file:
-            progress_file.write(f"Done with snap {snap} of {len(base_halo_data)}: num halos = {len(base_halo_data_snap['ID'])} ({np.sum(base_halo_data_snap['hostHaloID']>0)} subhalos), took {t2-t1:.2f} sec \n")
+    else: #if insufficient halos at snap
+        print('Skipping adding the extra halo fields for this snap (insufficient halo count)')
 
+    t2=time.time()
 
-    # Save data to file (remove if path already exists)
-    print('Saving full halo data to file ...')
-    outfilename='B3_HaloData_'+base_halo_data[-1]['outname']+'.dat'
-    if path.exists(outfilename):
-        print('Overwriting existing B3 halo data ...')
-        os.remove(outfilename)
-    with open(outfilename, 'wb') as halo_data_file:
-        pickle.dump(new_halo_data, halo_data_file)
-        halo_data_file.close()
-    return new_halo_data
+    with open(fname_log,"a") as progress_file:
+        progress_file.write(f"Done with snap {snap}: num halos = {len(base_halo_data_snap['ID'])} ({np.sum(base_halo_data_snap['hostHaloID']>0)} subhalos), took {t2-t1:.2f} sec \n")
+        fname_log.close()
+
+# Save data to file (remove if path already exists)
+print('Saving full halo data to file ...')
+dump_pickle(data=new_halo_data_snap, path=outfilename)
+return new_halo_data_snap
 
 ########################### COMPRESS DETAILED HALO DATA ###########################
 
