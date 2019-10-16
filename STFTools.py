@@ -425,7 +425,7 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,outname=
 
     with open(fname_log,"a") as progress_file:
         progress_file.write(f"Done with snap {snap}: num halos = {len(base_halo_data_snap['ID'])} ({np.sum(base_halo_data_snap['hostHaloID']>0)} subhalos), took {t2-t1:.2f} sec \n")
-        fname_log.close()
+        progress_file.close()
 
     # Save data to file
     print('Saving full halo data to file ...')
