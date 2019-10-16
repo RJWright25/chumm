@@ -111,6 +111,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     B2_HaloData_outname.dat 
 
 	"""
+    if not os.path.exists('job_logs'):
+        os.mkdir('job_logs')
 
     base_fields=['ID','hostHaloID','Structuretype',"numSubStruct"]#default halo fields
 
@@ -179,15 +181,14 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
     tf_filelist=np.compress(have_halo_data,tf_filelist)#compressing the TreeFrog filelist to valid snaps only 
-    snap_no=len(tf_filelist)
-    np.savetxt('tf_filelist_compressed.txt',tf_filelist,fmt='%s')
-    tf_filelist="tf_filelist_compressed.txt"
+    np.savetxt('job_logs/tf_filelist_compressed.txt',tf_filelist,fmt='%s')
+    tf_filelist="job_logs/tf_filelist_compressed.txt"
 
     # Read in tree data
     halo_tree=ReadHaloMergerTreeDescendant(tf_filelist,ibinary=vr_filetype,iverbose=1,imerit=True,inpart=False)
 
     # Now build trees and add onto halo data array (for the valid, unpadded snaps)
-    BuildTemporalHeadTailDescendant(snap_no,halo_tree,halo_data_counts,halo_data_all,iverbose=1,TEMPORALHALOIDVAL=temporal_idval)
+    BuildTemporalHeadTailDescendant(len(tf_filelist),halo_tree,halo_data_counts,halo_data_all,iverbose=1,TEMPORALHALOIDVAL=temporal_idval)
     
     print('Finished assembling descendent tree using VR python tools')
     print('Adding timesteps & filepath information')
@@ -280,10 +281,13 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
 
     Returns
     --------
+    None
+    
+    saves to file:
+    B3_HaloData_outname_snap.dat : list of dict
 
-    V3_HaloData_outname_snap.dat : list of dict
+    Dictionaries for the parsed snaps which contain halo data with the following fields:
 
-    A list (for each snap desired) of dictionaries which contain halo data with the following fields:
         'ID'
         'hostHaloID'
         'Snap'
@@ -434,7 +438,54 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
     
     return None
 
+########################### COLLATE DETAILED HALO DATA ###########################
+
 def postprocess_detailed_halo_data(path=None):
+    """
+    
+    postprocess_detailed_halo_data : function
+	----------
+
+    Collates all the detailed snapshot halo data in given path into one combined file. 
+
+    Parameters
+    ----------
+
+    path : str
+
+        Path which contains the detailed halo data files for each snapshot. 
+
+    Returns
+    --------
+    None
+
+    saves to file:
+    B3_HaloData_outname.dat : list of dict
+
+    A list (for each snap desired) of dictionaries which contain halo data with the following fields:
+        'ID'
+        'hostHaloID'
+        'Snap'
+        'Head'
+        'Tail'
+
+        'SimulationInfo'
+            'h_val'
+            'Hubble_unit'
+            'Omega_Lambda'
+            'ScaleFactor'
+            'z'
+            'LookbackTime'
+
+        'UnitInfo'
+        'VR_FilePath'
+        'VR_FileType'
+        'Part_FilePath'
+        'Part_FileType'
+
+        AND ANY EXTRAS from vr_property_fields
+
+        """
 
     if path==None:
         path='halo_data/'
@@ -483,7 +534,9 @@ def compress_halo_data(detailed_halo_data,fields=[]):
 
     Returns
     --------
+    None
 
+    saves to file:
     B4_HaloData_outname.dat : list of dict
 
     A list (for each snap desired) of dictionaries which contain halo data with the desired fields, which by default will always contain:
