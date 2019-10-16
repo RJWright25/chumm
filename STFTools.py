@@ -253,7 +253,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 ########################### ADD DETAILED HALO DATA ###########################
 
-def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_halo_fields=[]):
+def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,outname=None,extra_halo_fields=[]):
     
     """
     
@@ -319,7 +319,13 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
     if not os.path.exists('halo_data'):
         os.mkdir('halo_data')
 
-    outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
+    try:
+        outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
+    except:
+        if outname==None:
+            outname=''
+        outfilename='halo_data/B3_HaloData_'+outname+f'_{str(snap).zfill(3)}.dat'
+
 
     # If we're not given vr halo fields, find all of the available data fields
     if vr_halo_fields==None:
