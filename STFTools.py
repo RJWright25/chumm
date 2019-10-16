@@ -403,6 +403,7 @@ def add_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,outname=
             print('Done with N_peers')
 
         if 'Subhalo_rank' in extra_halo_fields:# mass ordered rank for subhalos in a group/cluster
+            print('Adding Subhalo_rank information for subhalos')
             new_halo_data_snap['Subhalo_rank']=np.zeros(len(new_halo_data_snap['ID']))+np.nan
             processed_hostIDs=[]
             for ihalo in range(n_halos_snap):
