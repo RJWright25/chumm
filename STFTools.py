@@ -444,7 +444,7 @@ def postprocess_detailed_halo_data(path=None):
     if path==None:
         path='halo_data/'
     
-    if not path.endswith('/')
+    if not path.endswith('/'):
         path=path+'/'
     
     halo_data_files=sorted(os.listdir(path))
