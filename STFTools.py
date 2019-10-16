@@ -436,7 +436,7 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
         # Save data to file
         print(f'Saving halo data for snap {snap} to file ...')
         dump_pickle(data=new_halo_data_snap, path=outfilename)
-        return new_halo_data_snap
+    return None
 
 def postprocess_detailed_halo_data(path=None):
 
