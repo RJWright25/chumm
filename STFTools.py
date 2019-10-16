@@ -350,7 +350,7 @@ def gen_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
 
     # Loop through each snap and add the extra fields
     t1=time.time()    
-    n_halos_snap=len(base_halo_data[snap]['ID'])#number of halos at this snap
+    n_halos_snap=len(base_halo_data_snap['ID'])#number of halos at this snap
 
     # Read new halo data
     print(f'Adding detailed halo data for snap ',snap,' where there are ',n_halos_snap,' halos')
@@ -364,7 +364,7 @@ def gen_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
     # Adding old halo data from V1 calcs
     print(f'Adding fields from base halo data')
     for field in base_fields:
-        new_halo_data_snap[field]=base_halo_data[snap][field]
+        new_halo_data_snap[field]=base_halo_data_snap[field]
     print('Done adding base fields')
             
     # Add extra halo fields -- post-process velociraptor files   
