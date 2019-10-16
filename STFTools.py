@@ -336,8 +336,6 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
     print('Will also collect the following fields from base halo data:')
     print(np.array(base_fields))
 
-    
-
     # Loop through each snap and add the extra fields
     for snap,base_halo_data_snap in enumerate(base_halo_data):
         t1=time.time()    
@@ -362,6 +360,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
         print(f'Adding fields from base halo data')
         for field in base_fields:
             new_halo_data_snap[field]=base_halo_data[snap][field]
+        print('Done adding base fields')
                 
         # Add extra halo fields -- post-process velociraptor files   
         if n_halos_snap>0:
@@ -404,6 +403,7 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
                             mass=new_halo_data_snap['Mass_200crit'][ihalo]
                             peer_indices=np.where(new_halo_data_snap['hostHaloID']==hostID_temp)[0]
                             peer_ranks=rank_list([new_halo_data_snap['Mass_200crit'] for ihalo_peer in peer_indices])
+                            print(peer_ranks)
                             for ipeer_index,peer_index in enumerate(peer_indices):
                                 new_halo_data_snap["Subhalo_rank"][peer_index]=peer_ranks[ipeer_index]
                 print('Done with Subhalo_rank')
