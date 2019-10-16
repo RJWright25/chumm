@@ -403,7 +403,6 @@ def gen_detailed_halo_data(base_halo_data,vr_halo_fields=None,extra_halo_fields=
                             mass=new_halo_data_snap['Mass_200crit'][ihalo]
                             peer_indices=np.where(new_halo_data_snap['hostHaloID']==hostID_temp)[0]
                             peer_ranks=rank_list([new_halo_data_snap['Mass_200crit'][ihalo_peer] for ihalo_peer in peer_indices])
-                            print(peer_ranks)
                             for ipeer_index,peer_index in enumerate(peer_indices):
                                 new_halo_data_snap["Subhalo_rank"][peer_index]=peer_ranks[ipeer_index]
                 print('Done with Subhalo_rank')
