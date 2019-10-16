@@ -420,10 +420,10 @@ def gen_detailed_halo_data_snap(base_halo_data_snap,vr_halo_fields=None,extra_ha
         progress_file.write(f"Done with snap {snap}: num halos = {len(base_halo_data_snap['ID'])} ({np.sum(base_halo_data_snap['hostHaloID']>0)} subhalos), took {t2-t1:.2f} sec \n")
         fname_log.close()
 
-# Save data to file (remove if path already exists)
-print('Saving full halo data to file ...')
-dump_pickle(data=new_halo_data_snap, path=outfilename)
-return new_halo_data_snap
+    # Save data to file
+    print('Saving full halo data to file ...')
+    dump_pickle(data=new_halo_data_snap, path=outfilename)
+    return new_halo_data_snap
 
 ########################### COMPRESS DETAILED HALO DATA ###########################
 
