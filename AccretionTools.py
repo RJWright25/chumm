@@ -1113,7 +1113,12 @@ def postprocess_acc_data_serial(path,test=False):
 
 
     # Initialise all new outputs
-    itypes=[0,1,4,5]
+    first_file=h5py.File(acc_data_hdf5files[0],'r')
+    first_halo_group=[key for key in list(first_file.keys()) if 'ihalo' in key][0]
+    first_halo_inflow_keys=list(first_file[first_halo_group]['Inflow'].keys())
+    no_parttypes=len(first_halo_inflow_keys)#grab from first file
+    print(f'Grabbing data for part types: {first_halo_inflow_keys}')
+    itypes=[0,1,4,5][:no_parttypes]
     summed_acc_data={}
     new_outputs_keys_bytype_in=[f'Inflow/PartType{itype}/'+field for field in new_outputs_inflow for itype in itypes]
     new_outputs_keys_bytype_out=[f'Outflow/PartType{itype}/'+field for field in new_outputs_outflow for itype in itypes]
