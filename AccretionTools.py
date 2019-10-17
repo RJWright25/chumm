@@ -100,6 +100,9 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
     for snap in valid_snaps:
         # Initialise output file (will be truncated if already exists)
         outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
+        if os.path.exists(outfile_name):
+            os.remove(outfile_name)
+            
         outfile=h5py.File(outfile_name,'w')
 
         # Load the EAGLE data for this snapshot
