@@ -1230,11 +1230,10 @@ def postprocess_acc_data_serial(path,test=False):
 def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,datasets=[]):
     """
 
-    read_eagle_from_IDs : function 
+    add_eagle_particle_data : function 
 	----------
 
-    Return a dictionary of datasets (from 'datasets' argument) with the data ordered and specifically
-    selected based on the provided particleIDs. 
+    Add EAGLE particle data to the accretion files. 
 
 	Parameters
 	----------
@@ -1242,12 +1241,8 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
         The base halo data dictionary (encodes particle data filepath, snap, particle histories).
 
     itype : int 
-        [0 (gas),1 (DM), 4 (stars), 5 (BH)]
+        [0 (gas),1 (DM), 4 (stars)]
         The particle type we want to read EAGLE data for. 
-
-    particleIDs: list of lists
-        The list of particle IDs for which we want to extract data for. 
-        *** todo ALLOW FOR LISTS OF LISTS *** (so we don't have to read the EAGLE snap multiple times for multiple halos)
 
     datasets: list 
         List of keys for datasets to extract. See Schaye+15 for full description. 
@@ -1257,6 +1252,7 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
         Requested datasets saved to file. 
 
     """
+
     if halo_index_list==None:
         halo_index_list=list(range(base_halo_data[snap]["Count"]))
     elif type(halo_index_list)==list:
@@ -1313,7 +1309,8 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
     print("Getting particle ID lists for desired halos...")
     t1=time.time()
     particle_acc_files,ParticleIDs=get_particle_acc_data(snap = base_halo_data[snap]["Snap"],halo_index_list=halo_index_list,fields=['ParticleIDs'])
-    ParticleIDs=ParticleIDs[f"PartType{itype}"]["ParticleIDs"]
+    ParticleIDs_inflow=ParticleIDs["Inflow"][f"PartType{itype}"]["ParticleIDs"]
+    ParticleIDs_outflow=ParticleIDs["Outflow"][f"PartType{itype}"]["ParticleIDs"]
     t2=time.time()
     print(f'Done in {t2-t1}')
 
@@ -1323,35 +1320,59 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
     print("Getting particle indices in history for desired halos...")
     for iihalo,ihalo in enumerate(halo_index_list):
         print(iihalo/len(halo_index_list)*100,'%')
-        output_datasets={dataset:[] for dataset in datasets}
+        output_datasets_inflow={dataset:[] for dataset in datasets}
+        output_datasets_outflow={dataset:[] for dataset in datasets}
         for prev_dataset in prev_datasets:
-            output_datasets[prev_dataset]=[]
-        ParticleIDs_halo=ParticleIDs[iihalo]
-        Npart_ihalo=np.size(ParticleIDs_halo)
+            output_datasets_inflow[prev_dataset]=[]
+            output_datasets_outflow[prev_dataset]=[]
         
-        history_indices_snap2=binary_search(items=sorted_IDs_snap2,sorted_list=ParticleIDs_halo,check_entries=True)
-        history_indices_snap1=binary_search(items=sorted_IDs_snap1,sorted_list=ParticleIDs_halo,check_entries=True)
+        ParticleIDs_halo_inflow=ParticleIDs_inflow[iihalo]
+        ParticleIDs_halo_outflow=ParticleIDs_outflow[iihalo]
+        
+        Npart_ihalo_inflow=np.size(ParticleIDs_halo_inflow)
+        Npart_ihalo_outflow=np.size(ParticleIDs_halo_outflow)
+        
+        if itype==0:
+            history_indices_snap2_inflow=binary_search(items=sorted_IDs_snap2,sorted_list=ParticleIDs_halo_inflow,check_entries=False)
+            history_indices_snap1_inflow=binary_search(items=sorted_IDs_snap1,sorted_list=ParticleIDs_halo_inflow,check_entries=False)
+            history_indices_snap2_outflow=binary_search(items=sorted_IDs_snap2,sorted_list=ParticleIDs_halo_outflow,check_entries=True)
+            history_indices_snap1_outflow=binary_search(items=sorted_IDs_snap1,sorted_list=ParticleIDs_halo_outflow,check_entries=False)
 
-        for history_index_snap1,history_index_snap2 in zip(history_indices_snap1,history_indices_snap2):#for each index in the histories (i.e. every particle)
+        for history_index_snap1,history_index_snap2 in zip(history_indices_snap1_inflow,history_indices_snap2_inflow):#for each index in the histories (i.e. every particle)
             if history_index_snap1>=0 and history_index_snap2>=0:#if we have a valid index (i.e. not np.nan)
                 particle_index_snap2=sorted_IDs_snap2_indices[history_index_snap2]#identify the index in the eagle snapshots
                 particle_index_snap1=sorted_IDs_snap1_indices[history_index_snap1]#identify the index in the eagle snapshots
                 for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
-                    output_datasets[dataset].append(EAGLE_datasets_snap2[dataset][particle_index_snap2])
-                    output_datasets[prev_dataset].append(EAGLE_datasets_snap1[dataset][particle_index_snap1])
+                    output_datasets_inflow[dataset].append(EAGLE_datasets_snap2[dataset][particle_index_snap2])
+                    output_datasets_inflow[prev_dataset].append(EAGLE_datasets_snap1[dataset][particle_index_snap1])
+            else:
+                for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
+                    output_datasets_inflow[dataset].append(np.nan)
+                    output_datasets_inflow[prev_dataset].append(np.nan)
+
+        for history_index_snap1,history_index_snap2 in zip(history_indices_snap1_outflow,history_indices_snap2_outflow):#for each index in the histories (i.e. every particle)
+            if history_index_snap1>=0 and history_index_snap2>=0:#if we have a valid index (i.e. not np.nan)
+                particle_index_snap2=sorted_IDs_snap2_indices[history_index_snap2]#identify the index in the eagle snapshots
+                particle_index_snap1=sorted_IDs_snap1_indices[history_index_snap1]#identify the index in the eagle snapshots
+                for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
+                    output_datasets_outflow[dataset].append(EAGLE_datasets_snap2[dataset][particle_index_snap2])
+                    output_datasets_outflow[prev_dataset].append(EAGLE_datasets_snap1[dataset][particle_index_snap1])
             else:
                 for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
                     output_datasets[dataset].append(np.nan)
                     output_datasets[prev_dataset].append(np.nan)
 
-        ihalo_itype_group=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/PartType{itype}"]
+        ihalo_itype_group_inflow=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/Inflow/PartType{itype}"]
+        ihalo_itype_group_outflow=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/Outflow/PartType{itype}"]
 
-        datasets_all=list(output_datasets.keys())
+        datasets_all=list(output_datasets_inflow.keys())
         for dataset in datasets_all:
             try:
-                ihalo_itype_group.create_dataset(dataset,data=output_datasets[dataset],dtype=np.float32)
+                ihalo_itype_group_inflow.create_dataset(dataset,data=output_datasets_inflow[dataset],dtype=np.float32)
+                ihalo_itype_group_outflow.create_dataset(dataset,data=output_datasets_outflow[dataset],dtype=np.float32)
             except:
-                ihalo_itype_group[dataset][:]=output_datasets[dataset]
+                ihalo_itype_group_inflow[dataset][:]=output_datasets_inflow[dataset]
+                ihalo_itype_group_outflow[dataset][:]=output_datasets_outflow[dataset]
 
 ########################### READ ALL ACC DATA ###########################
 
@@ -1435,54 +1456,13 @@ def get_summed_acc_data(path):
 	----------
     
     accretion_data : dict
-        With fields:
-        "PartTypeX/All_TotalDeltaM",
-        "PartTypeX/All_TotalDeltaN",
-        "PartTypeX/All_CosmologicalDeltaN",
-        "PartTypeX/All_CosmologicalDeltaM',
-        "PartTypeX/All_CGMDeltaN',
-        "PartTypeX/All_CGMDeltaM',
-        "PartTypeX/All_ClumpyDeltaN',
-        "PartTypeX/All_ClumpyDeltaM',
-        "PartTypeX/Stable_TotalDeltaM",
-        "PartTypeX/Stable_TotalDeltaN",
-        "PartTypeX/Stable_CosmologicalDeltaN",
-        "PartTypeX/Stable_CosmologicalDeltaM',
-        "PartTypeX/Stable_CGMDeltaN',
-        "PartTypeX/Stable_CGMDeltaM',
-        "PartTypeX/Stable_ClumpyDeltaN',
-        "PartTypeX/Stable_ClumpyDeltaM'
-        "PartTypeX/ifile'
+        With different fields for inflow and outflow. 
 
     Each dictionary entry will be of length n_halos, and each of these entries will be a dictionary
 
     """
     # Define output fields
-    acc_fields=["All_TotalDeltaM",
-    "All_TotalDeltaN",
-    "All_CosmologicalDeltaN",
-    'All_CosmologicalDeltaM',
-    'All_CGMDeltaN',
-    'All_CGMDeltaM',
-    'All_ClumpyDeltaN',
-    'All_ClumpyDeltaM',
-    'All_PrimordialDeltaN',
-    'All_PrimordialDeltaM',
-    'All_RecycledDeltaN',
-    'All_RecycledDeltaM',   
-    "Stable_TotalDeltaM",
-    "Stable_TotalDeltaN",
-    "Stable_CosmologicalDeltaN",
-    'Stable_CosmologicalDeltaM',
-    'Stable_CGMDeltaN',
-    'Stable_CGMDeltaM',
-    'Stable_ClumpyDeltaN',
-    'Stable_ClumpyDeltaM',
-    'Stable_PrimordialDeltaN',
-    'Stable_PrimordialDeltaM',
-    'Stable_RecycledDeltaN',
-    'Stable_RecycledDeltaM', 
-    ]
+
     # Load collated file
     hdf5file=h5py.File(path,'r')
 
@@ -1495,10 +1475,58 @@ def get_summed_acc_data(path):
     # Initialise output data
     total_num_halos=acc_metadata['total_num_halos']
     group_list=list(hdf5file.keys())
-    part_group_list=['PartType'+str(itype) for itype in [0,1,4,5]]
-    acc_data={part_group:{} for part_group in part_group_list}
+    part_group_list=['PartType'+str(itype) for itype in [0,1,4]]
+    acc_data_inflow={part_group:{} for part_group in part_group_list}
+    acc_data_outflow={part_group:{} for part_group in part_group_list}
+    
+    acc_fields_inflow=[
+    "All_TotalDeltaM_In",
+    "All_TotalDeltaN_In",
+    "All_CosmologicalDeltaN_In",
+    'All_CosmologicalDeltaM_In',
+    'All_CGMDeltaN_In',
+    'All_CGMDeltaM_In',
+    'All_ClumpyDeltaN_In',
+    'All_ClumpyDeltaM_In',
+    'All_PrimordialDeltaN_In',
+    'All_PrimordialDeltaM_In',
+    'All_ProcessedCosmologicalDeltaN_In',
+    'All_ProcessedCosmologicalDeltaM_In',   
+    "Stable_TotalDeltaM_In",
+    "Stable_TotalDeltaN_In",
+    "Stable_CosmologicalDeltaN_In",
+    'Stable_CosmologicalDeltaM_In',
+    'Stable_CGMDeltaN_In',
+    'Stable_CGMDeltaM_In',
+    'Stable_ClumpyDeltaN_In',
+    'Stable_ClumpyDeltaM_In',
+    'Stable_PrimordialDeltaN_In',
+    'Stable_PrimordialDeltaM_In',
+    'Stable_ProcessedCosmologicalDeltaN_In',
+    'Stable_ProcessedCosmologicalDeltaM_In'
+    ]
+
+    acc_fields_outflow=[
+    "All_TotalDeltaM_Out",
+    "All_TotalDeltaN_Out",
+    "All_FieldDeltaM_Out",
+    "All_FieldDeltaN_Out",
+    "All_CGMDeltaM_Out",
+    "All_CGMDeltaN_Out",
+    "All_OtherHaloDeltaM_Out",
+    "All_OtherHaloDeltaN_Out",
+    "All_RecycledDeltaN_Out",#at snap 3
+    "All_RecycledDeltaM_Out"]#at snap 3
+
     for part_group_name in part_group_list:
-        for dataset in acc_fields:
-            acc_data[part_group_name][dataset]=hdf5file[part_group_name+'/'+dataset].value
+        for dataset in acc_fields_inflow:
+            acc_data_inflow[part_group_name][dataset]=hdf5file['Inflow/'+part_group_name+'/'+dataset].value
+
+    for part_group_name in part_group_list:
+        for dataset in acc_fields_outflow:
+            acc_data_outflow[part_group_name][dataset]=hdf5file['Outflow/'+part_group_name+'/'+dataset].value    
+    
+    acc_data={'Inflow':acc_data_inflow,'Outflow':acc_data_outflow}
+    
     return acc_metadata, acc_data
 
