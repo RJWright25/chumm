@@ -485,6 +485,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     header_hdf5.attrs.create('snap1_z',data=z1,dtype=np.float16)
     header_hdf5.attrs.create('snap2_z',data=z2,dtype=np.float16)
     header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
+    header_hdf5.attrs.create('snap1',data=snap1,dtype=np.int16)
+    header_hdf5.attrs.create('snap2',data=snap2,dtype=np.int16)
+    header_hdf5.attrs.create('snap3',data=snap3,dtype=np.int16)
 
     # Now find which simulation type we're dealing with
     part_filetype=base_halo_data[snap]["Part_FileType"]
@@ -1236,12 +1239,12 @@ def postprocess_acc_data_serial(path,test=False):
     print(f'Finished collating files in {t2-t1} sec')
     return None
 
-########################### ADD EAGLE DATA TO ACC DATA ###########################
+########################### ADD PARTICLE DATA TO ACC DATA ###########################
 
-def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,datasets=[]):
+def add_gas_particle_data(base_halo_data,accdata_path,datasets=[]):
     """
 
-    add_eagle_particle_data : function 
+    add_gas_particle_data : function 
 	----------
 
     Add EAGLE particle data to the accretion files. 
@@ -1251,27 +1254,19 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
     base_halo_data: dict
         The base halo data dictionary (encodes particle data filepath, snap, particle histories).
 
-    itype : int 
-        [0 (gas),1 (DM), 4 (stars)]
-        The particle type we want to read EAGLE data for. 
+    accdata_path : str
+        The file path to the base hdf5 accretion data file. 
 
     datasets: list 
         List of keys for datasets to extract. See Schaye+15 for full description. 
 
     Returns
 	----------
-        Requested datasets saved to file. 
+        Requested gas datasets, saved to file at accdata_path. 
 
     """
-
-    if halo_index_list==None:
-        halo_index_list=list(range(base_halo_data[snap]["Count"]))
-    elif type(halo_index_list)==list:
-        pass
-    else:
-        halo_index_list=halo_index_list["indices"]
-    
-    # Load the relevant EAGLE snapshot
+    ########################################## CONSTRUCTION ZONE ##########################################
+    # Load the relevant snapshot
     print('Loading & slicing EAGLE snapshots ...')
     t1=time.time()
     partdata_filepath_snap2=base_halo_data[snap]["Part_FilePath"]
@@ -1384,6 +1379,8 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
             except:
                 ihalo_itype_group_inflow[dataset][:]=output_datasets_inflow[dataset]
                 ihalo_itype_group_outflow[dataset][:]=output_datasets_outflow[dataset]
+    
+    ########################################## CONSTRUCTION ZONE ##########################################
 
 ########################### READ ALL ACC DATA ###########################
 
