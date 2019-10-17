@@ -1314,7 +1314,7 @@ def add_eagle_particle_data(base_halo_data,snap,itype=0,halo_index_list=None,dat
     # Load in the lists of particle IDs
     print("Getting particle ID lists for desired halos...")
     t1=time.time()
-    particle_acc_files,ParticleIDs=get_particle_acc_data(snap = base_halo_data[snap]["Snap"],halo_index_list=halo_index_list,fields=['ParticleIDs'])
+    particle_acc_files,ParticleIDs=get_particle_acc_data(snap = base_halo_data[snap]["Snap"],halo_index_list=halo_index_list,fields_in=['ParticleIDs'],fields_out=['ParticleIDs'])
     ParticleIDs_inflow=ParticleIDs["Inflow"][f"PartType{itype}"]["ParticleIDs"]
     ParticleIDs_outflow=ParticleIDs["Outflow"][f"PartType{itype}"]["ParticleIDs"]
     t2=time.time()
