@@ -312,9 +312,6 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
 
 	"""
     t1=time.time()
-    if not os.path.exists('job_logs'):
-        os.mkdir('job_logs')
-
     
     if not os.path.exists('halo_data'):
         os.mkdir('halo_data')
