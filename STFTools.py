@@ -180,6 +180,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     # We have halo data, now load the trees
     # Import tree data from TreeFrog, build temporal head/tails from descendants -- adds to halo_data_all (all halo data)
     print('Now assembling descendent tree using VR python tools')
+    no_tf_files=np.sum(have_halo_data)
     tf_filelist=np.compress(have_halo_data,tf_filelist)#compressing the TreeFrog filelist to valid snaps only 
     np.savetxt('job_logs/tf_filelist_compressed.txt',tf_filelist,fmt='%s')
     tf_filelist="job_logs/tf_filelist_compressed.txt"
@@ -188,7 +189,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     halo_tree=ReadHaloMergerTreeDescendant(tf_filelist,ibinary=vr_filetype,iverbose=1,imerit=True,inpart=False)
 
     # Now build trees and add onto halo data array (for the valid, unpadded snaps)
-    BuildTemporalHeadTailDescendant(len(tf_filelist),halo_tree,halo_data_counts,halo_data_all,iverbose=1,TEMPORALHALOIDVAL=temporal_idval)
+    BuildTemporalHeadTailDescendant(no_tf_files,halo_tree,halo_data_counts,halo_data_all,iverbose=1,TEMPORALHALOIDVAL=temporal_idval)
     
     print('Finished assembling descendent tree using VR python tools')
     print('Adding timesteps & filepath information')
