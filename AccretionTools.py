@@ -102,7 +102,7 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
         outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
         if os.path.exists(outfile_name):
             os.remove(outfile_name)
-            
+
         outfile=h5py.File(outfile_name,'w')
 
         # Load the EAGLE data for this snapshot
@@ -160,6 +160,7 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
             all_Structure_IDs_itype=structure_Particles_bytype[str(itype)][:,0]
             all_Structure_HostStructureID_itype=structure_Particles_bytype[str(itype)][:,1]
             all_Structure_IDs_itype_partindex=binary_search(sorted_list=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"],items=all_Structure_IDs_itype)
+            print(itype,len(all_Structure_IDs_itype_partindex))
             for ipart_switch, ipart_index in enumerate(all_Structure_IDs_itype_partindex):#for each particle in structure, add its host structure to the array (if not in structure, HostStructure=-1)
                 if ipart_switch%100000==0:
                     print(ipart_switch/len(all_Structure_IDs_itype_partindex)*100,f'% done adding host halos for {PartNames[itype]} particles')
