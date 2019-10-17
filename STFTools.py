@@ -111,8 +111,6 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     B2_HaloData_outname.dat 
 
 	"""
-    if not os.path.exists('job_logs'):
-        os.mkdir('job_logs')
 
     base_fields=['ID','hostHaloID','Structuretype',"numSubStruct"]#default halo fields
 
