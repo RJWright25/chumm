@@ -766,6 +766,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ihalo_itype_snap1_inflow_transformed[str(0)].append(1)
                         
                         #remove the ID from the star accretion list 
+                        
                         new_particle_IDs_itype_snap2['4']=np.delete(arr=new_particle_IDs_itype_snap2['4'],obj=ID)
                         ihalo_itype_snap1_inflow_transformed['0'].append(1)
 
