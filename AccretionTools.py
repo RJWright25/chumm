@@ -1068,7 +1068,7 @@ def postprocess_acc_data_serial(path):
     # Open existing files in list structure
     acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])#total number of halos from file
-    if test or total_num_halos<1000:
+    if total_num_halos<1000:
         print(f'Using array size {3*10**5}')
         total_num_halos=3*10**5
     print(f'Collating data for {total_num_halos} halos')
