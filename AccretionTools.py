@@ -431,10 +431,13 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
         os.mkdir(acc_log_dir)
-    run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}/snap_{str(snap).zfill(3)}/"
+    run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}/"
     if not os.path.exists(run_log_dir):
         os.mkdir(run_log_dir)
-    fname_log=run_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
+    run_snap_log_dir=run_log_dir+f'snap_{str(snap).zfill(3)}/'
+    if not os.path.exists(run_snap_log_dir):
+        os.mkdir(run_snap_log_dir)
+    fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
     if os.path.exists(fname_log):
         os.remove(fname_log)
 
