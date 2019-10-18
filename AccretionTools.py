@@ -1282,15 +1282,6 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     partdata_filetype=base_halo_data[-1]['Part_FileType']
 
 
-
-    if partdata_filetype:
-
-
-
-
-
-
-
 ########################### READ ALL ACC DATA ###########################
 
 def get_particle_acc_data(snap,halo_index_list,path='',fields_in=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],fields_out=['Particle_IDs','Masses',"Destination_S2","Destination_S3"],itype=None):
