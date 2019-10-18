@@ -680,7 +680,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 new_particle_count=len(new_particle_IDs_itype_snap2)# Count number of new particles
                 # print(f"Extracting outflow particles of type {itype} from halo list at snap 1 ...")
                 out_particle_mask_itype=np.logical_and(out_particle_IDs_mask_snap1,snap1_Types_temp==itype)# Mask for particles in halo list at snap 1 which outflowed and are of the correct type
-                out_particle_IDs_itype_snap1=np.compress(out_particle_mask_itype,snap1_IDs_temp)# Compress snap 1 list with above mask
+                out_particle_IDs_itype_snap1[str(itype)]=np.compress(out_particle_mask_itype,snap1_IDs_temp)# Compress snap 1 list with above mask
                 out_particle_count=len(out_particle_IDs_itype_snap1)# Count number of outflow particles
                 t2_typing.append(time.time())
 
