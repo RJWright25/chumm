@@ -137,6 +137,7 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
                 try:
                     Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
                     print(f'{PartNames[itype]} IDs loaded')
+                    print(f'There are n = {len(Particle_IDs_Unsorted_itype)} PartType{itype} particles loaded for snap {snap}')
                 except:
                     print(f'No {PartNames[itype]} IDs found')
                     Particle_IDs_Unsorted_itype=[]
