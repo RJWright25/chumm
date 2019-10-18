@@ -467,7 +467,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         os.mkdir(calc_snap_dir)
 
     run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
-    outfile_name=calc_snap_dir+'FOF_AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'_p'+str(iprocess).zfill(3)+f'_n{str(len(halo_index_list_snap2)).zfill(3)}.hdf5'
+    outfile_name=calc_snap_dir+'FOF_AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'_p'+str(iprocess).zfill(3)+f'_n{str(len(halo_index_list_snap2)).zfill(6)}.hdf5'
     if os.path.exists(outfile_name):#if the accretion file already exists, get rid of it 
         os.remove(outfile_name)
 
