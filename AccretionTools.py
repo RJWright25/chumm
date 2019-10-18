@@ -729,7 +729,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 ihalo_itype_snap1_inflow_transformed={str(itype):[] for itype in PartTypes}
 
                 for iipart_historyindex,ipart_historyindex in enumerate(new_particle_IDs_itype_snap1_historyindex):
-                    ID=new_particle_IDs_itype_snap2[iipart_historyindex]
+                    ID=new_particle_IDs_itype_snap2[str(itype)][iipart_historyindex]
                     # we have to be careful with star particles - we have their index in ipart_historyindex IF they were a star at the previous snap, otherwise np.nan
                     if ipart_historyindex>=0: #if our calculated index is valid at snap1, just use this index for the current parttype 
                         #(i.e. the particle was found as this type at previous snap)
