@@ -979,7 +979,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
 ########################### POSTPROCESS/SUM ACCRETION DATA ###########################
 
-def postprocess_acc_data_serial(path,test=False):
+def postprocess_acc_data_serial(path):
     """
 
     postprocess_acc_data_serial : function
@@ -1042,19 +1042,9 @@ def postprocess_acc_data_serial(path,test=False):
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
     acc_data_filelist=sorted(acc_data_filelist)
-    if not test:
-        acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename))]
-    else:
-        acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' in filename) and ('FOF' in filename))]
+    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename) and ('DS' not in filename))]
     acc_data_filelist=acc_data_filelist_trunc
-    if test:
-        acc_data_outfile_name=acc_data_filelist[0][:-8]+'_summed.hdf5'
-    else:
-        acc_data_outfile_name=acc_data_filelist[0][:-9]+'_summed.hdf5'
-
-    print(f'Output: {acc_data_outfile_name}')
-    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if not (filename == acc_data_outfile_name or 'DS' in filename)]
-    acc_data_filelist=acc_data_filelist_trunc
+    acc_data_outfile_name=acc_data_filelist[0].split('_p0')[0]+'_summed.hdf5'
 
     if os.path.exists(path+acc_data_outfile_name):
         print("Deleting existing combined data first")
