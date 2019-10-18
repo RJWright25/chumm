@@ -825,7 +825,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 
                 #Grab future destination and transofmration status from snap2 indices
                 for iipart_historyindex,ipart_historyindex in enumerate(out_particle_IDs_itype_snap2_historyindex):
-                    ID=out_particle_IDs_itype_snap1[iipart_historyindex]
+                    ID=out_particle_IDs_itype_snap1[str(itype)][iipart_historyindex]
                     if ipart_historyindex>=0:
                         ihalo_itype_snap2_outflow_transformed[str(itype)].append(0)
                         
