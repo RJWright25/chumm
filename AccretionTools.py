@@ -661,8 +661,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             t1_print=[];t2_print=[]
             t1_save=[];t2_save=[]
 
-            new_particle_IDs_itype_snap2=dict(str(itype):[] for itype in PartTypes)
-            out_particle_IDs_itype_snap1=dict(str(itype):[] for itype in PartTypes)
+            new_particle_IDs_itype_snap2={str(itype):[] for itype in PartTypes}
+            out_particle_IDs_itype_snap1={str(itype):[] for itype in PartTypes}
 
             # Now loop through each particle type and process accreted particle data 
             for iitype,itype in enumerate(PartTypes):
