@@ -863,30 +863,30 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 t1_print.append(time.time())
                 if not isub:#if a field halo, either cosmological accretion or from mergers ("clumpy")
                     print('-- INFLOW --')
-                    print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(ihalo_itype_snap1_inflow_masses)):.2e} Msun')
-                    print(f'Particles that stayed in halo at snap 3: {np.sum(ihalo_itype_snap1_inflow_fidelity)/len(ihalo_itype_snap1_inflow_fidelity)*100:.2f}%')
-                    print(f'Accretion from field: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)<0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')
-                    print(f'Accretion from other halos: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)>0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')#clumpy if prevhost>0
+                    print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(ihalo_itype_snap1_inflow_masses[str(itype)])):.2e} Msun')
+                    print(f'Particles that stayed in halo at snap 3: {np.sum(ihalo_itype_snap1_inflow_fidelity[str(itype)])/len(ihalo_itype_snap1_inflow_fidelity[str(itype)])*100:.2f}%')
+                    print(f'Accretion from field: {np.sum(np.array(ihalo_itype_snap1_inflow_structure[str(itype)])<0)/len(ihalo_itype_snap1_inflow_structure[str(itype)])*100:.2f}%')
+                    print(f'Accretion from other halos: {np.sum(np.array(ihalo_itype_snap1_inflow_structure[str(itype)])>0)/len(ihalo_itype_snap1_inflow_structure[str(itype)])*100:.2f}%')#clumpy if prevhost>0
                     print('-- OUTFLOW --')
-                    print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(ihalo_itype_snap1_outflow_masses)):.2e} Msun')
-                    print(f'Outflow particles in other halos at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination)>0)/len(ihalo_itype_snap2_outflow_destination)*100:.2f}%')
-                    print(f'Outflow particles in field at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination)<0)/len(ihalo_itype_snap2_outflow_destination)*100:.2f}%')
-                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(ihalo_itype_snap3_outflow_recycled)==1)/len(ihalo_itype_snap3_outflow_recycled)*100:.2f}%')
+                    print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(ihalo_itype_snap1_outflow_masses[str(itype)])):.2e} Msun')
+                    print(f'Outflow particles in other halos at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination[str(itype)])>0)/len(ihalo_itype_snap2_outflow_destination[str(itype)])*100:.2f}%')
+                    print(f'Outflow particles in field at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination[str(itype)])<0)/len(ihalo_itype_snap2_outflow_destination[str(itype)])*100:.2f}%')
+                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(ihalo_itype_snap3_outflow_recycled[str(itype)])==1)/len(ihalo_itype_snap3_outflow_recycled[str(itype)])*100:.2f}%')
                     
                 else:
 
                     print('-- INFLOW --')
-                    print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(ihalo_itype_snap1_inflow_masses)):.2e} Msun')
-                    print(f'Particles that stayed in halo at snap 3: {np.sum(ihalo_itype_snap1_inflow_fidelity)/len(ihalo_itype_snap1_inflow_fidelity)*100:.2f}%')
-                    print(f'Accretion from field: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)<0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')
-                    print(f'Accretion from CGM: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)==0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')#CGM if prevhost==0
-                    print(f'Accretion from other halos: {np.sum(np.array(ihalo_itype_snap1_inflow_structure)>0)/len(ihalo_itype_snap1_inflow_structure)*100:.2f}%')#clumpy if prevhost>0
+                    print(f'Gross {PartNames[itype]} accretion: {np.sum(np.array(ihalo_itype_snap1_inflow_masses[str(itype)])):.2e} Msun')
+                    print(f'Particles that stayed in halo at snap 3: {np.sum(ihalo_itype_snap1_inflow_fidelity[str(itype)])/len(ihalo_itype_snap1_inflow_fidelity[str(itype)])*100:.2f}%')
+                    print(f'Accretion from field: {np.sum(np.array(ihalo_itype_snap1_inflow_structure[str(itype)])<0)/len(ihalo_itype_snap1_inflow_structure[str(itype)])*100:.2f}%')
+                    print(f'Accretion from CGM: {np.sum(np.array(ihalo_itype_snap1_inflow_structure[str(itype)])==0)/len(ihalo_itype_snap1_inflow_structure[str(itype)])*100:.2f}%')#CGM if prevhost==0
+                    print(f'Accretion from other halos: {np.sum(np.array(ihalo_itype_snap1_inflow_structure[str(itype)])>0)/len(ihalo_itype_snap1_inflow_structure[str(itype)])*100:.2f}%')#clumpy if prevhost>0
                     print('-- OUTFLOW --')
-                    print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(ihalo_itype_snap1_outflow_masses)):.2e} Msun')
-                    print(f'Outflow particles in CGM at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination)==0)/len(ihalo_itype_snap2_outflow_destination)*100:.2f}%')
-                    print(f'Outflow particles in other halos at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination)>0)/len(ihalo_itype_snap2_outflow_destination)*100:.2f}%')
-                    print(f'Outflow particles in field at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination)<0)/len(ihalo_itype_snap2_outflow_destination)*100:.2f}%')
-                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(ihalo_itype_snap3_outflow_recycled)==1)/len(ihalo_itype_snap3_outflow_recycled)*100:.2f}%')
+                    print(f'Gross {PartNames[itype]} outflow: {np.sum(np.array(ihalo_itype_snap1_outflow_masses[str(itype)])):.2e} Msun')
+                    print(f'Outflow particles in CGM at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination[str(itype)])==0)/len(ihalo_itype_snap2_outflow_destination[str(itype)])*100:.2f}%')
+                    print(f'Outflow particles in other halos at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination[str(itype)])>0)/len(ihalo_itype_snap2_outflow_destination[str(itype)])*100:.2f}%')
+                    print(f'Outflow particles in field at snap 2: {np.sum(np.array(ihalo_itype_snap2_outflow_destination[str(itype)])<0)/len(ihalo_itype_snap2_outflow_destination[str(itype)])*100:.2f}%')
+                    print(f'Outflow particles re-accreted at snap 3: {np.sum(np.array(ihalo_itype_snap3_outflow_recycled[str(itype)])==1)/len(ihalo_itype_snap3_outflow_recycled[str(itype)])*100:.2f}%')
 
                 t2_print.append(time.time())
 
