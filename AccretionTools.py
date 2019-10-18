@@ -438,6 +438,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     if os.path.exists(fname_log):
         os.remove(fname_log)
 
+
+
     # Assigning snap
     if snap==None:
         snap=len(base_halo_data)-1#if not given snap, just use the last one
@@ -454,16 +456,21 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     # Initialising outputs
     if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
         os.mkdir('acc_data')
-    if not os.path.exists('acc_data/snap_'+str(snap2).zfill(3)):#create folder for outputs if doesn't already exist
+    calc_dir=f'acc_data/pre{pre_depth})_post_{post_depth}/'
+    if not os.path.exists(calc_dir):#create folder for outputs if doesn't already exist
         try:
-            os.mkdir('acc_data/snap_'+str(snap2).zfill(3))
+            os.mkdir(calc_dir)
         except:
             pass
-    
+    calc_snap_dir=calc_dir+f'snap_{str(snap2).zfill(3)}/'
+    if not os.path.exists(calc_snap_dir):#create folder for outputs if doesn't already exist
+        os.mkdir(calc_snap_dir)
+
     run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
-    outfile_name=f'acc_data/snap_'+str(snap2).zfill(3)+'/FOF_AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'_p'+iprocess+'.hdf5'
+    outfile_name=calc_snap_dir+'FOF_AccretionData_snap'+str(snap).zfill(3)+'_pre'+str(pre_depth)+'_post'+str(post_depth)+'_p'+iprocess+'.hdf5'
     if os.path.exists(outfile_name):#if the accretion file already exists, get rid of it 
         os.remove(outfile_name)
+
     # Make header for accretion data  based on base halo data 
     output_hdf5=h5py.File(outfile_name,"w")#initialise file object
     header_hdf5=output_hdf5.create_group("Header")
@@ -1265,123 +1272,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=[]):
         Requested gas datasets, saved to file at accdata_path. 
 
     """
-    ########################################## CONSTRUCTION ZONE ##########################################
-    # Load the relevant snapshot
-    print('Loading & slicing EAGLE snapshots ...')
-    t1=time.time()
-    partdata_filepath_snap2=base_halo_data[snap]["Part_FilePath"]
-    partdata_filepath_snap1=base_halo_data[snap-1]["Part_FilePath"]
-    EAGLE_Snap_2=read_eagle.EagleSnapshot(partdata_filepath_snap2)
-    EAGLE_Snap_1=read_eagle.EagleSnapshot(partdata_filepath_snap1)
-    EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
-    EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-    EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-
-    # Read the relevant datasets
-    print("Grabbing EAGLE datasets for snap 2...")
-    t1=time.time()
-    EAGLE_datasets_snap2={dataset:EAGLE_Snap_2.read_dataset(itype,dataset) for dataset in datasets}
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-
-    # Read the relevant datasets
-    print("Grabbing EAGLE datasets for snap 1...")
-    t1=time.time()
-    EAGLE_datasets_snap1={dataset:EAGLE_Snap_1.read_dataset(itype,dataset) for dataset in datasets}
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-
-    # Load in the particle histories
-    print("Grabbing particle histories for previous snap ...")
-    t1=time.time()
-    part_histories_snap1=h5py.File("part_histories/PartHistory_"+str(base_halo_data[snap-1]["Snap"]).zfill(3)+'_'+base_halo_data[snap]["outname"]+".hdf5",'r')
-    sorted_IDs_snap1=part_histories_snap1["PartType"+str(itype)+"/ParticleIDs"].value
-    sorted_IDs_snap1_indices=part_histories_snap1["PartType"+str(itype)+"/ParticleIndex"].value
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-
-    # Load in the particle histories
-    print("Grabbing particle histories for snap 2 ...")
-    t1=time.time()
-    part_histories_snap2=h5py.File("part_histories/PartHistory_"+str(base_halo_data[snap]["Snap"]).zfill(3)+'_'+base_halo_data[snap]["outname"]+".hdf5",'r')
-    sorted_IDs_snap2=part_histories_snap2["PartType"+str(itype)+"/ParticleIDs"].value
-    sorted_IDs_snap2_indices=part_histories_snap2["PartType"+str(itype)+"/ParticleIndex"].value
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-
-    # Load in the lists of particle IDs
-    print("Getting particle ID lists for desired halos...")
-    t1=time.time()
-    particle_acc_files,ParticleIDs=get_particle_acc_data(snap = base_halo_data[snap]["Snap"],halo_index_list=halo_index_list,fields_in=['ParticleIDs'],fields_out=['ParticleIDs'])
-    ParticleIDs_inflow=ParticleIDs["Inflow"][f"PartType{itype}"]["ParticleIDs"]
-    ParticleIDs_outflow=ParticleIDs["Outflow"][f"PartType{itype}"]["ParticleIDs"]
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-
-    # Find the indices of our particleIDs in the particle histories
-    prev_datasets=['Prev_'+idataset for idataset in datasets]
-
-    print("Getting particle indices in history for desired halos...")
-    for iihalo,ihalo in enumerate(halo_index_list):
-        print(iihalo/len(halo_index_list)*100,'%')
-        output_datasets_inflow={dataset:[] for dataset in datasets}
-        output_datasets_outflow={dataset:[] for dataset in datasets}
-        for prev_dataset in prev_datasets:
-            output_datasets_inflow[prev_dataset]=[]
-            output_datasets_outflow[prev_dataset]=[]
-        
-        ParticleIDs_halo_inflow=ParticleIDs_inflow[iihalo]
-        ParticleIDs_halo_outflow=ParticleIDs_outflow[iihalo]
-        
-        Npart_ihalo_inflow=np.size(ParticleIDs_halo_inflow)
-        Npart_ihalo_outflow=np.size(ParticleIDs_halo_outflow)
-        
-        if itype==0:
-            history_indices_snap2_inflow=binary_search(items=sorted_IDs_snap2,sorted_list=ParticleIDs_halo_inflow,check_entries=False)
-            history_indices_snap1_inflow=binary_search(items=sorted_IDs_snap1,sorted_list=ParticleIDs_halo_inflow,check_entries=False)
-            history_indices_snap2_outflow=binary_search(items=sorted_IDs_snap2,sorted_list=ParticleIDs_halo_outflow,check_entries=True)
-            history_indices_snap1_outflow=binary_search(items=sorted_IDs_snap1,sorted_list=ParticleIDs_halo_outflow,check_entries=False)
-
-        for history_index_snap1,history_index_snap2 in zip(history_indices_snap1_inflow,history_indices_snap2_inflow):#for each index in the histories (i.e. every particle)
-            if history_index_snap1>=0 and history_index_snap2>=0:#if we have a valid index (i.e. not np.nan)
-                particle_index_snap2=sorted_IDs_snap2_indices[history_index_snap2]#identify the index in the eagle snapshots
-                particle_index_snap1=sorted_IDs_snap1_indices[history_index_snap1]#identify the index in the eagle snapshots
-                for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
-                    output_datasets_inflow[dataset].append(EAGLE_datasets_snap2[dataset][particle_index_snap2])
-                    output_datasets_inflow[prev_dataset].append(EAGLE_datasets_snap1[dataset][particle_index_snap1])
-            else:
-                for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
-                    output_datasets_inflow[dataset].append(np.nan)
-                    output_datasets_inflow[prev_dataset].append(np.nan)
-
-        for history_index_snap1,history_index_snap2 in zip(history_indices_snap1_outflow,history_indices_snap2_outflow):#for each index in the histories (i.e. every particle)
-            if history_index_snap1>=0 and history_index_snap2>=0:#if we have a valid index (i.e. not np.nan)
-                particle_index_snap2=sorted_IDs_snap2_indices[history_index_snap2]#identify the index in the eagle snapshots
-                particle_index_snap1=sorted_IDs_snap1_indices[history_index_snap1]#identify the index in the eagle snapshots
-                for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
-                    output_datasets_outflow[dataset].append(EAGLE_datasets_snap2[dataset][particle_index_snap2])
-                    output_datasets_outflow[prev_dataset].append(EAGLE_datasets_snap1[dataset][particle_index_snap1])
-            else:
-                for prev_dataset,dataset in zip(prev_datasets,datasets):#for each dataset, add the data for this particle
-                    output_datasets[dataset].append(np.nan)
-                    output_datasets[prev_dataset].append(np.nan)
-
-        ihalo_itype_group_inflow=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/Inflow/PartType{itype}"]
-        ihalo_itype_group_outflow=h5py.File(particle_acc_files[iihalo],'r+')[f"ihalo_"+str(ihalo).zfill(6)+f"/Outflow/PartType{itype}"]
-
-        datasets_all=list(output_datasets_inflow.keys())
-        for dataset in datasets_all:
-            try:
-                ihalo_itype_group_inflow.create_dataset(dataset,data=output_datasets_inflow[dataset],dtype=np.float32)
-                ihalo_itype_group_outflow.create_dataset(dataset,data=output_datasets_outflow[dataset],dtype=np.float32)
-            except:
-                ihalo_itype_group_inflow[dataset][:]=output_datasets_inflow[dataset]
-                ihalo_itype_group_outflow[dataset][:]=output_datasets_outflow[dataset]
-    
-    ########################################## CONSTRUCTION ZONE ##########################################
-
+    yeet=1
 ########################### READ ALL ACC DATA ###########################
 
 def get_particle_acc_data(snap,halo_index_list,path='',fields_in=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],fields_out=['Particle_IDs','Masses',"Destination_S2","Destination_S3"],itype=None):
