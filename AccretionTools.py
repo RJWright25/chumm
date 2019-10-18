@@ -808,17 +808,18 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 
                 #Grab masses and recycling status from snap1 indices
                 for iipart_historyindex,ipart_historyindex in enumerate(out_particle_IDs_itype_snap1_historyindex):
-                    #All these indices will be valid as we took the list of particles from snap 1 directly 
-                        # Mass
-                        if constant_mass[str(itype)]:# If this particle type has a constant mass
-                            ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)]
-                        else:
-                            ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
-                            ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
-                        
-                        ihalo_itype_snap1_outflow_masses[str(itype)].append(ipart_snap1_mass)
-                        ihalo_itype_snap3_outflow_recycled[str(itype)].append(int(out_particle_IDs_itype_snap1[iipart_historyindex] in snap3_IDs_temp_set))
-        
+                    #All these indices will be valid as we took the list of particles from snap 1 directly
+                    ID=out_particle_IDs_itype_snap1[str(itype)][iipart_historyindex]
+                    # Mass
+                    if constant_mass[str(itype)]:# If this particle type has a constant mass
+                        ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)]
+                    else:
+                        ipart_snap1_partdataindex=Part_Histories_Index_snap1[str(itype)][ipart_historyindex]
+                        ipart_snap1_mass=Part_Data_Masses_Snap1[str(itype)][ipart_snap1_partdataindex]
+                    
+                    ihalo_itype_snap1_outflow_masses[str(itype)].append(ipart_snap1_mass)
+                    ihalo_itype_snap3_outflow_recycled[str(itype)].append(int(ID in snap3_IDs_temp_set))
+    
                 ihalo_itype_snap2_outflow_transformed={str(itype):[] for itype in PartTypes}
                 ihalo_itype_snap2_outflow_destination={str(itype):[] for itype in PartTypes}
                 
