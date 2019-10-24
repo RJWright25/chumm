@@ -1360,9 +1360,12 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                 ihalo_datasets_inflow[f'snap2_{dataset}']=np.nan
                 ihalo_datasets_outflow[f'snap2_{dataset}']=np.nan
         else:#valid halo
-            
-            transformed_in=np.array(acc_file[ihalo_group]['Inflow']['PartType0']['Transformed'])==1
-            transformed_out=np.array(acc_file[ihalo_group]['Outflow']['PartType0']['Transformed'])==1
+            try:
+                transformed_in=np.array(acc_file[ihalo_group]['Inflow']['PartType0']['Transformed'])==1
+                transformed_out=np.array(acc_file[ihalo_group]['Outflow']['PartType0']['Transformed'])==1
+            except:
+                transformed_in=np.zeros(np.size(gas_IDs_in_snap1))
+                transformed_out=np.zeros(np.size(gas_IDs_out_snap1))
 
             #Find indices of gas particles for snap1
             ihalo_gas_inflow_history_indices_snap1=binary_search(items=gas_IDs_in_snap1,sorted_list=parthist_gas_IDs_snap1,check_entries=False)
