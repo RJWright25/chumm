@@ -1352,9 +1352,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
         gas_IDs_in_snap1=acc_file[ihalo_group]['Inflow']['PartType0']['ParticleIDs'].value
         gas_IDs_out_snap1=acc_file[ihalo_group]['Outflow']['PartType0']['ParticleIDs'].value
-        print(type(gas_IDs_in_snap1))
-        print(gas_IDs_in_snap1)
-        
+
         if np.size(gas_IDs_in_snap1)==1 and type(gas_IDs_in_snap1)==np.float16:
             print(f'Not processing {ihalo_group}')
             for dataset in datasets:
@@ -1400,7 +1398,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                             try:
                                 ihalo_datasets_inflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
                             except:
-                                print(f'Couldnt get {dataset} data for stars.')
+                                # print(f'Couldnt get {dataset} data for stars.')
                                 ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
                         else:
                             ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
