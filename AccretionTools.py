@@ -1350,8 +1350,8 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
             ihalo_datasets_outflow[f'snap2_{dataset}']=[]
             ihalo_datasets_outflow[f'snap1_{dataset}']=[]        
 
-        gas_IDs_in_snap1=acc_file[ihalo_group]['Inflow']['PartType0']['ParticleIDs']
-        gas_IDs_out_snap1=acc_file[ihalo_group]['Outflow']['PartType0']['ParticleIDs']
+        gas_IDs_in_snap1=acc_file[ihalo_group]['Inflow']['PartType0']['ParticleIDs'].value
+        gas_IDs_out_snap1=acc_file[ihalo_group]['Outflow']['PartType0']['ParticleIDs'].value
         print(type(gas_IDs_in_snap1))
         print(gas_IDs_in_snap1)
         
