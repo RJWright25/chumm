@@ -1356,6 +1356,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
         print(gas_IDs_in_snap1)
         
         if np.size(gas_IDs_in_snap1)==1 and type(gas_IDs_in_snap1)==np.float16:
+            print(f'Not processing {ihalo_group}')
             for dataset in datasets:
                 ihalo_datasets_inflow[f'snap1_{dataset}']=np.nan
                 ihalo_datasets_outflow[f'snap1_{dataset}']=np.nan
