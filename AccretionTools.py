@@ -430,9 +430,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             halo_index_list_snap2=halo_index_list
             iprocess="x"
             num_processes='test'
-            
-    if num_processes==1:
-        num_processes='test'
+
 
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
@@ -1428,7 +1426,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                             try:
                                 ihalo_datasets_outflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
                             except:
-                                print(f'Couldnt get {dataset} data for stars.')
+                                # print(f'Couldnt get {dataset} data for stars.')
                                 ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
 
                         else:
