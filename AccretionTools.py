@@ -663,7 +663,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
             new_particle_IDs_itype_snap2={str(itype):[] for itype in PartTypes}
             out_particle_IDs_itype_snap1={str(itype):[] for itype in PartTypes}
-            
+
             ihalo_itype_snap1_inflow_history_L1={str(itype):[] for itype in PartTypes}
             ihalo_itype_snap1_inflow_history_L2={str(itype):[] for itype in PartTypes}
             ihalo_itype_snap1_inflow_masses={str(itype):[] for itype in PartTypes}
@@ -936,9 +936,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 if itype==0 or itype==1:
                     halo_in_parttype_hdf5.create_dataset('Processed_L1',data=np.nan,dtype=np.float16)
                     halo_in_parttype_hdf5.create_dataset('Processed_L2',data=np.nan,dtype=np.float16)
-                if itype==4:
-                    halo_in_parttype_hdf5.create_dataset('SF_Accretion',data=np.nan,dtype=np.float16)
-                
+                if itype==0:
+                    halo_out_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
                 # Saving OUTFLOW data for this parttype of the halo to file 
                 halo_out_parttype_hdf5=halo_out_hdf5.create_group('PartType'+str(itype))
                 halo_out_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
@@ -1287,9 +1286,61 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     """
     
     acc_filename=accdata_path.split('/')[-1]
-    snap=acc_filename.split('snap_')[-1][:3]
-    partdata_filetype=base_halo_data[-1]['Part_FileType']
+    snap2=int(acc_filename.split('snap')[-1][:3])
+    pre_depth=int(acc_filename.split('pre')[-1][:1])
+    snap1=snap2-pre_depth
 
+    partdata_filetype=base_halo_data[snap2]['Part_FileType']
+    partdata_outname=base_halo_data[snap2]['outname']
+    parthist_file_snap2=h5py.File(f'part_histories/PartHistory_{str(snap2).zfill(3)}_{outname}.hdf5','r')
+    parthist_file_snap1=h5py.File(f'part_histories/PartHistory_{str(snap1).zfill(3)}_{outname}.hdf5','r')
+    
+    #Load particle histories
+    parthist_gas_IDs_snap1=parthist_file_snap1['PartType0']['ParticleIDs'].value
+    parthist_gas_indices_snap1=parthist_file_snap1['PartType0']['ParticleIndex'].value
+    parthist_gas_IDs_snap2=parthist_file_snap2['PartType0']['ParticleIDs'].value
+    parthist_gas_indices_snap2=parthist_file_snap2['PartType0']['ParticleIndex'].value
+
+    #Load particle data
+    gas_particle_datasets_snap1={dataset:[] for dataset in datasets}
+    gas_particle_datasets_snap2={dataset:[] for dataset in datasets}
+    star_particle_datasets_snap2={dataset:[] for dataset in datasets}
+
+    if 'EAGLE' in partdata_filetype:
+        print('Reading in EAGLE snapshot data ...')
+        EAGLE_boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
+        EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
+        EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+        EAGLE_Snap_2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
+        EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+
+        for dataset in datasets:
+            gas_particle_datasets_snap1[dataset]=EAGLE_Snap_1.read_dataset(0,dataset)
+            gas_particle_datasets_snap2[dataset]=EAGLE_Snap_2.read_dataset(0,dataset)
+            try:
+                star_particle_datasets_snap2[dataset]=EAGLE_Snap_2.read_dataset(4,dataset)
+            except:
+                pass#cannot get the dataset for stars (will be empty list)
+    else:#non-eagle file -- GADGET OR SWIFT (don't have read routine)
+        PartFile_Snap_1=h5py.File(base_halo_data[snap1]['Part_FilePath'],'r')
+        PartFile_Snap_2=h5py.File(base_halo_data[snap2]['Part_FilePath'],'r')
+
+        for dataset in datasets:
+            gas_particle_datasets_snap1[dataset]=PartFile_Snap_1['PartType0'][dataset].value
+            gas_particle_datasets_snap2[dataset]=PartFile_Snap_2['PartType1'][dataset].value
+            try:
+                star_particle_datasets_snap2[dataset]=PartFile_Snap_2['PartType4'][dataset].value
+            except:
+                pass#cannot get the dataset for stars (will be empty list)
+
+    acc_file=h5py.File(acc_filename,'r')
+    ihalo_groups=list(acc_file.keys())
+    ihalo_groups_trunc=[ihalo_group for ihalo_group in ihalo_groups if 'ihalo_' in ihalo_group]
+
+    for ihalo_group in ihalo_groups_trunc:
+        gas_IDs_in=acc_file[ihalo_group]['Inflow']['PartType0']['ParticleIDs']
+        gas_IDs_out=acc_file[ihalo_group]['Outflow']['PartType0']['ParticleIDs']
+        star_mask_in=acc_file[ihalo_group]['Inflow']['PartType0']['ParticleIDs']
 
 ########################### READ ALL ACC DATA ###########################
 
