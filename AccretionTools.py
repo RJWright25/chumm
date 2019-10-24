@@ -1388,7 +1388,11 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                 
                 for dataset in datasets:
                     if partdata_index>=0:
-                        ihalo_datasets_inflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
+                        try:
+                            ihalo_datasets_inflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
+                        except:
+                            print(f'Couldnt get {dataset} data for stars.')
+                            ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
                     else:
                         ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
 
@@ -1409,7 +1413,12 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                 
                 for dataset in datasets:
                     if partdata_index>=0:
-                        ihalo_datasets_outflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
+                        try:
+                            ihalo_datasets_outflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
+                        except:
+                            print(f'Couldnt get {dataset} data for stars.')
+                            ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
+
                     else:
                         ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
 
