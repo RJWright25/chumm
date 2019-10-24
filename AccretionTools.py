@@ -1292,8 +1292,8 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
     partdata_filetype=base_halo_data[snap2]['Part_FileType']
     partdata_outname=base_halo_data[snap2]['outname']
-    parthist_file_snap2=h5py.File(f'part_histories/PartHistory_{str(snap2).zfill(3)}_{outname}.hdf5','r')
-    parthist_file_snap1=h5py.File(f'part_histories/PartHistory_{str(snap1).zfill(3)}_{outname}.hdf5','r')
+    parthist_file_snap2=h5py.File(f'part_histories/PartHistory_{str(snap2).zfill(3)}_{partdata_outname}.hdf5','r')
+    parthist_file_snap1=h5py.File(f'part_histories/PartHistory_{str(snap1).zfill(3)}_{partdata_outname}.hdf5','r')
     
     #Load particle histories
     parthist_gas_IDs_snap1=parthist_file_snap1['PartType0']['ParticleIDs'].value
