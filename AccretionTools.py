@@ -420,7 +420,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     if halo_index_list==None:
         halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
         iprocess="x"
-        num_processes=0
+        num_processes='test'
     else:
         try:
             halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
@@ -429,7 +429,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         except:
             halo_index_list_snap2=halo_index_list
             iprocess="x"
-            num_processes=0
+            num_processes='test'
 
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
