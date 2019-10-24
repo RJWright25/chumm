@@ -1398,7 +1398,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
         #outflow
         for iipartID_out,ipartID_out in enumerate(gas_IDs_out_snap1):
-            star_at_snap2=transformed_out[iipartID_in]
+            star_at_snap2=transformed_out[ipartID_out]
             if not star_at_snap2:
                 history_index=ihalo_gas_outflow_history_indices_snap2[iipartID_out]
                 partdata_index=parthist_gas_indices_snap2[history_index]
