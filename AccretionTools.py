@@ -663,7 +663,13 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
             new_particle_IDs_itype_snap2={str(itype):[] for itype in PartTypes}
             out_particle_IDs_itype_snap1={str(itype):[] for itype in PartTypes}
-
+            ihalo_itype_snap1_inflow_history_L1={str(itype):[] for itype in PartTypes}
+            ihalo_itype_snap1_inflow_history_L2={str(itype):[] for itype in PartTypes}
+            ihalo_itype_snap1_inflow_masses={str(itype):[] for itype in PartTypes}
+            ihalo_itype_snap1_inflow_structure={str(itype):[] for itype in PartTypes}
+            ihalo_itype_snap1_inflow_fidelity={str(itype):[] for itype in PartTypes}
+            ihalo_itype_snap1_inflow_transformed={str(itype):[] for itype in PartTypes}
+            
             # Now loop through each particle type and process accreted particle data 
             for iitype,itype in enumerate(PartTypes):
                 t1_itype.append(time.time())#Time the full loop for this halo and particle type
@@ -720,13 +726,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                 print(f'Retrieving histories (prev processing, prev host, masses) and checking fidelity of inflow particles...')
                 t1_inflow.append(time.time())
-
-                ihalo_itype_snap1_inflow_history_L1={str(itype):[] for itype in PartTypes}
-                ihalo_itype_snap1_inflow_history_L2={str(itype):[] for itype in PartTypes}
-                ihalo_itype_snap1_inflow_masses={str(itype):[] for itype in PartTypes}
-                ihalo_itype_snap1_inflow_structure={str(itype):[] for itype in PartTypes}
-                ihalo_itype_snap1_inflow_fidelity={str(itype):[] for itype in PartTypes}
-                ihalo_itype_snap1_inflow_transformed={str(itype):[] for itype in PartTypes}
 
                 if itype==4:
                     new_particle_IDs_itype_snap2_star_truncated=new_particle_IDs_itype_snap2['4']
@@ -850,7 +849,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ipart_transformed_ID_athistoryindex=Part_Histories_IDs_snap1['4'][ipart_transformed_historyindex]
                         
                         if ID!=ipart_transformed_ID_athistoryindex:
-                            print(f"Couldn't find outflow particle {ID} at snap 2 - not in star list")
+                            print(f"Couldn't find outflow particle {ID} at snap 2 - not in star list (probably turned into BH)")
                             ipart_snap2_destination=np.nan
                         else:
                             #Find destination
