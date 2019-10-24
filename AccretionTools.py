@@ -669,7 +669,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             ihalo_itype_snap1_inflow_structure={str(itype):[] for itype in PartTypes}
             ihalo_itype_snap1_inflow_fidelity={str(itype):[] for itype in PartTypes}
             ihalo_itype_snap1_inflow_transformed={str(itype):[] for itype in PartTypes}
-
+            ihalo_itype_snap2_outflow_transformed={str(itype):[] for itype in PartTypes}
+            ihalo_itype_snap2_outflow_destination={str(itype):[] for itype in PartTypes}
+            
             # Now loop through each particle type and process accreted particle data 
             for iitype,itype in enumerate(PartTypes):
                 t1_itype.append(time.time())#Time the full loop for this halo and particle type
@@ -825,8 +827,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     ihalo_itype_snap1_outflow_masses[str(itype)].append(ipart_snap1_mass)
                     ihalo_itype_snap3_outflow_recycled[str(itype)].append(int(ID in snap3_IDs_temp_set))
     
-                ihalo_itype_snap2_outflow_transformed={str(itype):[] for itype in PartTypes}
-                ihalo_itype_snap2_outflow_destination={str(itype):[] for itype in PartTypes}
+
                 
                 #Grab future destination and transofmration status from snap2 indices
                 for iipart_historyindex,ipart_historyindex in enumerate(out_particle_IDs_itype_snap2_historyindex):
