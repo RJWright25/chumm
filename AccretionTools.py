@@ -1352,79 +1352,82 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
         gas_IDs_in_snap1=acc_file[ihalo_group]['Inflow']['PartType0']['ParticleIDs']
         gas_IDs_out_snap1=acc_file[ihalo_group]['Outflow']['PartType0']['ParticleIDs']
+        
+        if not np.isfinite(gas_IDs_in_snap1):
+            for dataset in datasets:
+                ihalo_datasets_inflow[f'snap1_{dataset}']=np.nan
+                ihalo_datasets_outflow[f'snap1_{dataset}']=np.nan
+                ihalo_datasets_inflow[f'snap2_{dataset}']=np.nan
+                ihalo_datasets_outflow[f'snap2_{dataset}']=np.nan
+        else:#valid halo
 
-        try:
             transformed_in=np.array(acc_file[ihalo_group]['Inflow']['PartType0']['Transformed'])==1
             transformed_out=np.array(acc_file[ihalo_group]['Outflow']['PartType0']['Transformed'])==1
-        except:
-            transformed_in=np.zeros(len(gas_IDs_in_snap1))
-            transformed_out=np.zeros(len(gas_IDs_out_snap1))
 
+            #Find indices of gas particles for snap1
+            ihalo_gas_inflow_history_indices_snap1=binary_search(items=gas_IDs_in_snap1,sorted_list=parthist_gas_IDs_snap1,check_entries=False)
+            ihalo_gas_outflow_history_indices_snap1=binary_search(items=gas_IDs_out_snap1,sorted_list=parthist_gas_IDs_snap1,check_entries=False)
+            ihalo_gas_inflow_partdata_indices_snap1=[parthist_gas_indices_snap1[index] for index in ihalo_gas_inflow_history_indices_snap1]
+            ihalo_gas_outflow_partdata_indices_snap1=[parthist_gas_indices_snap1[index] for index in ihalo_gas_outflow_history_indices_snap1]
 
-        #Find indices of gas particles for snap1
-        ihalo_gas_inflow_history_indices_snap1=binary_search(items=gas_IDs_in_snap1,sorted_list=parthist_gas_IDs_snap1,check_entries=False)
-        ihalo_gas_outflow_history_indices_snap1=binary_search(items=gas_IDs_out_snap1,sorted_list=parthist_gas_IDs_snap1,check_entries=False)
-        ihalo_gas_inflow_partdata_indices_snap1=[parthist_gas_indices_snap1[index] for index in ihalo_gas_inflow_history_indices_snap1]
-        ihalo_gas_outflow_partdata_indices_snap1=[parthist_gas_indices_snap1[index] for index in ihalo_gas_outflow_history_indices_snap1]
-
-        for dataset in datasets:
-            ihalo_datasets_inflow[f'snap1_{dataset}']=[gas_particle_datasets_snap1[dataset][index] for index in ihalo_gas_inflow_partdata_indices_snap1]
-            ihalo_datasets_outflow[f'snap1_{dataset}']=[gas_particle_datasets_snap1[dataset][index] for index in ihalo_gas_outflow_partdata_indices_snap1]
-        
-        #Find indices of gas particles for snap2
-        ihalo_gas_inflow_history_indices_snap2=binary_search(items=gas_IDs_in_snap1,sorted_list=parthist_gas_IDs_snap2,check_entries=False)
-        ihalo_gas_outflow_history_indices_snap2=binary_search(items=gas_IDs_out_snap1,sorted_list=parthist_gas_IDs_snap2,check_entries=False)
-        
-        #inflow
-        for iipartID_in,ipartID_in in enumerate(gas_IDs_in_snap1):
-            star_at_snap2=transformed_in[iipartID_in]
-            if not star_at_snap2:
-                history_index=ihalo_gas_inflow_history_indices_snap2[iipartID_in]
-                partdata_index=parthist_gas_indices_snap2[history_index]
-                for dataset in datasets:
-                    ihalo_datasets_inflow[f'snap2_{dataset}'].append(gas_particle_datasets_snap2[dataset][partdata_index])
-            else:
-                history_index=bisect_left(a=parthist_star_IDs_snap2,x=ipartID_in,lo=0,hi=parthist_star_count_snap2)
-                if parthist_star_IDs_snap2[history_index]==ipartID_in:
-                    partdata_index=parthist_star_indices_snap2[history_index]
+            for dataset in datasets:
+                ihalo_datasets_inflow[f'snap1_{dataset}']=[gas_particle_datasets_snap1[dataset][index] for index in ihalo_gas_inflow_partdata_indices_snap1]
+                ihalo_datasets_outflow[f'snap1_{dataset}']=[gas_particle_datasets_snap1[dataset][index] for index in ihalo_gas_outflow_partdata_indices_snap1]
+            
+            #Find indices of gas particles for snap2
+            ihalo_gas_inflow_history_indices_snap2=binary_search(items=gas_IDs_in_snap1,sorted_list=parthist_gas_IDs_snap2,check_entries=False)
+            ihalo_gas_outflow_history_indices_snap2=binary_search(items=gas_IDs_out_snap1,sorted_list=parthist_gas_IDs_snap2,check_entries=False)
+            
+            #inflow
+            for iipartID_in,ipartID_in in enumerate(gas_IDs_in_snap1):
+                star_at_snap2=transformed_in[iipartID_in]
+                if not star_at_snap2:
+                    history_index=ihalo_gas_inflow_history_indices_snap2[iipartID_in]
+                    partdata_index=parthist_gas_indices_snap2[history_index]
+                    for dataset in datasets:
+                        ihalo_datasets_inflow[f'snap2_{dataset}'].append(gas_particle_datasets_snap2[dataset][partdata_index])
                 else:
-                    partdata_index=np.nan
-                
-                for dataset in datasets:
-                    if partdata_index>=0:
-                        try:
-                            ihalo_datasets_inflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
-                        except:
-                            print(f'Couldnt get {dataset} data for stars.')
+                    history_index=bisect_left(a=parthist_star_IDs_snap2,x=ipartID_in,lo=0,hi=parthist_star_count_snap2)
+                    if parthist_star_IDs_snap2[history_index]==ipartID_in:
+                        partdata_index=parthist_star_indices_snap2[history_index]
+                    else:
+                        partdata_index=np.nan
+                    
+                    for dataset in datasets:
+                        if partdata_index>=0:
+                            try:
+                                ihalo_datasets_inflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
+                            except:
+                                print(f'Couldnt get {dataset} data for stars.')
+                                ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
+                        else:
                             ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
-                    else:
-                        ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
 
-        #outflow
-        for iipartID_out,ipartID_out in enumerate(gas_IDs_out_snap1):
-            star_at_snap2=transformed_out[iipartID_out]
-            if not star_at_snap2:
-                history_index=ihalo_gas_outflow_history_indices_snap2[iipartID_out]
-                partdata_index=parthist_gas_indices_snap2[history_index]
-                for dataset in datasets:
-                    ihalo_datasets_outflow[f'snap2_{dataset}'].append(gas_particle_datasets_snap2[dataset][partdata_index])
-            else:
-                history_index=bisect_left(a=parthist_star_IDs_snap2,x=ipartID_out,lo=0,hi=parthist_star_count_snap2)
-                if parthist_star_IDs_snap2[history_index]==ipartID_out:
-                    partdata_index=parthist_star_indices_snap2[history_index]
+            #outflow
+            for iipartID_out,ipartID_out in enumerate(gas_IDs_out_snap1):
+                star_at_snap2=transformed_out[iipartID_out]
+                if not star_at_snap2:
+                    history_index=ihalo_gas_outflow_history_indices_snap2[iipartID_out]
+                    partdata_index=parthist_gas_indices_snap2[history_index]
+                    for dataset in datasets:
+                        ihalo_datasets_outflow[f'snap2_{dataset}'].append(gas_particle_datasets_snap2[dataset][partdata_index])
                 else:
-                    partdata_index=np.nan
-                
-                for dataset in datasets:
-                    if partdata_index>=0:
-                        try:
-                            ihalo_datasets_outflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
-                        except:
-                            print(f'Couldnt get {dataset} data for stars.')
-                            ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
-
+                    history_index=bisect_left(a=parthist_star_IDs_snap2,x=ipartID_out,lo=0,hi=parthist_star_count_snap2)
+                    if parthist_star_IDs_snap2[history_index]==ipartID_out:
+                        partdata_index=parthist_star_indices_snap2[history_index]
                     else:
-                        ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
+                        partdata_index=np.nan
+                    
+                    for dataset in datasets:
+                        if partdata_index>=0:
+                            try:
+                                ihalo_datasets_outflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
+                            except:
+                                print(f'Couldnt get {dataset} data for stars.')
+                                ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
+
+                        else:
+                            ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
 
         for dataset in datasets:
             try:
