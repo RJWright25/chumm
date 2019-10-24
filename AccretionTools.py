@@ -1426,19 +1426,19 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
             try:
                 acc_file[ihalo_group]['Inflow']['PartType0'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32)
             except:
-                acc_file[ihalo_group]['Inflow']['PartType0'][f'snap2_{dataset}']=ihalo_datasets_inflow[f'snap2_{dataset}']
+                acc_file[ihalo_group]['Inflow']['PartType0'][f'snap2_{dataset}'][:]=ihalo_datasets_inflow[f'snap2_{dataset}']
             try:
                 acc_file[ihalo_group]['Inflow']['PartType0'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32)
             except:
-                acc_file[ihalo_group]['Inflow']['PartType0'][f'snap1_{dataset}']=ihalo_datasets_inflow[f'snap1_{dataset}']
+                acc_file[ihalo_group]['Inflow']['PartType0'][f'snap1_{dataset}'][:]=ihalo_datasets_inflow[f'snap1_{dataset}']
             try:
                 acc_file[ihalo_group]['Outflow']['PartType0'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=np.float32)
             except:
-                acc_file[ihalo_group]['Outflow']['PartType0'][f'snap2_{dataset}']=ihalo_datasets_outflow[f'snap2_{dataset}']
+                acc_file[ihalo_group]['Outflow']['PartType0'][f'snap2_{dataset}'][:]=ihalo_datasets_outflow[f'snap2_{dataset}']
             try:
                 acc_file[ihalo_group]['Outflow']['PartType0'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=np.float32)
             except:
-                acc_file[ihalo_group]['Outflow']['PartType0'][f'snap1_{dataset}']=ihalo_datasets_outflow[f'snap1_{dataset}']
+                acc_file[ihalo_group]['Outflow']['PartType0'][f'snap1_{dataset}'][:]=ihalo_datasets_outflow[f'snap1_{dataset}']
 
     acc_file.close()
 
