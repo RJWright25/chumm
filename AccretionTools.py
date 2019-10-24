@@ -420,19 +420,21 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     if halo_index_list==None:
         halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
         iprocess="x"
+        num_processes=0
     else:
         try:
             halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
             iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
+            num_processes=halo_index_list["np"]
         except:
             halo_index_list_snap2=halo_index_list
-            print('Using iprocess x')
             iprocess="x"
-    
+            num_processes=0
+
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
         os.mkdir(acc_log_dir)
-    run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}/"
+    run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}/"
     if not os.path.exists(run_log_dir):
         os.mkdir(run_log_dir)
     run_snap_log_dir=run_log_dir+f'snap_{str(snap).zfill(3)}/'
@@ -460,7 +462,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     # Initialising outputs
     if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
         os.mkdir('acc_data')
-    calc_dir=f'acc_data/pre{pre_depth}_post{post_depth}/'
+    calc_dir=f'acc_data/pre{pre_depth}_post{post_depth}_np{num_processes}/'
     if not os.path.exists(calc_dir):#create folder for outputs if doesn't already exist
         try:
             os.mkdir(calc_dir)
