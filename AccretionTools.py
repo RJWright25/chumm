@@ -1353,14 +1353,14 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
         gas_IDs_in_snap1=acc_file[ihalo_group]['Inflow']['PartType0']['ParticleIDs']
         gas_IDs_out_snap1=acc_file[ihalo_group]['Outflow']['PartType0']['ParticleIDs']
         
-        if gas_IDs_in_snap1==np.nan:
+        if np.size(gas_IDs_in_snap1)==1 and type(gas_IDs_in_snap1)==float:
             for dataset in datasets:
                 ihalo_datasets_inflow[f'snap1_{dataset}']=np.nan
                 ihalo_datasets_outflow[f'snap1_{dataset}']=np.nan
                 ihalo_datasets_inflow[f'snap2_{dataset}']=np.nan
                 ihalo_datasets_outflow[f'snap2_{dataset}']=np.nan
         else:#valid halo
-
+            
             transformed_in=np.array(acc_file[ihalo_group]['Inflow']['PartType0']['Transformed'])==1
             transformed_out=np.array(acc_file[ihalo_group]['Outflow']['PartType0']['Transformed'])==1
 
