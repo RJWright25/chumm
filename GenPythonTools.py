@@ -80,7 +80,7 @@ def gen_mp_indices(indices,n):
         for iprocess_iindex in range(n_indices_iprocess):
             iprocess_index=iprocess_iindex*n+iprocess
             iprocess_indices.append(indices[iprocess_index])
-        output_iprocess={"iprocess":iprocess,"indices":list(iprocess_indices)}
+        output_iprocess={"iprocess":iprocess,"indices":list(iprocess_indices),"np":n}
         output.append(output_iprocess)
 
     return output
