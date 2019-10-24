@@ -728,6 +728,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 ihalo_itype_snap1_inflow_fidelity={str(itype):[] for itype in PartTypes}
                 ihalo_itype_snap1_inflow_transformed={str(itype):[] for itype in PartTypes}
 
+                if itype==4:
+                    new_particle_IDs_itype_snap2_star_truncated=new_particle_IDs_itype_snap2['4']
+
                 for iipart_historyindex,ipart_historyindex in enumerate(new_particle_IDs_itype_snap1_historyindex):
                     ID=new_particle_IDs_itype_snap2[str(itype)][iipart_historyindex]
                     # we have to be careful with star particles - we have their index in ipart_historyindex IF they were a star at the previous snap, otherwise np.nan
@@ -763,12 +766,12 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ihalo_itype_snap1_inflow_structure[str(itype)].append(ipart_snap1_prevhost)
 
                     else: # the particle was transformed (i.e. was gas at snap 1 and star at snap 2) - we want this particle in the gas list not the star list so we add to this
-                        ihalo_itype_snap1_inflow_transformed[str(0)].append(1)
+                        new_particle_IDs_itype_snap2['0'].append(ID)#add ID to gas list
+                        ihalo_itype_snap1_inflow_transformed['0'].append(1)#note this gas particle was transformed
                         
                         #remove the ID from the star accretion list 
-                        ID_index_todelete=np.where(ID==new_particle_IDs_itype_snap2['4'])[0][0]
-                        new_particle_IDs_itype_snap2['4']=np.delete(arr=new_particle_IDs_itype_snap2['4'],obj=ID_index_todelete)
-                        ihalo_itype_snap1_inflow_transformed['0'].append(1)
+                        ID_index_todelete=np.where(ID==new_particle_IDs_itype_snap2_star_truncated)[0][0]
+                        new_particle_IDs_itype_snap2_star_truncated=np.delete(arr=new_particle_IDs_itype_snap2_star_truncated,obj=ID_index_todelete)
 
                         # Fidelity
                         if ID in snap3_IDs_temp_set:#if still in halo at snap 3
@@ -786,8 +789,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                         ipart_snap1_history_L1=Part_Histories_Processed_L1_snap1['0'][ipart_transformed_historyindex]
                         ipart_snap1_history_L2=Part_Histories_Processed_L2_snap1['0'][ipart_transformed_historyindex]
-                        ihalo_itype_snap1_inflow_history_L1['0'].append(ipart_snap1_history_L1)
-                        ihalo_itype_snap1_inflow_history_L2['0'].append(ipart_snap1_history_L2)
+                        ihalo_itype_snap1_inflow_history_L1['0'].append(ipart_snap1_history_L1)#add processing history to gas list
+                        ihalo_itype_snap1_inflow_history_L2['0'].append(ipart_snap1_history_L2)#add processing history to gas list
 
                         # Previous host
                         ipart_snap1_prevhost=Part_Histories_HostStructure_snap1['0'][ipart_transformed_historyindex]
@@ -797,6 +800,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ihalo_itype_snap1_inflow_structure['0'].append(ipart_snap1_prevhost)
 
                 t2_inflow.append(time.time())
+                
+                if itype==4:#truncate list of inflow star particles to just those that were stars beforehand. 
+                    new_particle_IDs_itype_snap2['4']=new_particle_IDs_itype_snap2_star_truncated
 
                 ############## OUTFLOW PARTICLE PROCESSING ##############    
                 
