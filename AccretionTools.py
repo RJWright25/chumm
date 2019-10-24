@@ -430,6 +430,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             halo_index_list_snap2=halo_index_list
             iprocess="x"
             num_processes='test'
+            
+    if num_processes==1:
+        num_processes='test'
 
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
