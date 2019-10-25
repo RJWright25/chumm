@@ -454,8 +454,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     if os.path.exists(fname_log):
         os.remove(fname_log)
 
-
-
     # Assigning snap
     if snap==None:
         snap=len(base_halo_data)-1#if not given snap, just use the last one
