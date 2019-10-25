@@ -472,13 +472,18 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     # Initialising outputs
     if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
         os.mkdir('acc_data')
-    calc_dir=f'acc_data/pre{pre_depth}_post{post_depth}_np{num_processes}/'
+    if test:
+        calc_dir=f'acc_data/pre{pre_depth}_post{post_depth}_np{num_processes}_test/'
+    else:
+        calc_dir=f'acc_data/pre{pre_depth}_post{post_depth}_np{num_processes}/'
+
     if not os.path.exists(calc_dir):#create folder for outputs if doesn't already exist
         try:
             os.mkdir(calc_dir)
         except:
             pass
     calc_snap_dir=calc_dir+f'snap_{str(snap2).zfill(3)}/'
+    
     if not os.path.exists(calc_snap_dir):#create folder for outputs if doesn't already exist
         os.mkdir(calc_snap_dir)
         
