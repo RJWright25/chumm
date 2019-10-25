@@ -428,7 +428,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
             num_processes=halo_index_list["np"]
             test=halo_index_list["test"]
-        except
+        except:
             print('Not parsed a valud halo index list. Exiting.')
             return None
 
