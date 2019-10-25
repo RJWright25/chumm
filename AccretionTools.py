@@ -421,27 +421,36 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
         iprocess="x"
         num_processes='test'
+        test=True
     else:
         try:
             halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
             iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
             num_processes=halo_index_list["np"]
-        except:
-            halo_index_list_snap2=halo_index_list
-            iprocess="x"
-            num_processes='test'
+            test=halo_index_list["test"]
+        except
+            print('Not parsed a valud halo index list. Exiting.')
+            return None
 
 
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
         os.mkdir(acc_log_dir)
-    run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}/"
+    if test:
+        run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}_test/"
+    else:
+        run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}/"
+
     if not os.path.exists(run_log_dir):
         os.mkdir(run_log_dir)
     run_snap_log_dir=run_log_dir+f'snap_{str(snap).zfill(3)}/'
     if not os.path.exists(run_snap_log_dir):
         os.mkdir(run_snap_log_dir)
-    fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
+    if test:
+        fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}_test.log"
+    else:
+        fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
+
     if os.path.exists(fname_log):
         os.remove(fname_log)
 

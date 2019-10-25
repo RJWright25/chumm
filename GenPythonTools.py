@@ -33,7 +33,7 @@ def flatten(listoflists):
             output.extend(list(sublist))
     return output
 
-def gen_mp_indices(indices,n):
+def gen_mp_indices(indices,n,test=False):
     """
 
     gen_mp_indices : function
@@ -80,7 +80,7 @@ def gen_mp_indices(indices,n):
         for iprocess_iindex in range(n_indices_iprocess):
             iprocess_index=iprocess_iindex*n+iprocess
             iprocess_indices.append(indices[iprocess_index])
-        output_iprocess={"iprocess":iprocess,"indices":list(iprocess_indices),"np":n}
+        output_iprocess={"iprocess":iprocess,"indices":list(iprocess_indices),"np":n,"test":test}
         output.append(output_iprocess)
 
     return output
