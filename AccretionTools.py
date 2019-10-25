@@ -1351,7 +1351,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
             except:
                 pass#cannot get the dataset for stars (will be empty list)
 
-    acc_file=h5py.File(accdata_path,'w')
+    acc_file=h5py.File(accdata_path,'r+')
     ihalo_groups=list(acc_file.keys())
     ihalo_groups_trunc=[ihalo_group for ihalo_group in ihalo_groups if 'ihalo_' in ihalo_group]
 
