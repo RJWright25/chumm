@@ -1278,7 +1278,7 @@ def postprocess_acc_data_serial(path):
 
 ########################### ADD PARTICLE DATA TO ACC DATA ###########################
 
-def add_gas_particle_data(base_halo_data,part_histories=None,part_datasets=None,accdata_path,datasets=None):
+def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     """
 
     add_gas_particle_data : function 
