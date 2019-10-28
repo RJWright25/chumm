@@ -1553,10 +1553,16 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                             ihalo_datasets_outflow[f'snap2_{dataset}'].append(ipart_idataset)
 
         for dataset in datasets:
-            ihalo_datasets_inflow[f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=dataset_types[dataset])
-            ihalo_datasets_inflow[f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=dataset_types[dataset])
-            ihalo_datasets_outflow[f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=dataset_types[dataset])
-            ihalo_datasets_outflow[f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=dataset_types[dataset])
+            try:
+                ihalo_datasets_inflow[f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=dataset_types[dataset])
+                ihalo_datasets_inflow[f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=dataset_types[dataset])
+                ihalo_datasets_outflow[f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=dataset_types[dataset])
+                ihalo_datasets_outflow[f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=dataset_types[dataset])
+            except:
+                ihalo_datasets_inflow[f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float64)
+                ihalo_datasets_inflow[f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float64)
+                ihalo_datasets_outflow[f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=np.float64)
+                ihalo_datasets_outflow[f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=np.float64)
 
             try:
                 acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=dataset_types[dataset],shape=np.shape(ihalo_datasets_inflow[f'snap2_{dataset}']),exact=False)
