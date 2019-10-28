@@ -1524,17 +1524,20 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
         for dataset in datasets:
             ihalo_datasets_inflow[f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32)
-            acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_inflow[f'snap2_{dataset}']),dataset_shapes[dataset]))
-
             ihalo_datasets_inflow[f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32)
-            acc_file[ihalo_group]['Inflow']['PartType0'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_inflow[f'snap1_{dataset}']),dataset_shapes[dataset]))
-    
             ihalo_datasets_outflow[f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=np.float32)
-            acc_file[ihalo_group]['Outflow']['PartType0'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_outflow[f'snap2_{dataset}']),dataset_shapes[dataset]))
-        
             ihalo_datasets_outflow[f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=np.float32)
-            acc_file[ihalo_group]['Outflow']['PartType0'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_outflow[f'snap1_{dataset}']),dataset_shapes[dataset]))
-
+            
+            if dataset_shapes[dataset]>1:
+                acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_inflow[f'snap2_{dataset}']),dataset_shapes[dataset]))
+                acc_file[ihalo_group]['Inflow']['PartType0'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_inflow[f'snap1_{dataset}']),dataset_shapes[dataset]))
+                acc_file[ihalo_group]['Outflow']['PartType0'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_outflow[f'snap2_{dataset}']),dataset_shapes[dataset]))
+                acc_file[ihalo_group]['Outflow']['PartType0'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_outflow[f'snap1_{dataset}']),dataset_shapes[dataset]))
+            else:
+acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_inflow[f'snap2_{dataset}']),))
+                acc_file[ihalo_group]['Inflow']['PartType0'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_inflow[f'snap1_{dataset}']),))
+                acc_file[ihalo_group]['Outflow']['PartType0'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_outflow[f'snap2_{dataset}']),))
+                acc_file[ihalo_group]['Outflow']['PartType0'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=np.float32,shape=(len(ihalo_datasets_outflow[f'snap1_{dataset}']),))
         t2_halo=time.time()
 
         with open(fname_log,"a") as progress_file:
