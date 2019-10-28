@@ -1278,7 +1278,7 @@ def postprocess_acc_data_serial(path):
 
 ########################### ADD PARTICLE DATA TO ACC DATA ###########################
 
-def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
+def add_gas_particle_data(base_halo_data,part_histories=None,part_datasets=None,accdata_path,datasets=None):
     """
 
     add_gas_particle_data : function 
@@ -1290,6 +1290,16 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 	----------
     base_halo_data: dict
         The base halo data dictionary (encodes particle data filepath, snap, particle histories).
+
+    # part_histories: dict or None
+    #     An optional dictionary with keys 'snap2_gas_datasets', 'snap1_gas_datasets', 'snap2_star_datasets' - loaded before runtime.
+    #     If not provided, will load. 
+    #     (saves memory if parallelizing)
+
+    # part_datasets: dict or None
+    #     An optional dictionary with keys 'snap2_gas_datasets', 'snap1_gas_datasets', 'snap2_star_datasets' - loaded before runtime.
+    #     If not provided, will load. 
+    #     (saves memory if parallelizing)
 
     accdata_path : str
         The file path to the base hdf5 accretion data file. 
@@ -1488,11 +1498,17 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                             ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
 
         for dataset in datasets:
+            try:
                 ihalo_datasets_inflow[f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32)
+                acc_file[ihalo_group]['Inflow']['PartType0'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32)
+            except:
+                acc_file[ihalo_group]['Inflow']['PartType0'][f'snap2_{dataset}'][:]=ihalo_datasets_inflow[f'snap2_{dataset}']
+            try:
                 ihalo_datasets_inflow[f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32)
+            try:
                 ihalo_datasets_outflow[f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=np.float32)
+            try:
                 ihalo_datasets_outflow[f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=np.float32)
-                acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],shape=(len(ihalo_datasets_inflow[f'snap2_{dataset}']),),dtype=np.float32)
                 acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[f'snap1_{dataset}'],shape=(len(ihalo_datasets_inflow[f'snap1_{dataset}']),),dtype=np.float32)
                 acc_file[ihalo_group]['Outflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[f'snap2_{dataset}'],shape=(len(ihalo_datasets_outflow[f'snap2_{dataset}']),),dtype=np.float32)
                 acc_file[ihalo_group]['Outflow']['PartType0'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[f'snap1_{dataset}'],shape=(len(ihalo_datasets_outflow[f'snap1_{dataset}']),),dtype=np.float32)
