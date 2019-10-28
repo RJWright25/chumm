@@ -1320,7 +1320,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     iprocess=int(acc_filename.split('_p')[-1][:3])
 
     acc_file=h5py.File(accdata_path,'r+')
-    ihalo_groups=list(acc_file.keys()).sort()
+    ihalo_groups=sorted(list(acc_file.keys()))
     ihalo_groups_trunc=[ihalo_group for ihalo_group in ihalo_groups if 'ihalo_' in ihalo_group]
     ihalo_count=len(ihalo_groups_trunc)
 
