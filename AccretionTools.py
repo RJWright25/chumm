@@ -1384,6 +1384,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                 star_particle_datasets_snap2[dataset]=EAGLE_Snap_2.read_dataset(4,dataset)
             except:
                 pass#cannot get the dataset for stars (will be empty list)
+
     else:#non-eagle file -- GADGET OR SWIFT (don't have read routine)
         PartFile_Snap_1=h5py.File(base_halo_data[snap1]['Part_FilePath'],'r')
         PartFile_Snap_2=h5py.File(base_halo_data[snap2]['Part_FilePath'],'r')
@@ -1442,7 +1443,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
             for dataset in datasets:
                 ihalo_datasets_inflow[f'snap1_{dataset}']=[gas_particle_datasets_snap1[dataset][index] for index in ihalo_gas_inflow_partdata_indices_snap1]
                 ihalo_datasets_outflow[f'snap1_{dataset}']=[gas_particle_datasets_snap1[dataset][index] for index in ihalo_gas_outflow_partdata_indices_snap1]
-            
+
             #Find indices of gas particles for snap2
             ihalo_gas_inflow_history_indices_snap2=binary_search(items=gas_IDs_in_snap1,sorted_list=parthist_gas_IDs_snap2,check_entries=False)
             ihalo_gas_outflow_history_indices_snap2=binary_search(items=gas_IDs_out_snap1,sorted_list=parthist_gas_IDs_snap2,check_entries=False)
