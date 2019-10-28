@@ -1304,9 +1304,41 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     """
     
     acc_filename=accdata_path.split('/')[-1]
+    acc_directory_split=accdata_path.split('/')[:-1]
+    for idir in acc_directory_split:#grab the directory
+        if 'pre' in idir:
+            calc_dir=idir
+        else:
+            pass
+    if 'test' in calc_dir:
+        test=True
+    else:
+        test=False
     snap2=int(acc_filename.split('snap')[-1][:3])
     pre_depth=int(acc_filename.split('pre')[-1][:1])
     snap1=snap2-pre_depth
+    iprocess=int(acc_filename.split('_p')[-1][:3])
+
+    acc_file=h5py.File(accdata_path,'r+')
+    ihalo_groups=list(acc_file.keys()).sort()
+    ihalo_groups_trunc=[ihalo_group for ihalo_group in ihalo_groups if 'ihalo_' in ihalo_group]
+    ihalo_count=len(ihalo_groups_trunc)
+
+    run_snap_log_dir='job_logs/acc_logs/'+calc_dir+f'snap_{str(snap2).zfill(3)}/'
+    if test:
+        fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(2)}_n{str(ihalo_count).zfill(6)}_test.log'
+    else:
+        fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(2)}_n{str(ihalo_count).zfill(6)}.log'
+
+    if os.path.exists(fname_log):
+        os.remove(fname_log)
+
+    with open(fname_log,"a") as progress_file:
+        progress_file.write(" \n")
+        progress_file.write('Loading in data ...')
+    progress_file.close()
+
+    t1_io=time.time()
 
     partdata_filetype=base_halo_data[snap2]['Part_FileType']
     partdata_outname=base_halo_data[snap2]['outname']
@@ -1353,13 +1385,22 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                 star_particle_datasets_snap2[dataset]=PartFile_Snap_2['PartType4'][dataset].value
             except:
                 pass#cannot get the dataset for stars (will be empty list)
+    
+    t2_io=time.time()
 
-    acc_file=h5py.File(accdata_path,'r+')
-    ihalo_groups=list(acc_file.keys())
-    ihalo_groups_trunc=[ihalo_group for ihalo_group in ihalo_groups if 'ihalo_' in ihalo_group]
+    with open(fname_log,"a") as progress_file:
+        progress_file.write(" \n")
+        progress_file.write(f'Finished I/O in {t2_io-t1_io}! Entering main halo loop... \n')
+    progress_file.close()
 
-    for ihalo_group in ihalo_groups_trunc:
+    for iihalo,ihalo_group in enumerate(ihalo_groups_trunc):
+        t1_halo=time.time()
         print(f'Processing {ihalo_group}')
+        with open(fname_log,"a") as progress_file:
+            progress_file.write(" \n")
+            progress_file.write(f'Processing halo {ihalo_group} ({iihalo+1} out of {ihalo_count}) \n')
+        progress_file.close()
+
         ihalo_datasets_inflow={}
         ihalo_datasets_outflow={}
         for dataset in datasets:#initialise empty halo datasets
@@ -1456,6 +1497,14 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                 acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[f'snap1_{dataset}'],exact=False)
                 acc_file[ihalo_group]['Outflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[f'snap2_{dataset}'],exact=False)
                 acc_file[ihalo_group]['Outflow']['PartType0'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[f'snap1_{dataset}'],exact=False)
+
+        t2_halo=time.time()
+        
+        with open(fname_log,"a") as progress_file:
+            progress_file.write(" \n")
+            progress_file.write(f'Done processing halo {ihalo_group} ({iihalo+1} out of {ihalo_count}) - took {t2_halo-t1_halo} \n')
+            progress_file.write(f'Progress: {(iihalo+1)/ihalo_count*100:.1f}%\n')
+        progress_file.close()
 
     acc_file.close()
 
