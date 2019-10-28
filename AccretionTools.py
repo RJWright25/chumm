@@ -1492,10 +1492,10 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                 ihalo_datasets_inflow[f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32)
                 ihalo_datasets_outflow[f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[f'snap2_{dataset}'],dtype=np.float32)
                 ihalo_datasets_outflow[f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[f'snap1_{dataset}'],dtype=np.float32)
-                acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],exact=True)
-                acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[f'snap1_{dataset}'],exact=True)
-                acc_file[ihalo_group]['Outflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[f'snap2_{dataset}'],exact=True)
-                acc_file[ihalo_group]['Outflow']['PartType0'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[f'snap1_{dataset}'],exact=True)
+                acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],shape=(len(ihalo_datasets_inflow[f'snap2_{dataset}']),),dtype=np.float32)
+                acc_file[ihalo_group]['Inflow']['PartType0'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[f'snap1_{dataset}'],shape=(len(ihalo_datasets_inflow[f'snap1_{dataset}']),),dtype=np.float32)
+                acc_file[ihalo_group]['Outflow']['PartType0'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[f'snap2_{dataset}'],shape=(len(ihalo_datasets_outflow[f'snap2_{dataset}']),),dtype=np.float32)
+                acc_file[ihalo_group]['Outflow']['PartType0'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[f'snap1_{dataset}'],shape=(len(ihalo_datasets_outflow[f'snap1_{dataset}']),),dtype=np.float32)
 
         t2_halo=time.time()
 
