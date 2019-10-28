@@ -1324,7 +1324,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     ihalo_groups_trunc=[ihalo_group for ihalo_group in ihalo_groups if 'ihalo_' in ihalo_group]
     ihalo_count=len(ihalo_groups_trunc)
 
-    run_snap_log_dir='job_logs/acc_logs/'+calc_dir+f'snap_{str(snap2).zfill(3)}/'
+    run_snap_log_dir='job_logs/acc_logs/'+calc_dir+f'/snap_{str(snap2).zfill(3)}/'
     if test:
         fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(2)}_n{str(ihalo_count).zfill(6)}_test.log'
     else:
