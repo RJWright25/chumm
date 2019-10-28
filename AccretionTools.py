@@ -1502,6 +1502,7 @@ def add_gas_particle_data(base_halo_data,part_histories=None,part_datasets=None,
                 ihalo_datasets_inflow[f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32)
                 acc_file[ihalo_group]['Inflow']['PartType0'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32)
             except:
+                print(ihalo_datasets_inflow[f'snap2_{dataset}'])
                 acc_file[ihalo_group]['Inflow']['PartType0'][f'snap2_{dataset}'][:]=ihalo_datasets_inflow[f'snap2_{dataset}']
             try:
                 ihalo_datasets_inflow[f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32)
