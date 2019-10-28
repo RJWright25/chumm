@@ -1454,7 +1454,8 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                     history_index=ihalo_gas_inflow_history_indices_snap2[iipartID_in]
                     partdata_index=parthist_gas_indices_snap2[history_index]
                     for dataset in datasets:
-                        ihalo_datasets_inflow[f'snap2_{dataset}'].append(gas_particle_datasets_snap2[dataset][partdata_index])
+                        ipart_idataset=gas_particle_datasets_snap2[dataset][partdata_index]
+                        ihalo_datasets_inflow[f'snap2_{dataset}'].append(ipart_idataset)
                 else:
                     history_index=bisect_left(a=parthist_star_IDs_snap2,x=ipartID_in,lo=0,hi=parthist_star_count_snap2)
                     if parthist_star_IDs_snap2[history_index]==ipartID_in:
@@ -1463,14 +1464,24 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                         partdata_index=np.nan
                     
                     for dataset in datasets:
+                        dataset_shape=np.size(star_particle_datasets_snap2[dataset][0])
                         if partdata_index>=0:
                             try:
                                 ihalo_datasets_inflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
                             except:
                                 # print(f'Couldnt get {dataset} data for stars.')
-                                ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
+                                if dataset_shape==1:
+                                    ipart_idataset=np.nan
+                                else:
+                                    ipart_idataset=[np.nan for i in range(dataset_shape)]
+
+                                ihalo_datasets_inflow[f'snap2_{dataset}'].append(ipart_idataset)
                         else:
-                            ihalo_datasets_inflow[f'snap2_{dataset}'].append(np.nan)
+                            if dataset_shape==1:
+                                ipart_idataset=np.nan
+                            else:
+                                ipart_idataset=[np.nan for i in range(dataset_shape)]
+                            ihalo_datasets_inflow[f'snap2_{dataset}'].append(ipart_idataset)
 
             #outflow
             for iipartID_out,ipartID_out in enumerate(gas_IDs_out_snap1):
@@ -1488,22 +1499,30 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                         partdata_index=np.nan
                     
                     for dataset in datasets:
+                        dataset_shape=np.size(star_particle_datasets_snap2[dataset][0])
                         if partdata_index>=0:
                             try:
                                 ihalo_datasets_outflow[f'snap2_{dataset}'].append(star_particle_datasets_snap2[dataset][partdata_index])
                             except:
                                 # print(f'Couldnt get {dataset} data for stars.')
-                                ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
-
+                                if dataset_shape==1:
+                                    ipart_idataset=np.nan
+                                else:
+                                    ipart_idataset=[np.nan for i in range(dataset_shape)]
+                                ihalo_datasets_outflow[f'snap2_{dataset}'].append(ipart_idataset)
                         else:
-                            ihalo_datasets_outflow[f'snap2_{dataset}'].append(np.nan)
+                            if dataset_shape==1:
+                                ipart_idataset=np.nan
+                            else:
+                                ipart_idataset=[np.nan for i in range(dataset_shape)]
+                            ihalo_datasets_outflow[f'snap2_{dataset}'].append(ipart_idataset)
 
         for dataset in datasets:
             try:
                 ihalo_datasets_inflow[f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32)
                 acc_file[ihalo_group]['Inflow']['PartType0'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[f'snap2_{dataset}'],dtype=np.float32)
             except:
-                print(ihalo_datasets_inflow[f'snap2_{dataset}'])
+                print(dataset,ihalo_datasets_inflow[f'snap2_{dataset}'])
                 acc_file[ihalo_group]['Inflow']['PartType0'][f'snap2_{dataset}'][:]=ihalo_datasets_inflow[f'snap2_{dataset}']
             try:
                 ihalo_datasets_inflow[f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[f'snap1_{dataset}'],dtype=np.float32)
