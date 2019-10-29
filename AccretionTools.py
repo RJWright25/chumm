@@ -1639,7 +1639,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
 ########################### READ ALL ACC DATA ###########################
 
-def get_particle_acc_data(directory,halo_index_list=None,fields_in=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],fields_out=['Particle_IDs','Masses','Destination'],itype=None):
+def get_particle_acc_data(directory,halo_index_list=None,fields_in=[],fields_out=[],itypes=None):
 
 
     print('Indexing halos ...')
@@ -1668,14 +1668,13 @@ def get_particle_acc_data(directory,halo_index_list=None,fields_in=["Fidelity","
             else:
                 pass
     t2=time.time()
-
-
     print(f'Done in {t2-t1}')
     
     if itype==None:
         parttypes=[0,1]
     else:
         parttypes=[itype]
+
     partfields_in=fields_in
     partfields_out=fields_out
     particle_acc_data_in={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_in} for itype in parttypes}
