@@ -1366,7 +1366,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     if os.path.exists(fname_log):
         os.remove(fname_log)
 
-    with open(fname_log,"a") as progress_file:
+    with open(fname_log,"w") as progress_file:
         progress_file.write('Loading in data ...')
     progress_file.close()
 
