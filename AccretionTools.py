@@ -442,10 +442,18 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}/"
 
     if not os.path.exists(run_log_dir):
-        os.mkdir(run_log_dir)
+        try:
+            os.mkdir(run_log_dir)
+        except:
+            pass
+
     run_snap_log_dir=run_log_dir+f'snap_{str(snap).zfill(3)}/'
+
     if not os.path.exists(run_snap_log_dir):
-        os.mkdir(run_snap_log_dir)
+        try:
+            os.mkdir(run_snap_log_dir)
+        except:
+            pass
     if test:
         fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}_test.log"
     else:
@@ -878,7 +886,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ihalo_itype_snap2_outflow_destination[str(itype)].append(ipart_snap2_destination)
 
                 t2_outflow.append(time.time())
-                
+
                 ############## PRINT RESULTS ##############
 
                 t1_print.append(time.time())
