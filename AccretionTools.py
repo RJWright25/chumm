@@ -1698,9 +1698,9 @@ def get_particle_acc_data(directory,halo_index_list=None):
         ihalo_name='ihalo_'+str(ihalo).zfill(6)
         ifile=ihalo_files[iihalo]
         print(f'ihalo: {ihalo}')
-        particle_acc_files.append(accdata_filelist_trunc[int(ifile)])
         for parttype in parttypes:
             for field in partfields_in:
+                print(f'looking for {ihalo_name+f'/Inflow/PartType{parttype}/'+field} in {accdata_files[int(ihalo_files[iihalo])]}')
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{parttype}/'+field].value
                 particle_acc_data_in[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
             for field in partfields_out:
@@ -1711,7 +1711,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
     t2=time.time()
     print(f'Done in {t2-t1}')
 
-    return particle_acc_files,particle_acc_data
+    return particle_acc_data
  
 ########################### READ SUMMED ACC DATA ###########################
 
