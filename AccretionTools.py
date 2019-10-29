@@ -531,6 +531,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
     # Now find which simulation type we're dealing with
     part_filetype=base_halo_data[snap]["Part_FileType"]
+    print(f'Particle data type: {part_filetype}')
 
     # Standard particle type names from simulation
     PartNames=['gas','DM','','','star','BH']
@@ -1333,7 +1334,6 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     snap2=int(acc_filename.split('snap')[-1][:3])
     pre_depth=int(acc_filename.split('pre')[-1][:1])
     snap1=snap2-pre_depth
-    print(acc_filename)
     iprocess=int(acc_filename.split('_p')[-1][:3])
 
     acc_file=h5py.File(accdata_path,'r+')
