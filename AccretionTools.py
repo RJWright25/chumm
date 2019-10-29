@@ -1371,7 +1371,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
             os.mkdir(run_log_dir)
         except:
             pass
-    run_snap_log_dir=run_log_dir+f'snap_{str(snap).zfill(3)}/'
+    run_snap_log_dir=run_log_dir+f'snap_{str(snap2).zfill(3)}/'
 
     if not os.path.exists(run_snap_log_dir):
         try:
