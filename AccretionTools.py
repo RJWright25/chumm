@@ -1639,7 +1639,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
 ########################### READ ALL ACC DATA ###########################
 
-def get_particle_acc_data(directory,halo_index_list=None,fields_in=[],fields_out=[],itypes=None):
+def get_particle_acc_data(directory,halo_index_list=None):
 
 
     print('Indexing halos ...')
@@ -1669,16 +1669,24 @@ def get_particle_acc_data(directory,halo_index_list=None,fields_in=[],fields_out
                 pass
     t2=time.time()
     print(f'Done in {t2-t1}')
-    
-    if itype==None:
-        parttypes=[0,1]
-    else:
-        parttypes=[itype]
 
-    partfields_in=fields_in
-    partfields_out=fields_out
-    particle_acc_data_in={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_in} for itype in parttypes}
-    particle_acc_data_out={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_out} for itype in parttypes}
+
+    if 'EAGLE' in directory:
+        parttypes=[0,1,4]
+    else:
+        parttypes=[0,1]
+
+    partfields_in={}
+    partfields_out={}
+    for itype in parttypes:
+        ihalo_group0=list(accdata_files[0].keys())[0]
+        fields_in_itype=list(accdata_files[0][ihalo_group0][f'PartType{itype}']['Inflow'].keys())
+        fields_out_itype=list(accdata_files[0][ihalo_group0][f'PartType{itype}']['Outflow'].keys())
+        partfields_in[str(itype)]=fields_in_itype
+        partfields_out[str(itype)]=fields_out_itype
+
+    particle_acc_data_in={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_in[str(itype)]} for itype in parttypes}
+    particle_acc_data_out={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_out[str(itype)]} for itype in parttypes}
     particle_acc_files=[]    
 
     print('Now retrieving halo data from file ...')
