@@ -1702,11 +1702,14 @@ def get_particle_acc_data(directory,halo_index_list=None):
         ifile=ihalo_files[iihalo]
         print(f'ihalo: {ihalo}')
         for parttype in parttypes:
+            print(accdata_files[int(ihalo_files[iihalo])])
             for field in partfields_in:
-                print(accdata_files[int(ihalo_files[iihalo])])
+                print('Inflow')
+                print(ihalo_name+f'/Inflow/PartType{parttype}/'+field)
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{parttype}/'+field].value
                 particle_acc_data_in[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
             for field in partfields_out:
+                print('Outflow')
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Outflow/PartType{parttype}/'+field].value
                 particle_acc_data_out[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
 
