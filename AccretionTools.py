@@ -1703,6 +1703,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
         print(f'ihalo: {ihalo}')
         for parttype in parttypes:
             for field in partfields_in:
+                print(accdata_files[int(ihalo_files[iihalo])])
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{parttype}/'+field].value
                 particle_acc_data_in[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
             for field in partfields_out:
