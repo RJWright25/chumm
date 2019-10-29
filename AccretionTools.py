@@ -1650,6 +1650,8 @@ def get_particle_acc_data(directory,halo_index_list=None):
     accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
     accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
+    accdata_halo_lists_flattened=flatten(accdata_halo_lists)
+    print(accdata_halo_lists_flattened)
 
     if halo_index_list==None:
         halo_index_list=list(range(np.size(accdata_halo_lists)))
