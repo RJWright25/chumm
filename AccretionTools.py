@@ -1652,7 +1652,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
     accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
 
     if halo_index_list==None:
-        halo_index_list=list(range(np.size(accdata_halo_list_indexing)))
+        halo_index_list=list(range(np.size(accdata_halo_lists)))
     
     if type(halo_index_list)==int:
         halo_index_list=[halo_index_list]
