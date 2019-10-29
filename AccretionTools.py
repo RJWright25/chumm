@@ -878,6 +878,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                         ihalo_itype_snap2_outflow_destination[str(itype)].append(ipart_snap2_destination)
 
                 t2_outflow.append(time.time())
+                
                 ############## PRINT RESULTS ##############
 
                 t1_print.append(time.time())
