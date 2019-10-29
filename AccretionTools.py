@@ -1688,6 +1688,9 @@ def get_particle_acc_data(directory,halo_index_list=None):
         partfields_in[str(itype)]=fields_in_itype
         partfields_out[str(itype)]=fields_out_itype
 
+    print('fields for inflow': partfields_in)
+    print('fields for outflow': partfields_out)
+
     particle_acc_data_in={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_in[str(itype)]} for itype in parttypes}
     particle_acc_data_out={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_out[str(itype)]} for itype in parttypes}
     particle_acc_files=[]    
@@ -1700,7 +1703,6 @@ def get_particle_acc_data(directory,halo_index_list=None):
         print(f'ihalo: {ihalo}')
         for parttype in parttypes:
             for field in partfields_in:
-                print(f'looking for {ihalo_name+f'/Inflow/PartType{parttype}/'+field} in {accdata_files[int(ihalo_files[iihalo])]}')
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{parttype}/'+field].value
                 particle_acc_data_in[f'PartType{parttype}'][field][iihalo]=ihalo_itype_ifield
             for field in partfields_out:
