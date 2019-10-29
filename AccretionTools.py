@@ -1651,7 +1651,6 @@ def get_particle_acc_data(directory,halo_index_list=None):
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
     accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
     accdata_halo_lists_flattened=flatten(accdata_halo_lists)
-    print(accdata_halo_lists_flattened[0])
 
     if halo_index_list==None:
         halo_index_list=list(range(len(accdata_halo_lists_flattened)-1))
@@ -1683,7 +1682,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
     partfields_in={}
     partfields_out={}
     for itype in parttypes:
-        ihalo_group0=list(accdata_files[0].keys())[0]
+        ihalo_group0=list(accdata_files[0].keys())[-1]
         fields_in_itype=list(accdata_files[0][ihalo_group0]['Inflow'][f'PartType{itype}'].keys())
         fields_out_itype=list(accdata_files[0][ihalo_group0]['Outflow'][f'PartType{itype}'].keys())
         partfields_in[str(itype)]=fields_in_itype
