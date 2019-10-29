@@ -1386,7 +1386,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
         parthist_star_IDs_snap2=parthist_file_snap2['PartType4']['ParticleIDs'].value
         parthist_star_indices_snap2=parthist_file_snap2['PartType4']['ParticleIndex'].value
         parthist_star_count_snap2=len(parthist_star_IDs_snap2)
-    except
+    except:
         pass
 
     #Load particle data
@@ -1412,7 +1412,7 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
     else:#non-eagle file -- GADGET OR SWIFT (don't have read routine)
         partdata_filetype='GADGET'
-        
+
         PartFile_Snap_1=h5py.File(base_halo_data[snap1]['Part_FilePath'],'r')
         PartFile_Snap_2=h5py.File(base_halo_data[snap2]['Part_FilePath'],'r')
 
