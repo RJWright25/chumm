@@ -607,6 +607,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     print('*********************************************************')
     print(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
     print('*********************************************************')
+    with open(fname_log,"a") as progress_file:
+        progress_file.write(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
+    progress_file.close()
 
     count=0
     halos_done=0
