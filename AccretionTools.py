@@ -866,8 +866,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     else:
                         #need to find the transformed gas ID from snap1 in the star list at snap 2
                         ihalo_itype_snap2_outflow_transformed[str(itype)].append(1)
-                        ipart_transformed_historyindex=bisect_left(a=Part_Histories_IDs_snap1['4'],x=ID)#search for this ID in the star list
-                        ipart_transformed_ID_athistoryindex=Part_Histories_IDs_snap1['4'][ipart_transformed_historyindex]
+                        ipart_transformed_historyindex=bisect_left(a=Part_Histories_IDs_snap2['4'],x=ID)#search for this ID in the star list at snap 2
+                        ipart_transformed_ID_athistoryindex=Part_Histories_IDs_snap2['4'][ipart_transformed_historyindex]
                         
                         if ID!=ipart_transformed_ID_athistoryindex:
                             print(f"Couldn't find outflow particle {ID} at snap 2 - not in star list (probably turned into BH)")
