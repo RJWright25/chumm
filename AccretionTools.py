@@ -1651,7 +1651,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
     accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
     accdata_halo_lists_flattened=flatten(accdata_halo_lists)
-    print(accdata_halo_lists_flattened)
+    print(accdata_halo_lists_flattened[0])
 
     if halo_index_list==None:
         halo_index_list=list(range(len(accdata_halo_lists_flattened)))
