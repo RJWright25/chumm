@@ -1671,7 +1671,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
             else:
                 pass
     t2=time.time()
-    print(f'Done in {t2-t1}')
+    print(f'Done indexing halos in {t2-t1:.1f} sec')
 
 
     if 'EAGLE' in directory:
@@ -1697,7 +1697,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
         ihalo_name='ihalo_'+str(ihalo).zfill(6)
         ifile=ihalo_files[iihalo]
         if iihalo%1000==0:
-            print(f'{iihalo/desired_num_halos*100:.1f}% done')
+            print(f'{iihalo/desired_num_halos*100:.1f}% of halo data loaded')
         for itype in parttypes:
             for field in partfields_in[str(itype)]:
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{itype}/'+field].value
