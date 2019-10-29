@@ -1644,6 +1644,8 @@ def get_particle_acc_data(directory,halo_index_list=None):
 
     print('Indexing halos ...')
     t1=time.time()
+    if not directory.endswith('/'):
+        directory=directory+'/'
     accdata_filelist=os.listdir(directory)
     accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
