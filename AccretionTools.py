@@ -1684,8 +1684,8 @@ def get_particle_acc_data(directory,halo_index_list=None):
     partfields_out={}
     for itype in parttypes:
         ihalo_group0=list(accdata_files[0].keys())[0]
-        fields_in_itype=list(accdata_files[0][ihalo_group0][f'PartType{itype}']['Inflow'].keys())
-        fields_out_itype=list(accdata_files[0][ihalo_group0][f'PartType{itype}']['Outflow'].keys())
+        fields_in_itype=list(accdata_files[0][ihalo_group0]['Inflow'][f'PartType{itype}'].keys())
+        fields_out_itype=list(accdata_files[0][ihalo_group0]['Outflow'][f'PartType{itype}'].keys())
         partfields_in[str(itype)]=fields_in_itype
         partfields_out[str(itype)]=fields_out_itype
 
