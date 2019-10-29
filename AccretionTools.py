@@ -738,7 +738,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                 with open(fname_log,"a") as progress_file:
                     progress_file.write(f'tracking {PartNames[itype]} particles ...\n')
-                    progress_file.write(f'n(in) = {new_particle_count} | n(out) = {out_particle_count}\n')
+                    progress_file.write(f'n(in) [{PartNames[itype]}] = {new_particle_count} | n(out) [{PartNames[itype]}] = {out_particle_count}\n')
                 progress_file.close()
 
                 ################################ this is the bottleneck in the code
