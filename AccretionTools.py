@@ -611,7 +611,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     num_halos_thisprocess=len(halo_index_list_snap2)
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
         with open(fname_log,"a") as progress_file:
-            progress_file.write(f'Starting with ihalo {ihalo_s2} ...')
+            progress_file.write(f'Starting with ihalo {ihalo_s2} ...\n')
         progress_file.close()
 
         t1_halo=time.time()
