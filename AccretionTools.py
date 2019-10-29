@@ -611,6 +611,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     num_halos_thisprocess=len(halo_index_list_snap2)
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
         with open(fname_log,"a") as progress_file:
+            progress_file.write(f' \n')
             progress_file.write(f'Starting with ihalo {ihalo_s2} ...\n')
         progress_file.close()
 
@@ -688,8 +689,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print(f"n(out) = {np.sum(out_particle_IDs_mask_snap1)}")
             
             with open(fname_log,"a") as progress_file:
-                progress_file.write(f'n(in): total = {np.sum(new_particle_IDs_mask_snap2)}\n')
-                progress_file.write(f'n(out): total = {np.sum(out_particle_IDs_mask_snap1)}\n')
+                progress_file.write(f'       n(in): total = {np.sum(new_particle_IDs_mask_snap2)}\n')
+                progress_file.write(f'       n(out): total = {np.sum(out_particle_IDs_mask_snap1)}\n')
             progress_file.close()
 
             t1_itype=[];t2_itype=[]
@@ -737,8 +738,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 t2_typing.append(time.time())
 
                 with open(fname_log,"a") as progress_file:
-                    progress_file.write(f'tracking {PartNames[itype]} particles ...\n')
-                    progress_file.write(f'n(in) [{PartNames[itype]}] = {new_particle_count} | n(out) [{PartNames[itype]}] = {out_particle_count}\n')
+                    progress_file.write(f'Tracking {PartNames[itype]} particles ...\n')
+                    progress_file.write(f'       n(in) [{PartNames[itype]}] = {new_particle_count} | n(out) [{PartNames[itype]}] = {out_particle_count}\n')
                 progress_file.close()
 
                 ################################ this is the bottleneck in the code
@@ -1017,16 +1018,14 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         halos_done=halos_done+1
         
         with open(fname_log,"a") as progress_file:
-            progress_file.write(" \n")
-            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
-            progress_file.write(f"ihalo {ihalo_s2} took {t2_halo-t1_halo} sec\n")
-            progress_file.write(f"Particles in = {np.sum(new_particle_IDs_mask_snap2)}\n")
-            progress_file.write(f"Particles out = {np.sum(out_particle_IDs_mask_snap1)}\n")
             for iitype,itype in enumerate(PartTypes):
                 progress_file.write(f'PartType{itype} - [n(in)= {np.sum(np.logical_and(snap2_Types_temp==itype,new_particle_IDs_mask_snap2))}, n(out)={np.sum(np.logical_and(snap1_Types_temp==itype,out_particle_IDs_mask_snap1))}]: timings (sec)')
                 progress_file.write(" \n")
                 progress_file.write(performance_ihalo[iitype].to_string())
                 progress_file.write(" \n")
+            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
+            progress_file.write(f"[took {t2_halo-t1_halo} sec]\n")
+            progress_file.write(f" \n")
         progress_file.close()
 
         print('----------------')
@@ -1640,23 +1639,24 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
 
 ########################### READ ALL ACC DATA ###########################
 
-def get_particle_acc_data(snap,halo_index_list,path='',fields_in=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],fields_out=['Particle_IDs','Masses',"Destination_S2","Destination_S3"],itype=None):
+def get_particle_acc_data(directory,halo_index_list=None,fields_in=["Fidelity","ParticleIDs","Masses","Processed_L1","Processed_L2"],fields_out=['Particle_IDs','Masses','Destination'],itype=None):
+
+
+    print('Indexing halos ...')
+    t1=time.time()
+    accdata_filelist=os.listdir(directory)
+    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
+    accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
+    accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
+
+    if halo_index_list==None:
+        halo_index_list=list(range(np.size(accdata_halo_list_indexing)))
+    
     if type(halo_index_list)==int:
         halo_index_list=[halo_index_list]
     else:
         halo_index_list=list(halo_index_list)
     
-    print('Indexing halos ...')
-    t1=time.time()
-    if path=='':
-        directory='acc_data/snap_'+str(snap).zfill(3)+'/'
-    else:
-        directory=path+'/acc_data/snap_'+str(snap).zfill(3)+'/'
-
-    accdata_filelist=os.listdir(directory)
-    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
-    accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
-    accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files]
     desired_num_halos=len(halo_index_list)
     ihalo_files=np.ones(desired_num_halos)+np.nan
     
@@ -1668,6 +1668,8 @@ def get_particle_acc_data(snap,halo_index_list,path='',fields_in=["Fidelity","Pa
             else:
                 pass
     t2=time.time()
+
+
     print(f'Done in {t2-t1}')
     
     if itype==None:
