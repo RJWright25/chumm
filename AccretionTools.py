@@ -426,7 +426,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         try:
             halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
             iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
-            print(f'iprocess {iprocess} has halo indices {halo_index_list_snap2}')
+            print(f'iprocess {iprocess} has {len(halo_index_list_snap2)} halo indices: {halo_index_list_snap2}')
             num_processes=halo_index_list["np"]
             test=halo_index_list["test"]
         except:
