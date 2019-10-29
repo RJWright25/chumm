@@ -466,7 +466,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         os.remove(fname_log)
     
     with open(fname_log,"a") as progress_file:
-        progress_file.write('Initialising and loading in data ...')
+        progress_file.write('Initialising and loading in data ...\n')
     progress_file.close()
 
     # Assigning snap
@@ -502,7 +502,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             os.mkdir(calc_snap_dir)
         except:
             pass
-    
 
 
     run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
@@ -604,14 +603,17 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     print(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
     print('*********************************************************')
     with open(fname_log,"a") as progress_file:
-        progress_file.write(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
+        progress_file.write(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...\n')
     progress_file.close()
 
     count=0
     halos_done=0
     num_halos_thisprocess=len(halo_index_list_snap2)
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
-        
+        with open(fname_log,"a") as progress_file:
+            progress_file.write(f'Starting with ihalo {ihalo_s2} ...')
+        progress_file.close()
+
         t1_halo=time.time()
         t1_preamble=time.time()
         # Create group for this halo in output file
@@ -684,6 +686,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             out_particle_IDs_mask_snap1=np.isin(snap1_IDs_temp,snap2_IDs_temp,assume_unique=True,invert=True)
             t2_out=time.time()
             print(f"n(out) = {np.sum(out_particle_IDs_mask_snap1)}")
+            
+            with open(fname_log,"a") as progress_file:
+                progress_file.write(f'n(in): total = {np.sum(new_particle_IDs_mask_snap2)}\n')
+                progress_file.write(f'n(out): total = {np.sum(out_particle_IDs_mask_snap1)}\n')
+            progress_file.close()
 
             t1_itype=[];t2_itype=[]
             t1_typing=[];t2_typing=[]
@@ -729,9 +736,15 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 out_particle_count=len(out_particle_IDs_itype_snap1[str(itype)])# Count number of outflow particles
                 t2_typing.append(time.time())
 
-                # Use the above inflow IDs and find their index in particle histories                 
-                
+                with open(fname_log,"a") as progress_file:
+                    progress_file.write(f'tracking {PartNames[itype]} particles ...\n')
+                    progress_file.write(f'n(in) = {new_particle_count} | n(out) = {out_particle_count}\n')
+                progress_file.close()
+
                 ################################ this is the bottleneck in the code
+
+                # Use the above inflow IDs and find their index in particle histories                 
+
                 #indexing inflow particle IDs
                 print(f"Finding relative particle index of accreted particles: n = {new_particle_count} ...")
                 t1_indexing_in.append(time.time())
