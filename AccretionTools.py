@@ -1649,7 +1649,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
     accdata_filelist=os.listdir(directory)
     accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
-    accdata_halo_lists=[list(accdata_file.keys()) for accdata_file in accdata_files][1:]
+    accdata_halo_lists=[list(accdata_file.keys())[1:] for accdata_file in accdata_files]
     accdata_halo_lists_flattened=flatten(accdata_halo_lists)
 
     if halo_index_list==None:
@@ -1697,8 +1697,8 @@ def get_particle_acc_data(directory,halo_index_list=None):
     for iihalo,ihalo in enumerate(halo_index_list):
         ihalo_name='ihalo_'+str(ihalo).zfill(6)
         ifile=ihalo_files[iihalo]
-        particle_acc_files.append(accdata_filelist_trunc[int(ifile)])
         print(f'ihalo: {ihalo}')
+        particle_acc_files.append(accdata_filelist_trunc[int(ifile)])
         for parttype in parttypes:
             for field in partfields_in:
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{parttype}/'+field].value
