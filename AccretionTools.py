@@ -1382,9 +1382,12 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     parthist_gas_indices_snap1=parthist_file_snap1['PartType0']['ParticleIndex'].value
     parthist_gas_IDs_snap2=parthist_file_snap2['PartType0']['ParticleIDs'].value
     parthist_gas_indices_snap2=parthist_file_snap2['PartType0']['ParticleIndex'].value    
-    parthist_star_IDs_snap2=parthist_file_snap2['PartType4']['ParticleIDs'].value
-    parthist_star_indices_snap2=parthist_file_snap2['PartType4']['ParticleIndex'].value
-    parthist_star_count_snap2=len(parthist_star_IDs_snap2)
+    try:
+        parthist_star_IDs_snap2=parthist_file_snap2['PartType4']['ParticleIDs'].value
+        parthist_star_indices_snap2=parthist_file_snap2['PartType4']['ParticleIndex'].value
+        parthist_star_count_snap2=len(parthist_star_IDs_snap2)
+    except
+        pass
 
     #Load particle data
     gas_particle_datasets_snap1={dataset:[] for dataset in datasets}
@@ -1408,6 +1411,8 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
                 pass#cannot get the dataset for stars (will be empty list)
 
     else:#non-eagle file -- GADGET OR SWIFT (don't have read routine)
+        partdata_filetype='GADGET'
+        
         PartFile_Snap_1=h5py.File(base_halo_data[snap1]['Part_FilePath'],'r')
         PartFile_Snap_2=h5py.File(base_halo_data[snap2]['Part_FilePath'],'r')
 
