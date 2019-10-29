@@ -457,6 +457,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             pass
     if test:
         fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}_test.log"
+        print(f'iprocess {iprocess} will save progress to log file: {fname_log}')
+
     else:
         fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
 
