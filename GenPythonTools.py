@@ -204,10 +204,10 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False):
             except ValueError:
                 item_at_calculated_index=np.nan
             items_at_calculated_indices.append(item_at_calculated_index)
-        try:
-            incorrect_indices=np.where(items_at_calculated_indices!=items)[0]
-            count=len(incorrect_indices)
 
+        incorrect_indices=np.where(items_at_calculated_indices!=items)[0]
+        count=len(incorrect_indices)
+        
         for incorrect_index in incorrect_indices:
             indices[incorrect_index]=np.nan
         try:
