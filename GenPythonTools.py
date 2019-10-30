@@ -193,13 +193,21 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False):
 
     if a1:
         indices=list(np.searchsorted(a=sorted_list,v=items))
+
     else:
         indices=[bisect_left(sorted_list,item,lo=0,hi=hi) for item in items]
 
-
     if check_entries:
-        incorrect_indices=np.where([sorted_list[index]!=items[iindex] for iindex,index in enumerate(indices)])[0]
-        count=len(incorrect_indices)
+        for supposed_index in indices:
+            try:
+                item_at_calculated_index=sorted_list[supposed_index]
+            except ValueError:
+                item_at_calculated_index=np.nan
+            items_at_calculated_indices.append(item_at_calculated_index)
+        try:
+            incorrect_indices=np.where(items_at_calculated_indices!=items)[0]
+            count=len(incorrect_indices)
+
         for incorrect_index in incorrect_indices:
             indices[incorrect_index]=np.nan
         try:

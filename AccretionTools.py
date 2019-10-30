@@ -751,7 +751,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 if new_particle_count>0:
                     if itype == 4:#if not stars, we don't need to check if the IDs from snap 2 are actually present at snap 1
                         new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2[str(itype)],sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=True)
-                        print((1-np.sum(np.isfinite(new_particle_IDs_itype_snap1_historyindex))/len(new_particle_IDs_itype_snap1_historyindex))*100,'% accreted star particles were actually gas at previous snapshot')
                     else:
                         new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2[str(itype)],sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=False)
                 else:
