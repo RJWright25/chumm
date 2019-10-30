@@ -438,9 +438,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     if not os.path.exists(acc_log_dir):
         os.mkdir(acc_log_dir)
     if test:
-        run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}_test/"
+        run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{num_processes}_test/"
     else:
-        run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}/"
+        run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{num_processes}/"
 
     if not os.path.exists(run_log_dir):
         try:
@@ -456,11 +456,11 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         except:
             pass
     if test:
-        fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}_test.log"
+        fname_log=run_snap_log_dir+f"progress_p{str(iprocess).zfill(3)}_n{str(len(halo_index_list_snap2)).zfill(6)}_test.log"
         print(f'iprocess {iprocess} will save progress to log file: {fname_log}')
 
     else:
-        fname_log=run_snap_log_dir+f"progress_p{iprocess}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
+        fname_log=run_snap_log_dir+f"progress_p{str(iprocess).zfill(3)}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
 
     if os.path.exists(fname_log):
         os.remove(fname_log)
@@ -486,9 +486,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
         os.mkdir('acc_data')
     if test:
-        calc_dir=f'acc_data/pre{pre_depth}_post{post_depth}_np{num_processes}_test/'
+        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_test/'
     else:
-        calc_dir=f'acc_data/pre{pre_depth}_post{post_depth}_np{num_processes}/'
+        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}/'
 
     if not os.path.exists(calc_dir):#create folder for outputs if doesn't already exist
         try:
@@ -502,7 +502,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             os.mkdir(calc_snap_dir)
         except:
             pass
-
 
     run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
     outfile_name=calc_snap_dir+'FOF_AccretionData_pre'+str(pre_depth)+'_post'+str(post_depth)+'_snap'+str(snap).zfill(3)+'_p'+str(iprocess).zfill(3)+f'_n{str(len(halo_index_list_snap2)).zfill(6)}.hdf5'
@@ -1346,8 +1345,8 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
         test=True
     else:
         test=False
-    pre_depth=int(acc_filename.split('pre')[-1][:1])
-    post_depth=int(acc_filename.split('post')[-1][:1])
+    pre_depth=int(acc_filename.split('pre')[-1][:2])
+    post_depth=int(acc_filename.split('post')[-1][:2])
     snap2=int(acc_filename.split('snap')[-1][:3])
     snap1=snap2-pre_depth
     num_processes=int((calc_dir.split('np')[-1]).split('_')[0])
