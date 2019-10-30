@@ -572,8 +572,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         Part_Data_Masses_Snap1=dict()
         hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])
         MassTable=hdf5file["Header"].attrs["MassTable"]
-        Part_Data_Masses_Snap1[str(1)]=MassTable[1]/h_val#CHECK THIS
-        Part_Data_Masses_Snap1[str(0)]=MassTable[0]/h_val#CHECK THIS
+        Part_Data_Masses_Snap1[str(1)]=MassTable[1]*10**10/h_val#CHECK THIS
+        Part_Data_Masses_Snap1[str(0)]=MassTable[0]*10**10/h_val#CHECK THIS
 
     #Load in particle histories: snap 1
     print(f'Retrieving & organising particle histories for snap = {snap1} ...')
