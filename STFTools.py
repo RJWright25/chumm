@@ -600,7 +600,7 @@ def compress_halo_data(detailed_halo_data,fields=[]):
         else:
             output_halo_data[snap]=detailed_halo_data_snap
     
-    file_outname='EAGLE_L25N376-'+outname.split('-')[-1]+f'/B4_HaloData_{outname}.dat'
+    file_outname=outname+f'/B4_HaloData_{outname}.dat'
     if os.path.exists(file_outname):
         os.remove(file_outname)
     dump_pickle(path=file_outname,data=output_halo_data)
