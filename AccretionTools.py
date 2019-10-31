@@ -1099,7 +1099,6 @@ def postprocess_acc_data_serial(path):
     acc_data_filelist=os.listdir(path)
     acc_data_filelist=sorted(acc_data_filelist)
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename) and ('DS' not in filename))]
-    print(acc_data_filelist_trunc)
     acc_data_filelist=acc_data_filelist_trunc
     acc_data_outfile_name=acc_data_filelist[0].split('_p0')[0]+'_summed.hdf5'
 
@@ -1113,7 +1112,7 @@ def postprocess_acc_data_serial(path):
     collated_output_file=h5py.File(path+acc_data_outfile_name,'w')
     
     # Open existing files in list structure
-    acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
+    acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist_trunc]
     total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])#total number of halos from file
     if total_num_halos<1000:
         print(f'Using array size {3*10**5}')
@@ -1190,7 +1189,7 @@ def postprocess_acc_data_serial(path):
 
     iihalo=0
     for ifile,acc_data_filetemp in enumerate(acc_data_hdf5files):
-        print(f"Reading from file {ifile}: {acc_data_filetemp}")
+        print(f"Reading from file {ifile}/{len(acc_data_hdf5files)}: {acc_data_filetemp}")
         ihalo_group_list_all=list(acc_data_filetemp.keys())
         ihalo_group_list=[ihalo_group for ihalo_group in ihalo_group_list_all if ihalo_group.startswith('ihalo')]
         for ihalo_group in ihalo_group_list:
