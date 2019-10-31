@@ -1360,9 +1360,9 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     if not os.path.exists(acc_log_dir):
         os.mkdir(acc_log_dir)
     if test:
-        run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}_test/"
+        run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_test/"
     else:
-        run_log_dir=f"job_logs/acc_logs/pre{pre_depth}_post{post_depth}_np{num_processes}/"
+        run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}/"
     if not os.path.exists(run_log_dir):
         try:
             os.mkdir(run_log_dir)
