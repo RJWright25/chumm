@@ -1098,7 +1098,7 @@ def postprocess_acc_data_serial(path):
     # List the contents of the provided directory
     acc_data_filelist=os.listdir(path)
     acc_data_filelist=sorted(acc_data_filelist)
-    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename) and ('DS' not in filename))]
+    acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename) and ('DS' not in filename) and ('summed' not in filename))]
     acc_data_filelist=acc_data_filelist_trunc
     acc_data_outfile_name=acc_data_filelist[0].split('_p0')[0]+'_summed.hdf5'
 
@@ -1112,8 +1112,15 @@ def postprocess_acc_data_serial(path):
     collated_output_file=h5py.File(path+acc_data_outfile_name,'w')
     
     # Open existing files in list structure
-    acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist_trunc]
-    total_num_halos=np.sum([len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files])#total number of halos from file
+    acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
+    total_num_halos=0
+    for ifile in acc_data_hdf5files:
+        groups=list(ifile.keys())
+        for group in groups:
+            if 'ihalo' in group:
+                total_num_halos=total_num_halos+1
+
+    ihalo_groups=[len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files]
     if total_num_halos<1000:
         print(f'Using array size {3*10**5}')
         total_num_halos=3*10**5
