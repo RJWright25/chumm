@@ -1,9 +1,9 @@
 # Code for Halo accUMulation of Mass [CHUMM]
 ## AUTHOR: Ruby Wright (2019)
+#### PhD Student | International Centre for Radio Astronomy Research (ICRAR) | University of Western Australia (UWA)
 
 ![](chumm.jpeg)
 
-#### PhD Student | International Centre for Radio Astronomy Research (ICRAR) | University of Western Australia (UWA)
 
 Tools to calculate accretion rates to halos in cosmological galaxy formation simulations.
 
