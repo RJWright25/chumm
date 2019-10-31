@@ -198,6 +198,7 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False):
         indices=[bisect_left(sorted_list,item,lo=0,hi=hi) for item in items]
 
     if check_entries:
+        items_at_calculated_indices=[]
         for supposed_index in indices:
             try:
                 item_at_calculated_index=sorted_list[supposed_index]
