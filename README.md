@@ -1,6 +1,7 @@
 # Code for Halo accUMulation of Mass [CHUMM]
-![](chumm.jpeg)
 ## AUTHOR: Ruby Wright (2019)
+
+![](chumm.jpeg)
 
 #### PhD Student | International Centre for Radio Astronomy Research (ICRAR) | University of Western Australia (UWA)
 
