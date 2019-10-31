@@ -1,14 +1,11 @@
 # Code for Halo accUMulation of Mass
 
-Tools to calculate accretion rates to halos in cosmological galaxy formation simulations.
------------------
 Author: Ruby Wright (2019)
+------------------------
 
-PhD Student
+PhD Student | International Centre for Radio Astronomy Research (ICRAR) | University of Western Australia (UWA)
 
-International Centre for Radio Astronomy Research (ICRAR)
-
-University of Western Australia
+Tools to calculate accretion rates to halos in cosmological galaxy formation simulations.
 
 ## Instructions
 
