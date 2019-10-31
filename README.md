@@ -9,7 +9,7 @@ Tools to calculate accretion rates to halos in cosmological galaxy formation sim
 
 ## USAGE
 
-### Step 0: Requirements for usage
+### Step 0: Requirements
 
 To run CHUMM over a cosmological simulation, VELOCIraptor and TreeFrog must first be run on the simulation snapshots. 
 Create a directory with an informative title where you would like the accretion data outputs.
