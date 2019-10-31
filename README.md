@@ -1,4 +1,4 @@
-# Code for Halo accUMulation of Mass
+# Code for Halo accUMulation of Mass [CHUMM]
 
 ## AUTHOR: Ruby Wright (2019)
 
