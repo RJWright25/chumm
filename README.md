@@ -1,8 +1,8 @@
 # Code for Halo accUMulation of Mass [CHUMM]
 #### RUBY WRIGHT (PhD Student | ICRAR-UWA) (2019)
 
-![](chumm.jpeg)
-
+![](chumm_logo.png)
+![](chumm_jaws.jpeg)
 
 Tools to calculate accretion rates to halos in cosmological galaxy formation simulations.
 
