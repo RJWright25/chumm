@@ -2,8 +2,6 @@
 
 Tools to calculate accretion rates to halos in cosmological galaxy formation simulations.
 
-AUTHOR
-
 Ruby Wright, 2019
 -----------------
 PhD Student
@@ -22,18 +20,24 @@ Create a directory with an informative title where you would like the accretion 
 ### Step 1: Generate halo data
 
 First, edit the GenData-HaloData.py script (with command line arguments) to generate lists (for each snap) pointing towards:
+
 (1) Particle data
+
 (2) VELOCIraptor data
+
 (3) TreeFrog data
+
 These lists must have identical length. If some snapshots are not available, they must be padded in these lists with 'None'.
 
 CHUMM collates all of the halo data from VELOCIraptor and TreeFrog data into a list (for each snap) of dictionaries with 
 keys for relevant halo properties. This object is saved to file in pickle/binary form in 3 levels of increasing detail. Each
 of these also contains pointers to the particle/VELOCIraptor/TreeFrog data which is used upstream.
 
-'B1' file contains the minimal basic halo data required for accretion calculation (saves memory at runtime).
-'B2' file contains the minimal basic halo data required for accretion calculation, as well as detailed TreeFrog data.
-'B3' file contains all available halo data from VELOCIraptor and TreeFrog, to be used for data processing. 
+The 'B1' file contains the minimal basic halo data required for accretion calculation (saves memory at runtime).
+
+The 'B2' file contains the minimal basic halo data required for accretion calculation, as well as detailed TreeFrog data.
+
+The 'B3' file contains all available halo data from VELOCIraptor and TreeFrog, to be used for data processing. 
 
 ### Step 2: Generate particle histories
 
