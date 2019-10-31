@@ -1099,6 +1099,7 @@ def postprocess_acc_data_serial(path):
     acc_data_filelist=os.listdir(path)
     acc_data_filelist=sorted(acc_data_filelist)
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename) and ('DS' not in filename))]
+    print(acc_data_filelist_trunc)
     acc_data_filelist=acc_data_filelist_trunc
     acc_data_outfile_name=acc_data_filelist[0].split('_p0')[0]+'_summed.hdf5'
 
