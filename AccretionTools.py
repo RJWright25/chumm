@@ -27,12 +27,10 @@ import astropy.units as u
 import read_eagle
 import time
 
-from pandas import DataFrame as df
-
-# VELOCIraptor python tools etc
 from GenPythonTools import *
 from VRPythonTools import *
 from STFTools import *
+from pandas import DataFrame as df
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
@@ -57,15 +55,17 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
 
 	Returns
 	----------
+    None.
+
+    Saves to file:
     PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
 
         '/PartTypeX/PartID' - SORTED particle IDs from simulation.
         '/PartTypeX/PartIndex' - Corresponding indices of particles. 
         '/PartTypeX/HostStructure' - Host structure (from STF) of particles. (-1: no host structure)
     
-    Will save to file at: part_histories/PartTypeX_History_xxx-outname.dat
-
 	"""
+
     # If not given snaps, do for all snaps in base_halo_data (can deal with padded snaps)
     if snaps==None:
         snaps=list(range(len(base_halo_data)))
@@ -202,15 +202,16 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
     Returns
     ----------
+    None.
 
-    {integrated_output}.hdf5
+    Saves to file:
+    PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
 
-    And datasets:
-    /PartTypeX/Processed_L1 #no_snaps this particle has been in a halo with substructure
-    /PartTypeX/Processed_L2 #no_snaps this particle has been in a halo with NO substructure (<Processed_L1)
-    /PartTypeX/HostStructure
-    /PartTypeX/ParticleIDs
-    /PartTypeX/ParticleIndex
+        /PartTypeX/Processed_L1 #no_snaps this particle has been in a halo with substructure
+        /PartTypeX/Processed_L2 #no_snaps this particle has been in a halo with NO substructure (<Processed_L1)
+        /PartTypeX/HostStructure
+        /PartTypeX/ParticleIDs
+        /PartTypeX/ParticleIndex
 
     """
 
@@ -389,27 +390,42 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 	----------
     
     FOF_AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}_px.hdf5: hdf5 file with datasets
+        Header contains attributes:
+            "snap1"
+            "snap2"
+            "snap3"
+            "snap1_LookbackTime"
+            "snap2_LookbackTime"
+            "snap3_LookbackTime"
+            "ave_LookbackTime"
+            "delta_LookbackTime"
+            "snap1_z"
+            "snap2_z"
+            "snap3_z"
+            "ave_z
 
-        Inflow: 
+        There is a group for each halo: ihalo_xxxxxx
+        
+        Inflow:
 
-        '/ihalo_xxxxxx/PartTypeX/Inflow/ParticleIDs': ParticleID (in particle data for given type) of all accreted particles.
-        '/ihalo_xxxxxx/PartTypeX/Inflow/Masses': Mass (in particle data for given type) of all accreted particles.
-        '/ihalo_xxxxxx/PartTypeX/Inflow/Fidelity': Whether this particle stayed in the halo at the given fidelity gap. 
-        '/ihalo_xxxxxx/PartTypeX/Inflow/PreviousHost': Which structure was this particle host to (-1: not in any fof object, 0 if CGM (subhalos only), >0: ID of previous halo).
-        '/ihalo_xxxxxx/PartTypeX/Inflow/Processed_L1': How many snaps has this particle been part of any structure in the past. 
-        '/ihalo_xxxxxx/PartTypeX/Inflow/Processed_L2': How many snaps has this particle been part of halos with no substructure in the past. 
+            '/Inflow/PartTypeX/ParticleIDs': ParticleID (in particle data for given type) of all accreted particles.
+            '/Inflow/PartTypeX/Masses': Mass (in particle data for given type) of all accreted particles.
+            '/Inflow/PartTypeX/Fidelity': Whether this particle stayed in the halo at the given fidelity gap. 
+            '/Inflow/PartTypeX/PreviousHost': Which structure was this particle host to (-1: not in any fof object, 0 if CGM (subhalos only), >0: ID of previous halo).
+            '/Inflow/PartTypeX/Processed_L1': How many snaps has this particle been part of any structure in the past. 
+            '/Inflow/PartTypeX/Processed_L2': How many snaps has this particle been part of halos with no substructure in the past. 
+            + more for PartType0 if add_gas_particle_data is run. 
 
-        and 
+        Outflow: 
 
-        '/ihalo_xxxxxx/PartTypeX/Outflow/ParticleIDs': ParticleID (in particle data for given type) of all outflow particles.
-        '/ihalo_xxxxxx/PartTypeX/Outflow/Masses': Mass (in particle data for given type) of all outflow particles.
-        '/ihalo_xxxxxx/PartTypeX/Outflow/Destination_S2': Where did the particle end up after outflow at snap 2 (-1: not in halo or group, 0: CGM (only subhalos), >1: ID of destination subhalo in same field halo)
-        '/ihalo_xxxxxx/PartTypeX/Outflow/Destination_S3': Where did the particle end up after outflow at snap 3 (-1: not in halo or group, 0: CGM (only subhalos), 1: reaccreted, >1: ID of destination subhalo in same field halo)
+            '/Outflow/PartTypeX/ParticleIDs': ParticleID (in particle data for given type) of all outflow particles.
+            '/Outflow/PartTypeX/Masses': Mass (in particle data for given type) of all outflow particles.
+            '/Outflow/PartTypeX/Destination_S2': Where did the particle end up after outflow at snap 2 (-1: not in halo or group, 0: CGM (only subhalos), >1: ID of destination subhalo in same field halo)
+            '/Outflow/PartTypeX/Destination_S3': Where did the particle end up after outflow at snap 3 (-1: not in halo or group, 0: CGM (only subhalos), 1: reaccreted, >1: ID of destination subhalo in same field halo)
+            + more for PartType0 if add_gas_particle_data is run. 
 
-        Where there will be n_halos ihalo datasets. 
-
-        '/Header': Contains attributes: "t1","t2","dt","z_ave","lt_ave"
-
+        Where there will be num_total_halos ihalo datasets. 
+    
     
     """
     
@@ -433,7 +449,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print('Not parsed a valud halo index list. Exiting.')
             return None
 
-
+    # Create log file and directories
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
         os.mkdir(acc_log_dir)

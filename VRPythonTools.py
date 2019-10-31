@@ -16,8 +16,8 @@
 #   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
                                                                                                                                                                   
                                                                                                                                                                   
-# VRPythonTools.py - Variant/extension of VELOCIraptor python tools (Elahi+19)
-# Author: RUBY WRIGHT 
+# VRPythonTools.py - Variant/extension of VELOCIraptor python tools for accretion calculations.
+# Author: ELAHI+2019
 
 # PREAMBLE
 from __future__ import print_function
