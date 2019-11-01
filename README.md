@@ -50,7 +50,7 @@ CHUMM saves this data in the form of a hdf5 file, with a group for each particle
 
 Thirdly, use the gen_accretion_data_fof_serial function (with command line arguments) to generate accretion data for a given snap. 
 
-CHUMM calculates accretion (outflow) rates to halos identified in VELOCIRAPTOR by considering which particles have entered (left) an object
+CHUMM calculates accretion (outflow) rates to halos identified in VELOCIraptor by considering which particles have entered (left) an object
 at the current snap compared to a snap at a user-specified depth (the interval being snap_1 to snap_2, where snap_2-snap_1=pre_depth). The fate of a particle at a subsequent snapshot is also tracked at a user-specified depth (snap_3=snap_2+post_depth). This calculation is parallelised with halo-based splitting, with the algorithm independent for each halo. 
 
 CHUMM saves this data in the form of a hdf5 file, with a group for each halo, grouped by inflow/outflow, further grouped by particle type,
