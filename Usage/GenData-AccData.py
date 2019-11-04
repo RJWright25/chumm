@@ -155,7 +155,7 @@ if gen_pd:
 if gen_ad:
     t1_sum=time.time()
 
-    postprocess_acc_data_serial(output_dir)
+    postprocess_acc_data_serial(base_halo_data,output_dir)
 
     t2_sum=time.time()
 

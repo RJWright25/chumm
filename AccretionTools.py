@@ -1051,7 +1051,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
 ########################### POSTPROCESS/SUM ACCRETION DATA ###########################
 
-def postprocess_acc_data_serial(path):
+def postprocess_acc_data_serial(base_halo_data,path):
     """
 
     postprocess_acc_data_serial : function
@@ -1061,6 +1061,7 @@ def postprocess_acc_data_serial(path):
 
 	Parameters
 	----------
+    base_halo_data : the halo data list of dictionaries for this run
     path : string indicating the directory in which the accretion data is stored (nominally acc_data/)
 
 	Returns
@@ -1115,6 +1116,8 @@ def postprocess_acc_data_serial(path):
     acc_data_filelist=os.listdir(path)
     acc_data_filelist=sorted(acc_data_filelist)
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename) and ('DS' not in filename) and ('summed' not in filename))]
+    print('Summing accretion data from the following files:')
+    print(np.array(acc_data_filelist_trunc))
     acc_data_filelist=acc_data_filelist_trunc
     acc_data_outfile_name=acc_data_filelist[0].split('_p0')[0]+'_summed.hdf5'
 
@@ -1129,17 +1132,19 @@ def postprocess_acc_data_serial(path):
     
     # Open existing files in list structure
     acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
+    acc_data_snap=int(acc_data_filelist_trunc[0].split('snap_')[-1][:3])
     total_num_halos=0
     for ifile in acc_data_hdf5files:
         groups=list(ifile.keys())
         for group in groups:
             if 'ihalo' in group:
                 total_num_halos=total_num_halos+1
-
-    ihalo_groups=[len(list(ifile.keys()))-1 for ifile in acc_data_hdf5files]
     if total_num_halos<1000:
         print(f'Using array size {3*10**5}')
         total_num_halos=3*10**5
+    else:
+        total_num_halos=base_halo_data[acc_data_snap]['Count']
+
     print(f'Collating data for {total_num_halos} halos')
     
     # Copy over header information from first file

@@ -22,6 +22,8 @@
 # PREAMBLE
 import numpy as np
 import pickle as pickle
+import os
+import subprocess
 from bisect import bisect_left
 
 def flatten(listoflists):
@@ -251,3 +253,28 @@ def rank_list(items):
     ranks=np.array(ranks)
     return ranks
 
+def list_dir(path):
+    """
+
+    list_dir : function
+	----------
+
+    List the contents of a directory with its path.
+
+
+	Parameters
+	----------
+    path : str
+        The path in which to list files
+
+    Returns
+	----------
+    dir_list : np.ndarray
+
+    A list of tfiles in the directory. 
+
+    """
+
+    stdout=subprocess.Popen(f'find {path} -type f',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, universal_newlines=True).stdout
+    dir_list=[str(item)[:-1] for item in stdout]
+    return dir_list
