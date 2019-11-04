@@ -72,7 +72,7 @@ if True:
     n_processes = parser.parse_args().np
     print('Arguments parsed:')
     print(f'snap: {snap}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi}')
-    print(f'gen_ad: {gen_ad}, gen_pd: {gen_pd}, n_processes: {n_processes}')
+    print(f'gen_ad: {gen_ad}, add_pd: {add_pd}, sum_ad: {sum_ad}, n_processes: {n_processes}')
 
     # Use the directory name to get the run name
     run_name=os.getcwd().split('/')[-1]
