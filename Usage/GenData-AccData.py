@@ -129,7 +129,7 @@ if gen_ad:
 # This is run in parallel, based on the files generated above. 
 # Here, we add desired gas particle data to the accretion file.
 
-if gen_pd:
+if add_pd:
     t1_part=time.time()
 
     # Multiprocessing arguments
