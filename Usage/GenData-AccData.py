@@ -55,8 +55,10 @@ if True:
                         help='halo index list upper limit (for testing, -1=all, not test)')
     parser.add_argument('-gen_ad', type=int,default=1,
                         help='Flag: generate accretion data (and sum)')
-    parser.add_argument('-gen_pd', type=int,default=1,
+    parser.add_argument('-add_pd', type=int,default=1,
                         help='Flag: add particle data to existing acc_data')
+    parser.add_argument('-sum_ad', type=int,default=1,
+                        help='Flag: sum the generated accretion data')
     parser.add_argument('-np', type=int, default=1,
                         help='number of processes to use')
     snap = parser.parse_args().snap
@@ -65,7 +67,8 @@ if True:
     halo_index_list_lo=parser.parse_args().hil_lo
     halo_index_list_hi=parser.parse_args().hil_hi
     gen_ad=bool(parser.parse_args().gen_ad)
-    gen_pd=bool(parser.parse_args().gen_pd)
+    add_pd=bool(parser.parse_args().add_pd)
+    sum_ad=bool(parser.parse_args().sum_ad)
     n_processes = parser.parse_args().np
     print('Arguments parsed:')
     print(f'snap: {snap}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi}')
@@ -152,11 +155,12 @@ if gen_pd:
 # Here, we sum the accretion data to create a database of 
 # accretion rates (of various types) for all halos in the simulation.
 
-t1_sum=time.time()
+if sum_ad:
+    t1_sum=time.time()
 
-postprocess_acc_data_serial(base_halo_data,output_dir)
+    postprocess_acc_data_serial(base_halo_data,output_dir)
 
-t2_sum=time.time()
+    t2_sum=time.time()
 
 ############ 4. PRINT PERFORMANCE ############
 # Print performance of above.
@@ -167,9 +171,9 @@ print()
 
 if gen_ad:
     print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc} sec')
-if gen_pd:
+if add_pd:
     print(f'Added particle data to accretion data for snap {snap} in {t2_part-t1_part} sec')
-if gen_ad:
+if sum_ad:
     print(f'Summed accretion data for snap {snap} in {t2_sum-t1_sum} sec')
 
 print()
