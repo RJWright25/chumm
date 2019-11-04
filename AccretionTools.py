@@ -1132,7 +1132,7 @@ def postprocess_acc_data_serial(base_halo_data,path):
     
     # Open existing files in list structure
     acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
-    acc_data_snap=int(path.split('/')[-1][-3:])
+    acc_data_snap=acc_data_hdf5files[0].attrs['snap2']
     total_num_halos=0
     for ifile in acc_data_hdf5files:
         groups=list(ifile.keys())
