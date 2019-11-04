@@ -152,12 +152,11 @@ if gen_pd:
 # Here, we sum the accretion data to create a database of 
 # accretion rates (of various types) for all halos in the simulation.
 
-if gen_ad:
-    t1_sum=time.time()
+t1_sum=time.time()
 
-    postprocess_acc_data_serial(base_halo_data,output_dir)
+postprocess_acc_data_serial(base_halo_data,output_dir)
 
-    t2_sum=time.time()
+t2_sum=time.time()
 
 ############ 4. PRINT PERFORMANCE ############
 # Print performance of above.
