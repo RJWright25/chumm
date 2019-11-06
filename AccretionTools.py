@@ -1161,12 +1161,9 @@ def postprocess_acc_data_serial(base_halo_data,path):
         print(attribute,collated_output_file_header.attrs[attribute])
 
     # Add extra header info
-    collated_output_file_header.attrs.create('outname',data=np.string_(base_halo_data[-1]['outname'])
+    collated_output_file_header.attrs.create('outname',data=np.string_(base_halo_data[-1]['outname']))
     collated_output_file_header.attrs.create('pre_depth',data=acc_data_hdf5files_header.attrs['snap2']-acc_data_hdf5files_header.attrs['snap1'])
     collated_output_file_header.attrs.create('post_depth',data=acc_data_hdf5files_header.attrs['snap3']-acc_data_hdf5files_header.attrs['snap2'])
-
-        
-
     collated_output_file_header.attrs.create('total_num_halos',data=total_num_halos)
 
     # Names of the new outputs
