@@ -1372,8 +1372,8 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
         test=True
     else:
         test=False
-    pre_depth=int(acc_filename.split('pre')[-1][:2])
-    post_depth=int(acc_filename.split('post')[-1][:2])
+    pre_depth=int(acc_filename.split('pre')[1][:2])
+    post_depth=int(acc_filename.split('post')[1][:2])
     snap2=int(acc_filename.split('snap')[-1][:3])
     snap1=snap2-pre_depth
     num_processes=int((calc_dir.split('np')[-1]).split('_')[0])
