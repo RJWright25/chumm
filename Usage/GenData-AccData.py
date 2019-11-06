@@ -125,7 +125,21 @@ if gen_ad:
 
     t2_acc=time.time()
 
-############ 2. ADD PARTICLE DATA ############
+
+############ 2. SUM ACCRETION DATA ############
+# This is run in serial, based on the files generated above. 
+# Here, we sum the accretion data to create a database of 
+# accretion rates (of various types) for all halos in the simulation.
+
+if sum_ad:
+    t1_sum=time.time()
+
+    postprocess_acc_data_serial(base_halo_data,output_dir)
+
+    t2_sum=time.time()
+
+
+############ 3. ADD PARTICLE DATA ############
 # This is run in parallel, based on the files generated above. 
 # Here, we add desired gas particle data to the accretion file.
 
@@ -150,17 +164,7 @@ if add_pd:
 
     t2_part=time.time()
 
-############ 3. SUM ACCRETION DATA ############
-# This is run in serial, based on the files generated above. 
-# Here, we sum the accretion data to create a database of 
-# accretion rates (of various types) for all halos in the simulation.
 
-if sum_ad:
-    t1_sum=time.time()
-
-    postprocess_acc_data_serial(base_halo_data,output_dir)
-
-    t2_sum=time.time()
 
 ############ 4. PRINT PERFORMANCE ############
 # Print performance of above.
@@ -171,11 +175,11 @@ print()
 
 if gen_ad:
     print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc} sec')
-if add_pd:
-    print(f'Added particle data to accretion data for snap {snap} in {t2_part-t1_part} sec')
 if sum_ad:
     print(f'Summed accretion data for snap {snap} in {t2_sum-t1_sum} sec')
-
+if add_pd:
+    print(f'Added particle data to accretion data for snap {snap} in {t2_part-t1_part} sec')
+    
 print()
 print('******************************************************')
 print()

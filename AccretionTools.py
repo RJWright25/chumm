@@ -520,7 +520,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             pass
 
     run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
-    outfile_name=calc_snap_dir+'FOF_AccretionData_pre'+str(pre_depth)+'_post'+str(post_depth)+'_snap'+str(snap).zfill(3)+'_p'+str(iprocess).zfill(3)+f'_n{str(len(halo_index_list_snap2)).zfill(6)}.hdf5'
+    outfile_name=calc_snap_dir+'FOF_AccretionData_pre'+str(pre_depth).zfill(2)+'_post'+str(post_depth).zfill(2)+'_snap'+str(snap).zfill(3)+'_p'+str(iprocess).zfill(3)+f'_n{str(len(halo_index_list_snap2)).zfill(6)}.hdf5'
     if os.path.exists(outfile_name):#if the accretion file already exists, get rid of it 
         os.remove(outfile_name)
 
@@ -1339,11 +1339,6 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
     base_halo_data: dict
         The base halo data dictionary (encodes particle data filepath, snap, particle histories).
 
-    # part_histories: dict or None
-    #     An optional dictionary with keys 'snap2_gas_datasets', 'snap1_gas_datasets', 'snap2_star_datasets' - loaded before runtime.
-    #     If not provided, will load. 
-    #     (saves memory if parallelizing)
-
     # part_datasets: dict or None
     #     An optional dictionary with keys 'snap2_gas_datasets', 'snap1_gas_datasets', 'snap2_star_datasets' - loaded before runtime.
     #     If not provided, will load. 
@@ -1372,17 +1367,21 @@ def add_gas_particle_data(base_halo_data,accdata_path,datasets=None):
         test=True
     else:
         test=False
-    pre_depth=int(acc_filename.split('pre')[1][:2])
-    post_depth=int(acc_filename.split('post')[1][:2])
-    snap2=int(acc_filename.split('snap')[-1][:3])
-    snap1=snap2-pre_depth
+
     num_processes=int((calc_dir.split('np')[-1]).split('_')[0])
     iprocess=int(acc_filename.split('_p')[-1][:3])
 
     acc_file=h5py.File(accdata_path,'r+')
+    snap3=acc_file['Header'].attrs['snap3']
+    snap2=acc_file['Header'].attrs['snap2']
+    snap1=acc_file['Header'].attrs['snap1']
+    pre_depth=snap2-snap1
+    post_depth=snap3-snap2
+
     ihalo_groups=sorted(list(acc_file.keys()))
     ihalo_groups_trunc=[ihalo_group for ihalo_group in ihalo_groups if 'ihalo_' in ihalo_group]
     ihalo_count=len(ihalo_groups_trunc)
+
 
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
