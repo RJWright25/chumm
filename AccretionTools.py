@@ -548,6 +548,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     header_hdf5.attrs.create('snap1',data=snap1,dtype=np.int16)
     header_hdf5.attrs.create('snap2',data=snap2,dtype=np.int16)
     header_hdf5.attrs.create('snap3',data=snap3,dtype=np.int16)
+    header_hdf5.attrs.create('pre_depth',data=snap2-snap1,dtype=np.int16)
+    header_hdf5.attrs.create('post_depth',data=snap3-snap2,dtype=np.int16)
+    header_hdf5.attrs.create('outname',data=base_halo_data[snap2]['outname'])
 
     # Now find which simulation type we're dealing with
     part_filetype=base_halo_data[snap]["Part_FileType"]
@@ -1156,6 +1159,15 @@ def postprocess_acc_data_serial(base_halo_data,path):
     for attribute in acc_data_hdf5files_header_attrs:
         collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header.attrs[attribute])
         print(attribute,collated_output_file_header.attrs[attribute])
+
+    # Add extra header info
+    try:
+        collated_output_file_header.attrs.create('outname',data=base_halo_data[-1]['outname'])
+        collated_output_file_header.attrs.create('pre_depth',data=acc_data_hdf5files_header.attrs['snap2']-acc_data_hdf5files_header.attrs['snap1'])
+        collated_output_file_header.attrs.create('post_depth',data=acc_data_hdf5files_header.attrs['snap3']-acc_data_hdf5files_header.attrs['snap2'])
+    except:
+        pass
+        
 
     collated_output_file_header.attrs.create('total_num_halos',data=total_num_halos)
 
