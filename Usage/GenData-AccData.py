@@ -135,7 +135,7 @@ if sum_ad:
     t1_sum=time.time()
     #recalc dir in case we want to use 1 process
     calc_list=os.listdir(f'acc_data')
-    calc_prefix=f'pre{str(pre_depth).zfill(2)}_post{str(post_depth)}'
+    calc_prefix=f'pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}'
     for icalc_dir in calc_list:
         print(f'Checking if {calc_prefix} in {icalc_dir}')
         if calc_prefix in icalc_dir:
