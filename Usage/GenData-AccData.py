@@ -139,7 +139,7 @@ if sum_ad:
         if f'pre{str(pre_depth).zfill(2)}_post{str(post_depth)}' in icalc_dir:
             calc_dir_forsum=icalc_dir
             break
-    if not calc_dir_forsum.endswith('/')
+    if not calc_dir_forsum.endswith('/'):
         calc_dir_forsum=calc_dir_forsum+'/'
     output_dir_forsum='acc_data/'+calc_dir_forsum+f'snap_{str(snap).zfill(3)}'
     postprocess_acc_data_serial(base_halo_data,output_dir_forsum)
