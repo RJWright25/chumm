@@ -1162,9 +1162,9 @@ def postprocess_acc_data_serial(base_halo_data,path):
 
     # Add extra header info
     try:
-        collated_output_file_header.attrs.create('outname',data=base_halo_data[-1]['outname'])
-        collated_output_file_header.attrs.create('pre_depth',data=acc_data_hdf5files_header.attrs['snap2']-acc_data_hdf5files_header.attrs['snap1'])
-        collated_output_file_header.attrs.create('post_depth',data=acc_data_hdf5files_header.attrs['snap3']-acc_data_hdf5files_header.attrs['snap2'])
+        collated_output_file_header.attrs.create('outname',data=base_halo_data[-1]['outname'],dtype=str)
+        collated_output_file_header.attrs.create('pre_depth',data=acc_data_hdf5files_header.attrs['snap2']-acc_data_hdf5files_header.attrs['snap1'],dtype=str)
+        collated_output_file_header.attrs.create('post_depth',data=acc_data_hdf5files_header.attrs['snap3']-acc_data_hdf5files_header.attrs['snap2'],dtype=str)
     except:
         pass
         
