@@ -136,6 +136,7 @@ if sum_ad:
     #recalc dir in case we want to use 1 process
     calc_list=os.listdir(f'acc_data')
     print(calc_list)
+    print(f'looking for pre{str(pre_depth).zfill(2)}_post{str(post_depth)}')
     for icalc_dir in calc_list:
         if f'pre{str(pre_depth).zfill(2)}_post{str(post_depth)}' in icalc_dir:
             calc_dir_forsum=icalc_dir
