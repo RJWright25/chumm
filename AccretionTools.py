@@ -1750,7 +1750,7 @@ def get_particle_acc_data(directory,halo_index_list=None):
  
 ########################### READ SUMMED ACC DATA ###########################
 
-def get_summed_acc_data(path):
+def get_summed_acc_data(base_halo_data,accdata_path):
 
     """
 
@@ -1776,13 +1776,23 @@ def get_summed_acc_data(path):
     # Define output fields
 
     # Load collated file
-    hdf5file=h5py.File(path,'r')
+    hdf5file=h5py.File(accdata_path,'r')
 
     # Load in metadata
     acc_metadata=dict()
     hdf5header_attrs=list(hdf5file['/Header'].attrs)
     for attribute in hdf5header_attrs:
         acc_metadata[attribute]=hdf5file['/Header'].attrs[attribute]
+
+    if 'pre_depth' not in hdf5header_attrs:
+        acc_metadata['pre_depth']=int(accdata_path.split('pre')[-1][:2])
+    if 'post_depth' not in hdf5header_attrs:
+        acc_metadata['post_depth']=int(accdata_path.split('post')[-1][:2])
+    if 'outname' not in hdf5header_attrs:
+        acc_metadata['outname']=str(base_halo_data[-1]['outname'])
+
+    if not type(acc_metadata['outname'])==str:
+        acc_metadata['outname']=acc_metadata['outname'].decode('utf-8')
 
     # Initialise output data
     total_num_halos=acc_metadata['total_num_halos']
@@ -1832,12 +1842,19 @@ def get_summed_acc_data(path):
 
     for part_group_name in part_group_list:
         for dataset in acc_fields_inflow:
-            acc_data_inflow[part_group_name][dataset]=hdf5file['Inflow/'+part_group_name+'/'+dataset].value
+            try:
+                acc_data_inflow[part_group_name][dataset]=hdf5file['Inflow/'+part_group_name+'/'+dataset].value
+            except:
+                # print(f'Couldnt retrieve {part_group_name}/{dataset}')
+                pass
 
     for part_group_name in part_group_list:
         for dataset in acc_fields_outflow:
-            acc_data_outflow[part_group_name][dataset]=hdf5file['Outflow/'+part_group_name+'/'+dataset].value    
-    
+            try:
+                acc_data_outflow[part_group_name][dataset]=hdf5file['Outflow/'+part_group_name+'/'+dataset].value    
+            except:
+                # print(f'Couldnt retrieve {part_group_name}/{dataset}')
+                pass
     acc_data={'Inflow':acc_data_inflow,'Outflow':acc_data_outflow}
     
     return acc_metadata, acc_data

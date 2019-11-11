@@ -368,7 +368,7 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
         for new_field in list(new_halo_data_snap.keys()):
             if ('ass_' in new_field or 'M_' in new_field) and 'R_' not in new_field and 'rhalfmass' not in new_field:
                 print(f'Converting {new_field} values to physical')
-                new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10/base_halo_data_snap['SimulationInfo']['h_val']
+                new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10
 
         # Adding old halo data from V1 calcs
         print(f'Adding fields from base halo data')
@@ -668,9 +668,11 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
                 field_halo_tlist=part_data_temp['Particle_Types'][field_halo_temp_index]
                 sub_halos_plist=np.concatenate([part_data_temp['Particle_IDs'][isub] for isub in sub_halos_temp])#list all particles IDs in substructure
                 sub_halos_tlist=np.concatenate([part_data_temp['Particle_Types'][isub] for isub in sub_halos_temp])#list all particles types substructure
-                part_data_temp['Particle_IDs'][field_halo_temp_index]=np.concatenate([field_halo_plist,sub_halos_plist])#add particles to field halo particle list
-                part_data_temp['Particle_Types'][field_halo_temp_index]=np.concatenate([field_halo_tlist,sub_halos_tlist])#add particles to field halo particle list
+                part_data_temp['Particle_IDs'][field_halo_temp_index],unique_indices=np.unique(np.concatenate([field_halo_plist,sub_halos_plist]),return_index=True)#add particles to field halo particle list
+                part_data_temp['Particle_Types'][field_halo_temp_index]=np.concatenate([field_halo_tlist,sub_halos_tlist])[unique_indices]#add particles to field halo particle list
                 part_data_temp['Npart'][field_halo_temp_index]=len(part_data_temp['Particle_IDs'][field_halo_temp_index])#update Npart for each field halo
+
+        
         print('Finished appending FOF particle lists with substructure')
 
     # Output just the halo_index_list halos (to save memory)
