@@ -673,7 +673,7 @@ def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=
                 part_data_temp['Npart'][field_halo_temp_index]=len(part_data_temp['Particle_IDs'][field_halo_temp_index])#update Npart for each field halo
 
         
-        print('Finished appending FOF particle lists with substructure')
+        print('Finished appending FOF particle lists with substructure and ensuring unique')
 
     # Output just the halo_index_list halos (to save memory)
     if halo_index_list==None:
