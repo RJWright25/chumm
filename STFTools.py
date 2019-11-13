@@ -77,6 +77,12 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         A list (for each snap desired) of dictionaries which contain halo data with the following fields:
         'ID'
         'hostHaloID'
+        'Xc'
+        'Yc'
+        'Zc'
+        'Vx'
+        'Vy'
+        'Vz'
         'Snap'
         'Head'*
         'Tail'
@@ -111,7 +117,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 	"""
 
-    base_fields=['ID','hostHaloID','Structuretype',"numSubStruct"]#default halo fields
+    base_fields=['ID','hostHaloID','Structuretype',"numSubStruct",'Xc','Yc','Zc','Vxc','Vyc','Vzc','R_200crit']#default halo fields
 
     # File lists
     part_list=partdata_filelist#particle data filepaths -- padded with None for snaps we don't have
