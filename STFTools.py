@@ -400,6 +400,20 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
                         new_halo_data_snap['R_rel'][ihalo]=r_rel_temp
                 print('Done with R_rel')
 
+            if 'M_rel' in extra_halo_fields:
+                print('Adding M_rel information for subhalos')
+                new_halo_data_snap['M_rel']=np.zeros(n_halos_snap)+np.nan #initialise to nan if field halo
+                for ihalo in range(n_halos_snap):
+                    hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
+                    if not hostID_temp==-1:
+                        #if we have a subhalo 
+                        hostindex_temp=np.where(new_halo_data_snap['ID']==hostID_temp)[0][0]
+                        host_M=new_halo_data_snap['Mass_FOF'][hostindex_temp]
+                        sub_M=new_halo_data_snap['Mass_200crit'][ihalo]
+                        M_rel_temp=sub_M/host_M
+                        new_halo_data_snap['M_rel'][ihalo]=M_rel_temp
+                print('Done with M_rel')
+
             if 'N_peers' in extra_halo_fields: #Number of peer subhalos
                 print('Adding N_peers information for subhalos')
                 new_halo_data_snap['N_peers']=np.zeros(len(new_halo_data_snap['ID']))+np.nan #initialise to nan if field halo
@@ -426,6 +440,8 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
                             peer_ranks=rank_list([new_halo_data_snap['Mass_200crit'][ihalo_peer] for ihalo_peer in peer_indices])
                             for ipeer_index,peer_index in enumerate(peer_indices):
                                 new_halo_data_snap["Subhalo_rank"][peer_index]=peer_ranks[ipeer_index]
+
+                
                 print('Done with Subhalo_rank')
 
         else: #if insufficient halos at snap
