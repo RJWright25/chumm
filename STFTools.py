@@ -408,8 +408,8 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
                     if not hostID_temp==-1:
                         #if we have a subhalo 
                         hostindex_temp=np.where(new_halo_data_snap['ID']==hostID_temp)[0][0]
-                        host_M=new_halo_data_snap['Mass_FOF'][hostindex_temp]
-                        sub_M=new_halo_data_snap['Mass_200crit'][ihalo]
+                        host_M=new_halo_data_snap['Mass_200crit'][hostindex_temp]
+                        sub_M=new_halo_data_snap['Mass_200crit_excl'][ihalo]
                         M_rel_temp=sub_M/host_M
                         new_halo_data_snap['M_rel'][ihalo]=M_rel_temp
                 print('Done with M_rel')
