@@ -80,9 +80,9 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         'Xc'
         'Yc'
         'Zc'
-        'Vx'
-        'Vy'
-        'Vz'
+        'VXc'
+        'VYc'
+        'VZc'
         'Snap'
         'Head'*
         'Tail'
@@ -117,7 +117,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 	"""
 
-    base_fields=['ID','hostHaloID','Structuretype',"numSubStruct",'Xc','Yc','Zc','Vxc','Vyc','Vzc','R_200crit']#default halo fields
+    base_fields=['ID','hostHaloID','Structuretype',"numSubStruct",'Xc','Yc','Zc','VXc','VYc','VZc','R_200crit']#default halo fields
 
     # File lists
     part_list=partdata_filelist#particle data filepaths -- padded with None for snaps we don't have
