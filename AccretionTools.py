@@ -1361,6 +1361,8 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         Requested gas datasets for snap 1 and snap 2, saved to file at accdata_path. 
 
     """
+    partdata_filetype=base_halo_data[-1]['Part_FileType']
+    partdata_outname=base_halo_data[-1]['outname']
 
     if 'EAGLE' in partdata_filetype:
         parttypes=[0,1,4]
@@ -1428,11 +1430,9 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
 
     t1_io=time.time()
 
-    partdata_filetype=base_halo_data[snap2]['Part_FileType']
-    partdata_outname=base_halo_data[snap2]['outname']
+
     parthist_file_snap2=h5py.File(f'part_histories/PartHistory_{str(snap2).zfill(3)}_{partdata_outname}.hdf5','r')
     parthist_file_snap1=h5py.File(f'part_histories/PartHistory_{str(snap1).zfill(3)}_{partdata_outname}.hdf5','r')
-    
     #Load particle histories
     parthist_IDs_snap1={str(itype):parthist_file_snap1[f'PartType{itype}']['ParticleIDs'].value for itype in parttypes}
     parthist_indices_snap1={str(itype):parthist_file_snap1[f'PartType{itype}']['ParticleIndex'].value for itype in parttypes}
