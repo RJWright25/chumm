@@ -125,8 +125,30 @@ if gen_ad:
 
     t2_acc=time.time()
 
+############ 2. ADD PARTICLE DATA ############
+# This is run in parallel, based on the files generated above. 
+# Here, we add desired gas particle data to the accretion file.
 
-############ 2. SUM ACCRETION DATA ############
+if add_pd:
+    t1_part=time.time()
+
+    # Multiprocessing arguments
+    processes=[]
+    accdata_files=os.listdir(output_dir)
+    accdata_paths=[output_dir+accdata_file for accdata_file in accdata_files if 'summed' not in accdata_file]
+    kwargs=[{'accdata_path':accdata_path}]
+    if __name__ == '__main__':
+        for iprocess in range(len(kwargs)):
+            print(f'Starting process {iprocess}')
+            p=Process(target=add_gas_particle_data, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            processes.append(p)
+            p.start()
+        for p in processes:
+            p.join()
+
+    t2_part=time.time()
+
+############ 3. SUM ACCRETION DATA ############
 # This is run in serial, based on the files generated above. 
 # Here, we sum the accretion data to create a database of 
 # accretion rates (of various types) for all halos in the simulation.
@@ -150,30 +172,6 @@ if sum_ad:
     t2_sum=time.time()
 
 
-############ 3. ADD PARTICLE DATA ############
-# This is run in parallel, based on the files generated above. 
-# Here, we add desired gas particle data to the accretion file.
-
-if add_pd:
-    t1_part=time.time()
-
-    # Multiprocessing arguments
-    processes=[]
-    accdata_files=os.listdir(output_dir)
-    accdata_paths=[output_dir+accdata_file for accdata_file in accdata_files if 'summed' not in accdata_file]
-    kwargs=[{'accdata_path':accdata_path,
-    'datasets':['ParticleIDs','AExpMaximumTemperature','Coordinates','Density','InternalEnergy','MaximumTemperature','StarFormationRate','Temperature','Velocity']} for accdata_path in accdata_paths]#* specify this
-
-    if __name__ == '__main__':
-        for iprocess in range(len(kwargs)):
-            print(f'Starting process {iprocess}')
-            p=Process(target=add_gas_particle_data, args=(base_halo_data,),kwargs=kwargs[iprocess])
-            processes.append(p)
-            p.start()
-        for p in processes:
-            p.join()
-
-    t2_part=time.time()
 
 
 
