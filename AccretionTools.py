@@ -1523,7 +1523,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         ihalo_datasets_outflow={str(itype):{} for itype in parttypes}
 
         for itype in parttypes:
-            for dataset in datasets[str(itype)]]:#initialise empty halo datasets
+            for dataset in datasets[str(itype)]:#initialise empty halo datasets
                 ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=[]
                 ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=[]            
                 ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=[]
