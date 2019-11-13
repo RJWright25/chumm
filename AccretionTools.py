@@ -1474,8 +1474,8 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         EAGLE_Snap_2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
         EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
         
-        particle_datasets_snap1={{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-        particle_datasets_snap2={{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
+        particle_datasets_snap1={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
+        particle_datasets_snap2={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
         for itype in parttypes:
             for dataset in datasets[str(itype)]:
                 particle_datasets_snap1[str(itype)][dataset]=EAGLE_Snap_1.read_dataset(itype,dataset)
