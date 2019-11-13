@@ -42,7 +42,7 @@ from multiprocessing import Process, cpu_count
 gen_base_halo_data_flag=True #* 
 gen_detailed_halo_data_flag=True #*
 postprocess_detailed_halo_data_flag=True #*
-extra_halo_fields=['R_rel','N_peers','Subhalo_rank']#*
+extra_halo_fields=['R_rel','N_peers','Subhalo_rank','M_rel']#*
 ####################################################
 
 # Parse argument for number of processes to use
