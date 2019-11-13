@@ -1361,6 +1361,9 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         Requested gas datasets for snap 1 and snap 2, saved to file at accdata_path. 
 
     """
+    print('Starting with I/O for adding particle data ...')
+    t1_io=time.time()
+
     partdata_filetype=base_halo_data[-1]['Part_FileType']
     partdata_outname=base_halo_data[-1]['outname']
 
@@ -1427,8 +1430,6 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
     with open(fname_log,"w") as progress_file:
         progress_file.write('Loading in data ...')
     progress_file.close()
-
-    t1_io=time.time()
 
 
     parthist_file_snap2=h5py.File(f'part_histories/PartHistory_{str(snap2).zfill(3)}_{partdata_outname}.hdf5','r')
@@ -1505,6 +1506,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 particle_datasets_snap2[str(itype)][dataset]=EAGLE_Snap_2.read_dataset(itype,dataset)
     
     t2_io=time.time()
+    print(f'Finished with I/O for adding particle data in {t2_io-t1_io:.2f} sec')
 
     with open(fname_log,"a") as progress_file:
         progress_file.write(" \n")
