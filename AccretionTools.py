@@ -1562,8 +1562,8 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             transformed_out=np.array(acc_file[ihalo_group]['Outflow']['PartType0']['Transformed'])==1
             
             #Save the shape of each dataset for each particle
-            dataset_shapes={str(itype):[] for itype in parttypes}
-            dataset_types={str(itype):[] for itype in parttypes}
+            dataset_shapes={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
+            dataset_types={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
             for itype in parttypes:
                 for dataset in datasets[str(itype)]:
                     dataset_shapes[str(itype)][dataset]=np.size(particle_datasets_snap2[str(itype)][dataset][0])
