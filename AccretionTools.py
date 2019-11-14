@@ -1575,6 +1575,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             ihalo_outflow_history_indices_snap1={}
             ihalo_inflow_partdata_indices_snap1={}
             ihalo_outflow_partdata_indices_snap1={}
+
             for itype in parttypes:
                 if itype==1:
                     ihalo_inflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=False) 
@@ -1629,6 +1630,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             ihalo_outflow_history_indices_snap2={}
             ihalo_inflow_partdata_indices_snap2={}
             ihalo_outflow_partdata_indices_snap2={}
+            
             for itype in parttypes:
                 if itype==1:
                     ihalo_inflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=False)
