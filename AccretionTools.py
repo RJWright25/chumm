@@ -1672,7 +1672,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         scalefactor_snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
         scalefactor_snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
         for itype in parttypes:
-            for dataset in datasets:
+            for dataset in datasets[str(itype)]:
                 if dataset=='Coordinates' or 'Velocity':
                     ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']*scalefactor_snap2/h_val
                     ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']*scalefactor_snap1/h_val                    
@@ -1680,7 +1680,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']*scalefactor_snap1/h_val
             
         for itype in parttypes:
-            for dataset in datasets:
+            for dataset in datasets[str(itype)]:
                 try:
                     ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[dataset])
                     ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[dataset])
