@@ -1666,8 +1666,12 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                                     try:
                                         ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(particle_datasets_snap2[str(new_parttype)][dataset][ipart_partdata_index])
                                     except:
-                                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(np.nan)
-        #convert to physical 
+                                        if dataset=='ParticleIDs':
+                                            ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(-1)
+                                        elif dataset_size==1:
+                                            ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(np.nan)
+                                        else:
+                                            ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append([np.nan for i in range(dataset_size)])        
         h_val=base_halo_data[-1]['SimulationInfo']['h_val']
         scalefactor_snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
         scalefactor_snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
