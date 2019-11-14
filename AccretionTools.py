@@ -1595,16 +1595,16 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             ihalo_outflow_partdata_indices_snap2={}
             for itype in parttypes:
                 if itype==1:
-                    ihalo_inflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_file_snap2[str(itype)],check_entries=False)
-                    ihalo_outflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_file_snap2[str(itype)],check_entries=False)
+                    ihalo_inflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=False)
+                    ihalo_outflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=False)
                     ihalo_inflow_partdata_indices_snap2[str(itype)]=[parthist_indices_snap2[str(itype)][index] for index in ihalo_inflow_history_indices_snap2[str(itype)]]
                     ihalo_outflow_partdata_indices_snap2[str(itype)]=[parthist_indices_snap2[str(itype)][index] for index in ihalo_outflow_history_indices_snap2[str(itype)]]
                     for dataset in datasets[str(itype)]:
                         ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=[particle_datasets_snap2[str(itype)][dataset][index] for index in ihalo_inflow_partdata_indices_snap2[str(itype)]]
                         ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=[particle_datasets_snap2[str(itype)][dataset][index] for index in ihalo_outflow_partdata_indices_snap2[str(itype)]]
                 else:
-                    ihalo_inflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_file_snap2[str(itype)],check_entries=True)
-                    ihalo_outflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_file_snap2[str(itype)],check_entries=True)
+                    ihalo_inflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=True)
+                    ihalo_outflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=True)
     
                     #inflow
                     for iipart_history_index,ipart_history_index in enumerate(ihalo_inflow_history_indices_snap2):
