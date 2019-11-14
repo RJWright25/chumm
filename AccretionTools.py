@@ -1607,7 +1607,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     ihalo_outflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=True)
     
                     #inflow
-                    for iipart_history_index,ipart_history_index in enumerate(ihalo_inflow_history_indices_snap2):
+                    for iipart_history_index,ipart_history_index in enumerate(ihalo_inflow_history_indices_snap2[str(itype)]):
                         ipart_ID=IDs_in_snap1[str(itype)][iipart_history_index]
                         if ipart_history_index>=0:
                             ipart_partdata_index=parthist_indices_snap2[str(itype)][ipart_history_index]
@@ -1638,7 +1638,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                                         ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append(np.nan)
 
                     #outflow
-                    for iipart_history_index,ipart_history_index in enumerate(ihalo_outflow_history_indices_snap2):
+                    for iipart_history_index,ipart_history_index in enumerate(ihalo_outflow_history_indices_snap2[str(itype)]):
                         ipart_ID=IDs_out_snap1[str(itype)][iipart_history_index]
                         if ipart_history_index>=0:
                             ipart_partdata_index=parthist_indices_snap2[str(itype)][ipart_history_index]
