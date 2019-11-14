@@ -1674,8 +1674,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         for itype in parttypes:
             for dataset in datasets[str(itype)]:
                 if dataset=='Coordinates' or 'Velocity':
-                    print(scalefactor_snap1,h_val)
-                    print(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'])
+                    print(f'Converting coordinates to physical: snap1_a = {scalefactor_snap1}, snap2_a = {scalefactor_snap2})
                     ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'])*scalefactor_snap2/h_val
                     ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'])*scalefactor_snap1/h_val                    
                     ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'])*scalefactor_snap2/h_val
