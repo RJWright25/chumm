@@ -1778,13 +1778,13 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             
             #adding relative position and velocity of particles
             if add_rel:
-                ihalo_datasets_inflow[str(itype)]['snap1_Rrel']=np.sum((ihalo_datasets_inflow[str(itype)]['snap1_Coordinates']-ihalo_snap1_com)**2,axis=1)
-                ihalo_datasets_inflow[str(itype)]['snap2_Rrel']=np.sum((ihalo_datasets_inflow[str(itype)]['snap2_Coordinates']-ihalo_snap2_com)**2,axis=1)
+                ihalo_datasets_inflow[str(itype)]['snap1_Rrel']=np.sum(np.square(ihalo_datasets_inflow[str(itype)]['snap1_Coordinates']-ihalo_snap1_com),axis=1)
+                ihalo_datasets_inflow[str(itype)]['snap2_Rrel']=np.sum(np.square(ihalo_datasets_inflow[str(itype)]['snap2_Coordinates']-ihalo_snap2_com),axis=1)
                 ihalo_datasets_inflow[str(itype)]['snap1_Vrel']=(ihalo_datasets_inflow[str(itype)]['snap1_Velocity']-ihalo_snap1_v)
                 ihalo_datasets_inflow[str(itype)]['snap2_Vrel']=(ihalo_datasets_inflow[str(itype)]['snap2_Velocity']-ihalo_snap2_v)
 
-                ihalo_datasets_outflow[str(itype)]['snap1_Rrel']=np.sum((ihalo_datasets_outflow[str(itype)]['snap1_Coordinates']-ihalo_snap1_com)**2,axis=1)
-                ihalo_datasets_outflow[str(itype)]['snap2_Rrel']=np.sum((ihalo_datasets_outflow[str(itype)]['snap2_Coordinates']-ihalo_snap2_com)**2,axis=1)
+                ihalo_datasets_outflow[str(itype)]['snap1_Rrel']=np.sum(np.square(ihalo_datasets_outflow[str(itype)]['snap1_Coordinates']-ihalo_snap1_com),axis=1)
+                ihalo_datasets_outflow[str(itype)]['snap2_Rrel']=np.sum(np.square(ihalo_datasets_outflow[str(itype)]['snap2_Coordinates']-ihalo_snap2_com),axis=1)
                 ihalo_datasets_outflow[str(itype)]['snap1_Vrel']=(ihalo_datasets_outflow[str(itype)]['snap1_Velocity']-ihalo_snap1_v)
                 ihalo_datasets_outflow[str(itype)]['snap2_Vrel']=(ihalo_datasets_outflow[str(itype)]['snap2_Velocity']-ihalo_snap2_v)
                 
