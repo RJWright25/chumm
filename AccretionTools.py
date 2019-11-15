@@ -1587,7 +1587,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         ipart_partdata_index=parthist_indices_snap1[str(itype)][ipart_history_index]
                         for dataset in datasets[str(itype)]:
                             ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'][iipart_history_index]=particle_datasets_snap1[str(itype)][dataset][ipart_partdata_index]
-                        print(f"ID to find {ipart_ID}, ID at index = {particle_datasets_snap1[str(itype)]['ParticleIDs'][ipart_partdata_index]}")
+                        # print(f"ID to find {ipart_ID}, ID at index = {particle_datasets_snap1[str(itype)]['ParticleIDs'][ipart_partdata_index]}")
                     else:
                         new_parttype=None
                         for itype_test in [0,4]:
@@ -1746,14 +1746,6 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         h_val=base_halo_data[-1]['SimulationInfo']['h_val']
         scalefactor_snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
         scalefactor_snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
-        for itype in parttypes:
-            for dataset in datasets[str(itype)]:
-                if dataset=='Coordinates' or 'Velocity':
-                    print(f'Converting coordinates to physical: snap1_a = {scalefactor_snap1}, snap2_a = {scalefactor_snap2}')
-                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'])*scalefactor_snap2/h_val
-                    ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'])*scalefactor_snap1/h_val   
-                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'])*scalefactor_snap2/h_val
-                    ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'])*scalefactor_snap1/h_val
             
         for itype in parttypes:
             for dataset in datasets[str(itype)]:
