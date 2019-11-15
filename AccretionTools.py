@@ -1578,6 +1578,11 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 if itype==1:
                     ihalo_inflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=False) 
                     ihalo_outflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=False) 
+                    for ihistory_index,history_index in enumerate(ihalo_inflow_history_indices_snap1[str(itype)]):
+                        ID_searched=IDs_in_snap1[str(itype)][ihistory_index]
+                        ID_atindex=parthist_IDs_snap1[str(itype)][history_index]
+                        print(ID_searched,ID_atindex)
+
                 else:
                     ihalo_inflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=True) 
                     ihalo_outflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=True) 
