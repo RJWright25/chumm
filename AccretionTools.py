@@ -1749,16 +1749,19 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             
         for itype in parttypes:
             for dataset in datasets[str(itype)]:
-                try:
-                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[dataset])
-                    ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[dataset])
-                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[dataset])
-                    ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[dataset])
-                except:
-                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=np.float32)
-                    ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=np.float32)
-                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=np.float32)
-                    ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=np.float32)
+                    if dataset=='Coordinates' or dataset=='Velocity':
+                        print(f'Converting {dataset} to physical')
+                        snap1_factor=scalefactor_snap1/h_val
+                        snap2_factor=scalefactor_snap2/h_val
+                    else:
+                        snap1_factor=1
+                        snap2_factor=1
+            
+                ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']*snap2_factor,dtype=dataset_types[dataset])
+                ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']*snap1_factor,dtype=dataset_types[dataset])
+                ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']*snap2_factor,dtype=dataset_types[dataset])
+                ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']*snap1_factor,dtype=dataset_types[dataset])
+
 
                 try:
                     acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset],shape=np.shape(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']),exact=False)
