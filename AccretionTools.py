@@ -1771,14 +1771,14 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
                 ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'])*snap2_factor
                 ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
-            
+            add_rel=True
             if add_rel:
                 ihalo_datasets_inflow[str(itype)]['snap1_Rrel']=(ihalo_datasets_inflow[str(itype)]['snap1_Coordinates']-ihalo_snap1_com)
                 ihalo_datasets_inflow[str(itype)]['snap2_Rrel']=(ihalo_datasets_inflow[str(itype)]['snap2_Coordinates']-ihalo_snap2_com)
                 ihalo_datasets_inflow[str(itype)]['snap1_Vrel']=ihalo_datasets_inflow[str(itype)]['snap1_Velocity']-ihalo_snap1_v
                 ihalo_datasets_inflow[str(itype)]['snap2_Vrel']=ihalo_datasets_inflow[str(itype)]['snap2_Velocity']-ihalo_snap2_v
                 datasets[str(itype)].extend(['Rrel','Vrel'])
-                
+
             for dataset in datasets[str(itype)]:
                 try:
                     del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap2_{dataset}']
