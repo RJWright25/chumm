@@ -1568,6 +1568,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.zeros(len(IDs_out_snap1[str(itype)]))
                     ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.zeros(len(IDs_out_snap1[str(itype)]))  
             
+            #SNAP 1
             #Find indices and datasets of particles for snap1
             ihalo_inflow_history_indices_snap1={}
             ihalo_outflow_history_indices_snap1={}
@@ -1575,12 +1576,9 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             ihalo_outflow_partdata_indices_snap1={}
 
             for itype in parttypes:
-                if itype==1:
-                    ihalo_inflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=False) 
-                    ihalo_outflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=False) 
-                else:
-                    ihalo_inflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=True) 
-                    ihalo_outflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=True) 
+
+                ihalo_inflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=False) 
+                ihalo_outflow_history_indices_snap1[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap1[str(itype)],check_entries=False) 
                 
                 #inflow
                 for iipart_history_index,ipart_history_index in enumerate(ihalo_inflow_history_indices_snap1[str(itype)]): 
@@ -1657,7 +1655,8 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                                     else:
                                         ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_history_index]=[np.nan for i in range(dataset_size)]
                                 
-                
+            #SNAP 2
+
             #Find indices and datasets of particles for snap2
             ihalo_inflow_history_indices_snap2={}
             ihalo_outflow_history_indices_snap2={}
@@ -1665,92 +1664,85 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             ihalo_outflow_partdata_indices_snap2={}
 
             for itype in parttypes:
-                if itype==1:
-                    ihalo_inflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=False)
-                    ihalo_outflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=False)
-                    ihalo_inflow_partdata_indices_snap2[str(itype)]=[parthist_indices_snap2[str(itype)][index] for index in ihalo_inflow_history_indices_snap2[str(itype)]]
-                    ihalo_outflow_partdata_indices_snap2[str(itype)]=[parthist_indices_snap2[str(itype)][index] for index in ihalo_outflow_history_indices_snap2[str(itype)]]
-                    for dataset in datasets[str(itype)]:
-                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=[particle_datasets_snap2[str(itype)][dataset][index] for index in ihalo_inflow_partdata_indices_snap2[str(itype)]]
-                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=[particle_datasets_snap2[str(itype)][dataset][index] for index in ihalo_outflow_partdata_indices_snap2[str(itype)]]
-                else:
-                    ihalo_inflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=True)
-                    ihalo_outflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=True)
-    
-                    #inflow
-                    for iipart_history_index,ipart_history_index in enumerate(ihalo_inflow_history_indices_snap2[str(itype)]):
-                        ipart_ID=IDs_in_snap1[str(itype)][iipart_history_index]
-                        if ipart_history_index>=0:
-                            ipart_partdata_index=parthist_indices_snap2[str(itype)][ipart_history_index]
-                            for dataset in datasets[str(itype)]:
-                                ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append(particle_datasets_snap2[str(itype)][dataset][ipart_partdata_index])
-                        else:
-                            new_parttype=None
-                            for itype_test in [0,4]:
-                                if ipart_ID in parthist_IDs_snap2[str(itype_test)]:
-                                    new_parttype=itype_test
-                                    break
-                            if new_parttype==None:
-                                for dataset in datasets[str(itype)]:
-                                    dataset_size=dataset_shapes[str(itype)][dataset]
-                                    if dataset=='ParticleIDs':
-                                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append(-1)
-                                    elif dataset_size==1:
-                                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append(np.nan)
-                                    else:
-                                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append([np.nan for i in range(dataset_size)])
-                            else:
-                                ipart_history_index_transformed=np.searchsorted(v=ipart_ID,a=parthist_IDs_snap2[str(new_parttype)])
-                                ipart_partdata_index_transformed=parthist_indices_snap2[str(new_parttype)][ipart_history_index_transformed]
-                                for dataset in datasets[str(itype)]:
-                                    try:
-                                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append(particle_datasets_snap2[str(new_parttype)][dataset][ipart_partdata_index])
-                                    except:
-                                        dataset_size=dataset_shapes[str(itype)][dataset]
-                                        if dataset=='ParticleIDs':
-                                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append(-1)
-                                        elif dataset_size==1:
-                                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append(np.nan)
-                                        else:
-                                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'].append([np.nan for i in range(dataset_size)])  
 
-                    #outflow
-                    for iipart_history_index,ipart_history_index in enumerate(ihalo_outflow_history_indices_snap2[str(itype)]):
-                        ipart_ID=IDs_out_snap1[str(itype)][iipart_history_index]
-                        if ipart_history_index>=0:
-                            ipart_partdata_index=parthist_indices_snap2[str(itype)][ipart_history_index]
+                ihalo_inflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_in_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=True)
+                ihalo_outflow_history_indices_snap2[str(itype)]=binary_search(items=IDs_out_snap1[str(itype)],sorted_list=parthist_IDs_snap2[str(itype)],check_entries=True)
+    
+                #inflow
+                for iipart_history_index,ipart_history_index in enumerate(ihalo_inflow_history_indices_snap2[str(itype)]):
+                    ipart_ID=IDs_in_snap1[str(itype)][iipart_history_index]
+                    if ipart_history_index>=0:
+                        ipart_partdata_index=parthist_indices_snap2[str(itype)][ipart_history_index]
+                        for dataset in datasets[str(itype)]:
+                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=particle_datasets_snap2[str(itype)][dataset][ipart_partdata_index]
+                    else:
+                        new_parttype=None
+                        for itype_test in [0,4]:
+                            if ipart_ID in parthist_IDs_snap2[str(itype_test)]:
+                                new_parttype=itype_test
+                                break
+                        if new_parttype==None:
                             for dataset in datasets[str(itype)]:
-                                ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(particle_datasets_snap2[str(itype)][dataset][ipart_partdata_index])
+                                dataset_size=dataset_shapes[str(itype)][dataset]
+                                if dataset=='ParticleIDs':
+                                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=-1
+                                elif dataset_size==1:
+                                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=np.nan
+                                else:
+                                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][[iipart_history_index]=[np.nan for i in range(dataset_size)]
                         else:
-                            new_parttype=None
-                            for itype_test in [0,4]:
-                                if ipart_ID in parthist_IDs_snap2[str(itype_test)]:
-                                    new_parttype=itype_test
-                                    break
-                            if new_parttype==None:
-                                for dataset in datasets[str(itype)]:
+                            ipart_history_index_transformed=np.searchsorted(v=ipart_ID,a=parthist_IDs_snap2[str(new_parttype)])
+                            ipart_partdata_index_transformed=parthist_indices_snap2[str(new_parttype)][ipart_history_index_transformed]
+                            for dataset in datasets[str(itype)]:
+                                try:
+                                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=particle_datasets_snap2[str(new_parttype)][dataset][ipart_partdata_index]
+                                except:
                                     dataset_size=dataset_shapes[str(itype)][dataset]
                                     if dataset=='ParticleIDs':
-                                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(-1)
+                                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=-1
                                     elif dataset_size==1:
-                                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(np.nan)
+                                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=np.nan
                                     else:
-                                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append([np.nan for i in range(dataset_size)])
-                            else:
-                                ipart_history_index_transformed=np.searchsorted(v=ipart_ID,a=parthist_IDs_snap2[str(new_parttype)])
-                                ipart_partdata_index_transformed=parthist_indices_snap2[str(new_parttype)][ipart_history_index_transformed]
-                                for dataset in datasets[str(itype)]:
-                                
-                                    try:
-                                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(particle_datasets_snap2[str(new_parttype)][dataset][ipart_partdata_index])
-                                    except:
-                                        dataset_size=dataset_shapes[str(itype)][dataset]
-                                        if dataset=='ParticleIDs':
-                                            ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(-1)
-                                        elif dataset_size==1:
-                                            ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append(np.nan)
-                                        else:
-                                            ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'].append([np.nan for i in range(dataset_size)])        
+                                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=[np.nan for i in range(dataset_size)]
+
+                #outflow
+                for iipart_history_index,ipart_history_index in enumerate(ihalo_outflow_history_indices_snap2[str(itype)]):
+                    ipart_ID=IDs_out_snap1[str(itype)][iipart_history_index]
+                    if ipart_history_index>=0:
+                        ipart_partdata_index=parthist_indices_snap2[str(itype)][ipart_history_index]
+                        for dataset in datasets[str(itype)]:
+                            ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=particle_datasets_snap2[str(itype)][dataset][ipart_partdata_index]
+                    else:
+                        new_parttype=None
+                        for itype_test in [0,4]:
+                            if ipart_ID in parthist_IDs_snap2[str(itype_test)]:
+                                new_parttype=itype_test
+                                break
+                        if new_parttype==None:
+                            for dataset in datasets[str(itype)]:
+                                dataset_size=dataset_shapes[str(itype)][dataset]
+                                if dataset=='ParticleIDs':
+                                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=-1
+                                elif dataset_size==1:
+                                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=np.nan
+                                else:
+                                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=[np.nan for i in range(dataset_size)]
+                        else:
+                            ipart_history_index_transformed=np.searchsorted(v=ipart_ID,a=parthist_IDs_snap2[str(new_parttype)])
+                            ipart_partdata_index_transformed=parthist_indices_snap2[str(new_parttype)][ipart_history_index_transformed]
+                            for dataset in datasets[str(itype)]:
+                            
+                                try:
+                                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=particle_datasets_snap2[str(new_parttype)][dataset][ipart_partdata_index]
+                                except:
+                                    dataset_size=dataset_shapes[str(itype)][dataset]
+                                    if dataset=='ParticleIDs':
+                                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=-1
+                                    elif dataset_size==1:
+                                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=np.nan
+                                    else:
+                                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=[np.nan for i in range(dataset_size)]
+
         h_val=base_halo_data[-1]['SimulationInfo']['h_val']
         scalefactor_snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
         scalefactor_snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
