@@ -1520,6 +1520,16 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 particle_datasets_snap2[str(itype)][dataset]=EAGLE_Snap_2.read_dataset(itype,dataset)
     
     t2_io=time.time()
+
+    #Save the shape of each dataset for each particle
+    dataset_shapes={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
+    dataset_types={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
+    for itype in parttypes:
+        for dataset in datasets[str(itype)]:
+            dataset_shapes[str(itype)][dataset]=np.size(particle_datasets_snap2[str(itype)][dataset][0])
+            dataset_types[str(itype)][dataset]=np.float32
+        dataset_types[str(itype)]['ParticleIDs']=np.int64
+
     print(f'Finished with I/O for adding particle data in {t2_io-t1_io:.2f} sec')
 
     with open(fname_log,"a") as progress_file:
@@ -1557,19 +1567,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.nan
                     ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.nan
 
-        else:#valid halo
-            transformed_in=np.array(acc_file[ihalo_group]['Inflow']['PartType0']['Transformed'])==1
-            transformed_out=np.array(acc_file[ihalo_group]['Outflow']['PartType0']['Transformed'])==1
-            
-            #Save the shape of each dataset for each particle
-            dataset_shapes={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-            dataset_types={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-            for itype in parttypes:
-                for dataset in datasets[str(itype)]:
-                    dataset_shapes[str(itype)][dataset]=np.size(particle_datasets_snap2[str(itype)][dataset][0])
-                    dataset_types[str(itype)][dataset]=np.float32
-                dataset_types[str(itype)]['ParticleIDs']=np.int64
-            
+        else:#valid halo            
             #Find indices and datasets of particles for snap1
             ihalo_inflow_history_indices_snap1={}
             ihalo_outflow_history_indices_snap1={}
@@ -1591,6 +1589,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         ipart_partdata_index=parthist_indices_snap1[str(itype)][ipart_history_index]
                         for dataset in datasets[str(itype)]:
                             ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'].append(particle_datasets_snap1[str(itype)][dataset][ipart_partdata_index])
+                    print(f'ID to find {ipart_ID}, ID at index = {parthist_IDs_snap1[str(itype)][ipart_partdata_index]}')
                     else:
                         new_parttype=None
                         for itype_test in [0,4]:
