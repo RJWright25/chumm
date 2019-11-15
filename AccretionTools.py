@@ -1751,12 +1751,16 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         h_val=base_halo_data[-1]['SimulationInfo']['h_val']
         scalefactor_snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
         scalefactor_snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
-        ihalo_snap1_com=acc_file[ihalo_group].attrs['snap1_com']
-        ihalo_snap1_v=acc_file[ihalo_group].attrs['snap1_v']
-        ihalo_snap1_R200=acc_file[ihalo_group].attrs['snap1_R200']
-        ihalo_snap2_com=acc_file[ihalo_group].attrs['snap2_com']
-        ihalo_snap2_v=acc_file[ihalo_group].attrs['snap2_v']
-        ihalo_snap2_R200=acc_file[ihalo_group].attrs['snap2_R200']
+        try:
+            ihalo_snap1_com=acc_file[ihalo_group].attrs['snap1_com']
+            ihalo_snap1_v=acc_file[ihalo_group].attrs['snap1_v']
+            ihalo_snap1_R200=acc_file[ihalo_group].attrs['snap1_R200']
+            ihalo_snap2_com=acc_file[ihalo_group].attrs['snap2_com']
+            ihalo_snap2_v=acc_file[ihalo_group].attrs['snap2_v']
+            ihalo_snap2_R200=acc_file[ihalo_group].attrs['snap2_R200']
+            add_rel=True
+        except:
+            add_rel=False
 
         for itype in parttypes:
             for dataset in datasets[str(itype)]:
@@ -1773,7 +1777,6 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
             
             #adding relative position and velocity of particles
-            add_rel=True
             if add_rel:
                 ihalo_datasets_inflow[str(itype)]['snap1_Rrel']=(ihalo_datasets_inflow[str(itype)]['snap1_Coordinates']-ihalo_snap1_com)
                 ihalo_datasets_inflow[str(itype)]['snap2_Rrel']=(ihalo_datasets_inflow[str(itype)]['snap2_Coordinates']-ihalo_snap2_com)
@@ -1806,24 +1809,25 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
                     acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
                     acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                
-            for dataset in ['Rrel','Vrel']:
-                try:
-                    del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap2_{dataset}']
-                    del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap1_{dataset}']
-                    del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap2_{dataset}']
-                    del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap1_{dataset}']
-                    acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+            
+            if add_rel:
+                for dataset in ['Rrel','Vrel']:
+                    try:
+                        del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap2_{dataset}']
+                        del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap1_{dataset}']
+                        del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap2_{dataset}']
+                        del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap1_{dataset}']
+                        acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+                        acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+                        acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+                        acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
 
-                except:
-                    acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-        
+                    except:
+                        acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+                        acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+                        acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+                        acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+            
         t2_halo=time.time()
 
         with open(fname_log,"a") as progress_file:
