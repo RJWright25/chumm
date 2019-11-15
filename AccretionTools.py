@@ -1689,7 +1689,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                                 elif dataset_size==1:
                                     ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=np.nan
                                 else:
-                                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][[iipart_history_index]=[np.nan for i in range(dataset_size)]
+                                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_history_index]=[np.nan for i in range(dataset_size)]
                         else:
                             ipart_history_index_transformed=np.searchsorted(v=ipart_ID,a=parthist_IDs_snap2[str(new_parttype)])
                             ipart_partdata_index_transformed=parthist_indices_snap2[str(new_parttype)][ipart_history_index_transformed]
