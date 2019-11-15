@@ -656,15 +656,20 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             halo_hdf5.attrs.create('snap1_com',data=[base_halo_data[snap1]['Xc'][ihalo_s1],base_halo_data[snap1]['Yc'][ihalo_s1],base_halo_data[snap1]['Zc'][ihalo_s1]],dtype=np.float32)
             halo_hdf5.attrs.create('snap1_v',data=[base_halo_data[snap1]['VXc'][ihalo_s1],base_halo_data[snap1]['VYc'][ihalo_s1],base_halo_data[snap1]['VZc'][ihalo_s1]],dtype=np.float32)
             halo_hdf5.attrs.create('snap1_R200',data=base_halo_data[snap1]['R_200crit'][ihalo_s1],dtype=np.float32)
+            halo_hdf5.attrs.create('snap1_M200',data=base_halo_data[snap1]['M_200crit'][ihalo_s1],dtype=np.float32)
+            halo_hdf5.attrs.create('snap1_Vmax',data=base_halo_data[snap1]['Vmax'][ihalo_s1],dtype=np.float32)
         if ihalo_s2>=0:
             halo_hdf5.attrs.create('snap2_com',data=[base_halo_data[snap2]['Xc'][ihalo_s2],base_halo_data[snap2]['Yc'][ihalo_s2],base_halo_data[snap2]['Zc'][ihalo_s2]],dtype=np.float32)
             halo_hdf5.attrs.create('snap2_v',data=[base_halo_data[snap2]['VXc'][ihalo_s2],base_halo_data[snap2]['VYc'][ihalo_s2],base_halo_data[snap2]['VZc'][ihalo_s2]],dtype=np.float32)
             halo_hdf5.attrs.create('snap2_R200',data=base_halo_data[snap2]['R_200crit'][ihalo_s2],dtype=np.float32)
+            halo_hdf5.attrs.create('snap2_M200',data=base_halo_data[snap2]['M_200crit'][ihalo_s2],dtype=np.float32)
+            halo_hdf5.attrs.create('snap2_Vmax',data=base_halo_data[snap2]['Vmax'][ihalo_s2],dtype=np.float32)
         if ihalo_s3>=0:
             halo_hdf5.attrs.create('snap3_com',data=[base_halo_data[snap3]['Xc'][ihalo_s3],base_halo_data[snap3]['Yc'][ihalo_s3],base_halo_data[snap3]['Zc'][ihalo_s3]],dtype=np.float32)
             halo_hdf5.attrs.create('snap3_v',data=[base_halo_data[snap3]['VXc'][ihalo_s3],base_halo_data[snap3]['VYc'][ihalo_s3],base_halo_data[snap3]['VZc'][ihalo_s3]],dtype=np.float32)
             halo_hdf5.attrs.create('snap3_R200',data=base_halo_data[snap3]['R_200crit'][ihalo_s3],dtype=np.float32)
-        
+            halo_hdf5.attrs.create('snap3_M200',data=base_halo_data[snap2]['M_200crit'][ihalo_s3],dtype=np.float32)
+            halo_hdf5.attrs.create('snap3_Vmax',data=base_halo_data[snap3]['Vmax'][ihalo_s3],dtype=np.float32)
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)#track if have both progenitor and descendant
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]#structure type
 
@@ -1746,7 +1751,14 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         h_val=base_halo_data[-1]['SimulationInfo']['h_val']
         scalefactor_snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
         scalefactor_snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
-            
+
+        ihalo_snap1_com=acc_file[ihalo_group].attrs['snap1_com']
+        ihalo_snap1_v=acc_file[ihalo_group].attrs['snap1_v']
+        ihalo_snap1_R200=acc_file[ihalo_group].attrs['snap1_R200']
+        ihalo_snap2_com=acc_file[ihalo_group].attrs['snap2_com']
+        ihalo_snap2_v=acc_file[ihalo_group].attrs['snap2_v']
+        ihalo_snap2_R200=acc_file[ihalo_group].attrs['snap2_R200']
+
         for itype in parttypes:
             for dataset in datasets[str(itype)]:
                 if dataset=='Coordinates' or dataset=='Velocity':
@@ -1760,7 +1772,10 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
                 ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'])*snap2_factor
                 ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
+            
+            datasets[str(itype)].extend(['halo_rrel','halo_vrad','halo_vtan'])
 
+            for dataset in datasets[str(itype)]:
                 try:
                     del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap2_{dataset}']
                     del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap1_{dataset}']
@@ -1778,6 +1793,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
                     acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
                     acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+
 
         t2_halo=time.time()
 
