@@ -1568,10 +1568,10 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         else:#valid halo            
             for itype in parttypes:
                 for dataset in datasets[str(itype)]:#initialise empty halo datasets
-                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.zeros(np.shape(IDs_in_snap1[str(itype)]))
-                    ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.zeros(np.shape(IDs_in_snap1[str(itype)]))        
-                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.zeros(np.shape(IDs_out_snap1[str(itype)]))
-                    ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.zeros(np.shape(IDs_out_snap1[str(itype)]))  
+                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.zeros((len(IDs_in_snap1[str(itype)]),dataset_shapes[str(itype)][dataset]))
+                    ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.zeros((len(IDs_in_snap1[str(itype)]),dataset_shapes[str(itype)][dataset]))
+                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.zeros((len(IDs_out_snap1[str(itype)]),dataset_shapes[str(itype)][dataset]))
+                    ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.zeros((len(IDs_out_snap1[str(itype)]),dataset_shapes[str(itype)][dataset]))  
             
             #SNAP 1
             #Find indices and datasets of particles for snap1
