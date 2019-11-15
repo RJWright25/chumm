@@ -1762,6 +1762,8 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap1_{dataset}']
                     del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap2_{dataset}']
                     del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap1_{dataset}']
+                    print(f'Overwriting data for {ihalo}, dataset {dataset}')
+
                     acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'])
                     acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'])
                     acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'])
