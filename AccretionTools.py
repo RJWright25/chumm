@@ -1756,11 +1756,14 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 else:
                     snap1_factor=1
                     snap2_factor=1
-            
-                ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'])*snap2_factor
-                ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
-                ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'])*snap2_factor
-                ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
+                try:
+                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'])*snap2_factor
+                    ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
+                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'])*snap2_factor
+                    ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.array(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'])*snap1_factor
+                except:
+                    print('Had a problem with type',itype,dataset)
+                    print(list(ihalo_datasets_inflow[str(itype)].keys()))
 
                 try:
                     acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].require_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset],shape=np.shape(ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']),exact=False)
