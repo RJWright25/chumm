@@ -1785,8 +1785,8 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
 
                 ihalo_datasets_outflow[str(itype)]['snap1_Rrel']=np.sum((ihalo_datasets_outflow[str(itype)]['snap1_Coordinates']-ihalo_snap1_com)**2,axis=1)
                 ihalo_datasets_outflow[str(itype)]['snap2_Rrel']=np.sum((ihalo_datasets_outflow[str(itype)]['snap2_Coordinates']-ihalo_snap2_com)**2,axis=1)
-                ihalo_datasets_outflow[str(itype)]['snap1_Vrel']=-(ihalo_datasets_outflow[str(itype)]['snap1_Velocity']-ihalo_snap1_v)
-                ihalo_datasets_outflow[str(itype)]['snap2_Vrel']=-(ihalo_datasets_outflow[str(itype)]['snap2_Velocity']-ihalo_snap2_v)
+                ihalo_datasets_outflow[str(itype)]['snap1_Vrel']=(ihalo_datasets_outflow[str(itype)]['snap1_Velocity']-ihalo_snap1_v)
+                ihalo_datasets_outflow[str(itype)]['snap2_Vrel']=(ihalo_datasets_outflow[str(itype)]['snap2_Velocity']-ihalo_snap2_v)
                 
                 dataset_shapes[str(itype)]['Rrel']=1;dataset_types[str(itype)]['Rrel']=np.float32
                 dataset_shapes[str(itype)]['Vrel']=3;dataset_types[str(itype)]['Vrel']=np.float32
