@@ -1778,6 +1778,8 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 ihalo_datasets_inflow[str(itype)]['snap1_Vrel']=ihalo_datasets_inflow[str(itype)]['snap1_Velocity']-ihalo_snap1_v
                 ihalo_datasets_inflow[str(itype)]['snap2_Vrel']=ihalo_datasets_inflow[str(itype)]['snap2_Velocity']-ihalo_snap2_v
                 datasets[str(itype)].extend(['Rrel','Vrel'])
+                dataset_shapes[str(itype)]['Rrel']=3;dataset_types[str(itype)]['Rrel']=np.float32
+                dataset_shapes[str(itype)]['Vrel']=3;dataset_types[str(itype)]['Vrel']=np.float32
 
             for dataset in datasets[str(itype)]:
                 try:
