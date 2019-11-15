@@ -1589,7 +1589,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         ipart_partdata_index=parthist_indices_snap1[str(itype)][ipart_history_index]
                         for dataset in datasets[str(itype)]:
                             ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'].append(particle_datasets_snap1[str(itype)][dataset][ipart_partdata_index])
-                    print(f'ID to find {ipart_ID}, ID at index = {parthist_IDs_snap1[str(itype)][ipart_partdata_index]}')
+                        print(f'ID to find {ipart_ID}, ID at index = {parthist_IDs_snap1[str(itype)][ipart_partdata_index]}')
                     else:
                         new_parttype=None
                         for itype_test in [0,4]:
