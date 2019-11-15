@@ -1554,7 +1554,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         if np.size(IDs_in_snap1['0'])==1 and type(IDs_in_snap1['0'])==np.float16:#if an invalid halo
             print(f'Not processing {ihalo_group}')
             for itype in parttypes:
-                for dataset in datasets:
+                for dataset in datasets[str(itype)]:
                     ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.nan
                     ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.nan
                     ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.nan
