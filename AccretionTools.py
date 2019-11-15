@@ -1772,10 +1772,10 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].require_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset],shape=np.shape(ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']),exact=False)
         
                 except:
-                    del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][str(itype)][f'snap2_{dataset}']
-                    del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][str(itype)][f'snap1_{dataset}']
-                    del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][str(itype)][f'snap2_{dataset}']
-                    del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][str(itype)][f'snap1_{dataset}']
+                    del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap2_{dataset}']
+                    del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap1_{dataset}']
+                    del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap2_{dataset}']
+                    del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap1_{dataset}']
                     acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'])
                     acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'])
                     acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'])
