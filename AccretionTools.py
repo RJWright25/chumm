@@ -417,9 +417,9 @@ def get_particle_indices(base_halo_data,sorted_IDs,sorted_indices,IDs,Types,snap
         parttypes=[0,1]
         search_types={'0':[0],'1':[1]}
 
-    types_atsnap=np.zeros(npart)-1
     historyindices_atsnap=np.zeros(npart)-1
     partindices_atsnap=np.zeros(npart)-1
+    parttypes_atsnap=np.zeros(npart)-1
 
     ipart=0
     for ipart,ipart_id,ipart_type in zip(list(range(npart)),IDs,Types):
@@ -435,17 +435,17 @@ def get_particle_indices(base_halo_data,sorted_IDs,sorted_indices,IDs,Types,snap
                     break
                 else:
                     continue
-        types_atsnap[ipart]=out_type
+        parttypes_atsnap[ipart]=out_type
 
     for itype in parttypes:
-        itype_mask=np.where(types_atsnap==itype)
+        itype_mask=np.where(parttypes_atsnap==itype)
         print(f'num of {itype}: ',np.size(itype_mask))
         itype_indices=binary_search(items=np.array(IDs)[itype_mask],sorted_list=sorted_IDs[f'PartType{itype}'],check_entries=False)
         historyindices_atsnap[itype_mask]=itype_indices
 
-    partindices_atsnap=[sorted_indices[f'PartType{ipart_type}'][ipart_historyindex] for ipart_type,ipart_history_index in zip(types_atsnap,historyindices_atsnap)]
+    partindices_atsnap=[sorted_indices[f'PartType{ipart_type}'][ipart_historyindex] for ipart_type,ipart_history_index in zip(parttypes_atsnap,historyindices_atsnap)]
 
-    return partindices_atsnap.astype(int),types_atsnap.astype(int)
+    return partindices_atsnap.astype(int),parttypes_atsnap.astype(int)
 
 
 ########################### GENERATE ACCRETION DATA ###########################
