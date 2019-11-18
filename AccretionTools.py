@@ -448,7 +448,12 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
     historyindices_atsnap=historyindices_atsnap.astype(int)
 
     #use the parttypes and history indices to find the particle data indices
-    partindices_atsnap=np.array([SortedIndices[f'{ipart_type}'][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
+    partindices_atsnap=np.zeros(npart).astype(int)
+    for iipart,ipart_type,ipart_historyindex in zip(list(range(npart)),parttypes_atsnap,historyindices_atsnap):
+        try:
+            partindices_atsnap[iipart]=SortedIndices[f'{ipart_type}'][ipart_historyindex]
+        except:
+            partindices_atsnap[iipart]=np.nan
 
     return parttypes_atsnap,historyindices_atsnap,partindices_atsnap
 
@@ -665,8 +670,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     
     # Assign the particle types we're considering 
     if part_filetype=='EAGLE':
-        PartTypes=[0,1,4] #Gas, DM, Stars
-        constant_mass={str(0):False,str(1):True,str(4):False}
+        PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
+        constant_mass={str(0):False,str(1):True,str(4):False,str(5):False}
     else:
         PartTypes=[0,1] #Gas, DM
         constant_mass={str(0):True,str(1):True}
