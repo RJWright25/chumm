@@ -351,7 +351,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
 ########################### GET PARTICLE INDICES ###########################
 
-def get_particle_indices(base_halo_data,sorted_IDs,sorted_indices,IDs,Types,snap_taken,snap_desired):
+def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartTypes,snap_taken,snap_desired):
 
     """
     get_particle_indices : function
