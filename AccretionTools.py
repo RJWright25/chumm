@@ -436,7 +436,7 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
                 else:
                     continue
         ipart=+1
-        Types_atsnap[ipart]=int(out_Type)
+        Types_atsnap[ipart]=out_Type
 
     for itype in parttypes:
         itype_mask=np.where(Types_atsnap==itype)
@@ -444,7 +444,7 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
         itype_indices=binary_search(items=np.array(IDs)[itype_mask],sorted_list=sorted_IDs[f'PartType{itype}'],check_entries=False)
         Indices_atsnap[itype_mask]=itype_indices
 
-    return Indices_atsnap,Types_atsnap
+    return Indices_atsnap.astype(int),Types_atsnap.astype(int)
 
 
 ########################### GENERATE ACCRETION DATA ###########################
