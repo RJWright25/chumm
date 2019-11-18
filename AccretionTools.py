@@ -364,13 +364,16 @@ def get_particle_indices(base_halo_data,sorted_IDs,sorted_indices,IDs,Types,snap
     base_halo_data : list of dict
         Base halo data from gen_base_halo_data.
 
-    sorted_IDs : dict of lists
+    SortedIDs : dict of lists
         Lists of sorted particle IDs from particle histories. 
 
-    IDs : list of int
+    SortedIndices : dict of lists
+        Lists of sorted particle indices from particle histories. 
+
+    PartIDs : list of int
         The IDs to search for at the desired snap. 
 
-    Types : list of int
+    PartTypes : list of int
         The corresponding types of the IDs above. 
 
     snap_taken : int
@@ -391,11 +394,11 @@ def get_particle_indices(base_halo_data,sorted_IDs,sorted_indices,IDs,Types,snap
 
 
     """
-    npart=len(IDs)
+    npart=len(PartIDs)
     search_after=snap_desired>snap_taken #flag as to whether index is desired after the ID was taken
     search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
 
-    parttype_keys=list(sorted_IDs.keys())
+    parttype_keys=list(SortedIDs.keys())
     parttypes=[int(parttype_key.split('PartType')[-1]) for parttype_key in parttype_keys]
     
     search_types={}
@@ -422,14 +425,14 @@ def get_particle_indices(base_halo_data,sorted_IDs,sorted_indices,IDs,Types,snap
     parttypes_atsnap=np.zeros(npart)-1
 
     ipart=0
-    for ipart,ipart_id,ipart_type in zip(list(range(npart)),IDs,Types):
+    for ipart,ipart_id,ipart_type in zip(list(range(npart)),PartIDs,PartTypes):
         #find new type
         search_in=search_types[str(ipart_type)]
         if len(search_in)==1:
             out_type=search_in[0]
         else:
             for itype in search_in:
-                test_index=binary_search(items=[ipart_id],sorted_list=sorted_IDs[f'PartType{itype}'],check_entries=True)[0]
+                test_index=binary_search(items=[ipart_id],sorted_list=SortedIDs[f'PartType{itype}'],check_entries=True)[0]
                 if test_index>=0:
                     out_type=itype
                     break
@@ -439,14 +442,14 @@ def get_particle_indices(base_halo_data,sorted_IDs,sorted_indices,IDs,Types,snap
 
     for itype in parttypes:
         itype_mask=np.where(parttypes_atsnap==itype)
-        itype_indices=binary_search(items=np.array(IDs)[itype_mask],sorted_list=sorted_IDs[f'PartType{itype}'],check_entries=False)
+        itype_indices=binary_search(items=np.array(PartIDs)[itype_mask],sorted_list=SortedIDs[f'PartType{itype}'],check_entries=False)
         historyindices_atsnap[itype_mask]=itype_indices
     
     parttypes_atsnap=parttypes_atsnap.astype(int)
     historyindices_atsnap=historyindices_atsnap.astype(int)
 
     #use the parttypes and history indices to find the particle data indices
-    partindices_atsnap=np.array([sorted_indices[f'PartType{ipart_type}'][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
+    partindices_atsnap=np.array([SortedIndices[f'PartType{ipart_type}'][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
 
     return partindices_atsnap,parttypes_atsnap
 
