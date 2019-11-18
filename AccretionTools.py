@@ -428,7 +428,7 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
             out_Type=search_in[0]
         else:
             for itype in search_in:
-                test_index=binary_search(items=[ID],sorted_list=sorted_IDs[f'PartType{itype}']["ParticleIDs"],check_entries=True)[0]
+                test_index=binary_search(items=[ID],sorted_list=sorted_IDs[f'PartType{itype}'],check_entries=True)[0]
                 if test_index>=0:
                     out_Type=itype
                     break
