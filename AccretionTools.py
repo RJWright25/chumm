@@ -349,6 +349,31 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
         infile_file.close()
 
+########################### GET PARTICLE INDICES ###########################
+
+# def get_particle_indices(base_halo_data,IDs,snap):
+# """
+# get_particle_indices : function
+# 	----------
+
+#     Given a list of particle IDs, find their index and type in particle data at the desired snap.
+
+# 	Parameters
+# 	----------
+#     base_halo_data : list of dict
+#         Base halo data from gen_base_halo_data.
+
+#     IDs : list of int
+#         The IDs to search for at the desired snap. 
+
+#     snap : int
+#         The snap at which to find the indices.
+
+
+
+# """
+
+
 ########################### GENERATE ACCRETION DATA ###########################
 
 def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1):
@@ -1793,8 +1818,6 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 ihalo_datasets_outflow[str(itype)]['snap2_Vrel']=(ihalo_datasets_outflow[str(itype)]['snap2_Velocity']-ihalo_snap2_v)
                 
                 
-
-
                 dataset_shapes[str(itype)]['Rrel']=3;dataset_types[str(itype)]['Rrel']=np.float32
                 dataset_shapes[str(itype)]['Rrel_abs']=1;dataset_types[str(itype)]['Rrel_abs']=np.float32
                 dataset_shapes[str(itype)]['Vrel']=3;dataset_types[str(itype)]['Vrel']=np.float32
@@ -1849,7 +1872,6 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
 ########################### READ ALL ACC DATA ###########################
 
 def get_particle_acc_data(directory,halo_index_list=None):
-
 
     print('Indexing halos ...')
     t1=time.time()
