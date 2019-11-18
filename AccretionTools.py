@@ -353,8 +353,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
 def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_desired):
 
-"""
-get_particle_indices : function
+    """
+    get_particle_indices : function
 	----------
 
     Given a list of particle IDs, find their index and type in particle data at the desired snap.
