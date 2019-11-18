@@ -442,6 +442,9 @@ def get_particle_indices(base_halo_data,sorted_IDs,sorted_indices,IDs,Types,snap
         print(f'num of {itype}: ',np.size(itype_mask))
         itype_indices=binary_search(items=np.array(IDs)[itype_mask],sorted_list=sorted_IDs[f'PartType{itype}'],check_entries=False)
         historyindices_atsnap[itype_mask]=itype_indices
+    
+    parttypes_atsnap=parttypes_atsnap.astype(int)
+    historyindices_atsnap=historyindices_atsnap.astype(int)
 
     partindices_atsnap=[sorted_indices[f'PartType{ipart_type}'][ipart_historyindex] for ipart_type,ipart_history_index in zip(parttypes_atsnap,historyindices_atsnap)]
 
