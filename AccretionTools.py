@@ -391,6 +391,7 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
 
 
     """
+    npart=len(IDs)
     search_after=snap_desired>snap_taken #flag as to whether index is desired after the ID was taken
     search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
 
@@ -416,11 +417,11 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
         parttypes=[0,1]
         search_types={'0':[0],'1':[1]}
 
-    Types_atsnap=np.zeros(len(IDs))-1
-    Indices_atsnap=np.zeros(len(IDs))-1
+    Types_atsnap=np.zeros(npart)-1
+    Indices_atsnap=np.zeros(npart)-1
 
     ipart=0
-    for ID,Type in zip(IDs,Types):
+    for ipart,ID,Type in zip(list(range(npart)),IDs,Types):
         #find new type
         search_in=search_types[str(Type)]
         if len(search_in)==1:
@@ -434,7 +435,6 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
                 else:
                     continue
         Types_atsnap[ipart]=out_Type
-        ipart=ipart+1
 
     for itype in parttypes:
         itype_mask=np.where(Types_atsnap==itype)
