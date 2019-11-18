@@ -925,6 +925,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             
             # Find mass
             for itype in PartTypes:
+                print(itype)
                 ihalo_itype_snap2_outflow_mask=ihalo_snap2_outflow_type==itype
                 ihalo_itype_snap2_outflow_where=np.where(ihalo_itype_snap2_outflow_mask)
                 ihalo_itype_snap2_outflow_n=np.sum(ihalo_itype_snap2_outflow_mask)
