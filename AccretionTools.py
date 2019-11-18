@@ -422,8 +422,6 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
     ipart=0
     for ID,Type in zip(IDs,Types):
         #find new type
-        out_Type=np.nan
-        out_index=np.nan
         search_in=search_types[str(Type)]
         if len(search_in)==1:
             out_Type=search_in[0]
@@ -435,7 +433,7 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
                     break
                 else:
                     continue
-        ipart=+1
+        ipart=ipart+1
         Types_atsnap[ipart]=out_Type
 
     for itype in parttypes:
