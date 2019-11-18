@@ -351,27 +351,91 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
 ########################### GET PARTICLE INDICES ###########################
 
-# def get_particle_indices(base_halo_data,IDs,snap):
-# """
-# get_particle_indices : function
-# 	----------
+def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_desired):
 
-#     Given a list of particle IDs, find their index and type in particle data at the desired snap.
+"""
+get_particle_indices : function
+	----------
 
-# 	Parameters
-# 	----------
-#     base_halo_data : list of dict
-#         Base halo data from gen_base_halo_data.
+    Given a list of particle IDs, find their index and type in particle data at the desired snap.
 
-#     IDs : list of int
-#         The IDs to search for at the desired snap. 
+	Parameters
+	----------
+    base_halo_data : list of dict
+        Base halo data from gen_base_halo_data.
 
-#     snap : int
-#         The snap at which to find the indices.
+    sorted_IDs : dict of lists
+        Lists of sorted particle IDs from particle histories. 
+
+    IDs : list of int
+        The IDs to search for at the desired snap. 
+
+    Types : list of int
+        The corresponding types of the IDs above. 
+
+    snap_taken : int
+        The snap at which the IDs were taken.
+
+    snap_desired : int
+        The snap at which to find the indices.
+
+    Returns
+	----------
+    Tuple of Indices, Types.
+
+    Indices : list of int
+        The indices in particle data of the IDs at snap_desired. 
+
+    Types : list of int
+        The corresponding types for indices above. 
 
 
+"""
+    search_after=snap_desired>snap_taken #flag as to whether index is desired after the ID was taken
+    search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
 
-# """
+    parttype_keys=list(sorted_IDs.keys())
+    parttypes=[int(parttype_key.split('PartType')[-1]) for parttype_key in parttype_keys]
+    
+    search_types={}
+    if len(parrtypes)>2:
+        if search_now:#if searching current snap, particles will always be same type
+            for itype in parttypes:
+                search_types[itype]=[itype]
+        else:# if past or future
+            search_types[str(1)]=[1]#dm particle will always be dm
+            if search_after:# if searching for particles after IDs were taken 
+                search_types[str(0)]=[0,4,5]#gas particles in future could be gas, star or BH
+                search_types[str(4)]=[4,5]#star particles in future could be star or BH
+                search_types[str(5)]=[5]#BH particles in future could be only BH
+            else:# if searching for particles before IDs were taken 
+                search_types[str(0)]=[0]#gas particles in past can only be gas
+                search_types[str(4)]=[0,4]#star particles in past can only be star or gas
+                search_types[str(5)]=[0,4,5]#BH particles in past can be gas, star or BH
+    else:
+        parttypes=[0,1]
+        search_types={'0':[0],'1':[1]}
+
+    Types_atdesiredsnap=[]
+    Indices_atdesiredsnap=[]
+
+    for ID,Type in zip(IDs,Types):
+        #find new type
+        out_Type=np.nan
+        out_index=np.nan
+        search_in=search_types[str(Type)]
+        if len(search_in)==1:
+            out_Type=search_in[0]
+        else:
+            for itype in search_in:
+                test_index=binary_search(items=[ID],sorted_list=sorted_IDs[f'PartType{itype}']["ParticleIDs"],check_entries=True)[0]
+                if test_index>=0:
+                    out_Type=itype
+                    break
+                else:
+                    continue
+        Types_atdesiredsnap.append(out_Type)
+    return Types_atdesiredsnap
 
 
 ########################### GENERATE ACCRETION DATA ###########################
