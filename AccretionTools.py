@@ -720,7 +720,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     print(f'Retrieving & organising particle histories for snap = {snap2} ...')
     Part_Histories_File_snap2=h5py.File("part_histories/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
     Part_Histories_IDs_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes}
+    Part_Histories_Index_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes}
     Part_Histories_HostStructure_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes}
+    Part_Histories_npart_snap2={str(parttype):len(Part_Histories_IDs_snap2[str(parttype)]) for parttype in PartTypes}
 
     #Load in particle lists from VR
     print('Retrieving VR halo particle lists ...')
