@@ -213,10 +213,10 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False):
         
         for incorrect_index in incorrect_indices:
             indices[incorrect_index]=np.nan
-        try:
-            print(f'{100-count/len(indices)*100:.2f}% of entries were correct')
-        except:
-            print("Couldn't print error indices")
+        # try:
+        #     print(f'{100-count/len(indices)*100:.2f}% of entries were correct')
+        # except:
+        #     print("Couldn't print error indices")
 
 
     return indices
