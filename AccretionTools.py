@@ -848,10 +848,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
             ihalo_snap1_inflow_type=new_particle_Types_snap1
             ihalo_snap1_inflow_transformed=new_particle_tranformed
-            ihalo_snap1_inflow_history_L1=np.zeros(ihalo_nin)+np.nan
-            ihalo_snap1_inflow_history_L2=np.zeros(ihalo_nin)+np.nan
+            ihalo_snap1_inflow_history_L1=np.zeros(ihalo_nin)
+            ihalo_snap1_inflow_history_L2=np.zeros(ihalo_nin)
             ihalo_snap1_inflow_structure=np.zeros(ihalo_nin)+np.nan
-            ihalo_snap1_inflow_fidelity=np.zeros(ihalo_nin)+np.nan
+            ihalo_snap1_inflow_fidelity=np.zeros(ihalo_nin)
             ihalo_snap1_inflow_masses=np.zeros(ihalo_nin)+np.nan
 
             # Find processing history, previous host, fidelity
@@ -991,7 +991,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 progress_file.write(f" \n")
         progress_file.close()
 
-        print('----------------')
         print()
 
     #Close the output file, finish up
