@@ -891,12 +891,12 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 print(f"Finding relative particle index of accreted particles: n = {new_particle_count} ...")
                 t1_indexing_in.append(time.time())
                 if new_particle_count>0:
-                    
+                    # types,new_particle_IDs_itype_snap1_historyindex
 
-                    # if itype == 4:#if not stars, we don't need to check if the IDs from snap 2 are actually present at snap 1
-                    #     new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2[str(itype)],sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=True)
-                    # else:
-                    #     new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2[str(itype)],sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=False)
+                    if itype == 4:#if not stars, we don't need to check if the IDs from snap 2 are actually present at snap 1
+                        new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2[str(itype)],sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=True)
+                    else:
+                        new_particle_IDs_itype_snap1_historyindex=binary_search(items=new_particle_IDs_itype_snap2[str(itype)],sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=False)
                 else:
                     new_particle_IDs_itype_snap1_historyindex=[]
                 t2_indexing_in.append(time.time())
