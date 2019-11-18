@@ -982,9 +982,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
         with open(fname_log,"a") as progress_file:
             for iitype,itype in enumerate(PartTypes):
-            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
-            progress_file.write(f"[took {t2_halo-t1_halo} sec]\n")
-            progress_file.write(f" \n")
+                progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
+                progress_file.write(f"[took {t2_halo-t1_halo} sec]\n")
+                progress_file.write(f" \n")
         progress_file.close()
 
         print('----------------')
