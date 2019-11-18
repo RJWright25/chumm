@@ -390,7 +390,7 @@ get_particle_indices : function
         The corresponding types for indices above. 
 
 
-"""
+    """
     search_after=snap_desired>snap_taken #flag as to whether index is desired after the ID was taken
     search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
 
