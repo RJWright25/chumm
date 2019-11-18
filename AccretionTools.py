@@ -440,7 +440,7 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
 
     for itype in parttypes:
         itype_mask=np.where(Types_atsnap==itype)
-        itype_indices=binary_search(items=IDs[itype_mask],sorted_list=sorted_IDs[f'PartType{itype}'],check_entries=False)
+        itype_indices=binary_search(items=np.array(IDs)[itype_mask],sorted_list=sorted_IDs[f'PartType{itype}'],check_entries=False)
         Indices_atsnap[itype_mask]=itype_indices
 
     return Indices_atsnap,Types_atsnap
