@@ -136,11 +136,11 @@ if add_pd:
     processes=[]
     accdata_files=os.listdir(output_dir)
     accdata_paths=[output_dir+accdata_file for accdata_file in accdata_files if 'summed' not in accdata_file]
-    kwargs=[{'accdata_path':accdata_path}]
+    kwargs=[{'accdata_path':accdata_path} for accdata_path in accdata_paths]
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
             print(f'Starting process {iprocess}')
-            p=Process(target=add_gas_particle_data, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            p=Process(target=add_particle_data, args=(base_halo_data,),kwargs=kwargs[iprocess])
             processes.append(p)
             p.start()
         for p in processes:
