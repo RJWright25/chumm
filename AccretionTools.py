@@ -435,8 +435,8 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
                     break
                 else:
                     continue
-            ipart=+1
-        Types_atsnap[ipart]=out_Type
+        ipart=+1
+        Types_atsnap[ipart]=int(out_Type)
 
     for itype in parttypes:
         itype_mask=np.where(Types_atsnap==itype)
