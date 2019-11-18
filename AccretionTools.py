@@ -398,7 +398,7 @@ def get_particle_indices(base_halo_data,sorted_IDs,IDs,Types,snap_taken,snap_des
     parttypes=[int(parttype_key.split('PartType')[-1]) for parttype_key in parttype_keys]
     
     search_types={}
-    if len(parrtypes)>2:
+    if len(parttypes)>2:
         if search_now:#if searching current snap, particles will always be same type
             for itype in parttypes:
                 search_types[itype]=[itype]
