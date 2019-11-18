@@ -399,7 +399,7 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
     search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
 
     parttype_keys=list(SortedIDs.keys())
-    parttypes=[int(parttype) for parttype_key in parttype_keys]
+    parttypes=[int(parttype_key) for parttype_key in parttype_keys]
     
     search_types={}
     if len(parttypes)>2:
