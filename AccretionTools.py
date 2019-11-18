@@ -681,6 +681,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         Part_Data_Masses_Snap1=dict();Part_Data_IDs_Snap1=dict()
         Part_Data_Masses_Snap2=dict();Part_Data_IDs_Snap2=dict()
         for itype in PartTypes:
+            print(f'Loading itype {itype} data ...')
             if not itype==1:#everything except DM
                 try:
                     Part_Data_Masses_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10/h_val #CHECK THIS√
