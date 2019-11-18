@@ -937,7 +937,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
             ############ SAVE DATA FOR INLFOW & OUTFLOW PARTICLES ###########
             for iitype, itype in enumerate(PartTypes):
-                t1_save.append(time.time())
 
                 # Saving INFLOW data for this parttype of the halo to file 
                 ihalo_itype_snap1_inflow_mask=ihalo_snap1_inflow_type==itype#type the inflow particles based on snap 1 state
