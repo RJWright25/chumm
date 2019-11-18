@@ -855,10 +855,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             ihalo_snap1_inflow_masses=np.zeros(ihalo_nin)+np.nan
 
             # Find processing history, previous host, fidelity
+            print('History L1:',ihalo_snap1_inflow_history_L1)
             for iipartin,ipartin_ID,ipartin_snap1_type,ipartin_snap1_historyindex,ipartin_snap1_partindex in zip(list(range(ihalo_nin)),new_particle_IDs,new_particle_Types_snap1,new_particle_historyindices_snap1,new_particle_partindices_snap1):
                 if ipartin_snap1_type==0 or ipartin_snap1_type==1:#if DM or gas, this has been recorded
-                    print(ihalo_snap1_inflow_history_L1)
-                    print(Part_Histories_Processed_L1_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex])
+                    print('ipart processing level:',Part_Histories_Processed_L1_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex])
                     ihalo_snap1_inflow_history_L1[iipartin]=Part_Histories_Processed_L1_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
                     ihalo_snap1_inflow_history_L2[iipartin]=Part_Histories_Processed_L2_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
                 else:#assume stars have been processed
