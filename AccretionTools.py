@@ -548,9 +548,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             print(f'iprocess {iprocess} has {len(halo_index_list_snap2)} halo indices: {halo_index_list_snap2}')
             num_processes=halo_index_list["np"]
             test=halo_index_list["test"]
-        except:
-            print('Not parsed a valud halo index list. Exiting.')
-            return None
+        # except:
+        #     print('Not parsed a valud halo index list. Exiting.')
+        #     return None
 
     # Create log file and directories
     acc_log_dir=f"job_logs/acc_logs/"
