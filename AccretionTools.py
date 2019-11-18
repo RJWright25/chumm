@@ -399,7 +399,7 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
     search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
 
     parttype_keys=list(SortedIDs.keys())
-    parttypes=[int(parttype_key.split('PartType')[-1]) for parttype_key in parttype_keys]
+    parttypes=[int(parttype) for parttype_key in parttype_keys]
     
     search_types={}
     if len(parttypes)>2:
@@ -417,7 +417,6 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
                 search_types[str(4)]=[4,0]#star particles in past can only be star or gas
                 search_types[str(5)]=[4,0,5]#BH particles in past can be gas, star or BH
     else:
-        parttypes=[0,1]
         search_types={'0':[0],'1':[1]}
 
     historyindices_atsnap=np.zeros(npart)-1
@@ -432,7 +431,7 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
             out_type=search_in[0]
         else:
             for itype in search_in:
-                test_index=binary_search(items=[ipart_id],sorted_list=SortedIDs[f'PartType{itype}'],check_entries=True)[0]
+                test_index=binary_search(items=[ipart_id],sorted_list=SortedIDs[f'{itype}'],check_entries=True)[0]
                 if test_index>=0:
                     out_type=itype
                     break
@@ -442,14 +441,14 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
 
     for itype in parttypes:
         itype_mask=np.where(parttypes_atsnap==itype)
-        itype_indices=binary_search(items=np.array(PartIDs)[itype_mask],sorted_list=SortedIDs[f'PartType{itype}'],check_entries=False)
+        itype_indices=binary_search(items=np.array(PartIDs)[itype_mask],sorted_list=SortedIDs[f'{itype}'],check_entries=False)
         historyindices_atsnap[itype_mask]=itype_indices
     
     parttypes_atsnap=parttypes_atsnap.astype(int)
     historyindices_atsnap=historyindices_atsnap.astype(int)
 
     #use the parttypes and history indices to find the particle data indices
-    partindices_atsnap=np.array([SortedIndices[f'PartType{ipart_type}'][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
+    partindices_atsnap=np.array([SortedIndices[f'{ipart_type}'][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
 
     return partindices_atsnap,parttypes_atsnap
 
