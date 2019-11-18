@@ -685,13 +685,13 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         for itype in PartTypes:
             print(f'Loading itype {itype} data ...')
             if not itype==1:#everything except DM
-                # try:
-                Part_Data_Masses_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10/h_val #CHECK THIS√
-                Part_Data_Masses_Snap2[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10/h_val #CHECK THIS√
-                # except:
-                #     print('No particles of this type were found.')
-                #     Part_Data_Masses_Snap1[str(itype)]=[]
-                #     Part_Data_Masses_Snap2[str(itype)]=[]
+                try:
+                    Part_Data_Masses_Snap1[str(itype)]=EAGLE_Snap_1.read_dataset(itype,"Mass")*10**10/h_val #CHECK THIS√
+                    Part_Data_Masses_Snap2[str(itype)]=EAGLE_Snap_2.read_dataset(itype,"Mass")*10**10/h_val #CHECK THIS√
+                except:
+                    print('No particles of this type were found.')
+                    Part_Data_Masses_Snap1[str(itype)]=[]
+                    Part_Data_Masses_Snap2[str(itype)]=[]
             else:#for DM, find particle data file and save 
                 hdf5file=h5py.File(base_halo_data[snap1]['Part_FilePath'])#hdf5 file
                 Part_Data_Masses_Snap1[str(itype)]=hdf5file['Header'].attrs['MassTable'][1]*10**10/h_val #CHECK THIS√
