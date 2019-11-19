@@ -1062,12 +1062,12 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     
     """
     t1=time.time()
-    print(f'Summing accretion data from path: {path}')
-    if not path.endswith('/'):
-        path=path+'/'
+    print(f'Summing accretion data from path: {accdata_dir}')
+    if not accdata_dir.endswith('/'):
+        accdata_dir=accdata_dir+'/'
 
     # List the contents of the provided directory
-    acc_data_filelist=os.listdir(path)
+    acc_data_filelist=os.listdir(accdata_dir)
     acc_data_filelist=sorted(acc_data_filelist)
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename) and ('DS' not in filename) and ('summed' not in filename))]
     print('Summing accretion data from the following files:')
@@ -1075,17 +1075,17 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     acc_data_filelist=acc_data_filelist_trunc
     acc_data_outfile_name=acc_data_filelist[0].split('_p0')[0]+'_summed.hdf5'
 
-    if os.path.exists(path+acc_data_outfile_name):
+    if os.path.exists(accdata_dir+acc_data_outfile_name):
         print("Deleting existing combined data first")
-        os.remove(path+acc_data_outfile_name)
+        os.remove(accdata_dir+acc_data_outfile_name)
 
     print(f'Output file name: {acc_data_outfile_name}')
     
     # Initialise output file
-    collated_output_file=h5py.File(path+acc_data_outfile_name,'w')
+    collated_output_file=h5py.File(accdata_dir+acc_data_outfile_name,'w')
     
     # Open existing files in list structure
-    acc_data_hdf5files=[h5py.File(path+acc_data_file,'r') for acc_data_file in acc_data_filelist]
+    acc_data_hdf5files=[h5py.File(accdata_dir+acc_data_file,'r') for acc_data_file in acc_data_filelist]
     acc_data_snap=acc_data_hdf5files[0]['Header'].attrs['snap2']
     total_num_halos=0
     for ifile in acc_data_hdf5files:
