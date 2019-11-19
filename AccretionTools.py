@@ -1639,27 +1639,23 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
 
 def get_particle_acc_data(base_halo_data,accdata_dir):
 
+    #Read the halo groups from file
     print('Indexing halos ...')
     t1=time.time()
-    if not directory.endswith('/'):
-        directory=directory+'/'
-    accdata_filelist=os.listdir(directory)
-    accdata_filelist_trunc=sorted([directory+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
+    if not accdata_dir.endswith('/'):
+        accdata_dir=accdata_dir+'/'
+    accdata_filelist=os.listdir(accdata_dir)
+    accdata_filelist_trunc=sorted([accdata_dir+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
     accdata_halo_lists=[sorted(list(accdata_file.keys()))[1:] for accdata_file in accdata_files]
     accdata_halo_lists_flattened=flatten(accdata_halo_lists)
 
-    if halo_index_list==None:
-        halo_index_list=list(range(len(accdata_halo_lists_flattened)-1))
-    
-    if type(halo_index_list)==int:
-        halo_index_list=[halo_index_list]
-    else:
-        halo_index_list=list(halo_index_list)
-    
+    #Read total number of halos from accretion file header
+    halo_index_list=list(range(accdata_files[0]['Header'].attrs['total_num_halos']))
     desired_num_halos=len(halo_index_list)
     ihalo_files=np.ones(desired_num_halos)+np.nan
     
+    #Save which file each halo's data is contained in
     for iihalo,ihalo in enumerate(halo_index_list):
         for ifile,ihalo_list in enumerate(accdata_halo_lists):
             if f'ihalo_'+str(ihalo).zfill(6) in ihalo_list:
@@ -1668,14 +1664,16 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
             else:
                 pass
     t2=time.time()
+
     print(f'Done indexing halos in {t2-t1:.1f} sec')
 
-
-    if 'EAGLE' in directory:
-        parttypes=[0,1,4]
+    #Assign particle types to read from base halo data
+    if base_halo_data[-1]['Part_FileType']=='EAGLE':
+        parttypes=[0,1,4,5]
     else:
         parttypes=[0,1]
 
+    #Read the outputs for inflow/outflow from the file
     partfields_in={}
     partfields_out={}
     for itype in parttypes:
@@ -1688,6 +1686,7 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
     particle_acc_data_out={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_out[str(itype)]} for itype in parttypes}
     particle_acc_files=[]    
 
+    #Grab all outputs from the above lists
     print('Now retrieving halo data from file ...')
     t1=time.time()
     for iihalo,ihalo in enumerate(halo_index_list):
@@ -1702,11 +1701,12 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
             for field in partfields_out[str(itype)]:
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Outflow/PartType{itype}/'+field].value
                 particle_acc_data_out[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
-
+    
+    #Return dictionary of outputs
     particle_acc_data={"Inflow":particle_acc_data_in,"Outflow":particle_acc_data_out}
+    
     t2=time.time()
     print(f'Done in {t2-t1}')
-
     return particle_acc_data
  
 ########################### READ SUMMED ACC DATA ###########################
