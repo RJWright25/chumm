@@ -927,7 +927,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             # Find processing history, previous host, fidelity
             for iipartout,ipartout_ID,ipartout_snap2_type,ipartout_snap2_historyindex,ipartout_snap2_partindex in zip(list(range(ihalo_nout)),out_particle_IDs,out_particle_Types_snap2,out_particle_historyindices_snap2,out_particle_partindices_snap2):
                 ihalo_snap2_outflow_destination[iipartout]=Part_Histories_HostStructure_snap2[str(ipartout_snap2_type)][ipartout_snap2_historyindex]
-                ihalo_snap3_outflow_recycled[iipartout]=int(iipartout in snap3_IDs_temp_set)
+                ihalo_snap3_outflow_recycled[iipartout]=int(ipartout_ID in snap3_IDs_temp_set)
             
             if isub:#if subhalo, check which particles went to CGM current_hostgroupID
                 ihalo_cgm_outflow_particles_mask=(current_hostgroupID==ihalo_snap2_outflow_destination)
@@ -1611,7 +1611,6 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         for itype in parttypes:
             for dataset in datasets[str(itype)]:
                 if dataset=='Coordinates' or dataset=='Velocity':
-                    print(f'Converting PartType{itype} {dataset} to physical ...')
                     ihalo_datasets_inflow[str(itype)]['snap1_'+dataset]=ihalo_datasets_inflow[str(itype)]['snap1_'+dataset]*scalefactor_snap1/h_val
                     ihalo_datasets_inflow[str(itype)]['snap2_'+dataset]=ihalo_datasets_inflow[str(itype)]['snap2_'+dataset]*scalefactor_snap2/h_val
                     ihalo_datasets_outflow[str(itype)]['snap1_'+dataset]=ihalo_datasets_outflow[str(itype)]['snap1_'+dataset]*scalefactor_snap1/h_val
