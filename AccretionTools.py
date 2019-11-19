@@ -916,7 +916,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             # Find processing history, previous host, fidelity
             for iipartout,ipartout_ID,ipartout_snap2_type,ipartout_snap2_historyindex,ipartout_snap2_partindex in zip(list(range(ihalo_nout)),out_particle_IDs,out_particle_Types_snap2,out_particle_historyindices_snap2,out_particle_partindices_snap2):
                 ihalo_snap2_outflow_destination[iipartout]=Part_Histories_HostStructure_snap2[str(ipartout_snap2_type)][ipartout_snap2_historyindex]
-                ihalo_snap3_outflow_recycled[iipartin]=(iipartout in snap3_IDs_temp_set)
+                ihalo_snap3_outflow_recycled[iipartout]=(iipartout in snap3_IDs_temp_set)
             
             if isub:#if subhalo, check which particles went to CGM current_hostgroupID
                 ihalo_cgm_outflow_particles_mask=(current_hostgroupID==ihalo_snap2_outflow_destination)
