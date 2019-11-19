@@ -1625,7 +1625,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                 acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
             
         t2_halo=time.time()
-
+        print(f'Done processing halo {ihalo_group} ({iihalo+1} out of {ihalo_count}) - took {t2_halo-t1_halo} \n')
         with open(fname_log,"a") as progress_file:
             progress_file.write(" \n")
             progress_file.write(f'Done processing halo {ihalo_group} ({iihalo+1} out of {ihalo_count}) - took {t2_halo-t1_halo} \n')
