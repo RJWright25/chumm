@@ -394,6 +394,7 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
 
 
     """
+    #Number of particle IDs parsed
     npart=len(PartIDs)
     search_after=snap_desired>snap_taken #flag as to whether index is desired after the ID was taken
     search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
@@ -1567,10 +1568,10 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         ipart_inflow_snap2_partdataindex=ihalo_itype_inflow_data_snap2[2][iipart_inflow]#maybe transformed
                         
                         #non-transformed
-                        ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'][iipart_inflow]=particle_datasets_snap1[str(ipart_inflow_snap1_type)][ipart_inflow_snap1_partdataindex]
+                        ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'][iipart_inflow]=particle_datasets_snap1[str(ipart_inflow_snap1_type)][dataset][ipart_inflow_snap1_partdataindex]
                         #transformed
                         try:
-                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=particle_datasets_snap2[str(ipart_inflow_snap2_type)][ipart_inflow_snap2_partdataindex]
+                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=particle_datasets_snap2[str(ipart_inflow_snap2_type)][dataset][ipart_inflow_snap2_partdataindex]
                         except:
                             nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
                             if np.size(nan_output)==1:
@@ -1585,10 +1586,10 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         ipart_outflow_snap2_partdataindex=ihalo_itype_outfloww_data_snap2[2][outflow]
                         
                         #non-transformed
-                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_outflow]=particle_datasets_snap2[str(ipart_outflow_snap2_type)][ipart_outflow_snap2_partdataindex]
+                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_outflow]=particle_datasets_snap2[str(ipart_outflow_snap2_type)][dataset][ipart_outflow_snap2_partdataindex]
                         #transformed
                         try:
-                            ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=particle_datasets_snap1[str(ipart_outflow_snap1_type)][ipart_inflow_snap1_partdataindex]
+                            ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=particle_datasets_snap1[str(ipart_outflow_snap1_type)][dataset][ipart_inflow_snap1_partdataindex]
                         except:
                             nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
                             if np.size(nan_output)==1:
