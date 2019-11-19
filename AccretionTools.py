@@ -905,9 +905,10 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                                                         PartTypes=out_particle_Types_snap1,
                                                         snap_taken=snap1,
                                                         snap_desired=snap2)
-            out_particle_tranformed=np.logical_not(out_particle_Types_snap1==out_particle_Types_snap2)
-            print('******************************')
-            print('Particles have been transformed!')
+            out_particle_tranformed=np.logical_not(np.array(out_particle_Types_snap1)==np.array(out_particle_Types_snap2))
+            if np.sum(out_particle_tranformed)>0:
+                print('******************************')
+                print('Particles have been transformed!')
             ihalo_nout=np.sum(out_particle_IDs_mask_snap1)
             t2_out=time.time()
             print(f"n(out) = {ihalo_nout}")
@@ -1586,7 +1587,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                             ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=nan_output
                     
                     #outflow particles
-                    for iipart_outflow in range(ihalo_itype_npart_in):
+                    for iipart_outflow in range(ihalo_itype_npart_out):
                         ipart_outflow_snap1_type=ihalo_itype_outflow_data_snap1[0][iipart_outflow]#maybe transformed
                         ipart_outflow_snap1_partdataindex=ihalo_itype_outflow_data_snap1[2][iipart_outflow]#maybe transformed
                         ipart_outflow_snap2_type=ihalo_itype_outflow_data_snap2[0][iipart_outflow]
