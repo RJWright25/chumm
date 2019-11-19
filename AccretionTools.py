@@ -984,7 +984,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 ihalo_in_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
                 ihalo_in_parttype_hdf5.create_dataset('Processed_L1',data=np.nan,dtype=np.float16)
                 ihalo_in_parttype_hdf5.create_dataset('Processed_L2',data=np.nan,dtype=np.float16)
-                ihalo_out_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
+                ihalo_in_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
 
                 # Saving OUTFLOW data for this parttype of the halo to file 
                 ihalo_out_parttype_hdf5=ihalo_out_hdf5.create_group('PartType'+str(itype))
@@ -992,7 +992,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 ihalo_out_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
                 ihalo_out_parttype_hdf5.create_dataset('Destination',data=np.nan,dtype=np.float16)
                 ihalo_out_parttype_hdf5.create_dataset('Recycled',data=np.nan,dtype=np.float16)
-                halo_out_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
+                ihalo_out_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
                 
         t2_halo=time.time()
 
