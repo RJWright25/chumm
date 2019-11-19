@@ -1373,9 +1373,9 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         except:
             pass    
     if test:
-        fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(2)}_n{str(ihalo_count).zfill(6)}_test.log'
+        fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(3)}_n{str(ihalo_count).zfill(6)}_test.log'
     else:
-        fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(2)}_n{str(ihalo_count).zfill(6)}.log'
+        fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(3)}_n{str(ihalo_count).zfill(6)}.log'
     if os.path.exists(fname_log):
         os.remove(fname_log)
 
