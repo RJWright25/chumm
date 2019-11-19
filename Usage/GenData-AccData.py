@@ -172,9 +172,6 @@ if sum_ad:
     t2_sum=time.time()
 
 
-
-
-
 ############ 4. PRINT PERFORMANCE ############
 # Print performance of above.
 
