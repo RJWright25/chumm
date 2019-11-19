@@ -906,9 +906,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                                                         snap_taken=snap1,
                                                         snap_desired=snap2)
             out_particle_tranformed=np.logical_not(np.array(out_particle_Types_snap1)==np.array(out_particle_Types_snap2))
-            if np.sum(out_particle_tranformed)>0:
-                print('******************************')
-                print('Particles have been transformed!')
+            # if np.sum(out_particle_tranformed)>0:
+            #     print('******************************')
+            #     print('Particles have been transformed!')
             ihalo_nout=np.sum(out_particle_IDs_mask_snap1)
             t2_out=time.time()
             print(f"n(out) = {ihalo_nout}")
@@ -1578,13 +1578,13 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         #non-transformed
                         ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'][iipart_inflow]=particle_datasets_snap1[str(ipart_inflow_snap1_type)][dataset][ipart_inflow_snap1_partdataindex]
                         #transformed
-                        # try:
-                        ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=particle_datasets_snap2[str(ipart_inflow_snap2_type)][dataset][ipart_inflow_snap2_partdataindex]
-                        # except:
-                            # nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
-                            # if np.size(nan_output)==1:
-                            #     nan_output=nan_output[0]
-                            # ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=nan_output
+                        try:
+                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=particle_datasets_snap2[str(ipart_inflow_snap2_type)][dataset][ipart_inflow_snap2_partdataindex]
+                        except:
+                            nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
+                            if np.size(nan_output)==1:
+                                nan_output=nan_output[0]
+                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=nan_output
                     
                     #outflow particles
                     for iipart_outflow in range(ihalo_itype_npart_out):
@@ -1596,13 +1596,13 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         #non-transformed
                         ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_outflow]=particle_datasets_snap2[str(ipart_outflow_snap2_type)][dataset][ipart_outflow_snap2_partdataindex]
                         #transformed
-                        # try:
-                        ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=particle_datasets_snap1[str(ipart_outflow_snap1_type)][dataset][ipart_outflow_snap1_partdataindex]
-                        # except:
-                        #     nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
-                        #     if np.size(nan_output)==1:
-                        #         nan_output=nan_output[0]
-                        #     ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=nan_output
+                        try:
+                            ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=particle_datasets_snap1[str(ipart_outflow_snap1_type)][dataset][ipart_outflow_snap1_partdataindex]
+                        except:
+                            nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
+                            if np.size(nan_output)==1:
+                                nan_output=nan_output[0]
+                            ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=nan_output
 
         #Convert coordinates and velocities to physical
         h_val=base_halo_data[-1]['SimulationInfo']['h_val']
