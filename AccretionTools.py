@@ -955,8 +955,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 ihalo_itype_snap1_inflow_where=np.where(ihalo_itype_snap1_inflow_mask)
 
                 ihalo_in_parttype_hdf5=ihalo_in_hdf5.create_group('PartType'+str(itype))
-                ihalo_in_parttype_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs[ihalo_itype_snap1_inflow_where],dtype=np.int64)#######
-                ihalo_in_parttype_hdf5.create_dataset('Transformed',data=ihalo_snap1_inflow_transformed[ihalo_itype_snap1_inflow_where],dtype=np.int64)
+                ihalo_in_parttype_hdf5.create_dataset('ParticleIDs',data=np.array(new_particle_IDs[ihalo_itype_snap1_inflow_where]),dtype=np.int64)#######
+                ihalo_in_parttype_hdf5.create_dataset('Transformed',data=np.array(ihalo_snap1_inflow_transformed[ihalo_itype_snap1_inflow_where]),dtype=np.int64)
                 ihalo_in_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_snap1_inflow_history_L1[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
                 ihalo_in_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_snap1_inflow_history_L2[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
                 ihalo_in_parttype_hdf5.create_dataset('PreviousHost',data=ihalo_snap1_inflow_structure[ihalo_itype_snap1_inflow_where],dtype=np.int64)
@@ -1582,7 +1582,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         try:
                             ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=particle_datasets_snap2[str(ipart_inflow_snap2_type)][dataset][ipart_inflow_snap2_partdataindex]
                         except:
-                            nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
+                            nan_output=np.array([np.nan]*dataset_shapes[str(itype)][dataset])
                             if np.size(nan_output)==1:
                                 nan_output=nan_output[0]
                             ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=nan_output
@@ -1600,7 +1600,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         try:
                             ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=particle_datasets_snap1[str(ipart_outflow_snap1_type)][dataset][ipart_outflow_snap1_partdataindex]
                         except:
-                            nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
+                            nan_output=np.array([np.nan]*dataset_shapes[str(itype)][dataset])
                             if np.size(nan_output)==1:
                                 nan_output=nan_output[0]
                             ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=nan_output
@@ -1647,12 +1647,40 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         progress_file.close()
 
     acc_file.close()
-    return []
+    return None
 
 ########################### READ ALL ACC DATA ###########################
 
 def get_particle_acc_data(base_halo_data,accdata_dir):
+    """
 
+    get_particle_acc_data : function 
+	----------
+
+    Read particle accretion data from a directory of accretion files. 
+
+	Parameters
+	----------
+    base_halo_data: dict
+        The base halo data dictionary (encodes particle data filepath, snap, particle histories).
+
+    accdata_dir : str
+        The directory path containing the hdf5 accretion data files. 
+
+    Returns
+	----------
+    acc_metadata : dict
+
+        Metadata from the accretion calculation. 
+    
+    acc_data : dict
+
+        All particle accretion data from the parsed directory. 
+
+    """
+
+    if not type(acc_metadata['outname'])==str:
+        acc_metadata['outname']=acc_metadata['outname'].decode('utf-8')
     #Read the halo groups from file
     print('Indexing halos ...')
     t1=time.time()
@@ -1668,6 +1696,19 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
     halo_index_list=list(range(accdata_files[0]['Header'].attrs['total_num_halos']))
     desired_num_halos=len(halo_index_list)
     ihalo_files=np.ones(desired_num_halos)+np.nan
+
+    # Load in metadata
+    acc_metadata=dict()
+    hdf5header_attrs=list(accdata_files[0]['/Header'].attrs)
+    for attribute in hdf5header_attrs:
+        acc_metadata[attribute]=accdata_files[0]['/Header'].attrs[attribute]
+
+    if 'pre_depth' not in hdf5header_attrs:
+        acc_metadata['pre_depth']=int(accdata_path.split('pre')[-1][:2])
+    if 'post_depth' not in hdf5header_attrs:
+        acc_metadata['post_depth']=int(accdata_path.split('post')[-1][:2])
+    if 'outname' not in hdf5header_attrs:
+        acc_metadata['outname']=str(base_halo_data[-1]['outname'])
     
     #Save which file each halo's data is contained in
     for iihalo,ihalo in enumerate(halo_index_list):
@@ -1717,11 +1758,11 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
                 particle_acc_data_out[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
     
     #Return dictionary of outputs
-    particle_acc_data={"Inflow":particle_acc_data_in,"Outflow":particle_acc_data_out}
+    acc_data={"Inflow":particle_acc_data_in,"Outflow":particle_acc_data_out}
     
     t2=time.time()
     print(f'Done in {t2-t1}')
-    return particle_acc_data
+    return acc_metadata,acc_data
  
 ########################### READ SUMMED ACC DATA ###########################
 
@@ -1729,26 +1770,31 @@ def get_summed_acc_data(base_halo_data,accdata_path):
 
     """
 
-    read_acc_rate_file : function
+    get_particle_acc_data : function 
 	----------
 
-    Read the accretion data from a certain file. 
+    Read accretion data from a summed accretion file. 
 
 	Parameters
 	----------
-    path : string 
-        Indicates the file in which the accretion data is stored (nominally acc_data/AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}.hdf5)
+    base_halo_data: dict
+        The base halo data dictionary (encodes particle data filepath, snap, particle histories).
 
-	Returns
+    accdata_path : str
+        The path to the summed hdf5 accretion data file. 
+
+    Returns
 	----------
-    
-    accretion_data : dict
-        With different fields for inflow and outflow. 
+    acc_metadata : dict
 
-    Each dictionary entry will be of length n_halos, and each of these entries will be a dictionary
+        Metadata from the accretion calculation. 
+    
+    acc_data : dict
+
+        All summed accretion data from the parsed file. 
 
     """
-    # Define output fields
+    
 
     # Load collated file
     hdf5file=h5py.File(accdata_path,'r')
@@ -1776,6 +1822,7 @@ def get_summed_acc_data(base_halo_data,accdata_path):
     acc_data_inflow={part_group:{} for part_group in part_group_list}
     acc_data_outflow={part_group:{} for part_group in part_group_list}
     
+    # Define output fields
     acc_fields_inflow=[
     "All_TotalDeltaM_In",
     "All_TotalDeltaN_In",
