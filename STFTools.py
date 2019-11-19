@@ -388,8 +388,6 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
             else:
                 print(f'Not converting {new_field}')
 
-
-
         # Add extra halo fields -- post-process velociraptor files   
         if n_halos_snap>0:
             if 'R_rel' in extra_halo_fields: #Relative radius to host
