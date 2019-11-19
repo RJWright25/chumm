@@ -405,7 +405,7 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
     if len(parttypes)>2:
         if search_now:#if searching current snap, particles will always be same type
             for itype in parttypes:
-                search_types[itype]=[itype]
+                search_types[str(itype)]=[itype]
         else:# if past or future
             search_types[str(1)]=[1]#dm particle will always be dm
             if search_after:# if searching for particles after IDs were taken 
