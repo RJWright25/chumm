@@ -806,6 +806,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 prev_hostgroupID=base_halo_data[snap1]["ID"][prev_hostindex] #the host halo ID of this subhalo at the previous snapshot
             except:#if can't find progenitor, don't try to compare for CGM accretion
                 prev_hostHaloID=np.nan
+                prev_hostgroupID=np.nan
                 print("Couldn't find the progenitor group - not checking for CGM accretion")
         else:
             isub=False
