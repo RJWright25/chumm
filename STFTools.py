@@ -379,14 +379,13 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
         print('Done adding base fields')
         
         #Converting to physical 
-        for new_field in list(new_halo_data_snap.keys()):
-            if new_field=='Mass_200crit':
-                new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10
+        for new_field in fields_needed_from_prop:
             elif ('ass_' in new_field or 'M_' in new_field) and ('R_' not in new_field and 'rhalfmass' not in new_field):
                 print(f'Converting {new_field} values to physical')
                 new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10
             else:
                 print(f'Not converting {new_field}')
+        new_halo_data_snap['Mass_200crit']=new_halo_data_snap['Mass_200crit']*10**10
 
         # Add extra halo fields -- post-process velociraptor files   
         if n_halos_snap>0:
