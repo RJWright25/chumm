@@ -898,9 +898,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                                                         snap_taken=snap1,
                                                         snap_desired=snap2)
             out_particle_tranformed=np.logical_not(out_particle_Types_snap1==out_particle_Types_snap2)
-            ihalo_nout=np.sum(new_particle_IDs_mask_snap2)
+            ihalo_nout=np.sum(out_particle_IDs_mask_snap1)
             t2_out=time.time()
-            print(f"n(out) = {np.sum(out_particle_IDs_mask_snap1)}")
+            print(f"n(out) = {ihalo_nout}")
             
             with open(fname_log,"a") as progress_file:
                 progress_file.write(f'       n(in): total = {ihalo_nin}\n')
