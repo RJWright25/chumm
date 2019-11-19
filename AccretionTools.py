@@ -871,7 +871,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     ihalo_snap1_inflow_history_L1[iipartin]=1
                     ihalo_snap1_inflow_history_L2[iipartin]=1
                 ihalo_snap1_inflow_structure[iipartin]=Part_Histories_HostStructure_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
-                ihalo_snap1_inflow_fidelity[iipartin]=(ipartin_ID in snap3_IDs_temp_set)
+                ihalo_snap1_inflow_fidelity[iipartin]=int(ipartin_ID in snap3_IDs_temp_set)
             
             if isub:#if subhalo, check which particles came from CGM
                 ihalo_cgm_inflow_particles_mask=prev_hostgroupID==ihalo_snap1_inflow_structure
@@ -906,6 +906,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                                                         snap_taken=snap1,
                                                         snap_desired=snap2)
             out_particle_tranformed=np.logical_not(out_particle_Types_snap1==out_particle_Types_snap2)
+            print('******************************')
+            print('Particles have been transformed!')
             ihalo_nout=np.sum(out_particle_IDs_mask_snap1)
             t2_out=time.time()
             print(f"n(out) = {ihalo_nout}")
@@ -924,7 +926,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             # Find processing history, previous host, fidelity
             for iipartout,ipartout_ID,ipartout_snap2_type,ipartout_snap2_historyindex,ipartout_snap2_partindex in zip(list(range(ihalo_nout)),out_particle_IDs,out_particle_Types_snap2,out_particle_historyindices_snap2,out_particle_partindices_snap2):
                 ihalo_snap2_outflow_destination[iipartout]=Part_Histories_HostStructure_snap2[str(ipartout_snap2_type)][ipartout_snap2_historyindex]
-                ihalo_snap3_outflow_recycled[iipartout]=(iipartout in snap3_IDs_temp_set)
+                ihalo_snap3_outflow_recycled[iipartout]=int(iipartout in snap3_IDs_temp_set)
             
             if isub:#if subhalo, check which particles went to CGM current_hostgroupID
                 ihalo_cgm_outflow_particles_mask=(current_hostgroupID==ihalo_snap2_outflow_destination)
@@ -952,7 +954,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
                 ihalo_in_parttype_hdf5=ihalo_in_hdf5.create_group('PartType'+str(itype))
                 ihalo_in_parttype_hdf5.create_dataset('ParticleIDs',data=new_particle_IDs[ihalo_itype_snap1_inflow_where],dtype=np.int64)#######
-                ihalo_in_parttype_hdf5.create_dataset('Transformed',data=ihalo_snap1_inflow_transformed[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
+                ihalo_in_parttype_hdf5.create_dataset('Transformed',data=ihalo_snap1_inflow_transformed[ihalo_itype_snap1_inflow_where],dtype=np.int64)
                 ihalo_in_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_snap1_inflow_history_L1[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
                 ihalo_in_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_snap1_inflow_history_L2[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
                 ihalo_in_parttype_hdf5.create_dataset('PreviousHost',data=ihalo_snap1_inflow_structure[ihalo_itype_snap1_inflow_where],dtype=np.int64)
@@ -966,7 +968,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                 ihalo_out_parttype_hdf5=ihalo_out_hdf5.create_group('PartType'+str(itype))
                 ihalo_out_parttype_hdf5.create_dataset('ParticleIDs',data=out_particle_IDs[ihalo_itype_snap2_outflow_where],dtype=np.int64)#######
                 ihalo_out_parttype_hdf5.create_dataset('Transformed',data=ihalo_snap2_outflow_transformed[ihalo_itype_snap2_outflow_where],dtype=np.uint8)
-                ihalo_out_parttype_hdf5.create_dataset('Destination',data=ihalo_snap2_outflow_destination[ihalo_itype_snap2_outflow_where],dtype=np.uint8)
+                ihalo_out_parttype_hdf5.create_dataset('Destination',data=ihalo_snap2_outflow_destination[ihalo_itype_snap2_outflow_where],dtype=np.int64)
                 ihalo_out_parttype_hdf5.create_dataset('Recycled',data=ihalo_snap3_outflow_recycled[ihalo_itype_snap2_outflow_where],dtype=np.uint8)
                 ihalo_out_parttype_hdf5.create_dataset('Masses',data=ihalo_snap2_outflow_masses[ihalo_itype_snap2_outflow_where],dtype=np.float64)
 
