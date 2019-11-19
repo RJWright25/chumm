@@ -424,8 +424,6 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
     partindices_atsnap=np.zeros(npart)-1
     parttypes_atsnap=np.zeros(npart)-1
 
-    print(f'Search types:')
-    print(search_types)
     ipart=0
     for ipart,ipart_id,ipart_type in zip(list(range(npart)),PartIDs,PartTypes):
         #find new type
