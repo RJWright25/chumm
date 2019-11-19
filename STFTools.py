@@ -372,17 +372,18 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
         print(f'Adding detailed halo data for snap ',snap,' where there are ',n_halos_snap,' halos')
         new_halo_data_snap=ReadPropertyFile(base_halo_data_snap['VR_FilePath'],ibinary=base_halo_data_snap["VR_FileType"],iseparatesubfiles=0,iverbose=0, desiredfields=fields_needed_from_prop, isiminfo=True, iunitinfo=True)[0]
 
-        for new_field in list(new_halo_data_snap.keys()):
-            if (new_field=='Mass_200crit') or (('ass_' in new_field or 'M_' in new_field) and ('R_' not in new_field and 'rhalfmass' not in new_field)):
-                print(f'Converting {new_field} values to physical')
-                new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10
-
         # Adding old halo data from V1 calcs
         print(f'Adding fields from base halo data')
         for field in base_fields:
             new_halo_data_snap[field]=base_halo_data_snap[field]
         print('Done adding base fields')
-                
+        
+        #Converting to physical 
+        for new_field in list(new_halo_data_snap.keys()):
+            if (new_field=='Mass_200crit') or (('ass_' in new_field or 'M_' in new_field) and ('R_' not in new_field and 'rhalfmass' not in new_field)):
+                print(f'Converting {new_field} values to physical')
+                new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10
+
         # Add extra halo fields -- post-process velociraptor files   
         if n_halos_snap>0:
             if 'R_rel' in extra_halo_fields: #Relative radius to host
