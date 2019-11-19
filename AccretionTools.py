@@ -1597,7 +1597,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_outflow]=particle_datasets_snap2[str(ipart_outflow_snap2_type)][dataset][ipart_outflow_snap2_partdataindex]
                         #transformed
                         # try:
-                        ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=particle_datasets_snap1[str(ipart_outflow_snap1_type)][dataset][ipart_inflow_snap1_partdataindex]
+                        ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=particle_datasets_snap1[str(ipart_outflow_snap1_type)][dataset][ipart_outflow_snap1_partdataindex]
                         # except:
                         #     nan_output=[np.nan]*dataset_shapes[str(itype)][dataset]
                         #     if np.size(nan_output)==1:
