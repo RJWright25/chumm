@@ -1410,6 +1410,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         'Coordinates',
                         'Velocity']
             datasets={'0':gas_datasets,'1':dm_datasets,'4':star_datasets,'5':bh_datasets}
+            print(datasets)
         
         print('Reading in EAGLE snapshot data ...')
         EAGLE_boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
