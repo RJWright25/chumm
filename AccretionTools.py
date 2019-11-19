@@ -1580,10 +1580,10 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                     
                     #outflow particles
                     for iipart_outflow in range(ihalo_itype_npart_in):
-                        ipart_outflow_snap1_type=ihalo_itype_outflow_data_snap1[0][outflow]#maybe transformed
-                        ipart_outflow_snap1_partdataindex=ihalo_itype_outflow_data_snap1[2][outflow]#maybe transformed
-                        ipart_outflow_snap2_type=ihalo_itype_outflow_data_snap2[0][outflow]
-                        ipart_outflow_snap2_partdataindex=ihalo_itype_outfloww_data_snap2[2][outflow]
+                        ipart_outflow_snap1_type=ihalo_itype_outflow_data_snap1[0][iipart_outflow]#maybe transformed
+                        ipart_outflow_snap1_partdataindex=ihalo_itype_outflow_data_snap1[2][iipart_outflow]#maybe transformed
+                        ipart_outflow_snap2_type=ihalo_itype_outflow_data_snap2[0][iipart_outflow]
+                        ipart_outflow_snap2_partdataindex=ihalo_itype_outfloww_data_snap2[2][iipart_outflow]
                         
                         #non-transformed
                         ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_outflow]=particle_datasets_snap2[str(ipart_outflow_snap2_type)][dataset][ipart_outflow_snap2_partdataindex]
