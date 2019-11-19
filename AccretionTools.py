@@ -1410,8 +1410,10 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         'Coordinates',
                         'Velocity']
             datasets={'0':gas_datasets,'1':dm_datasets,'4':star_datasets,'5':bh_datasets}
-            print(datasets)
         
+        #record parttypes as those parsed
+        parttypes=[int(key) for key in list(datasets.keys())]
+
         print('Reading in EAGLE snapshot data ...')
         EAGLE_boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
         EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
@@ -1439,10 +1441,13 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                         'Coordinates',
                         'Velocity']
             datasets={'0':gas_datasets,'1':dm_datasets}
+        
+        #record parttypes as those parsed
+        parttypes=[int(key) for key in list(datasets.keys())]
 
         PartFile_Snap_1=h5py.File(base_halo_data[snap1]['Part_FilePath'],'r')
         PartFile_Snap_2=h5py.File(base_halo_data[snap2]['Part_FilePath'],'r')
-        
+
         particle_datasets_snap1={{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
         particle_datasets_snap2={{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
         for itype in parttypes:
@@ -1517,7 +1522,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                                                     SortedIDs=parthist_IDs_snap1,
                                                     SortedIndices=parthist_indices_snap1,
                                                     PartIDs=IDs_in_snap1[str(itype)],
-                                                    PartTypes=np.ones(ihalo_itype_npart_in)*itype.astype(int),
+                                                    PartTypes=np.array(np.ones(ihalo_itype_npart_in)*itype,dtype=int),
                                                     snap_taken=snap1,
                                                     snap_desired=snap1)
                 #snap 2 - types were taken at snap 1 so transformation may have occurred
@@ -1525,7 +1530,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                                                     SortedIDs=parthist_IDs_snap2,
                                                     SortedIndices=parthist_indices_snap2,
                                                     PartIDs=IDs_in_snap1[str(itype)],
-                                                    PartTypes=np.ones(lihalo_itype_npart_in)*itype.astype(int),
+                                                    PartTypes=np.array(np.ones(ihalo_itype_npart_in)*itype,dtype=int),
                                                     snap_taken=snap1,
                                                     snap_desired=snap2)
                 #Find index and type data for OUTFLOW particles at snap 1 and snap 2
@@ -1534,7 +1539,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                                                     SortedIDs=parthist_IDs_snap1,
                                                     SortedIndices=parthist_indices_snap1,
                                                     PartIDs=IDs_out_snap2[str(itype)],
-                                                    PartTypes=np.ones(ihalo_itype_npart_out)*itype.astype(int),
+                                                    PartTypes=np.array(np.ones(ihalo_itype_npart_out)*itype,dtype=int),
                                                     snap_taken=snap2,
                                                     snap_desired=snap1)
                 # snap 2 - types were taken here
@@ -1542,7 +1547,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
                                                     SortedIDs=parthist_IDs_snap2,
                                                     SortedIndices=parthist_indices_snap2,
                                                     PartIDs=IDs_out_snap2[str(itype)],
-                                                    PartTypes=np.ones(ihalo_itype_npart_out)*itype.astype(int),
+                                                    PartTypes=np.array(np.ones(ihalo_itype_npart_out)*itype,dtype=int),
                                                     snap_taken=snap2,
                                                     snap_desired=snap2)
                 
