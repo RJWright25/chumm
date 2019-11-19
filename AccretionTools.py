@@ -392,16 +392,19 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
     Types : list of int
         The corresponding types for indices above. 
 
-
     """
     #Number of particle IDs parsed
     npart=len(PartIDs)
+
+    #Indicating whether we are searching for future or past particles
     search_after=snap_desired>snap_taken #flag as to whether index is desired after the ID was taken
     search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
-
+    
+    #Particle types from dictionary of particle histories
     parttype_keys=list(SortedIDs.keys())
     parttypes=[int(parttype_key) for parttype_key in parttype_keys]
     
+    #For each particle type, determine which lists will need to be searched
     search_types={}
     if len(parttypes)>2:
         if search_now:#if searching current snap, particles will always be same type
@@ -419,11 +422,13 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
                 search_types[str(5)]=[4,0,5]#BH particles in past can be gas, star or BH
     else:
         search_types={'0':[0],'1':[1]}
-
+    
+    #Initialising outputs
     historyindices_atsnap=np.zeros(npart)-1
     partindices_atsnap=np.zeros(npart)-1
     parttypes_atsnap=np.zeros(npart)-1
-
+    
+    #Iterate through particles and type, history index and partdata index at the desited snap
     ipart=0
     for ipart,ipart_id,ipart_type in zip(list(range(npart)),PartIDs,PartTypes):
         #find new type
@@ -445,12 +450,14 @@ def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartType
         itype_indices=binary_search(items=np.array(PartIDs)[itype_mask],sorted_list=SortedIDs[f'{itype}'],check_entries=False)
         historyindices_atsnap[itype_mask]=itype_indices
     
+    #Convert types and indices to integet
     parttypes_atsnap=parttypes_atsnap.astype(int)
     historyindices_atsnap=historyindices_atsnap.astype(int)
 
-    #use the parttypes and history indices to find the particle data indices
+    #Use the parttypes and history indices to find the particle data indices
     partindices_atsnap=np.array([SortedIndices[str(ipart_type)][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
 
+    #Return types, history indices, and particle data indices
     return parttypes_atsnap,historyindices_atsnap,partindices_atsnap
 
 ########################### GENERATE ACCRETION DATA ###########################
@@ -998,7 +1005,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
 ########################### POSTPROCESS/SUM ACCRETION DATA ###########################
 
-def postprocess_acc_data_serial(base_halo_data,path):
+def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     """
 
     postprocess_acc_data_serial : function
@@ -1099,12 +1106,13 @@ def postprocess_acc_data_serial(base_halo_data,path):
     acc_data_hdf5files_header_attrs=list(acc_data_hdf5files_header.attrs)
     collated_output_file_header=collated_output_file.create_group('Header')
 
+    #Print attributes of accretion calculation
     print("Attributes of accretion calculation: ")
     for attribute in acc_data_hdf5files_header_attrs:
         collated_output_file_header.attrs.create(attribute,data=acc_data_hdf5files_header.attrs[attribute])
         print(attribute,collated_output_file_header.attrs[attribute])
 
-    # Add extra header info
+    # Add extra header info if needed
     try:
         collated_output_file_header.attrs.create('outname',data=np.string_(base_halo_data[-1]['outname']))
         collated_output_file_header.attrs.create('pre_depth',data=acc_data_hdf5files_header.attrs['snap2']-acc_data_hdf5files_header.attrs['snap1'])
@@ -1168,47 +1176,42 @@ def postprocess_acc_data_serial(base_halo_data,path):
         summed_acc_data[outfield]=np.zeros(total_num_halos)+np.nan
     for infield in new_outputs_keys_bytype_in:
         summed_acc_data[infield]=np.zeros(total_num_halos)+np.nan
-
+    
+    #Loop through each acc data file
     iihalo=0
     for ifile,acc_data_filetemp in enumerate(acc_data_hdf5files):
         print(f"Reading from file {ifile+1}/{len(acc_data_hdf5files)}: {acc_data_filetemp}")
         ihalo_group_list_all=list(acc_data_filetemp.keys())
         ihalo_group_list=[ihalo_group for ihalo_group in ihalo_group_list_all if ihalo_group.startswith('ihalo')]
+        #Loop through each halo group in this acc data file
         for ihalo_group in ihalo_group_list:
             iihalo=iihalo+1
             ihalo=int(ihalo_group.split('_')[-1])
+            #Loop through each particle type group in this ihalo group 
             for itype in itypes:
                 # Load in the details of particles new to this halo
-                try:
+                try:#if can't load, skip itype for this halo
                     fidelities=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Fidelity'].value
                     masses=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Masses'].value
                     prevhosts=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/PreviousHost'].value
-                    if itype==0 or itype==1:
-                        processed_l1=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Processed_L1'].value
-                        processed_l2=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Processed_L2'].value
-                    else:
-                        processed_l1=np.ones(len(masses))#stars/bh will always be processed at some level
-                        processed_l2=np.ones(len(masses))#stars/bh will always be processed at lowest level
-                except:
-                    # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
+                    processed_l1=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Processed_L1'].value
+                    processed_l2=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Processed_L2'].value
+                except:#skip
                     continue
-
+                
                 #Load in the details of particles which left this halo
-                try:
+                try:#if can't load, skip itype for this halo
                     masses_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Masses'].value
                     destination_s2_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Destination'].value
                     recycled_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Recycled'].value
-                except:
-                    # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
+                except:#skip
                     continue
 
                 if not np.isfinite(np.sum(fidelities)):
-                    # print(f'ihalo {ihalo} does not have accretion data for part type = {itype}')
                     continue
 
                 # Define masks based on particle properties
                 stable_mask=fidelities>0
-
                 cosmological_mask=prevhosts<0
                 cgm_mask=prevhosts==0
                 clumpy_mask=prevhosts>0
@@ -1221,6 +1224,7 @@ def postprocess_acc_data_serial(base_halo_data,path):
                 stable_primordial_mask=np.logical_and(stable_mask,primordial_mask)
                 stable_processedcosmological_mask=np.logical_and(stable_mask,recycled_mask)
 
+                # Save the summed data for this itype, halo and file to our running dictionary
                 summed_acc_data[f'Inflow/PartType{itype}/All_TotalDeltaN_In'][ihalo]=np.size(masses)
                 summed_acc_data[f'Inflow/PartType{itype}/All_TotalDeltaM_In'][ihalo]=np.sum(masses)
                 summed_acc_data[f'Inflow/PartType{itype}/All_CosmologicalDeltaN_In'][ihalo]=np.size(np.compress(cosmological_mask,masses))
@@ -1262,18 +1266,21 @@ def postprocess_acc_data_serial(base_halo_data,path):
                 summed_acc_data[f'Outflow/PartType{itype}/All_RecycledDeltaN_Out'][ihalo]=np.size(np.compress(reaccreted_mask,masses_out))
                 summed_acc_data[f'Outflow/PartType{itype}/All_RecycledDeltaM_Out'][ihalo]=np.sum(np.compress(reaccreted_mask,masses_out))
 
-
+    # Create groups for output hdf5
     collated_output_file_inflow=collated_output_file.create_group('Inflow')
     collated_output_file_outflow=collated_output_file.create_group('Outflow')
 
+    # Loop through each particle type
     for itype in itypes:
         collated_output_file_inflow_itype=collated_output_file_inflow.create_group(f'PartType{itype}')
         collated_output_file_outflow_itype=collated_output_file_outflow.create_group(f'PartType{itype}')
+        #Save data from collated dictionary to output file
         for new_field in new_outputs_inflow:
             collated_output_file_inflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'Inflow/PartType{itype}/'+new_field],dtype=np.float32)
         for new_field in new_outputs_outflow:
             collated_output_file_outflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'Outflow/PartType{itype}/'+new_field],dtype=np.float32)
     collated_output_file.close()
+
     t2=time.time()
     print(f'Finished collating files in {t2-t1} sec')
     return None
@@ -1626,10 +1633,11 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         progress_file.close()
 
     acc_file.close()
+    return []
 
 ########################### READ ALL ACC DATA ###########################
 
-def get_particle_acc_data(directory,halo_index_list=None):
+def get_particle_acc_data(base_halo_data,accdata_dir):
 
     print('Indexing halos ...')
     t1=time.time()
