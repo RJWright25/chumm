@@ -1669,7 +1669,6 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
     """
 
     #Read the halo groups from file
-    print('Indexing halos ...')
     t1=time.time()
     if not accdata_dir.endswith('/'):
         accdata_dir=accdata_dir+'/'
