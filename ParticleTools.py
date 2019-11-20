@@ -66,7 +66,7 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True)
         ihalo_snap1_particles_IDs=ihalo_snap1_particles["Particle_IDs"][0]
         ihalo_snap1_particles_Types=ihalo_snap1_particles["Particle_Types"][0]
         
-        if base_halo_data[snap]['Part_FileType']:
+        if base_halo_data[snap2]['Part_FileType']=='EAGLE':
             parttypes=[0,1,4,5]
         else:
             parttypes=[0,1]
