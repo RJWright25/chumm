@@ -46,8 +46,9 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True)
         if not os.path.exists(fullpath):
             os.mkdir(fullpath)
 
-    outname_snap2=f'vis_data/coordinates/ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.dat'
-    outname_snap1=f'vis_data/coordinates/ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.dat'
+    outname_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.dat'
+    outname_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.dat'
+    outname_types=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_type.dat'
 
     if os.path.exists(outname_snap2):
         proceed=bool(int(input("Data exists for this ihalo and snap. Overwrite?\n")))
@@ -112,9 +113,11 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True)
 
         dump_pickle(path=outname_snap2,data=ihalo_Coordinates_snap2)
         dump_pickle(path=outname_snap1,data=ihalo_Coordinates_snap1)
+        dump_pickle(path=outname_types,data=types_snap2)
 
     else:
         ihalo_Coordinates_snap1=open_pickle(outname_snap1)
         ihalo_Coordinates_snap2=open_pickle(outname_snap2)
+        types_snap2=open_pickle(outname_snap2)
 
-    return ihalo_Coordinates_snap1,ihalo_Coordinates_snap2
+    return ihalo_Coordinates_snap1,ihalo_Coordinates_snap2,types_snap2
