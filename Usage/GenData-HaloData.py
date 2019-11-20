@@ -85,7 +85,7 @@ if gen_base_halo_data_flag:
     ############ generate tf filelist
     tffiles_directory="/fred/oz009/clagos/vr-testing-outputs/hydro/REFERENCE-treefrog/"
     tffiles_list_all=os.listdir(tffiles_directory)
-    tffiles_list_trunc=[tffiles_directory+tempfile for tempfile in tffiles_list_all if tempfile.startswith('EAGLE_L25N376-REF-tfout.s')]
+    tffiles_list_trunc=[tffiles_directory+tempfile for tempfile in tffiles_list_all if tempfile.startswith(f'{run_name}-tfout.s')]
     tffiles_list_trunc.sort()
     tffiles_list=[tempfile[:-5] for tempfile in tffiles_list_trunc]#remove the .tree
     # print(np.array(tffiles_list))
