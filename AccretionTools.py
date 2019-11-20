@@ -1668,8 +1668,6 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
 
     """
 
-    if not type(acc_metadata['outname'])==str:
-        acc_metadata['outname']=acc_metadata['outname'].decode('utf-8')
     #Read the halo groups from file
     print('Indexing halos ...')
     t1=time.time()
@@ -1692,6 +1690,8 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
     for attribute in hdf5header_attrs:
         acc_metadata[attribute]=accdata_files[0]['/Header'].attrs[attribute]
 
+    if not type(acc_metadata['outname'])==str:
+        acc_metadata['outname']=acc_metadata['outname'].decode('utf-8')
     if 'pre_depth' not in hdf5header_attrs:
         acc_metadata['pre_depth']=int(accdata_path.split('pre')[-1][:2])
     if 'post_depth' not in hdf5header_attrs:
