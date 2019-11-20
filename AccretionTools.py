@@ -1399,10 +1399,8 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         if datasets==None:
             datasets={}
             gas_datasets=['ParticleIDs',
-                        'AExpMaximumTemperature',
                         'Coordinates',
                         'Density',
-                        'InternalEnergy',
                         'MaximumTemperature',
                         'StarFormationRate',
                         'Temperature',
@@ -1413,8 +1411,6 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             star_datasets=['ParticleIDs',
                         'AExpMaximumTemperature',
                         'Coordinates',
-                        'BirthDensity',
-                        'InternalEnergy',
                         'MaximumTemperature',
                         'StellarFormationTime',
                         'Velocity']
