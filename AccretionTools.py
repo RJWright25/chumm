@@ -790,7 +790,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             ihalo_hdf5.attrs.create('snap3_com',data=[base_halo_data[snap3]['Xc'][ihalo_s3],base_halo_data[snap3]['Yc'][ihalo_s3],base_halo_data[snap3]['Zc'][ihalo_s3]],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap3_v',data=[base_halo_data[snap3]['VXc'][ihalo_s3],base_halo_data[snap3]['VYc'][ihalo_s3],base_halo_data[snap3]['VZc'][ihalo_s3]],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap3_R200',data=base_halo_data[snap3]['R_200crit'][ihalo_s3],dtype=np.float32)
-            ihalo_hdf5.attrs.create('snap3_M200',data=base_halo_data[snap2]['Mass_200crit'][ihalo_s3],dtype=np.float32)
+            ihalo_hdf5.attrs.create('snap3_M200',data=base_halo_data[snap3]['Mass_200crit'][ihalo_s3],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap3_Vmax',data=base_halo_data[snap3]['Vmax'][ihalo_s3],dtype=np.float32)
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)#track if have both progenitor and descendant
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]#structure type

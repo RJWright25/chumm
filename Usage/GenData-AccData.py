@@ -140,7 +140,7 @@ if add_pd:
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
             print(f'Starting process {iprocess}')
-            p=Process(target=add_particle_data, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            p=Process(target=add_particle_acc_data, args=(base_halo_data,),kwargs=kwargs[iprocess])
             processes.append(p)
             p.start()
         for p in processes:
