@@ -1737,11 +1737,10 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
     for iihalo,ihalo in enumerate(halo_index_list):
         ihalo_name='ihalo_'+str(ihalo).zfill(6)
         ifile=ihalo_files[iihalo]
-        if iihalo%1000==0:
+        if iihalo%10==0:
             print(f'{iihalo/desired_num_halos*100:.1f}% of halo data loaded')
         for itype in parttypes:
             for field in partfields_in[str(itype)]:
-                print(itype,field)
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{itype}/'+field].value
                 particle_acc_data_in[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
             for field in partfields_out[str(itype)]:
