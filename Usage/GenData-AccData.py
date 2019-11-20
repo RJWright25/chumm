@@ -160,7 +160,7 @@ if sum_ad:
     calc_prefix=f'pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}'
     for icalc_dir in calc_list:
         print(f'Checking if {calc_prefix} in {icalc_dir}')
-        if calc_prefix in icalc_dir:
+        if calc_prefix in icalc_dir and 'test' not in icalc_dir:
             print('found')
             calc_dir_forsum=icalc_dir
             break
