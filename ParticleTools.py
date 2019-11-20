@@ -34,7 +34,7 @@ from AccretionTools import *
 from pandas import DataFrame as df
 
 #get IDs
-def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True):
+def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,always_overwrite=True):
     """
     dumps coordinates to file
 
