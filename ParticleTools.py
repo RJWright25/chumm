@@ -42,7 +42,7 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True)
     outfolder='vis_data/coordinates/'
     fullpath=''
     for path in outfolder.split('/'):
-        fullpath.append(f'{path}/')
+        fullpath=fullpath+f'{path}/'
         if not os.path.exists(fullpath):
             os.mkdir(fullpath)
 
