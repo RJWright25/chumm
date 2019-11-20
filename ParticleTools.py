@@ -118,6 +118,6 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True)
     else:
         ihalo_Coordinates_snap1=open_pickle(outname_snap1)
         ihalo_Coordinates_snap2=open_pickle(outname_snap2)
-        types_snap2=open_pickle(outname_snap2)
+        types_snap2=open_pickle(outname_types)
 
     return ihalo_Coordinates_snap1,ihalo_Coordinates_snap2,types_snap2
