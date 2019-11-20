@@ -1675,7 +1675,6 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
         accdata_dir=accdata_dir+'/'
     accdata_filelist=os.listdir(accdata_dir)
     accdata_filelist_trunc=sorted([accdata_dir+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
-    print(accdata_filelist_trunc)
     accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
     accdata_halo_lists=[sorted(list(accdata_file.keys()))[1:] for accdata_file in accdata_files]
     accdata_halo_lists_flattened=flatten(accdata_halo_lists)
@@ -1700,6 +1699,7 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
     if 'outname' not in hdf5header_attrs:
         acc_metadata['outname']=str(base_halo_data[-1]['outname'])
     
+    print(f'Indexing halos in {t2-t1:.1f} sec')
     #Save which file each halo's data is contained in
     for iihalo,ihalo in enumerate(halo_index_list):
         for ifile,ihalo_list in enumerate(accdata_halo_lists):
@@ -1741,6 +1741,7 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
             print(f'{iihalo/desired_num_halos*100:.1f}% of halo data loaded')
         for itype in parttypes:
             for field in partfields_in[str(itype)]:
+                print(itype,field)
                 ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{itype}/'+field].value
                 particle_acc_data_in[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
             for field in partfields_out[str(itype)]:
