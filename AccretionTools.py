@@ -1398,17 +1398,13 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
         #Default datasets (will be added for snap1 and snap2)
         if datasets==None:
             datasets={}
-            gas_datasets=['ParticleIDs',
-                        'Coordinates',
+            gas_datasets=['Coordinates',
                         'Velocity']
-            dm_datasets=['ParticleIDs',
-                        'Coordinates',
+            dm_datasets=['Coordinates',
                         'Velocity']
-            star_datasets=['ParticleIDs',
-                        'Coordinates',
+            star_datasets=['Coordinates',
                         'Velocity']
-            bh_datasets=['ParticleIDs',
-                        'Coordinates',
+            bh_datasets=['Coordinates',
                         'Velocity']
             datasets={'0':gas_datasets,'1':dm_datasets,'4':star_datasets,'5':bh_datasets}
         
