@@ -46,8 +46,8 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True)
         if not os.path.exists(fullpath):
             os.mkdir(fullpath)
 
-    outname_snap2=f'vis_data/coordinates/ihalo{str(ihalo).zfill(6)}_snap{str(snap).zfill(3)}_current_xyz.dat'
-    outname_snap1=f'vis_data/coordinates/ihalo{str(ihalo).zfill(6)}_snap{str(snap).zfill(3)}_previous_xyz.dat'
+    outname_snap2=f'vis_data/coordinates/ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.dat'
+    outname_snap1=f'vis_data/coordinates/ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.dat'
 
     if os.path.exists(outname_snap2):
         proceed=int(input("Data exists for this ihalo and snap. Overwrite?"))
