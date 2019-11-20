@@ -385,7 +385,6 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
                 new_halo_data_snap[new_field]=new_halo_data_snap[new_field]*10**10
             else:
                 print(f'Not converting {new_field}')
-        new_halo_data_snap['Mass_200crit']=new_halo_data_snap['Mass_200crit']*10**10
 
         # Add extra halo fields -- post-process velociraptor files   
         if n_halos_snap>0:
