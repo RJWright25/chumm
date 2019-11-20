@@ -97,8 +97,8 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True)
                                                             snap_desired=snap2)
 
         print('Loading simulation data ...')
-        if base_halo_data[snap]['Part_FileType']=='EAGLE':
-            EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
+        if base_halo_data[snap2]['Part_FileType']=='EAGLE':
+            EAGLE_boxsize=base_halo_data[snap2]['SimulationInfo']['BoxSize_Comoving']
             EAGLE_Snap1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
             EAGLE_Snap1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
             EAGLE_Snap2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
