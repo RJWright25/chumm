@@ -1741,12 +1741,18 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
             print(f'{iihalo/desired_num_halos*100:.1f}% of halo data loaded')
         for itype in parttypes:
             for field in partfields_in[str(itype)]:
-                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{itype}/'+field].value
-                particle_acc_data_in[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
+                try:
+                    ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{itype}/'+field].value
+                    particle_acc_data_in[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
+                except:
+                    particle_acc_data_in[f'PartType{itype}'][field][iihalo]=np.nan
             for field in partfields_out[str(itype)]:
-                ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Outflow/PartType{itype}/'+field].value
-                particle_acc_data_out[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
-    
+                try:
+                    ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Outflow/PartType{itype}/'+field].value
+                    particle_acc_data_out[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
+                except:
+                    particle_acc_data_out[f'PartType{itype}'][field][iihalo]=np.nan
+        
     #Return dictionary of outputs
     acc_data={"Inflow":particle_acc_data_in,"Outflow":particle_acc_data_out}
     dump_pickle(path=accdata_filelist_trunc[0].split('_p0')[0]+'-ALL.dat',data=(acc_metadata,acc_data))
