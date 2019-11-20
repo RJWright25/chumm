@@ -1748,7 +1748,8 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
     
     #Return dictionary of outputs
     acc_data={"Inflow":particle_acc_data_in,"Outflow":particle_acc_data_out}
-    
+    dump_pickle(path=accdata_filelist_trunc[0].split('_p0')[0]+'-ALL.dat',data=(acc_metadata,acc_data))
+
     t2=time.time()
     print(f'Done in {t2-t1}')
     return acc_metadata,acc_data
