@@ -51,10 +51,13 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,
     outname_types_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_type.dat'
     outname_types_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_type.dat'
 
-    if os.path.exists(outname_snap2):
-        proceed=bool(int(input("Data exists for this ihalo and snap. Overwrite?\n")))
-    else:
+    if always_overwrite:
         proceed=True
+    else:
+        if os.path.exists(outname_snap2):
+            proceed=bool(int(input("Data exists for this ihalo and snap. Overwrite?\n")))
+        else:
+            proceed=True
 
     if proceed:
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=1)
