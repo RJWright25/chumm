@@ -1699,7 +1699,7 @@ def get_particle_acc_data(base_halo_data,accdata_dir):
     if 'outname' not in hdf5header_attrs:
         acc_metadata['outname']=str(base_halo_data[-1]['outname'])
     
-    print(f'Indexing halos in {t2-t1:.1f} sec')
+    print(f'Indexing halos ...')
     #Save which file each halo's data is contained in
     for iihalo,ihalo in enumerate(halo_index_list):
         for ifile,ihalo_list in enumerate(accdata_halo_lists):
