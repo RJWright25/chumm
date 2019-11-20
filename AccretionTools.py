@@ -1401,7 +1401,7 @@ def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
             gas_datasets=['ParticleIDs',
                         'Coordinates',
                         'Velocity']
-            gas_datasets=['ParticleIDs',
+            dm_datasets=['ParticleIDs',
                         'Coordinates',
                         'Velocity']
             star_datasets=['ParticleIDs',
