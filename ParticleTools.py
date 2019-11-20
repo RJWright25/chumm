@@ -108,9 +108,13 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True)
             PartData_Coordinates_Snap1={str(itype):EAGLE_Snap1.read_dataset(itype,'Coordinates') for itype in parttypes}
             PartData_Coordinates_Snap2={str(itype):EAGLE_Snap2.read_dataset(itype,'Coordinates') for itype in parttypes}
         
+        h_val=base_halo_data[snap1]['SimulationInfo']['h_val']
+        scalefactor_Snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
+        scalefactor_Snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
+
         print('Extracting coordinates ...')
-        ihalo_Coordinates_snap1=np.array([PartData_Coordinates_Snap1[str(ipart_type)][ipart_partdataindex] for ipart_type,ipart_partdataindex in zip(types_snap1,partindices_snap1)])
-        ihalo_Coordinates_snap2=np.array([PartData_Coordinates_Snap2[str(ipart_type)][ipart_partdataindex] for ipart_type,ipart_partdataindex in zip(types_snap2,partindices_snap2)])
+        ihalo_Coordinates_snap1=np.array([PartData_Coordinates_Snap1[str(ipart_type)][ipart_partdataindex] for ipart_type,ipart_partdataindex in zip(types_snap1,partindices_snap1)])/h_val*scalefactor_Snap1
+        ihalo_Coordinates_snap2=np.array([PartData_Coordinates_Snap2[str(ipart_type)][ipart_partdataindex] for ipart_type,ipart_partdataindex in zip(types_snap2,partindices_snap2)])/h_val*scalefactor_Snap2
 
         dump_pickle(path=outname_snap2,data=ihalo_Coordinates_snap2)
         dump_pickle(path=outname_snap1,data=ihalo_Coordinates_snap1)
