@@ -778,19 +778,19 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             ihalo_hdf5.attrs.create('snap1_com',data=[base_halo_data[snap1]['Xc'][ihalo_s1],base_halo_data[snap1]['Yc'][ihalo_s1],base_halo_data[snap1]['Zc'][ihalo_s1]],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap1_v',data=[base_halo_data[snap1]['VXc'][ihalo_s1],base_halo_data[snap1]['VYc'][ihalo_s1],base_halo_data[snap1]['VZc'][ihalo_s1]],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap1_R200',data=base_halo_data[snap1]['R_200crit'][ihalo_s1],dtype=np.float32)
-            ihalo_hdf5.attrs.create('snap1_M200',data=base_halo_data[snap1]['Mass_200crit'][ihalo_s1],dtype=np.float32)
+            ihalo_hdf5.attrs.create('snap1_M200',data=base_halo_data[snap1]['Mass_200crit'][ihalo_s1]*10**10,dtype=np.float32)
             ihalo_hdf5.attrs.create('snap1_Vmax',data=base_halo_data[snap1]['Vmax'][ihalo_s1],dtype=np.float32)
         if ihalo_s2>=0:
             ihalo_hdf5.attrs.create('snap2_com',data=[base_halo_data[snap2]['Xc'][ihalo_s2],base_halo_data[snap2]['Yc'][ihalo_s2],base_halo_data[snap2]['Zc'][ihalo_s2]],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap2_v',data=[base_halo_data[snap2]['VXc'][ihalo_s2],base_halo_data[snap2]['VYc'][ihalo_s2],base_halo_data[snap2]['VZc'][ihalo_s2]],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap2_R200',data=base_halo_data[snap2]['R_200crit'][ihalo_s2],dtype=np.float32)
-            ihalo_hdf5.attrs.create('snap2_M200',data=base_halo_data[snap2]['Mass_200crit'][ihalo_s2],dtype=np.float32)
+            ihalo_hdf5.attrs.create('snap2_M200',data=base_halo_data[snap2]['Mass_200crit'][ihalo_s2]*10**10,dtype=np.float32)
             ihalo_hdf5.attrs.create('snap2_Vmax',data=base_halo_data[snap2]['Vmax'][ihalo_s2],dtype=np.float32)
         if ihalo_s3>=0:
             ihalo_hdf5.attrs.create('snap3_com',data=[base_halo_data[snap3]['Xc'][ihalo_s3],base_halo_data[snap3]['Yc'][ihalo_s3],base_halo_data[snap3]['Zc'][ihalo_s3]],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap3_v',data=[base_halo_data[snap3]['VXc'][ihalo_s3],base_halo_data[snap3]['VYc'][ihalo_s3],base_halo_data[snap3]['VZc'][ihalo_s3]],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap3_R200',data=base_halo_data[snap3]['R_200crit'][ihalo_s3],dtype=np.float32)
-            ihalo_hdf5.attrs.create('snap3_M200',data=base_halo_data[snap3]['Mass_200crit'][ihalo_s3],dtype=np.float32)
+            ihalo_hdf5.attrs.create('snap3_M200',data=base_halo_data[snap3]['Mass_200crit'][ihalo_s3]*10**10,dtype=np.float32)
             ihalo_hdf5.attrs.create('snap3_Vmax',data=base_halo_data[snap3]['Vmax'][ihalo_s3],dtype=np.float32)
         ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)#track if have both progenitor and descendant
         structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]#structure type
