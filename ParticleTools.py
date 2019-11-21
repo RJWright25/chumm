@@ -75,7 +75,7 @@ def get_halo_particle_data(base_halo_data,snap2,halo_index_list,add_subparts_to_
     PartHistories_Snap2_IDs={str(itype):PartHistories_Snap2_File[f"PartType{itype}"]["ParticleIDs"] for itype in parttypes}
     PartHistories_Snap2_Indices={str(itype):PartHistories_Snap2_File[f"PartType{itype}"]["ParticleIndex"] for itype in parttypes}
 
-    print('Loading halo data ...')
+    print('Loading halo particle data ...')
     ihalo_snap2_particles=get_particle_lists(base_halo_data[snap2],halo_index_list=halo_index_list,include_unbound=True,add_subparts_to_fofs=add_subparts_to_fofs)
     ihalo_snap1_particles=get_particle_lists(base_halo_data[snap1],halo_index_list=halo_index_list,include_unbound=True,add_subparts_to_fofs=add_subparts_to_fofs)
 
