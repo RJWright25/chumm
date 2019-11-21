@@ -82,10 +82,10 @@ def get_halo_particle_data(base_halo_data,snap2,halo_index_list,add_subparts_to_
     for iihalo,ihalo in enumerate(halo_index_list):
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=1)
 
-        outname_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.txt'
-        outname_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.txt'
-        outname_types_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_type.txt'
-        outname_types_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_type.txt'
+        outname_snap2=outfolder+f'ihalo_{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.txt'
+        outname_snap1=outfolder+f'ihalo_{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.txt'
+        outname_types_snap2=outfolder+f'ihalo_{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_type.txt'
+        outname_types_snap1=outfolder+f'ihalo_{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_type.txt'
 
         ihalo_snap2_particles_IDs=ihalo_snap2_particles["Particle_IDs"][iihalo]
         ihalo_snap2_particles_Types=ihalo_snap2_particles["Particle_Types"][iihalo]
@@ -105,8 +105,8 @@ def get_halo_particle_data(base_halo_data,snap2,halo_index_list,add_subparts_to_
                                                             PartTypes=ihalo_snap2_particles_Types,
                                                             snap_taken=snap2,
                                                             snap_desired=snap2)
-        ihalo_snap1_particles_IDs=ihalo_snap1_particles["Particle_IDs"][0]
-        ihalo_snap1_particles_Types=ihalo_snap1_particles["Particle_Types"][0]
+        ihalo_snap1_particles_IDs=ihalo_snap1_particles["Particle_IDs"][iihalo]
+        ihalo_snap1_particles_Types=ihalo_snap1_particles["Particle_Types"][iihalo]
 
         if not any(np.isfinite(ihalo_snap1_particles_IDs)):
             print(f'Skipping ihalo {ihalo} (previous particles)')
@@ -130,9 +130,9 @@ def get_halo_particle_data(base_halo_data,snap2,halo_index_list,add_subparts_to_
         ihalo_Coordinates_snap1=np.array([PartData_Coordinates_Snap1[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap1 for ipart_type,ipart_partdataindex in zip(types_snap1,partindices_snap1)])
         ihalo_Coordinates_snap2=np.array([PartData_Coordinates_Snap2[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap2 for ipart_type,ipart_partdataindex in zip(types_snap2,partindices_snap2)])
 
-        np.savetxt(fname=outname_snap2,X=ihalo_Coordinates_snap2,delimiter=',')
-        np.savetxt(fname=outname_snap1,X=ihalo_Coordinates_snap1,delimiter=',')
-        np.savetxt(fname=outname_types_snap1,X=types_snap1,delimiter=',')
-        np.savetxt(fname=outname_types_snap2,X=types_snap2,delimiter=',')
+        np.savetxt(fname=outname_snap2,X=ihalo_Coordinates_snap2,delimiter=',',fmt='%.6e’)
+        np.savetxt(fname=outname_snap1,X=ihalo_Coordinates_snap1,delimiter=',',fmt='%.6e’)
+        np.savetxt(fname=outname_types_snap1,X=types_snap1,delimiter=',',fmt='%.6e’)
+        np.savetxt(fname=outname_types_snap2,X=types_snap2,delimiter=',',fmt='%.6e’)
 
     return None
