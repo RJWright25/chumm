@@ -204,7 +204,7 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False):
         for supposed_index in indices:
             try:
                 item_at_calculated_index=sorted_list[supposed_index]
-            except ValueError:
+            except:
                 item_at_calculated_index=np.nan
             items_at_calculated_indices.append(item_at_calculated_index)
 
