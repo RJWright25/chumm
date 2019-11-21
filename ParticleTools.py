@@ -46,10 +46,10 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,
         if not os.path.exists(fullpath):
             os.mkdir(fullpath)
 
-    outname_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.dat'
-    outname_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.dat'
-    outname_types_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_type.dat'
-    outname_types_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_type.dat'
+    outname_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.txt'
+    outname_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.txt'
+    outname_types_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_type.txt'
+    outname_types_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_type.txt'
 
     if always_overwrite:
         proceed=True
@@ -67,9 +67,17 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,
         ihalo_snap2_particles_IDs=ihalo_snap2_particles["Particle_IDs"][0]
         ihalo_snap2_particles_Types=ihalo_snap2_particles["Particle_Types"][0]
 
+        if np.size(ihalo_snap2_particles_IDs)==1:
+            ihalo_snap2_particles_IDs=np.array([ihalo_snap2_particles_IDs])
+            ihalo_snap2_particles_Types=np.array([ihalo_snap2_particles_Types])
+
         ihalo_snap1_particles=get_particle_lists(base_halo_data[snap1],halo_index_list=[ihalo_s1],include_unbound=True,add_subparts_to_fofs=True)
         ihalo_snap1_particles_IDs=ihalo_snap1_particles["Particle_IDs"][0]
         ihalo_snap1_particles_Types=ihalo_snap1_particles["Particle_Types"][0]
+        
+        if np.size(ihalo_snap1_particles_IDs)==1:
+            ihalo_snap1_particles_IDs=np.array([ihalo_snap1_particles_IDs])
+            ihalo_snap1_particles_Types=np.array([ihalo_snap1_particles_Types])
         
         if base_halo_data[snap2]['Part_FileType']=='EAGLE':
             parttypes=[0,1,4,5]
@@ -92,7 +100,7 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,
                                                             PartTypes=ihalo_snap1_particles_Types,
                                                             snap_taken=snap2,
                                                             snap_desired=snap1)
-        print(f'Indexing {len(ihalo_snap2_particles_IDs)} particles at snap 2...')
+        print(f'Indexing {np.size(ihalo_snap2_particles_IDs)} particles at snap 2...')
         types_snap2,historyindices_snap2,partindices_snap2=get_particle_indices(base_halo_data,
                                                             SortedIDs=PartHistories_Snap2_IDs,
                                                             SortedIndices=PartHistories_Snap2_Indices,
@@ -119,15 +127,14 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,
         ihalo_Coordinates_snap1=np.array([PartData_Coordinates_Snap1[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap1 for ipart_type,ipart_partdataindex in zip(types_snap1,partindices_snap1)])
         ihalo_Coordinates_snap2=np.array([PartData_Coordinates_Snap2[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap2 for ipart_type,ipart_partdataindex in zip(types_snap2,partindices_snap2)])
 
-        dump_pickle(path=outname_snap2,data=ihalo_Coordinates_snap2)
-        dump_pickle(path=outname_snap1,data=ihalo_Coordinates_snap1)
-        dump_pickle(path=outname_types_snap1,data=types_snap1)
-        dump_pickle(path=outname_types_snap2,data=types_snap2)
-
+        np.savetxt(fname=outname_snap2,X=ihalo_Coordinates_snap2,delimiter=',')
+        np.savetxt(fname=outname_snap1,X=ihalo_Coordinates_snap1,delimiter=',')
+        np.savetxt(fname=outname_types_snap1,X=types_snap1,delimiter=',')
+        np.savetxt(fname=outname_types_snap2,X=types_snap2,delimiter=',')
     else:
-        ihalo_Coordinates_snap1=open_pickle(outname_snap1)
-        ihalo_Coordinates_snap2=open_pickle(outname_snap2)
-        types_snap1=open_pickle(outname_types_snap1)
-        types_snap2=open_pickle(outname_types_snap2)
+        ihalo_Coordinates_snap1=np.loadtxt(outname_snap1,delimiter=',')
+        ihalo_Coordinates_snap2=np.loadtxt(outname_snap2,delimiter=',')
+        types_snap1=np.loadtxt(outname_types_snap1,delimiter=',')
+        types_snap2=np.loadtxt(outname_types_snap2,delimiter=',')
 
     return ihalo_Coordinates_snap1,ihalo_Coordinates_snap2,types_snap1,types_snap2
