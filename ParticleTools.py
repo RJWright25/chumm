@@ -34,72 +34,70 @@ from AccretionTools import *
 from pandas import DataFrame as df
 
 #get IDs
-def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,always_overwrite=True):
+def get_halo_particle_data(base_halo_data,snap2,halo_index_list,add_subparts_to_fofs=True,always_overwrite=True):
     """
     dumps coordinates to file
 
     """
-    outfolder='vis_data/coordinates/'
+    snap1=snap2-1
+    
+    outfolder='vis_data/halo_partcoordinates/'
     fullpath=''
     for path in outfolder.split('/'):
         fullpath=fullpath+f'{path}/'
         if not os.path.exists(fullpath):
             os.mkdir(fullpath)
+    
+    h_val=base_halo_data[snap1]['SimulationInfo']['h_val']
+    scalefactor_Snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
+    scalefactor_Snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
 
-    outname_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.txt'
-    outname_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.txt'
-    outname_types_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_type.txt'
-    outname_types_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_type.txt'
+    print('Loading particle history data ...')
+    PartHistories_Snap1_File=h5py.File(base_halo_data[snap1]['PartHist_FilePath'],'r')
+    PartHistories_Snap1_IDs={str(itype):PartHistories_Snap1_File[f"PartType{itype}"]["ParticleIDs"] for itype in parttypes}
+    PartHistories_Snap1_Indices={str(itype):PartHistories_Snap1_File[f"PartType{itype}"]["ParticleIndex"] for itype in parttypes}
+    PartHistories_Snap2_File=h5py.File(base_halo_data[snap2]['PartHist_FilePath'],'r')
+    PartHistories_Snap2_IDs={str(itype):PartHistories_Snap2_File[f"PartType{itype}"]["ParticleIDs"] for itype in parttypes}
+    PartHistories_Snap2_Indices={str(itype):PartHistories_Snap2_File[f"PartType{itype}"]["ParticleIndex"] for itype in parttypes}
 
-    if always_overwrite:
-        proceed=True
+    print('Loading simulation data ...')
+    if base_halo_data[snap2]['Part_FileType']=='EAGLE':
+        parttypes=[0,1,4,5]
+        EAGLE_boxsize=base_halo_data[snap2]['SimulationInfo']['BoxSize_Comoving']
+        EAGLE_Snap1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
+        EAGLE_Snap1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+        EAGLE_Snap2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
+        EAGLE_Snap2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+        PartData_Coordinates_Snap1={str(itype):EAGLE_Snap1.read_dataset(itype,'Coordinates') for itype in parttypes}
+        PartData_Coordinates_Snap2={str(itype):EAGLE_Snap2.read_dataset(itype,'Coordinates') for itype in parttypes}
     else:
-        if os.path.exists(outname_snap2):
-            proceed=bool(int(input("Data exists for this ihalo and snap. Overwrite?\n")))
-        else:
-            proceed=True
+        parttypes=[0,1]
+        PartData_Coordinates_Snap1={str(itype):h5py.File(base_halo_data[snap1]['Part_FilePath'],'r')[f'PartType{itype}']['Coordinates'] for itype in parttypes}
+        PartData_Coordinates_Snap2={str(itype):h5py.File(base_halo_data[snap2]['Part_FilePath'],'r')[f'PartType{itype}']['Coordinates'] for itype in parttypes}
 
-    if proceed:
+
+    print('Loading halo data ...')
+    ihalo_snap2_particles=get_particle_lists(base_halo_data[snap2],halo_index_list=halo_index_list,include_unbound=True,add_subparts_to_fofs=add_subparts_to_fofs)
+    ihalo_snap1_particles=get_particle_lists(base_halo_data[snap1],halo_index_list=halo_index_list,include_unbound=True,add_subparts_to_fofs=add_subparts_to_fofs)
+
+    for iihalo,ihalo in enumerate(halo_index_list):
         ihalo_s1=find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=1)
-        snap1=snap2-1
 
-        ihalo_snap2_particles=get_particle_lists(base_halo_data[snap2],halo_index_list=[ihalo],include_unbound=True,add_subparts_to_fofs=True)
-        ihalo_snap2_particles_IDs=ihalo_snap2_particles["Particle_IDs"][0]
-        ihalo_snap2_particles_Types=ihalo_snap2_particles["Particle_Types"][0]
+        outname_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyz.txt'
+        outname_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyz.txt'
+        outname_types_snap2=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_type.txt'
+        outname_types_snap1=outfolder+f'ihalo{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_type.txt'
 
-        if np.size(ihalo_snap2_particles_IDs)==1:
+        ihalo_snap2_particles_IDs=ihalo_snap2_particles["Particle_IDs"][iihalo]
+        ihalo_snap2_particles_Types=ihalo_snap2_particles["Particle_Types"][iihalo]
+
+        if not any(np.isfinite(ihalo_snap2_particles_IDs)):
+            print(f'Skipping ihalo {ihalo} (current particles)')
+            continue
+        elif np.size(ihalo_snap2_particles_IDs)==1:
             ihalo_snap2_particles_IDs=np.array([ihalo_snap2_particles_IDs])
             ihalo_snap2_particles_Types=np.array([ihalo_snap2_particles_Types])
-
-        ihalo_snap1_particles=get_particle_lists(base_halo_data[snap1],halo_index_list=[ihalo_s1],include_unbound=True,add_subparts_to_fofs=True)
-        ihalo_snap1_particles_IDs=ihalo_snap1_particles["Particle_IDs"][0]
-        ihalo_snap1_particles_Types=ihalo_snap1_particles["Particle_Types"][0]
         
-        if np.size(ihalo_snap1_particles_IDs)==1:
-            ihalo_snap1_particles_IDs=np.array([ihalo_snap1_particles_IDs])
-            ihalo_snap1_particles_Types=np.array([ihalo_snap1_particles_Types])
-        
-        if base_halo_data[snap2]['Part_FileType']=='EAGLE':
-            parttypes=[0,1,4,5]
-        else:
-            parttypes=[0,1]
-        
-        print('Loading particle history data ...')
-        PartHistories_Snap1_File=h5py.File(base_halo_data[snap1]['PartHist_FilePath'],'r')
-        PartHistories_Snap1_IDs={str(itype):PartHistories_Snap1_File[f"PartType{itype}"]["ParticleIDs"] for itype in parttypes}
-        PartHistories_Snap1_Indices={str(itype):PartHistories_Snap1_File[f"PartType{itype}"]["ParticleIndex"] for itype in parttypes}
-        PartHistories_Snap2_File=h5py.File(base_halo_data[snap2]['PartHist_FilePath'],'r')
-        PartHistories_Snap2_IDs={str(itype):PartHistories_Snap2_File[f"PartType{itype}"]["ParticleIDs"] for itype in parttypes}
-        PartHistories_Snap2_Indices={str(itype):PartHistories_Snap2_File[f"PartType{itype}"]["ParticleIndex"] for itype in parttypes}
-
-        print(f'Indexing {len(ihalo_snap1_particles_IDs)} particles at snap 1...')
-        types_snap1,historyindices_snap1,partindices_snap1=get_particle_indices(base_halo_data,
-                                                            SortedIDs=PartHistories_Snap1_IDs,
-                                                            SortedIndices=PartHistories_Snap1_Indices,
-                                                            PartIDs=ihalo_snap1_particles_IDs,
-                                                            PartTypes=ihalo_snap1_particles_Types,
-                                                            snap_taken=snap2,
-                                                            snap_desired=snap1)
         print(f'Indexing {np.size(ihalo_snap2_particles_IDs)} particles at snap 2...')
         types_snap2,historyindices_snap2,partindices_snap2=get_particle_indices(base_halo_data,
                                                             SortedIDs=PartHistories_Snap2_IDs,
@@ -108,20 +106,26 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,
                                                             PartTypes=ihalo_snap2_particles_Types,
                                                             snap_taken=snap2,
                                                             snap_desired=snap2)
+        ihalo_snap1_particles_IDs=ihalo_snap1_particles["Particle_IDs"][0]
+        ihalo_snap1_particles_Types=ihalo_snap1_particles["Particle_Types"][0]
 
-        print('Loading simulation data ...')
-        if base_halo_data[snap2]['Part_FileType']=='EAGLE':
-            EAGLE_boxsize=base_halo_data[snap2]['SimulationInfo']['BoxSize_Comoving']
-            EAGLE_Snap1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
-            EAGLE_Snap1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-            EAGLE_Snap2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
-            EAGLE_Snap2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-            PartData_Coordinates_Snap1={str(itype):EAGLE_Snap1.read_dataset(itype,'Coordinates') for itype in parttypes}
-            PartData_Coordinates_Snap2={str(itype):EAGLE_Snap2.read_dataset(itype,'Coordinates') for itype in parttypes}
+        if not any(np.isfinite(ihalo_snap1_particles_IDs)):
+            print(f'Skipping ihalo {ihalo} (previous particles)')
+            continue
+        elif np.size(ihalo_snap1_particles_IDs)==1:
+            ihalo_snap1_particles_IDs=np.array([ihalo_snap1_particles_IDs])
+            ihalo_snap1_particles_Types=np.array([ihalo_snap1_particles_Types])
         
-        h_val=base_halo_data[snap1]['SimulationInfo']['h_val']
-        scalefactor_Snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
-        scalefactor_Snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
+        print(f'Indexing {len(ihalo_snap1_particles_IDs)} particles at snap 1...')
+        types_snap1,historyindices_snap1,partindices_snap1=get_particle_indices(base_halo_data,
+                                                            SortedIDs=PartHistories_Snap1_IDs,
+                                                            SortedIndices=PartHistories_Snap1_Indices,
+                                                            PartIDs=ihalo_snap1_particles_IDs,
+                                                            PartTypes=ihalo_snap1_particles_Types,
+                                                            snap_taken=snap2,
+                                                            snap_desired=snap1)
+        
+
 
         print('Extracting coordinates ...')
         ihalo_Coordinates_snap1=np.array([PartData_Coordinates_Snap1[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap1 for ipart_type,ipart_partdataindex in zip(types_snap1,partindices_snap1)])
@@ -131,10 +135,5 @@ def get_halo_particle_data(base_halo_data,snap2,ihalo,add_subparts_to_fofs=True,
         np.savetxt(fname=outname_snap1,X=ihalo_Coordinates_snap1,delimiter=',')
         np.savetxt(fname=outname_types_snap1,X=types_snap1,delimiter=',')
         np.savetxt(fname=outname_types_snap2,X=types_snap2,delimiter=',')
-    else:
-        ihalo_Coordinates_snap1=np.loadtxt(outname_snap1,delimiter=',')
-        ihalo_Coordinates_snap2=np.loadtxt(outname_snap2,delimiter=',')
-        types_snap1=np.loadtxt(outname_types_snap1,delimiter=',')
-        types_snap2=np.loadtxt(outname_types_snap2,delimiter=',')
-
-    return ihalo_Coordinates_snap1,ihalo_Coordinates_snap2,types_snap1,types_snap2
+        
+    return None
