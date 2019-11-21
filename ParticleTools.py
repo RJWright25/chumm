@@ -130,9 +130,9 @@ def get_halo_particle_data(base_halo_data,snap2,halo_index_list,add_subparts_to_
         ihalo_Coordinates_snap1=np.array([PartData_Coordinates_Snap1[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap1 for ipart_type,ipart_partdataindex in zip(types_snap1,partindices_snap1)])
         ihalo_Coordinates_snap2=np.array([PartData_Coordinates_Snap2[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap2 for ipart_type,ipart_partdataindex in zip(types_snap2,partindices_snap2)])
 
-        np.savetxt(fname=outname_snap2,X=ihalo_Coordinates_snap2,delimiter=',',fmt='%.6e’)
-        np.savetxt(fname=outname_snap1,X=ihalo_Coordinates_snap1,delimiter=',',fmt='%.6e’)
-        np.savetxt(fname=outname_types_snap1,X=types_snap1,delimiter=',',fmt='%.6e’)
-        np.savetxt(fname=outname_types_snap2,X=types_snap2,delimiter=',',fmt='%.6e’)
+        np.savetxt(fname=outname_snap2,X=ihalo_Coordinates_snap2,delimiter=',',fmt='%.6e')
+        np.savetxt(fname=outname_snap1,X=ihalo_Coordinates_snap1,delimiter=',',fmt='%.6e')
+        np.savetxt(fname=outname_types_snap1,X=types_snap1,delimiter=',',fmt='%.6e')
+        np.savetxt(fname=outname_types_snap2,X=types_snap2,delimiter=',',fmt='%.6e')
 
     return None
