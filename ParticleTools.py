@@ -41,7 +41,7 @@ def get_halo_particle_data(base_halo_data,snap2,halo_index_list,add_subparts_to_
     """
     snap1=snap2-1
     
-    outfolder='vis_data/halo_partcoordinates/'
+    outfolder='vis_data/halo_coordinates/'
     fullpath=''
     for path in outfolder.split('/'):
         fullpath=fullpath+f'{path}/'
