@@ -176,7 +176,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
                     if hosthaloid<0:
                         halo_data_all[isnap]["hostHaloID"][ihalo]=-1
                     else:
-                        halo_data_all[isnap]["hostHaloID"][ihalo]=np.int64(isnap*temporal_idval)+hosthaloid+1
+                        halo_data_all[isnap]["hostHaloID"][ihalo]=np.int64(isnap*temporal_idval)+hosthaloid
         except:
             pass
 
