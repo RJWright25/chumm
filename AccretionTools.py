@@ -522,7 +522,7 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             '/Inflow/PartTypeX/ParticleIDs': ParticleID (in particle data for given type) of all accreted particles.
             '/Inflow/PartTypeX/Masses': Mass (in particle data for given type) of all accreted particles.
             '/Inflow/PartTypeX/Fidelity': Whether this particle stayed in the halo at the given fidelity gap. 
-            '/Inflow/PartTypeX/PreviousHost': Which structure was this particle host to (-1: not in any fof object, 0 if CGM (subhalos only), >0: ID of previous halo).
+            '/Inflow/PartTypeX/PreviousHost': Which structure was this particle host to (-1: not in any fof object, >0: ID of previous halo).
             '/Inflow/PartTypeX/Processed_L1': How many snaps has this particle been part of any structure in the past. 
             '/Inflow/PartTypeX/Processed_L2': How many snaps has this particle been part of halos with no substructure in the past. 
             + more for PartType0 if add_gas_particle_data is run. 
@@ -873,11 +873,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
                     ihalo_snap1_inflow_history_L2[iipartin]=1
                 ihalo_snap1_inflow_structure[iipartin]=Part_Histories_HostStructure_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
                 ihalo_snap1_inflow_fidelity[iipartin]=int(ipartin_ID in snap3_IDs_temp_set)
-            
-            if isub:#if subhalo, check which particles came from CGM
-                ihalo_cgm_inflow_particles_mask=prev_hostgroupID==ihalo_snap1_inflow_structure
-                ihalo_cgm_inflow_particles_where=np.where(ihalo_cgm_inflow_particles_mask)
-                ihalo_snap1_inflow_structure[ihalo_cgm_inflow_particles_where]=np.zeros(np.sum(ihalo_cgm_inflow_particles_mask))
 
             # Find mass
             for itype in PartTypes:
@@ -929,11 +924,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             for iipartout,ipartout_ID,ipartout_snap2_type,ipartout_snap2_historyindex,ipartout_snap2_partindex in zip(list(range(ihalo_nout)),out_particle_IDs,out_particle_Types_snap2,out_particle_historyindices_snap2,out_particle_partindices_snap2):
                 ihalo_snap2_outflow_destination[iipartout]=Part_Histories_HostStructure_snap2[str(ipartout_snap2_type)][ipartout_snap2_historyindex]
                 ihalo_snap3_outflow_recycled[iipartout]=int(ipartout_ID in snap3_IDs_temp_set)
-            
-            if isub:#if subhalo, check which particles went to CGM current_hostgroupID
-                ihalo_cgm_outflow_particles_mask=(current_hostgroupID==ihalo_snap2_outflow_destination)
-                ihalo_cgm_outflow_particles_where=np.where(ihalo_cgm_outflow_particles_mask)
-                ihalo_snap2_outflow_destination[ihalo_cgm_outflow_particles_where]=np.zeros(np.sum(ihalo_cgm_outflow_particles_mask))
             
             # Find mass
             for itype in PartTypes:
@@ -1033,27 +1023,24 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
         '/PartTypeX/All_TotalDeltaM': Total mass of particles of type X new to the halo  (length: num_total_halos)
         '/PartTypeX/All_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/All_CGMDeltaN': Total number of CGM origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/All_CGMDeltaM': Total mass of CGM origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/All_ClumpyDeltaN': Total number of clumpy origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/All_ClumpyDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_PrimordialDeltaN': Total number of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_PrimordialDeltaM': Total mass of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_ProcessedCosmologicalDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/All_ProcessedCosmologicalDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_ProcessedCosmologicalDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)    
+        '/PartTypeX/All_TransferredDeltaN': Total number of clumpy origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/All_TransferredDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
 
-        '/PartTypeX/Stable_TotalDeltaN': Total number of particles of type X new (and LOYAL) to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_TotalDeltaM': Total mass of particles of type X new (and LOYAL) to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_CosmologicalDeltaN': Total number of cosmological origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_CGMDeltaN': Total number of CGM origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_CGMDeltaM': Total mass of CGM origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_ClumpyDeltaN': Total number of clumpy origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_ClumpyDeltaM': Total mass of clumpy origin particles of type X new (and LOYAL) to the halo (length: num_total_halos)
+
+        '/PartTypeX/Stable_TotalDeltaN': Total number of particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_TotalDeltaM': Total mass of particles of type X new to the halo  (length: num_total_halos)
+        '/PartTypeX/Stable_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/Stable_PrimordialDeltaN': Total number of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/Stable_PrimordialDeltaM': Total mass of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/Stable_ProcessedCosmologicalDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
-        '/PartTypeX/Stable_ProcessedCosmologicalDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_ProcessedCosmologicalDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)    
+        '/PartTypeX/Stable_TransferredDeltaN': Total number of clumpy origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/Stable_TransferredDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
 
 
         '/Header' contains attributes: 
@@ -1131,10 +1118,8 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     "All_TotalDeltaN_In",
     "All_CosmologicalDeltaN_In",
     'All_CosmologicalDeltaM_In',
-    'All_CGMDeltaN_In',
-    'All_CGMDeltaM_In',
-    'All_ClumpyDeltaN_In',
-    'All_ClumpyDeltaM_In',
+    'All_TransferredDeltaN_In',
+    'All_TransferredDeltaM_In',
     'All_PrimordialDeltaN_In',
     'All_PrimordialDeltaM_In',
     'All_ProcessedCosmologicalDeltaN_In',
@@ -1143,10 +1128,8 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     "Stable_TotalDeltaN_In",
     "Stable_CosmologicalDeltaN_In",
     'Stable_CosmologicalDeltaM_In',
-    'Stable_CGMDeltaN_In',
-    'Stable_CGMDeltaM_In',
-    'Stable_ClumpyDeltaN_In',
-    'Stable_ClumpyDeltaM_In',
+    'Stable_TransferredDeltaN_In',
+    'Stable_TransferredDeltaM_In',
     'Stable_PrimordialDeltaN_In',
     'Stable_PrimordialDeltaM_In',
     'Stable_ProcessedCosmologicalDeltaN_In',
@@ -1158,10 +1141,8 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     "All_TotalDeltaN_Out",
     "All_FieldDeltaM_Out",
     "All_FieldDeltaN_Out",
-    "All_CGMDeltaM_Out",
-    "All_CGMDeltaN_Out",
-    "All_OtherHaloDeltaM_Out",
-    "All_OtherHaloDeltaN_Out",
+    "All_TransferredDeltaM_Out",
+    "All_TransferredDeltaN_Out",
     "All_RecycledDeltaN_Out",#at snap 3
     "All_RecycledDeltaM_Out"]#at snap 3
 
@@ -1217,14 +1198,12 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
                 # Define masks based on particle properties
                 stable_mask=fidelities>0
                 cosmological_mask=prevhosts<0
-                cgm_mask=prevhosts==0
-                clumpy_mask=prevhosts>0
+                transfer_mask=prevhosts>0
                 primordial_mask=processed_l1==0
                 recycled_mask=np.logical_and(np.logical_or(cgm_mask,cosmological_mask),np.logical_not(primordial_mask))
 
                 stable_cosmological_mask=np.logical_and(stable_mask,cosmological_mask)
-                stable_cgm_mask=np.logical_and(stable_mask,cgm_mask)
-                stable_clumpy_mask=np.logical_and(stable_mask,clumpy_mask)
+                stable_transfer_mask=np.logical_and(stable_mask,transfer_mask)
                 stable_primordial_mask=np.logical_and(stable_mask,primordial_mask)
                 stable_processedcosmological_mask=np.logical_and(stable_mask,recycled_mask)
 
@@ -1233,10 +1212,8 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
                 summed_acc_data[f'Inflow/PartType{itype}/All_TotalDeltaM_In'][ihalo]=np.sum(masses)
                 summed_acc_data[f'Inflow/PartType{itype}/All_CosmologicalDeltaN_In'][ihalo]=np.size(np.compress(cosmological_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/All_CosmologicalDeltaM_In'][ihalo]=np.sum(np.compress(cosmological_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_CGMDeltaN_In'][ihalo]=np.size(np.compress(cgm_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_CGMDeltaM_In'][ihalo]=np.sum(np.compress(cgm_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_ClumpyDeltaN_In'][ihalo]=np.size(np.compress(clumpy_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_ClumpyDeltaM_In'][ihalo]=np.sum(np.compress(clumpy_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/All_TransferredDeltaN_In'][ihalo]=np.size(np.compress(transfer_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/All_TransferredDeltaM_In'][ihalo]=np.sum(np.compress(transfer_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/All_PrimordialDeltaN_In'][ihalo]=np.size(np.compress(primordial_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/All_PrimordialDeltaM_In'][ihalo]=np.sum(np.compress(primordial_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/All_ProcessedCosmologicalDeltaN_In'][ihalo]=np.size(np.compress(recycled_mask,masses))
@@ -1245,10 +1222,8 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
                 summed_acc_data[f'Inflow/PartType{itype}/Stable_TotalDeltaM_In'][ihalo]=np.sum(np.compress(stable_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/Stable_CosmologicalDeltaN_In'][ihalo]=np.size(np.compress(stable_cosmological_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/Stable_CosmologicalDeltaM_In'][ihalo]=np.sum(np.compress(stable_cosmological_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_CGMDeltaN_In'][ihalo]=np.size(np.compress(stable_cgm_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_CGMDeltaM_In'][ihalo]=np.sum(np.compress(stable_cgm_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_ClumpyDeltaN_In'][ihalo]=np.size(np.compress(stable_clumpy_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_ClumpyDeltaM_In'][ihalo]=np.sum(np.compress(stable_clumpy_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/Stable_TransferredDeltaN_In'][ihalo]=np.size(np.compress(stable_transfer_mask,masses))
+                summed_acc_data[f'Inflow/PartType{itype}/Stable_TransferredDeltaM_In'][ihalo]=np.sum(np.compress(stable_transfer_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/Stable_PrimordialDeltaN_In'][ihalo]=np.size(np.compress(stable_primordial_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/Stable_PrimordialDeltaM_In'][ihalo]=np.sum(np.compress(stable_primordial_mask,masses))
                 summed_acc_data[f'Inflow/PartType{itype}/Stable_ProcessedCosmologicalDeltaN_In'][ihalo]=np.size(np.compress(stable_processedcosmological_mask,masses))
@@ -1256,17 +1231,14 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
 
                 outfield_mask=(destination_s2_out==-1)
                 outhalo_mask=(destination_s2_out>1)
-                outcgm_mask=destination_s2_out==0
                 reaccreted_mask=recycled_out==1
 
                 summed_acc_data[f'Outflow/PartType{itype}/All_TotalDeltaN_Out'][ihalo]=np.size(masses_out)
                 summed_acc_data[f'Outflow/PartType{itype}/All_TotalDeltaM_Out'][ihalo]=np.sum(masses_out)
                 summed_acc_data[f'Outflow/PartType{itype}/All_FieldDeltaN_Out'][ihalo]=np.size(np.compress(outfield_mask,masses_out))
                 summed_acc_data[f'Outflow/PartType{itype}/All_FieldDeltaM_Out'][ihalo]=np.sum(np.compress(outfield_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_CGMDeltaN_Out'][ihalo]=np.size(np.compress(outcgm_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_CGMDeltaM_Out'][ihalo]=np.sum(np.compress(outcgm_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_OtherHaloDeltaN_Out'][ihalo]=np.size(np.compress(outhalo_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_OtherHaloDeltaM_Out'][ihalo]=np.sum(np.compress(outhalo_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_TransferredDeltaN_Out'][ihalo]=np.size(np.compress(outhalo_mask,masses_out))
+                summed_acc_data[f'Outflow/PartType{itype}/All_TransferredDeltaM_Out'][ihalo]=np.sum(np.compress(outhalo_mask,masses_out))
                 summed_acc_data[f'Outflow/PartType{itype}/All_RecycledDeltaN_Out'][ihalo]=np.size(np.compress(reaccreted_mask,masses_out))
                 summed_acc_data[f'Outflow/PartType{itype}/All_RecycledDeltaM_Out'][ihalo]=np.sum(np.compress(reaccreted_mask,masses_out))
 
