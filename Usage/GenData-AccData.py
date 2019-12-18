@@ -32,7 +32,8 @@ import os
 import sys
 import argparse
 
-sys.path.append('/home/rwright/CHUMM/') # may need to specify
+sys.path.append('/Users/ruby/Documents/GitHub/CHUMM/')
+sys.path.append('/home/rwright/CHUMM/')
 from STFTools import *
 from AccretionTools import *
 from VRPythonTools import *
@@ -43,6 +44,10 @@ from multiprocessing import Process, cpu_count
 # Parse the arguments for accretion calculation
 if True:
     parser=argparse.ArgumentParser()
+    parser.add_argument('-detailed',type=int, default=1,
+                        help='Flag: generate detailed (rather than FOF) accretion data')    
+    parser.add_argument('-compression',type=int, default=1,
+                        help='Flag: compress the resulting hdf5 datasets')
     parser.add_argument('-snap', type=int,
                         help='snap to calculate accretion for')
     parser.add_argument('-pre', type=int,default=1,
@@ -54,25 +59,30 @@ if True:
     parser.add_argument('-hil_hi', type=int,default=-1,
                         help='halo index list upper limit (for testing, -1=all, not test)')
     parser.add_argument('-gen_ad', type=int,default=1,
-                        help='Flag: generate accretion data (and sum)')
-    parser.add_argument('-add_pd', type=int,default=1,
-                        help='Flag: add particle data to existing acc_data')
+                        help='Flag: generate accretion data')
     parser.add_argument('-sum_ad', type=int,default=1,
                         help='Flag: sum the generated accretion data')
     parser.add_argument('-np', type=int, default=1,
                         help='number of processes to use')
+    
+    detailed=bool(parser.parse_args().detailed)
+    compression=bool(parser.parse_args().compression)
     snap = parser.parse_args().snap
     pre_depth=parser.parse_args().pre
     post_depth=parser.parse_args().post
     halo_index_list_lo=parser.parse_args().hil_lo
     halo_index_list_hi=parser.parse_args().hil_hi
     gen_ad=bool(parser.parse_args().gen_ad)
-    add_pd=bool(parser.parse_args().add_pd)
     sum_ad=bool(parser.parse_args().sum_ad)
     n_processes = parser.parse_args().np
+    
+    print()
+    print('**********************************************************************************************************************')
     print('Arguments parsed:')
-    print(f'snap: {snap}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi}')
-    print(f'gen_ad: {gen_ad}, add_pd: {add_pd}, sum_ad: {sum_ad}, n_processes: {n_processes}')
+    print(f'Generate accretion data: {gen_ad}, sum accretion data: {sum_ad} (at snap {snap})')
+    print(f'Detailed accretion data: {detailed} (with n_processes: {n_processes}, compress: {compression}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
+    print('**********************************************************************************************************************')
+    print()
 
     # Use the directory name to get the run name
     run_name=os.getcwd().split('/')[-1]
@@ -83,18 +93,24 @@ if True:
     # Process arguments: if we're parsed a halo index list range that isn't -1, then use testing mode
     if halo_index_list_lo==-1:
         test=False
-        num_halos=base_halo_data[snap]["Count"]
-        halo_index_lists=gen_mp_indices(indices=list(range(num_halos)),n=n_processes,test=test)
+        halo_index_list_massordered=np.argsort(base_halo_data[snap]["Mass_200crit"])[::-1]
+        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered,n=n_processes,test=test)
     else:
         test=True
         halo_index_list=list(range(halo_index_list_lo,halo_index_list_hi))
         halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes,test=test)
 
     # Determine output directory for this calculation
-    if test:
-        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
+    if detailed:
+        if test:
+            calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
+        else:
+            calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}/'
     else:
-        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}/'
+        if test:
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
+        else:
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}/'
 
     output_dir=calc_dir+f'snap_{str(snap).zfill(3)}/'
 
@@ -112,12 +128,15 @@ if gen_ad:
 
     # Multiprocessing arguments
     processes=[]
-    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth} for iprocess in range(n_processes)]
+    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'compression':compression} for iprocess in range(n_processes)]
 
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
             print(f'Starting process {iprocess}')
-            p=Process(target=gen_accretion_data_fof_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            if detailed:
+                p=Process(target=gen_accretion_data_detailed_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            else:
+                p=Process(target=gen_accretion_data_fof_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
             processes.append(p)
             p.start()
         for p in processes:
@@ -125,49 +144,17 @@ if gen_ad:
 
     t2_acc=time.time()
 
-############ 2. ADD PARTICLE DATA ############
-# This is run in parallel, based on the files generated above. 
-# Here, we add desired gas particle data to the accretion file.
 
-if add_pd:
-    t1_part=time.time()
-
-    # Multiprocessing arguments
-    processes=[]
-    accdata_files=os.listdir(output_dir)
-    accdata_paths=[output_dir+accdata_file for accdata_file in accdata_files if 'summed' not in accdata_file]
-    kwargs=[{'accdata_path':accdata_path} for accdata_path in accdata_paths]
-    if __name__ == '__main__':
-        for iprocess in range(len(kwargs)):
-            print(f'Starting process {iprocess}')
-            p=Process(target=add_particle_acc_data, args=(base_halo_data,),kwargs=kwargs[iprocess])
-            processes.append(p)
-            p.start()
-        for p in processes:
-            p.join()
-
-    t2_part=time.time()
-
-############ 3. SUM ACCRETION DATA ############
+############ 2. SUM ACCRETION DATA ############
 # This is run in serial, based on the files generated above. 
 # Here, we sum the accretion data to create a database of 
 # accretion rates (of various types) for all halos in the simulation.
 
 if sum_ad:
     t1_sum=time.time()
-    #recalc dir in case we want to use 1 process
-    calc_list=os.listdir(f'acc_data')
-    calc_prefix=f'pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}'
-    for icalc_dir in calc_list:
-        print(f'Checking if {calc_prefix} in {icalc_dir}')
-        if calc_prefix in icalc_dir and 'test' not in icalc_dir:
-            print('found')
-            calc_dir_forsum=icalc_dir
-            break
-    if not calc_dir_forsum.endswith('/'):
-        calc_dir_forsum=calc_dir_forsum+'/'
-    output_dir_forsum='acc_data/'+calc_dir_forsum+f'snap_{str(snap).zfill(3)}'
-    postprocess_acc_data_serial(base_halo_data,output_dir_forsum)
+
+    snap_calcdir=calc_dir+f'snap_{str(snap).zfill(3)}/'
+    postprocess_accretion_data(base_halo_data,path=snap_calcdir)
 
     t2_sum=time.time()
 
@@ -181,10 +168,9 @@ print()
 
 if gen_ad:
     print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc} sec')
-if sum_ad:
-    print(f'Summed accretion data for snap {snap} in {t2_sum-t1_sum} sec')
-if add_pd:
-    print(f'Added particle data to accretion data for snap {snap} in {t2_part-t1_part} sec')
+# if sum_ad:
+#     print(f'Summed accretion data for snap {snap} in {t2_sum-t1_sum} sec')
+
     
 print()
 print('******************************************************')

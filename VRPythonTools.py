@@ -688,8 +688,7 @@ def ReadUnitInfo(basefilename):
 	unitsfile.close()
 	return unitdata
 
-
-def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfiles=0,iparttypes=0,iverbose=0, binarydtype=np.int64, unbound=True):
+def ReadParticleDataFile(basefilename,ibinary=2,iparttypes=1,iseparatesubfiles=0,binarydtype=np.int64,iverbose=0):
 	"""
 	VELOCIraptor/STF catalog_group, catalog_particles and catalog_parttypes in various formats
 
@@ -744,6 +743,7 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 	particledata['Npart']=np.zeros(numtothalos,dtype=np.uint64)
 	particledata['Npart_unbound']=np.zeros(numtothalos,dtype=np.uint64)
 	particledata['Particle_IDs']=[[] for i in range(numtothalos)]
+	particledata['Particle_Bound']=[[] for i in range(numtothalos)]
 	if (iparttypes==1):
 		particledata['Particle_Types']=[[] for i in range(numtothalos)]
 
@@ -868,55 +868,28 @@ def ReadParticleDataFile(basefilename,halo_index_list,ibinary=2,iseparatesubfile
 				unumingroup[i]=(uoffset[i+1]-uoffset[i]);
 			unumingroup[-1]=(unpart-uoffset[-1])
 
-			if unbound:
-				particledata['Npart'][counter:counter+numhalos]=numingroup
-			else:
-				particledata['Npart'][counter:counter+numhalos] = numingroup-unumingroup
-
+			particledata['Npart'][counter:counter+numhalos]=numingroup
 			particledata['Npart_unbound'][counter:counter+numhalos]=unumingroup
+
 			for i in range(numhalos):
-				if unbound:
-					particledata['Particle_IDs'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
-					particledata['Particle_IDs'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
-					particledata['Particle_IDs'][int(i+counter)][int(numingroup[i]-unumingroup[i]):numingroup[i]]=upiddata[uoffset[i]:uoffset[i]+unumingroup[i]]
-					if (iparttypes==1):
-						particledata['Particle_Types'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
-						particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
-						particledata['Particle_Types'][int(i+counter)][int(numingroup[i]-unumingroup[i]):numingroup[i]]=utdata[uoffset[i]:uoffset[i]+unumingroup[i]]
-				else:
-					particledata['Particle_IDs'][int(i+counter)]=np.zeros(numingroup[i]-unumingroup[i],dtype=np.int64)
-					particledata['Particle_IDs'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
-					if (iparttypes==1):
-						particledata['Particle_Types'][int(i+counter)]=np.zeros(numingroup[i]-unumingroup[i],dtype=np.int64)
-						particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
+				particledata['Particle_IDs'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
+				particledata['Particle_IDs'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
+				particledata['Particle_IDs'][int(i+counter)][int(numingroup[i]-unumingroup[i]):numingroup[i]]=upiddata[uoffset[i]:uoffset[i]+unumingroup[i]]
+
+				particledata['Particle_Bound'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.uint8)
+				particledata['Particle_Bound'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=np.ones(len(piddata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]))
+
+				if (iparttypes==1):
+					particledata['Particle_Types'][int(i+counter)]=np.zeros(numingroup[i],dtype=np.int64)
+					particledata['Particle_Types'][int(i+counter)][:int(numingroup[i]-unumingroup[i])]=tdata[offset[i]:offset[i]+numingroup[i]-unumingroup[i]]
+					particledata['Particle_Types'][int(i+counter)][int(numingroup[i]-unumingroup[i]):numingroup[i]]=utdata[uoffset[i]:uoffset[i]+unumingroup[i]]
+
 
 			counter+=numhalos
 
-	if halo_index_list==None:
-		print("No halo_index_list given, returning all halo data")
-		return particledata
-	else:
-		print("Just returning particle lists for halo_index_list")
-		IDs_truncated=[]
-		Types_truncated=[]
-		Npart_truncated=[]
-		Npart_unbound_truncated=[]
-		for ihalo in halo_index_list:
-			if ihalo>-1:
-				IDs_truncated.append(particledata["Particle_IDs"][ihalo])
-				Types_truncated.append(particledata["Particle_Types"][ihalo])
-				Npart_truncated.append(particledata["Npart"][ihalo])
-				Npart_unbound_truncated.append(particledata["Npart_unbound"][ihalo])
-			else:
-				IDs_truncated.append(np.nan)
-				Types_truncated.append(np.nan)
-				Npart_truncated.append(np.nan)
-				Npart_unbound_truncated.append(np.nan)
-		particledata_trunc={"Particle_IDs":IDs_truncated,"Particle_Types":Types_truncated,"Npart":Npart_truncated,"Npart_unbound":Npart_unbound_truncated}
-		del particledata
-		return particledata_trunc
+	return particledata
 
-def ReadSOParticleDataFile(basefilename,ibinary=0,iverbose=0,binarydtype=np.int64):
+def ReadSOParticleDataFile(basefilename,ibinary=2,binarydtype=np.int64,iverbose=0):
 	"""
 	VELOCIraptor/STF catalog_group, catalog_particles and catalog_parttypes in various formats
 
@@ -1018,6 +991,8 @@ def ReadSOParticleDataFile(basefilename,ibinary=0,iverbose=0,binarydtype=np.int6
 		for i in range(numSO):
 			particledata['Particle_IDs'][int(i+counter)]=np.array(piddata[offset[i]:offset[i]+numingroup[i]])
 		counter+=numSO
+
+
 
 	return particledata
 

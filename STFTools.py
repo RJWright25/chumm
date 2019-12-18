@@ -26,11 +26,13 @@ import h5py
 import pickle
 import astropy.units as u
 import time
+import read_eagle
 
 from astropy.cosmology import FlatLambdaCDM,z_at_value
 from os import path
-from VRPythonTools import *
 from GenPythonTools import *
+from ParticleTools import *
+from VRPythonTools import *
 
 ########################### CREATE BASE HALO DATA ###########################
 
@@ -117,7 +119,10 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 	"""
 
-    base_fields=['ID','hostHaloID','Structuretype',"numSubStruct",'Xc','Yc','Zc','VXc','VYc','VZc','R_200crit','Mass_200crit','Vmax']#default halo fields
+    if not os.path.exists('job_logs'):
+        os.mkdir('job_logs')
+
+    base_fields=['ID','hostHaloID','Structuretype',"numSubStruct",'Xc','Yc','Zc','Xcminpot','Ycminpot','Zcminpot','Xcmbp','Ycmbp','Zcmbp','VXc','VYc','VZc','R_200crit','R_200mean','Mass_200crit','Vmax']#default halo fields
 
     # File lists
     part_list=partdata_filelist#particle data filepaths -- padded with None for snaps we don't have
@@ -214,17 +219,22 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             lookback_time=cosmo.lookback_time(redshift).value
             halo_data_all[isnap]['SimulationInfo']['z']=redshift
             halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
+            halo_data_all[isnap]['SimulationInfo']['Omega_b_Planck']=0.157332
+            halo_data_all[isnap]['SimulationInfo']['BoxSize_Comoving']=halo_data_all[isnap]['SimulationInfo']['Period']*halo_data_all[isnap]['SimulationInfo']['h_val']/scale_factor
+            if part_list[snap]:
+                halo_data_all[isnap]['SimulationInfo']['Mass_DM_Physical']=(h5py.File(part_list[snap],'r+')['Header'].attrs['MassTable'])[1]/halo_data_all[isnap]['SimulationInfo']['h_val']*10**10
+                halo_data_all[isnap]['SimulationInfo']['Mass_Gas_Physical']=halo_data_all[isnap]['SimulationInfo']['Mass_DM_Physical']*halo_data_all[isnap]['SimulationInfo']['Omega_b_Planck']/(1-halo_data_all[isnap]['SimulationInfo']['Omega_b_Planck'])
             halo_data_all[isnap]['VR_FilePath']=vr_list[snap]
             halo_data_all[isnap]['VR_FileType']=vr_filetype
             halo_data_all[isnap]['Part_FilePath']=part_list[snap]
             halo_data_all[isnap]['Part_FileType']=partdata_filetype
+            halo_data_all[isnap]['PartHist_FilePath']=f'part_histories/PartHistory_{str(snap).zfill(3)}_{outname}.hdf5'
             halo_data_all[isnap]['outname']=outname
             halo_data_all[isnap]['Snap']=snap
-            halo_data_all[isnap]['SimulationInfo']['BoxSize_Comoving']=halo_data_all[isnap]['SimulationInfo']['Period']*halo_data_all[isnap]['SimulationInfo']['h_val']/scale_factor
-            halo_data_all[isnap]['PartHist_FilePath']=f'part_histories/PartHistory_{str(snap).zfill(3)}_{outname}.hdf5'
+
             halo_data_output.append(halo_data_all[isnap])
         else:
-            halo_data_output.append({'Snap':snap,'Part_FilePath':part_list[snap],'Part_FileType':partdata_filetype})#for padded snaps, return particle data and snapshot 
+            halo_data_output.append({'Snap':snap,'Part_FilePath':part_list[snap],'Part_FileType':partdata_filetype,'outname':outname})#for padded snaps, return particle data and snapshot 
 
     # Now save all the data (with detailed TreeFrog fields) as "B2"
     print('Saving B2 halo data to file (contains detailed TreeFrog data)')
@@ -236,7 +246,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         halo_data_file.close()
 
     # Now save all the data (with detailed TreeFrog fields removed) as "B1" (saves memory for accretion calculations)
-    fields_to_keep=['Count','Snap','Structuretype','numSubStruct','ID','hostHaloID','Tail','Head','VR_FilePath','VR_FileType','Part_FilePath','Part_FileType','PartHist_FilePath','UnitInfo','SimulationInfo','outname','Xc','Yc','Zc','VXc','VYc','VZc','R_200crit','Mass_200crit','Vmax']
+    fields_to_keep=['Count','Snap','Structuretype','numSubStruct','ID','hostHaloID','Tail','Head','VR_FilePath','VR_FileType','Part_FilePath','Part_FileType','PartHist_FilePath','UnitInfo','SimulationInfo','outname','Xc','Yc','Zc','Xcminpot','Ycminpot','Zcminpot','VXc','VYc','VZc','R_200crit','R_200mean','Mass_200crit','Vmax']
     halo_data_all_truncated=[]
     for snap,halo_data_snap in enumerate(halo_data_output):
         if have_halo_data[snap]:
@@ -260,7 +270,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
 ########################### ADD DETAILED HALO DATA ###########################
 
-def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outname=None,extra_halo_fields=[]):
+def gen_detailed_halo_data(base_halo_data,snaps,vr_halo_fields=None,extra_halo_fields=None):
     
     """
     
@@ -321,21 +331,18 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
     if not os.path.exists('halo_data'):
         os.mkdir('halo_data')
 
-    isnaps=snap_indices['indices']
-    iprocess=snap_indices['iprocess']
+    if extra_halo_fields==None:
+        extra_halo_fields=[]
+
+    isnaps=snaps['indices']
+    iprocess=snaps['iprocess']
     print(f'iprocess {iprocess} has snaps {isnaps}')
 
     for isnap in isnaps:
         base_halo_data_snap=base_halo_data[isnap]
         snap=base_halo_data_snap["Snap"]
 
-        try:
-            outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
-        except:
-            if outname==None:
-                outname=''
-            outfilename='halo_data/B3_HaloData_'+outname+f'_{str(snap).zfill(3)}.dat'
-
+        outfilename='halo_data/B3_HaloData_'+base_halo_data_snap['outname']+f'_{str(snap).zfill(3)}.dat'
 
         # If we're not given vr halo fields, find all of the available data fields
         if vr_halo_fields==None:
@@ -429,9 +436,23 @@ def gen_detailed_halo_data(base_halo_data,snap_indices,vr_halo_fields=None,outna
                         new_halo_data_snap['N_peers'][ihalo]=N_peers           
                 print('Done with N_peers')
 
+            if 'halotype' in extra_halo_fields:#0 = group, 1 = field halo, 2 =subhalo
+                print('Adding halotype information ')
+                new_halo_data_snap['halotype']=np.zeros(len(new_halo_data_snap['ID']))+np.nan #initialise to nan if field halo
+                for ihalo in range(n_halos_snap):
+                    hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
+                    numsubstruct=new_halo_data_snap['numSubStruct'][ihalo]
+                    if hostID_temp>=0:
+                        new_halo_data_snap['halotype'][ihalo]=2
+                    elif numsubstruct==0:
+                        new_halo_data_snap['halotype'][ihalo]=1
+                    else:
+                        new_halo_data_snap['halotype'][ihalo]=0
+                print('Done with halotype')
+
             if 'Subhalo_rank' in extra_halo_fields:# mass ordered rank for subhalos in a group/cluster
                 print('Adding Subhalo_rank information for subhalos')
-                new_halo_data_snap['Subhalo_rank']=np.zeros(len(new_halo_data_snap['ID']))+np.nan
+                new_halo_data_snap['Subhalo_rank']=np.zeros(len(new_halo_data_snap['ID']))
                 processed_hostIDs=[]
                 for ihalo in range(n_halos_snap):
                     hostID_temp=new_halo_data_snap['hostHaloID'][ihalo]
@@ -513,8 +534,9 @@ def postprocess_detailed_halo_data(path=None):
         path=path+'/'
     
     halo_data_files=sorted(os.listdir(path))
-    halo_data_files_wdir=[path+halo_data_file for halo_data_file in halo_data_files]
-    outfilename=halo_data_files[-1][:-8]+'.dat'
+    halo_data_files_trunc=[halo_data_file for halo_data_file in halo_data_files if 'HaloData' in halo_data_file]
+    halo_data_files_wdir=[path+halo_data_file for halo_data_file in halo_data_files_trunc]
+    outfilename=halo_data_files_trunc[-1][:-8]+'.dat'
     if os.path.exists(outfilename):
         print('Removing existing detailed halo data ...')
         os.remove(outfilename)
@@ -531,7 +553,7 @@ def postprocess_detailed_halo_data(path=None):
 
 ########################### COMPRESS DETAILED HALO DATA ###########################
 
-def compress_halo_data(detailed_halo_data,fields=[]):
+def compress_detailed_halo_data(detailed_halo_data,fields=None):
         
     """
     
@@ -586,9 +608,16 @@ def compress_halo_data(detailed_halo_data,fields=[]):
         "Npart"
         
         """
+    print('Compressing detailed halo data ...')
 
     #process fields to include defaults + those desired
-    default_fields=['ID',
+    default_fields=['outname',
+    'Part_FileType',
+    'Part_FilePath',
+    'PartHist_FilePath',
+    'VR_FilePath',
+    'VR_FileType',
+    'ID',
     'hostHaloID',
     'Snap',
     'Head',
@@ -596,14 +625,90 @@ def compress_halo_data(detailed_halo_data,fields=[]):
     'SimulationInfo',
     'UnitInfo',
     'outname',
+    "npart",
     "Mass_tot",
+    'Mass_FOF',
     "M_gas",
     "Mass_200crit",
     "Mass_200mean",
-    "N_part"]
+    "Mass_200crit_excl",
+    "Aperture_mass_100_kpc",
+    "Aperture_mass_10_kpc",
+    "Aperture_mass_30_kpc",
+    "Aperture_mass_50_kpc",
+    "Aperture_mass_5_kpc",
+    "Aperture_mass_gas_100_kpc",
+    "Aperture_mass_gas_10_kpc",
+    "Aperture_mass_gas_30_kpc",
+    "Aperture_mass_gas_50_kpc",
+    "Aperture_mass_gas_5_kpc",
+    "Aperture_mass_gas_nsf_100_kpc",
+    "Aperture_mass_gas_nsf_10_kpc",
+    "Aperture_mass_gas_nsf_30_kpc",
+    "Aperture_mass_gas_nsf_50_kpc",
+    "Aperture_mass_gas_nsf_5_kpc",
+    "Aperture_mass_gas_sf_100_kpc",
+    "Aperture_mass_gas_sf_10_kpc",
+    "Aperture_mass_gas_sf_30_kpc",
+    "Aperture_mass_gas_sf_50_kpc",
+    "Aperture_mass_gas_sf_5_kpc",
+    "Aperture_mass_star_100_kpc",
+    "Aperture_mass_star_10_kpc",
+    "Aperture_mass_star_30_kpc",
+    "Aperture_mass_star_50_kpc",
+    "Aperture_mass_star_5_kpc",
+    "Aperture_rhalfmass_100_kpc",
+    "Aperture_rhalfmass_10_kpc",
+    "Aperture_rhalfmass_30_kpc",
+    "Aperture_rhalfmass_50_kpc",
+    "Aperture_rhalfmass_5_kpc",
+    "Aperture_rhalfmass_gas_100_kpc",
+    "Aperture_rhalfmass_gas_10_kpc",
+    "Aperture_rhalfmass_gas_30_kpc",
+    "Aperture_rhalfmass_gas_50_kpc",
+    "Aperture_rhalfmass_gas_5_kpc",
+    "Aperture_rhalfmass_gas_nsf_100_kpc",
+    "Aperture_rhalfmass_gas_nsf_10_kpc",
+    "Aperture_rhalfmass_gas_nsf_30_kpc",
+    "Aperture_rhalfmass_gas_nsf_50_kpc",
+    "Aperture_rhalfmass_gas_nsf_5_kpc",
+    "Aperture_rhalfmass_gas_sf_100_kpc",
+    "Aperture_rhalfmass_gas_sf_10_kpc",
+    "Aperture_rhalfmass_gas_sf_30_kpc",
+    "Aperture_rhalfmass_gas_sf_50_kpc",
+    "Aperture_rhalfmass_gas_sf_5_kpc",
+    "Aperture_rhalfmass_star_100_kpc",
+    "Aperture_rhalfmass_star_10_kpc",
+    "Aperture_rhalfmass_star_30_kpc",
+    "Aperture_rhalfmass_star_50_kpc",
+    "Aperture_rhalfmass_star_5_kpc",
+    "R_HalfMass",
+    "R_HalfMass_gas",
+    "R_HalfMass_gas_nsf",
+    "R_HalfMass_gas_sf",
+    "R_HalfMass_star",
+    "R_size",
+    "R_200crit",
+    "R_200mean",
+    "Xc",
+    "Yc",
+    "Zc",
+    "Xcminpot",
+    "Ycminpot",
+    "Zcminpot",
+    "Xcmbp",
+    "Ycmbp",
+    "Zcmbp",
+    "Rmax",
+    "SFR_gas",
+    "M_rel",
+    "Subhalo_rank",
+    "R_rel",
+    "halotype",
+    ]
 
-    fields_compound=np.unique(flatten([default_fields,fields]))
-    fields=fields_compound
+    if fields==None:
+        fields=default_fields
 
     no_snaps=len(detailed_halo_data)
     snap_mask=[len(detailed_halo_data_snap)>5 for detailed_halo_data_snap in detailed_halo_data]
@@ -619,105 +724,16 @@ def compress_halo_data(detailed_halo_data,fields=[]):
                 try:
                     output_halo_data[snap][field]=detailed_halo_data_snap[field]
                 except:
+                    print(f"Couldn't get {field} data")
                     pass
         else:
             output_halo_data[snap]=detailed_halo_data_snap
     
-    file_outname=outname+f'/B4_HaloData_{outname}.dat'
+    file_outname=f'B4_HaloData_{outname}.dat'
     if os.path.exists(file_outname):
         os.remove(file_outname)
     dump_pickle(path=file_outname,data=output_halo_data)
     return output_halo_data
-
-########################### RETRIEVE PARTICLE LISTS ###########################
-
-def get_particle_lists(base_halo_data_snap,halo_index_list=None,include_unbound=True,add_subparts_to_fofs=False):
-    
-    """
-
-    get_particle_lists : function
-	----------
-
-    Retrieve the particle lists for each halo for the provided halo data dictionary 
-    (and corresponding snapshot) from velociraptor.
-
-	Parameters
-    ----------
-
-    base_halo_data_snap : dictionary
-        The halo data dictionary for the relevant snapshot.
-
-    add_subparts_to_fof : bool
-        Flag as to whether to add subhalo particles to their fof halos.
-
-    Returns
-    ----------
-    part_data_temp : dictionary 
-        The particle IDs, Types, and counts for the given snapshot in a dictionary
-        Keys: 
-            "Particle_IDs" - list (for each halo) of lists of particle IDs
-            "Particle_Types" - list (for each halo) of lists of particle Types
-            "Npart" - list (for each halo) of the number of particles belonging to the object
-
-	"""
-
-    snap=int(base_halo_data_snap["Snap"])#grabs snap from the halo data dictionary
-
-    print('Reading halo particle lists for snap = ',snap)
-    halo_index_list_for_load=list(range(len(base_halo_data_snap["hostHaloID"])))#always need to load all particle lists (in case we need to add subparticles)
-
-    # Use VR python tools to grab particle data
-    try:
-        part_data_temp=ReadParticleDataFile(base_halo_data_snap['VR_FilePath'],halo_index_list=halo_index_list_for_load,ibinary=base_halo_data_snap['VR_FileType'],iverbose=0,iparttypes=1,unbound=include_unbound)
-    
-        if part_data_temp==[]:
-            part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
-            print('Particle data not found for snap = ',snap)
-            return part_data_temp
-
-    except: #if we can't load particle data
-        print('Particle data not included in hdf5 file for snap = ',snap)
-        part_data_temp={"Npart":[],"Npart_unbound":[],'Particle_IDs':[],'Particle_Types':[]}
-        return part_data_temp
-    
-    # Now (if desired) add particles from substructure to field halos (only do this for field halos)
-    if add_subparts_to_fofs:
-        print('Appending FOF particle lists with substructure')
-        field_halo_indices_temp=np.where(base_halo_data_snap['hostHaloID']==-1)[0]#find field/fof halos
-        for i_field_halo,field_halo_ID in enumerate(base_halo_data_snap['ID'][field_halo_indices_temp]):#go through each field halo
-            sub_halos_temp=(np.where(base_halo_data_snap['hostHaloID']==field_halo_ID)[0])#find the indices of its subhalos
-            if len(sub_halos_temp)>0:#where there is substructure
-                field_halo_temp_index=field_halo_indices_temp[i_field_halo]
-                field_halo_plist=part_data_temp['Particle_IDs'][field_halo_temp_index]
-                field_halo_tlist=part_data_temp['Particle_Types'][field_halo_temp_index]
-                sub_halos_plist=np.concatenate([part_data_temp['Particle_IDs'][isub] for isub in sub_halos_temp])#list all particles IDs in substructure
-                sub_halos_tlist=np.concatenate([part_data_temp['Particle_Types'][isub] for isub in sub_halos_temp])#list all particles types substructure
-                part_data_temp['Particle_IDs'][field_halo_temp_index],unique_indices=np.unique(np.concatenate([field_halo_plist,sub_halos_plist]),return_index=True)#add particles to field halo particle list
-                part_data_temp['Particle_Types'][field_halo_temp_index]=np.concatenate([field_halo_tlist,sub_halos_tlist])[unique_indices]#add particles to field halo particle list
-                part_data_temp['Npart'][field_halo_temp_index]=len(part_data_temp['Particle_IDs'][field_halo_temp_index])#update Npart for each field halo
-
-        
-        print('Finished appending FOF particle lists with substructure and ensuring unique')
-
-    # Output just the halo_index_list halos (to save memory)
-    if halo_index_list==None:
-        return part_data_temp#if not provided - just return all halo data 
-    else: 
-        truncated_IDs=[]
-        truncated_Types=[]
-        truncated_Npart=[]
-        for ihalo in halo_index_list:#add particle data for each halo in halo_index_list
-            if ihalo>-1:#if valid halo index
-                truncated_IDs.append(part_data_temp["Particle_IDs"][int(ihalo)])
-                truncated_Types.append(part_data_temp["Particle_Types"][int(ihalo)])
-                truncated_Npart.append(part_data_temp["Npart"][int(ihalo)])
-            else:#if not valid, add a np.nan
-                truncated_IDs.append(np.nan)
-                truncated_Types.append(np.nan)
-                truncated_Npart.append(np.nan)
-        part_data_temp_truncated={"Particle_IDs":truncated_IDs,"Particle_Types":truncated_Types,"Npart":truncated_Npart}
-
-        return part_data_temp_truncated
 
 ########################### FIND PROGENITOR AT DEPTH ###########################
 
@@ -815,4 +831,415 @@ def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
             if idepth==depth-1:
                 return index_idepth
     return index_idepth
+
+########################### GET FOF PARTICLE LISTS into DICTIONARY ###########################
+
+def get_FOF_particle_lists(base_halo_data,snap,halo_index_list=None):
+
+    keys_FOF=["Npart","Npart_unbound",'Particle_IDs','Particle_Types',"Particle_Bound"]
+    num_tot_halos=len(base_halo_data[snap]['ID'])
+    if halo_index_list==None:
+        halo_index_list=list(range(num_tot_halos))
+
+    try:
+        print('Reading FOF halo particle lists for snap = ',snap)
+        part_data_temp_FOF=ReadParticleDataFile(base_halo_data[snap]['VR_FilePath'],iparttypes=1,ibinary=base_halo_data[snap]['VR_FileType'],iverbose=0)
+        print('Read FOF halo particle lists for snap = ',snap)
+        part_data_temp_FOF_dict={field: {} for field in keys_FOF}
+        for field in keys_FOF:
+            part_data_temp_FOF_dict[field]={str(ihalo):part_data_temp_FOF[field][ihalo] for ihalo in range(num_tot_halos)}
+        part_data_temp_FOF=part_data_temp_FOF_dict
+        part_data_temp_FOF['Particle_InHost']={}
+        for ihalo in range(num_tot_halos):
+            part_data_temp_FOF['Particle_InHost'][str(ihalo)]=np.ones(part_data_temp_FOF["Npart"][str(ihalo)])
+
+    except: #if we can't load particle data
+        print('Couldnt get FOF particle data for snap = ',snap)
+        return None
+    halo_index_list_keys=list(part_data_temp_FOF['Npart'].keys())
+    halo_index_list_indices=[int(halo_index_list_key) for halo_index_list_key in halo_index_list_keys]
+
+    print('Appending FOF particle lists with substructure')
+    field_halo_indices_temp=np.where(base_halo_data[snap]['hostHaloID']==-1)[0]#find field/fof halos
+    for i_field_halo,field_halo_ID in enumerate(base_halo_data[snap]['ID'][field_halo_indices_temp]):#go through each field halo
+        sub_halos_temp=(np.where(base_halo_data[snap]['hostHaloID']==field_halo_ID)[0])#find the indices of its subhalos
+        if len(sub_halos_temp)>0:#where there is substructure
+            field_halo_temp_index=field_halo_indices_temp[i_field_halo]
+            field_halo_plist=part_data_temp_FOF['Particle_IDs'][str(field_halo_temp_index)]
+            field_halo_hlist=np.ones(len(field_halo_plist)).astype(int)
+            field_halo_tlist=part_data_temp_FOF['Particle_Types'][str(field_halo_temp_index)]
+            field_halo_blist=part_data_temp_FOF['Particle_Bound'][str(field_halo_temp_index)]
+            sub_halos_plist=np.concatenate([part_data_temp_FOF['Particle_IDs'][str(isub)] for isub in sub_halos_temp])#list all particles IDs in substructure
+            sub_halos_hlist=np.zeros(len(sub_halos_plist)).astype(int)
+            sub_halos_tlist=np.concatenate([part_data_temp_FOF['Particle_Types'][str(isub)] for isub in sub_halos_temp])#list all particles types substructure
+            sub_halos_blist=np.concatenate([part_data_temp_FOF['Particle_Bound'][str(isub)] for isub in sub_halos_temp])#list all particles bound 
+            part_data_temp_FOF['Particle_IDs'][str(field_halo_temp_index)],unique_indices=np.unique(np.concatenate([field_halo_plist,sub_halos_plist]),return_index=True)#add particles to field halo particle list
+            part_data_temp_FOF['Particle_InHost'][str(field_halo_temp_index)]=np.concatenate([field_halo_hlist,sub_halos_hlist])[unique_indices]#add particles to field halo particle list
+            part_data_temp_FOF['Particle_Types'][str(field_halo_temp_index)]=np.concatenate([field_halo_tlist,sub_halos_tlist])[unique_indices]#add particles to field halo particle list
+            part_data_temp_FOF['Particle_Bound'][str(field_halo_temp_index)]=np.concatenate([field_halo_blist,sub_halos_blist])[unique_indices]#add particles to field halo particle list
+            part_data_temp_FOF['Npart'][str(field_halo_temp_index)]=len(part_data_temp_FOF['Particle_IDs'][str(field_halo_temp_index)])#update Npart for each field halo
+    
+    print('Finished appending FOF particle lists with substructure and ensuring unique')
+
+    keys_FOF_all=["Npart","Npart_unbound",'Particle_IDs','Particle_Types',"Particle_Bound","Particle_InHost"]
+
+    part_data_temp_FOF_trunc={}
+    for field in keys_FOF_all:
+        part_data_temp_FOF_trunc[field]={str(ihalo):part_data_temp_FOF[field][str(ihalo)] for ihalo in halo_index_list if ihalo>=0}
+    
+    return part_data_temp_FOF_trunc
+
+########################### DUMP FOF/SO PARTICLE DATA ###########################
+
+def dump_structure_particle_data(base_halo_data,snaps,add_partdata=True,ifofs=True,isos=True):
+    
+    """
+
+    dump_structure_particle_data : function
+	----------
+
+    Retrieve the particle lists for each halo and so region for the provided halo data dictionary 
+    (and corresponding snapshot) from velociraptor.
+
+	Parameters
+    ----------
+
+    base_halo_data : list of dictionaries 
+        The halo data list for the relevant simulation.
+    
+    snap : int
+        The snap to retrieve particle lists for. 
+
+    add_partdata : bool
+        Whether to add particle data to the result. 
+
+    ifof : bool
+        Whether to add data for FOFs (default = True). 
+
+    iso : bool
+        Whether to add data for SOs (default = True). 
+
+    Returns
+    ----------
+    part_data_temp : dictionary 
+        The particle IDs, Types, and counts for the given snapshot in a dictionary
+        Keys: 
+            "Particle_IDs" - list (for each halo) of lists of particle IDs
+            "Particle_Types" - list (for each halo) of lists of particle Types
+            "Particle_Bound" - list (for each halo) of lists of the bound status of each particle
+            "Particle_InHost" - list (for each halo) of lists of the bound status of each particle
+            "Npart" - list (for each halo) of the number of particles belonging to the object
+
+            and, if add_partdata:
+            "Coordinates"
+            "Velicity"
+
+	"""
+
+    if snaps==None:
+        snap_indices=[len(base_halo_data)-1]
+    else:
+        snap_indices=snaps["indices"] #extract index list from input dictionary
+
+    if base_halo_data[-1]['Part_FileType']=='EAGLE':
+        parttypes=[0,1,4,5]
+    else:
+        parttypes=[0,1]
+
+    outfolder='halo_data/part_data/'
+    if not os.path.exists(outfolder):
+        os.mkdir(outfolder)
+    runname=base_halo_data[-1]["outname"]
+    
+    part_fields=['Coordinates','Velocity','Mass']
+
+    for snap in snap_indices:
+        print(f'****************************************************')
+        print(f'Generating data for particles in structure at snap {snap} ...')
+        print(f'****************************************************')
+
+        halo_index_list=list(range(len(base_halo_data[snap]['ID'])))
+        so_index_list=list(range(len(base_halo_data[snap]['ID'])))[22000:]
+
+
+        # Use VR python tools to grab FOF particle data
+        if ifofs:
+            keys_FOF=["Npart","Npart_unbound",'Particle_IDs','Particle_Types',"Particle_Bound"]
+            try:
+                print('Reading FOF halo particle lists for snap = ',snap)
+                part_data_temp_FOF=ReadParticleDataFile(base_halo_data[snap]['VR_FilePath'],iparttypes=1,ibinary=base_halo_data[snap]['VR_FileType'],iverbose=0)
+                print('Read FOF halo particle lists for snap = ',snap)
+                num_tot_halos=len(part_data_temp_FOF["Npart"])
+                part_data_temp_FOF_dict={field: {} for field in keys_FOF}
+                for field in keys_FOF:
+                    part_data_temp_FOF_dict[field]={str(ihalo):part_data_temp_FOF[field][ihalo] for ihalo in range(num_tot_halos)}
+                part_data_temp_FOF=part_data_temp_FOF_dict
+                part_data_temp_FOF['Particle_InHost']={}
+                for ihalo in range(num_tot_halos):
+                    part_data_temp_FOF['Particle_InHost'][str(ihalo)]=np.ones(part_data_temp_FOF["Npart"][str(ihalo)])
+
+            except: #if we can't load particle data
+                print('Couldnt get FOF particle data for snap = ',snap)
+                return None
+            halo_index_list_keys=list(part_data_temp_FOF['Npart'].keys())
+            halo_index_list_indices=[int(halo_index_list_key) for halo_index_list_key in halo_index_list_keys][:100]
+
+            print('Appending FOF particle lists with substructure')
+            field_halo_indices_temp=np.where(base_halo_data[snap]['hostHaloID']==-1)[0]#find field/fof halos
+            for i_field_halo,field_halo_ID in enumerate(base_halo_data[snap]['ID'][field_halo_indices_temp]):#go through each field halo
+                sub_halos_temp=(np.where(base_halo_data[snap]['hostHaloID']==field_halo_ID)[0])#find the indices of its subhalos
+                if len(sub_halos_temp)>0:#where there is substructure
+                    field_halo_temp_index=field_halo_indices_temp[i_field_halo]
+                    field_halo_plist=part_data_temp_FOF['Particle_IDs'][str(field_halo_temp_index)]
+                    field_halo_hlist=np.ones(len(field_halo_plist)).astype(int)
+                    field_halo_tlist=part_data_temp_FOF['Particle_Types'][str(field_halo_temp_index)]
+                    field_halo_blist=part_data_temp_FOF['Particle_Bound'][str(field_halo_temp_index)]
+                    sub_halos_plist=np.concatenate([part_data_temp_FOF['Particle_IDs'][str(isub)] for isub in sub_halos_temp])#list all particles IDs in substructure
+                    sub_halos_hlist=np.zeros(len(sub_halos_plist)).astype(int)
+                    sub_halos_tlist=np.concatenate([part_data_temp_FOF['Particle_Types'][str(isub)] for isub in sub_halos_temp])#list all particles types substructure
+                    sub_halos_blist=np.concatenate([part_data_temp_FOF['Particle_Bound'][str(isub)] for isub in sub_halos_temp])#list all particles bound 
+                    part_data_temp_FOF['Particle_IDs'][str(field_halo_temp_index)],unique_indices=np.unique(np.concatenate([field_halo_plist,sub_halos_plist]),return_index=True)#add particles to field halo particle list
+                    part_data_temp_FOF['Particle_InHost'][str(field_halo_temp_index)]=np.concatenate([field_halo_hlist,sub_halos_hlist])[unique_indices]#add particles to field halo particle list
+                    part_data_temp_FOF['Particle_Types'][str(field_halo_temp_index)]=np.concatenate([field_halo_tlist,sub_halos_tlist])[unique_indices]#add particles to field halo particle list
+                    part_data_temp_FOF['Particle_Bound'][str(field_halo_temp_index)]=np.concatenate([field_halo_blist,sub_halos_blist])[unique_indices]#add particles to field halo particle list
+                    part_data_temp_FOF['Npart'][str(field_halo_temp_index)]=len(part_data_temp_FOF['Particle_IDs'][str(field_halo_temp_index)])#update Npart for each field halo
+            print('Finished appending FOF particle lists with substructure and ensuring unique')
+        
+            if add_partdata:        
+                #Load particle histories    
+                print('Loading particle history data ...')
+                PartHistories_Snap_File=h5py.File(base_halo_data[snap]['PartHist_FilePath'],'r')
+                PartHistories_Snap_IDs={str(itype):PartHistories_Snap_File[f"PartType{itype}"]["ParticleIDs"].value for itype in parttypes}
+                PartHistories_Snap_Indices={str(itype):PartHistories_Snap_File[f"PartType{itype}"]["ParticleIndex"].value for itype in parttypes}
+
+                #Load basic sim data for this snap
+                h_val=base_halo_data[snap]['SimulationInfo']['h_val']
+                scalefactor_Snap=base_halo_data[snap]['SimulationInfo']['ScaleFactor']
+                dm_mass=base_halo_data[snap]['SimulationInfo']['Mass_DM_Physical']*h_val
+
+                #Load simulation data if needed
+                print('Loading simulation data ...')
+                if base_halo_data[snap]['Part_FileType']=='EAGLE':
+                    EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
+                    EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
+                    EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+                    PartData_Datasets_Snap_FULL={}
+                    for field in part_fields:
+                        PartData_Datasets_Snap_FULL[field]={}
+                        for itype in parttypes:
+                            if not field=='Mass':
+                                PartData_Datasets_Snap_FULL[field][str(itype)]=EAGLE_Snap.read_dataset(itype,field)
+                            else:
+                                if itype==1:
+                                    PartData_Datasets_Snap_FULL[field][str(itype)]=np.ones(len(PartData_Datasets_Snap_FULL['Coordinates']['1']))*dm_mass
+                                else:
+                                    PartData_Datasets_Snap_FULL[field][str(itype)]=EAGLE_Snap.read_dataset(itype,field)*10**10
+                else:
+                    PartData_Datasets_Snap_FULL={field:{str(itype):h5py.File(base_halo_data[snap]['Part_FilePath'],'r')[f'PartType{itype}'][field] for itype in parttypes} for field in part_fields}
+
+            # Process FOF lists
+            #initialise outputs
+            fields_FOF=list(part_data_temp_FOF.keys())
+            if add_partdata:
+                fields_FOF.extend(part_fields)
+                for field in part_fields:
+                    part_data_temp_FOF[field]={}
+
+            #output file
+            outpath_FOF=outfolder+f'ParticleData_{runname}_{str(snap).zfill(3)}.hdf5'
+            if os.path.exists(outpath_FOF):
+                outfile_FOF=h5py.File(outpath_FOF,'r+')
+            else:
+                outfile_FOF=h5py.File(outpath_FOF,'w')
+
+            print('Entering main halo loop to grab extra particle data ...')
+            for iihalo,ihalo in enumerate(halo_index_list):
+                if ihalo<10:
+                    print(f'Processing ihalo {ihalo} ({iihalo/len(halo_index_list)*100:.1f}% done)')
+                elif iihalo%100==0:
+                    print(f'Processing ihalo {ihalo} ({iihalo/len(halo_index_list)*100:.1f}% done)')
+
+                ifield=base_halo_data[snap]['hostHaloID'][ihalo]==-1
+                ihalo_FOF_IDlist=part_data_temp_FOF["Particle_IDs"][str(ihalo)]
+                ihalo_FOF_typelist=part_data_temp_FOF["Particle_Types"][str(ihalo)]
+                ihalo_Npart=len(ihalo_FOF_IDlist)
+
+                ihalo_types,ihalo_historyindices,ihalo_partindices=get_particle_indices(base_halo_data,
+                                                                    IDs_sorted=PartHistories_Snap_IDs,
+                                                                    indices_sorted=PartHistories_Snap_Indices,
+                                                                    IDs_taken=ihalo_FOF_IDlist,
+                                                                    types_taken=ihalo_FOF_typelist,
+                                                                    snap_taken=snap,
+                                                                    snap_desired=snap)
+                if add_partdata:
+                    for field in part_fields:
+                        if field=='Coordinates' or field =='Velocity':
+                            conversion_to_physical_fac=scalefactor_Snap/h_val
+                            part_data_temp_FOF[field][str(ihalo)]=np.zeros((ihalo_Npart,3))
+                        elif field=='Mass':
+                            conversion_to_physical_fac=1/h_val
+                            part_data_temp_FOF[field][str(ihalo)]=np.zeros(ihalo_Npart)
+                        else:
+                            conversion_to_physical_fac=1.0
+                            part_data_temp_FOF[field][str(ihalo)]=np.zeros(ihalo_Npart)
+
+                        for itype in parttypes:
+                            itype_mask=np.where(ihalo_types==itype)
+                            itype_partindices=ihalo_partindices[itype_mask]
+                            part_data_temp_FOF[field][str(ihalo)][itype_mask]=PartData_Datasets_Snap_FULL[field][str(itype)][(itype_partindices,)]*conversion_to_physical_fac
+
+                #SAVE TO FILE
+                try:
+                    ihalo_group=outfile_FOF.create_group(f'ihalo_{str(ihalo).zfill(6)}')
+                except:
+                    ihalo_group=outfile_FOF[f'ihalo_{str(ihalo).zfill(6)}']
+                    datasets=list(ihalo_group.keys())
+                    for dataset in datasets:
+                        del ihalo_group[dataset]
+
+                ihalo_Npart=part_data_temp_FOF["Npart"][str(ihalo)]
+                ihalo_meancop=np.array([np.nanmean(part_data_temp_FOF["Coordinates"][str(ihalo)][:,i]) for i in range(3)])
+                ihalo_mediancop=np.array([np.nanmedian(part_data_temp_FOF["Coordinates"][str(ihalo)][:,i]) for i in range(3)])
+                ihalo_com=np.array([base_halo_data[snap]['Xc'][ihalo],base_halo_data[snap]['Yc'][ihalo],base_halo_data[snap]['Zc'][ihalo]])
+                ihalo_cminpot=np.array([base_halo_data[snap]['Xcminpot'][ihalo],base_halo_data[snap]['Ycminpot'][ihalo],base_halo_data[snap]['Zcminpot'][ihalo]])
+                ihalo_cmbp=np.array([base_halo_data[snap]['Xcmbp'][ihalo],base_halo_data[snap]['Ycmbp'][ihalo],base_halo_data[snap]['Zcmbp'][ihalo]])
+                ihalo_r200crit=base_halo_data[snap]['R_200crit'][ihalo]
+                ihalo_r200mean=base_halo_data[snap]['R_200mean'][ihalo]
+                
+                for field in fields_FOF:
+                    if field=='Particle_IDs':
+                        ihalo_group.require_dataset(field,data=part_data_temp_FOF[field][str(ihalo)],dtype=np.uint64,shape=np.shape(part_data_temp_FOF[field][str(ihalo)]))
+                    elif 'Particle' in field:
+                        ihalo_group.require_dataset(field,data=part_data_temp_FOF[field][str(ihalo)],dtype=np.int8,shape=np.shape(part_data_temp_FOF[field][str(ihalo)]))
+                    else:
+                        ihalo_group.require_dataset(field,data=part_data_temp_FOF[field][str(ihalo)],dtype=np.float32,shape=np.shape(part_data_temp_FOF[field][str(ihalo)]))
+
+                ihalo_group.require_dataset('ihalo_meancop',data=ihalo_meancop,dtype=np.float32,shape=(1,3))
+                ihalo_group.require_dataset('ihalo_mediancop',data=ihalo_mediancop,dtype=np.float32,shape=(1,3))
+                ihalo_group.require_dataset('ihalo_com',data=ihalo_com,dtype=np.float32,shape=(1,3))
+                ihalo_group.require_dataset('ihalo_cminpot',data=ihalo_cminpot,dtype=np.float32,shape=(1,3))
+                ihalo_group.require_dataset('ihalo_cmbp',data=ihalo_cmbp,dtype=np.float32,shape=(1,3))
+                ihalo_group.require_dataset('ihalo_r200crit',data=ihalo_r200crit,dtype=np.float32,shape=(1,))
+                ihalo_group.require_dataset('ihalo_r200mean',data=ihalo_r200mean,dtype=np.float32,shape=(1,))
+
+            outfile_FOF.close()
+       
+        # SO LISTS
+        if isos:
+            #factors
+            h_val=base_halo_data[snap]['SimulationInfo']['h_val']
+            scalefactor=base_halo_data[snap]['SimulationInfo']['ScaleFactor']
+            dm_mass=base_halo_data[snap]['SimulationInfo']['Mass_DM_Physical']*h_val#comoving
+            phystocom=h_val/scalefactor
+            comtophys=1.0/phystocom
+
+            #output file
+            outpath_SO=outfolder+f'ParticleData_{runname}_{str(snap).zfill(3)}.hdf5'
+            if os.path.exists(outpath_SO):
+                outfile_SO=h5py.File(outpath_SO,'r+')
+            else:
+                outfile_SO=h5py.File(outpath_SO,'w')
+
+            print('Entering main so loop to grab extra particle data ...')
+            #initialise outputs
+            part_data_temp_SO={}
+            fields_SO=['Particle_IDs','Particle_Types','Npart']
+            if add_partdata:
+                fields_SO.extend(part_fields)
+  
+            for field in fields_SO:
+                part_data_temp_SO[field]={}
+            
+            for iiso,iso in enumerate(so_index_list):
+                if iso<10:
+                    print(f'Processing iso {iso} at snap {snap} ({iiso/len(so_index_list)*100:.1f}% done)')
+                elif iiso%100==0:
+                    print(f'Processing iso {iso} at snap {snap} ({iiso/len(so_index_list)*100:.1f}% done)')
+
+                iso_r200mean=base_halo_data[snap]['R_200mean'][iso]*phystocom
+                iso_r200crit=base_halo_data[snap]['R_200crit'][iso]*phystocom
+                iso_com=np.array([base_halo_data[snap]['Xc'][iso],base_halo_data[snap]['Yc'][iso],base_halo_data[snap]['Zc'][iso]])*phystocom
+                iso_cminpot=np.array([base_halo_data[snap]['Xcminpot'][iso],base_halo_data[snap]['Ycminpot'][iso],base_halo_data[snap]['Zcminpot'][iso]])*phystocom
+                iso_cmbp=np.array([base_halo_data[snap]['Xcmbp'][iso],base_halo_data[snap]['Ycmbp'][iso],base_halo_data[snap]['Zcmbp'][iso]])*phystocom
+
+                #LOAD/SLICE EAGLE SNAPSHOT
+                snapshot=read_eagle.EagleSnapshot(fname=base_halo_data[snap]['Part_FilePath'])
+                snapshot.select_region(xmin=iso_com[0]-iso_r200mean,xmax=iso_com[0]+iso_r200mean,ymin=iso_com[1]-iso_r200mean,ymax=iso_com[1]+iso_r200mean,zmin=iso_com[2]-iso_r200mean,zmax=iso_com[2]+iso_r200mean)
+
+                iso_IDs=[snapshot.read_dataset(itype,'ParticleIDs') for itype in [0,1,4,5]]
+                iso_IDs_concatenated=np.concatenate(iso_IDs)
+                iso_npart=[len(iso_IDs[iitype]) for iitype in range(len(iso_IDs))]
+                iso_types=np.concatenate([np.ones(iso_npart[iitype])*itype for iitype,itype in enumerate([0,1,4,5])]).astype(int)
+
+                part_data_temp_SO['Particle_IDs'][str(iso)]=iso_IDs_concatenated
+                part_data_temp_SO['Particle_Types'][str(iso)]=iso_types
+                part_data_temp_SO['Npart'][str(iso)]=int(len(iso_IDs_concatenated))
+
+                if add_partdata:
+                    for field in part_fields:
+                        if field=='Velocity' or field=='Coordinates':
+                            so_temp_partdata=np.concatenate([snapshot.read_dataset(itype,field) for itype in [0,1,4,5]])*comtophys
+                        elif field=='Mass':
+                            so_temp_partdata=[]
+                            for itype in parttypes:
+                                if not itype==1:
+                                    so_temp_partdata.extend(snapshot.read_dataset(itype,field)*10**10)
+                                else:
+                                    so_temp_partdata.extend(np.ones(iso_npart[1])*dm_mass)
+                            so_temp_partdata=np.array(so_temp_partdata)/h_val#convert to physical
+                        part_data_temp_SO[field][str(iso)]=so_temp_partdata
+
+                #SAVE TO FILE
+                try:
+                    iso_group=outfile_SO.create_group(f'iso_{str(iso).zfill(6)}')
+                except:
+                    iso_group=outfile_SO[f'iso_{str(iso).zfill(6)}']
+                    datasets=list(iso_group.keys())
+                    for dataset in datasets:
+                        del iso_group[dataset]
+
+
+                iso_Npart=part_data_temp_SO["Npart"][str(iso)]
+
+                if iso_Npart>0:#if non-zero SO region
+                    iso_meancop=np.array([np.nanmean(part_data_temp_SO["Coordinates"][str(iso)][:,i]) for i in range(3)])
+                    iso_mediancop=np.array([np.nanmedian(part_data_temp_SO["Coordinates"][str(iso)][:,i]) for i in range(3)])
+                    iso_r=(np.nanmax(part_data_temp_SO["Coordinates"][str(iso)][:,0])-np.nanmin(part_data_temp_SO["Coordinates"][str(iso)][:,0]))/2
+                    if iso_r>1:
+                        iso_r=(np.nanmax(part_data_temp_SO["Coordinates"][str(iso)][:,1])-np.nanmin(part_data_temp_SO["Coordinates"][str(iso)][:,1]))/2
+                        if iso_r>1:
+                            iso_r=(np.nanmax(part_data_temp_SO["Coordinates"][str(iso)][:,2])-np.nanmin(part_data_temp_SO["Coordinates"][str(iso)][:,2]))/2
+
+                    for field in fields_SO:
+                        if field=='Particle_IDs':
+                            iso_group.require_dataset(field,data=part_data_temp_SO[field][str(iso)],dtype=np.uint64,shape=np.shape(part_data_temp_SO[field][str(iso)]))
+                        elif 'Particle' in field:
+                            iso_group.require_dataset(field,data=part_data_temp_SO[field][str(iso)],dtype=np.int8,shape=np.shape(part_data_temp_SO[field][str(iso)]))
+                        else:
+                            iso_group.require_dataset(field,data=part_data_temp_SO[field][str(iso)],dtype=np.float32,shape=np.shape(part_data_temp_SO[field][str(iso)]))
+
+
+                else: 
+                    iso_meancop=np.array([np.nan,np.nan,np.nan])
+                    iso_mediancop=np.array([np.nan,np.nan,np.nan])
+                    iso_r=np.nan
+  
+                    for field in fields_SO:
+                        iso_group.require_dataset(field,data=np.nan,dtype=np.float16,shape=(1,))
+
+                iso_group.require_dataset('iso_meancop',data=iso_meancop,dtype=np.float32,shape=(1,3))
+                iso_group.require_dataset('iso_mediancop',data=iso_mediancop,dtype=np.float32,shape=(1,3))
+                iso_group.require_dataset('iso_r',data=iso_r,dtype=np.float32,shape=(1,))
+                iso_group.require_dataset('iso_com',data=iso_com*comtophys,dtype=np.float32,shape=(1,3))
+                iso_group.require_dataset('iso_cminpot',data=iso_cminpot*comtophys,dtype=np.float32,shape=(1,3))
+                iso_group.require_dataset('iso_cmbp',data=iso_cmbp*comtophys,dtype=np.float32,shape=(1,3))
+                iso_group.require_dataset('iso_r200mean',data=iso_r200mean*comtophys,dtype=np.float32,shape=(1,))
+                iso_group.require_dataset('iso_r200crit',data=iso_r200crit*comtophys,dtype=np.float32,shape=(1,))
+
+
+            outfile_SO.close()
+
+    return None
+
+########################### MATCH FOF/SO PARTICLE DATA ###########################
 

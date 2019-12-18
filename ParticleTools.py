@@ -28,111 +28,138 @@ import read_eagle
 import time
 
 from GenPythonTools import *
-from VRPythonTools import *
-from STFTools import *
-from AccretionTools import *
-from pandas import DataFrame as df
 
-#get IDs
-def get_halo_particle_data(base_halo_data,snap2,halo_index_list,add_subparts_to_fofs=True):
-    """
-    dumps coordinates to file
+#GET PARTICLE INDICES
+
+def get_particle_indices(base_halo_data,IDs_sorted,indices_sorted,IDs_taken,types_taken=None,snap_taken=None,snap_desired=None):
 
     """
-    snap1=snap2-1
-    
-    outfolder='vis_data/halo_coordinates/'
-    fullpath=''
-    for path in outfolder.split('/'):
-        fullpath=fullpath+f'{path}/'
-        if not os.path.exists(fullpath):
-            os.mkdir(fullpath)
-    
-    h_val=base_halo_data[snap1]['SimulationInfo']['h_val']
-    scalefactor_Snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
-    scalefactor_Snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
+    get_particle_indices : function
+	----------
 
-    print('Loading simulation data ...')
-    if base_halo_data[snap2]['Part_FileType']=='EAGLE':
-        parttypes=[0,1,4,5]
-        EAGLE_boxsize=base_halo_data[snap2]['SimulationInfo']['BoxSize_Comoving']
-        EAGLE_Snap1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
-        EAGLE_Snap1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-        EAGLE_Snap2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
-        EAGLE_Snap2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-        PartData_Coordinates_Snap1={str(itype):EAGLE_Snap1.read_dataset(itype,'Coordinates') for itype in parttypes}
-        PartData_Coordinates_Snap2={str(itype):EAGLE_Snap2.read_dataset(itype,'Coordinates') for itype in parttypes}
+    Given a list of particle IDs, find their index and type in particle data at the desired snap.
+
+	Parameters
+	----------
+    base_halo_data : list of dict
+        Base halo data from gen_base_halo_data.
+
+    IDs_sorted : dict of lists
+        Lists of sorted particle IDs from particle histories at the desired snap. 
+
+    indices_sorted : dict of lists
+        Lists of sorted particle indices from particle histories at the desired snap. 
+
+    IDs_taken : list of int
+        The IDs to search for at the desired snap. 
+
+    types_taken : list of int
+        The corresponding types of the IDs above (if available). 
+
+    snap_taken : int
+        The snap at which the IDs were taken.
+
+    snap_desired : int
+        The snap at which to find the indices.
+
+    Returns
+	----------
+    Tuple of parttypes_desired, historyindices_desired, partindices_desired
+
+    indices : list of int
+        The indices in particle data of the IDs at snap_desired. 
+
+    types : list of int
+        The corresponding types for indices above. 
+
+    """
+    #Number of particle IDs parsed
+    npart=len(IDs_taken)
+
+    #Indicating whether we are searching for future or past particles
+    search_after=snap_desired>snap_taken #flag as to whether index is desired after the ID was taken
+    search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
+
+    #if can't find particle, give it the index -1
+    indices_sorted['-1']=[-1]
+
+    #Particle types from dictionary of particle histories
+    parttype_keys=list(IDs_sorted.keys())
+    parttypes=sorted([int(parttype_key) for parttype_key in parttype_keys])
+    
+    #For each particle type, determine which lists will need to be searched
+    search_types={}
+    if len(parttypes)>2:
+        if search_now:#if searching current snap, particles will always be same type
+            for itype in parttypes:
+                search_types[str(itype)]=[itype]
+            search_types[str(-1)]=parttypes
+        else:# if past or future
+            search_types[str(1)]=[1]#dm particle will always be dm
+            search_types[str(-1)]=parttypes#if we don't have type, again have to search them all
+            if search_after:# if searching for particles after IDs were taken 
+                search_types[str(0)]=[0,4,5]#gas particles in future could be gas, star or BH
+                search_types[str(4)]=[4,5]#star particles in future could be star or BH
+                search_types[str(5)]=[5]#BH particles in future could be only BH
+            else:# if searching for particles before IDs were taken 
+                search_types[str(0)]=[0]#gas particles in past can only be gas
+                search_types[str(4)]=[4,0]#star particles in past can only be star or gas
+                search_types[str(5)]=[4,0,5]#BH particles in past can be gas, star or BH
     else:
-        parttypes=[0,1]
-        PartData_Coordinates_Snap1={str(itype):h5py.File(base_halo_data[snap1]['Part_FilePath'],'r')[f'PartType{itype}']['Coordinates'] for itype in parttypes}
-        PartData_Coordinates_Snap2={str(itype):h5py.File(base_halo_data[snap2]['Part_FilePath'],'r')[f'PartType{itype}']['Coordinates'] for itype in parttypes}
+        search_types={'0':[0],'1':[1],'-1':[0,1]}
     
-    print('Loading particle history data ...')
-    PartHistories_Snap1_File=h5py.File(base_halo_data[snap1]['PartHist_FilePath'],'r')
-    PartHistories_Snap1_IDs={str(itype):PartHistories_Snap1_File[f"PartType{itype}"]["ParticleIDs"] for itype in parttypes}
-    PartHistories_Snap1_Indices={str(itype):PartHistories_Snap1_File[f"PartType{itype}"]["ParticleIndex"] for itype in parttypes}
-    PartHistories_Snap2_File=h5py.File(base_halo_data[snap2]['PartHist_FilePath'],'r')
-    PartHistories_Snap2_IDs={str(itype):PartHistories_Snap2_File[f"PartType{itype}"]["ParticleIDs"] for itype in parttypes}
-    PartHistories_Snap2_Indices={str(itype):PartHistories_Snap2_File[f"PartType{itype}"]["ParticleIndex"] for itype in parttypes}
+    #if not given types, set all to -1
+    try:
+        len(types_taken)
+    except:
+        types_taken=np.array(np.zeros(npart)-1,dtype=np.int8)
 
-    print('Loading halo particle data ...')
-    ihalo_snap2_particles=get_particle_lists(base_halo_data[snap2],halo_index_list=halo_index_list,include_unbound=True,add_subparts_to_fofs=add_subparts_to_fofs)
-    ihalo_snap1_particles=get_particle_lists(base_halo_data[snap1],halo_index_list=halo_index_list,include_unbound=True,add_subparts_to_fofs=add_subparts_to_fofs)
+    #Initialising outputs
+    historyindices_atsnap=np.zeros(npart)-1
+    partindices_atsnap=np.zeros(npart)-1
+    parttypes_atsnap=np.zeros(npart)-1
+    
+    #Iterate through particles and type, history index and partdata index at the desited snap
+    ipart=0
+    npart_sorted={str(itype):len(IDs_sorted[f'{itype}']) for itype in parttypes}
 
-    for iihalo,ihalo in enumerate(halo_index_list):
-        ihalo_s1=find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=1)
-
-        outname_snap2=outfolder+f'ihalo_{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_current_xyzt.txt'
-        outname_snap1=outfolder+f'ihalo_{str(ihalo).zfill(6)}_snap{str(snap2).zfill(3)}_previous_xyzt.txt'
-
-        ihalo_snap2_particles_IDs=ihalo_snap2_particles["Particle_IDs"][iihalo]
-        ihalo_snap2_particles_Types=ihalo_snap2_particles["Particle_Types"][iihalo]
-
-        if not any(np.isfinite(ihalo_snap2_particles_IDs)):
-            print(f'Skipping ihalo {ihalo} (current particles)')
-            continue
-        elif np.size(ihalo_snap2_particles_IDs)==1:
-            ihalo_snap2_particles_IDs=np.array([ihalo_snap2_particles_IDs])
-            ihalo_snap2_particles_Types=np.array([ihalo_snap2_particles_Types])
+    for ipart,ipart_id,ipart_type in zip(list(range(npart)),IDs_taken,types_taken):
+        out_type=-1
+        if ipart%500==0:
+            # print(f'{ipart/npart*100:.2f}% done typing')
+            pass
+        #find new type
+        search_in=search_types[str(ipart_type)]
+        if len(search_in)==1:
+            out_type=search_in[0]
+        else:
+            isearch=0
+            for itype in search_in:
+                test_index=bisect_left(a=IDs_sorted[f'{itype}'],x=ipart_id,hi=npart_sorted[str(itype)])
+                if IDs_sorted[f'{itype}'][test_index]==ipart_id:
+                    out_type=itype
+                    break
+                else:
+                    continue
+                isearch=isearch+1
         
-        print(f'Indexing {np.size(ihalo_snap2_particles_IDs)} particles at snap 2...')
-        types_snap2,historyindices_snap2,partindices_snap2=get_particle_indices(base_halo_data,
-                                                            SortedIDs=PartHistories_Snap2_IDs,
-                                                            SortedIndices=PartHistories_Snap2_Indices,
-                                                            PartIDs=ihalo_snap2_particles_IDs,
-                                                            PartTypes=ihalo_snap2_particles_Types,
-                                                            snap_taken=snap2,
-                                                            snap_desired=snap2)
-        ihalo_snap1_particles_IDs=ihalo_snap1_particles["Particle_IDs"][iihalo]
-        ihalo_snap1_particles_Types=ihalo_snap1_particles["Particle_Types"][iihalo]
+        if out_type==-1:
+            print(f'Warning: couldnt find particle {ipart_id}.')
+            print(f'When taken (snap {snap_taken}), the particle was of type {ipart_type} but (at snap {snap_desired}) could not be found in {search_in} lists')
 
-        if not any(np.isfinite(ihalo_snap1_particles_IDs)):
-            print(f'Skipping ihalo {ihalo} (previous particles)')
-            continue
-        elif np.size(ihalo_snap1_particles_IDs)==1:
-            ihalo_snap1_particles_IDs=np.array([ihalo_snap1_particles_IDs])
-            ihalo_snap1_particles_Types=np.array([ihalo_snap1_particles_Types])
-        
-        print(f'Indexing {len(ihalo_snap1_particles_IDs)} particles at snap 1...')
-        types_snap1,historyindices_snap1,partindices_snap1=get_particle_indices(base_halo_data,
-                                                            SortedIDs=PartHistories_Snap1_IDs,
-                                                            SortedIndices=PartHistories_Snap1_Indices,
-                                                            PartIDs=ihalo_snap1_particles_IDs,
-                                                            PartTypes=ihalo_snap1_particles_Types,
-                                                            snap_taken=snap2,
-                                                            snap_desired=snap1)
-        
+        parttypes_atsnap[ipart]=out_type
 
+    for itype in parttypes:
+        itype_mask=np.where(parttypes_atsnap==itype)
+        itype_indices=binary_search(items=np.array(IDs_taken)[itype_mask],sorted_list=IDs_sorted[f'{itype}'],check_entries=False)
+        historyindices_atsnap[itype_mask]=itype_indices
+    
+    #Convert types and indices to integet
+    parttypes_atsnap=parttypes_atsnap.astype(int)
+    historyindices_atsnap=historyindices_atsnap.astype(int)
 
-        print('Extracting coordinates ...')
-        ihalo_Coordinates_snap1=np.array([PartData_Coordinates_Snap1[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap1 for ipart_type,ipart_partdataindex in zip(types_snap1,partindices_snap1)])
-        ihalo_Coordinates_snap2=np.array([PartData_Coordinates_Snap2[str(ipart_type)][ipart_partdataindex]/h_val*scalefactor_Snap2 for ipart_type,ipart_partdataindex in zip(types_snap2,partindices_snap2)])
+    #Use the parttypes and history indices to find the particle data indices
+    partindices_atsnap=np.array([indices_sorted[str(ipart_type)][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
 
-        ihalo_Coordinates_snap1=np.column_stack((ihalo_Coordinates_snap1,types_snap1))
-        ihalo_Coordinates_snap2=np.column_stack((ihalo_Coordinates_snap2,types_snap2))
-        
-        np.savetxt(fname=outname_snap2,X=ihalo_Coordinates_snap2,delimiter=',',fmt='%.8e')
-        np.savetxt(fname=outname_snap1,X=ihalo_Coordinates_snap1,delimiter=',',fmt='%.8e')
-
-
-    return None
+    #Return types, history indices, and particle data indices
+    return parttypes_atsnap,historyindices_atsnap,partindices_atsnap

@@ -21,6 +21,7 @@
 
 # PREAMBLE
 import numpy as np
+import pandas
 import pickle as pickle
 import os
 import subprocess
@@ -230,7 +231,7 @@ def rank_list(items):
     Take a list and return a list with the corresponding ranking of the element in the list. 
 
     e.g. items=[0,1,2,3,4,5]
-        ranks=[5,4,3,2,1,0] - 0 is the highest
+        ranks=[6,5,4,3,2,1] - 1 is the highest
 
 	Parameters
 	----------
@@ -248,12 +249,13 @@ def rank_list(items):
     items=np.array(items)
     ranks=[]
     for item in items:
-        num_elements_greater=int(np.sum(item<items))
+        num_elements_greater=int(np.sum(item<items))+1
         ranks.append(num_elements_greater)
     ranks=np.array(ranks)
     return ranks
 
 def list_dir(path):
+
     """
 
     list_dir : function
@@ -278,3 +280,26 @@ def list_dir(path):
     stdout=subprocess.Popen(f'find {path} -type f',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, universal_newlines=True).stdout
     dir_list=[str(item)[:-1] for item in stdout]
     return dir_list
+
+def mask_wnans(array,indices):
+    indices=np.array(indices)
+    array=np.array(array)
+    array_shape=np.shape(array)
+    if len(array_shape)>1:
+        entry_size=array_shape[1]
+        output_shape=(len(indices),entry_size)
+    else:
+        entry_size=0
+        output_shape=(len(indices),)
+
+    output_array=np.zeros(output_shape)+np.nan
+    valid_indices=np.where(np.isfinite(indices))
+    try:
+        output_array[valid_indices]=array[(indices[valid_indices].astype(int),)]
+    except:
+        for valid_index in valid_indices[0]:
+            try:
+                output_array[valid_index]=array[indices[valid_index]]
+            except:
+                pass
+    return output_array

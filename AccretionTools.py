@@ -26,11 +26,14 @@ import h5py
 import astropy.units as u
 import read_eagle
 import time
+import hdfdict
 
 from GenPythonTools import *
 from VRPythonTools import *
 from STFTools import *
+from ParticleTools import *
 from pandas import DataFrame as df
+from silx.io.dictdump import h5todict
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 
@@ -116,16 +119,16 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
 
         # Load the Halo particle lists for this snapshot for each particle type
         t1=time.time()
-        snap_Halo_Particle_Lists=get_particle_lists(base_halo_data[snap],include_unbound=True,add_subparts_to_fofs=False)#don't need to add subhalo particles as we have each subhalo separately
+        snap_Halo_Particle_Lists=get_FOF_particle_lists(base_halo_data,snap,add_subparts_to_fofs=False)#don't need to add subhalo particles as we have each subhalo separately
         n_halos=len(snap_Halo_Particle_Lists["Particle_IDs"])
         n_halo_particles=[len(snap_Halo_Particle_Lists["Particle_IDs"][ihalo]) for ihalo in range(n_halos)]
         allhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='int64')*haloid for ihalo,haloid in enumerate(base_halo_data[snap]['ID'])])
         structure_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostStructureID":allhalo_Particle_hosts},dtype=np.int64).sort_values(["ParticleIDs"])
         structure_Particles_bytype={str(itype):np.array(structure_Particles[["ParticleIDs","HostStructureID"]].loc[structure_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
-        n_structure_particles=np.sum([len(structure_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
+        n_structure_particles=np.nansum([len(structure_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists for snap {snap} in {t2-t1} sec")
-        print(f"There are {np.sum(n_structure_particles)} particles in structure")
+        print(f"There are {np.nansum(n_structure_particles)} particles in structure")
 
         # Map IDs to indices from particle data, and initialise array
         Particle_History_Flags=dict()
@@ -335,7 +338,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
                 if host_ID in halo_l2_IDs:
                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
-        print('About to save: L1!=L2?', np.sum(gas_flags_L2!=gas_flags_L1))
+        print('About to save: L1!=L2?', np.nansum(gas_flags_L2!=gas_flags_L1))
 
         try:
             infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.uint8)
@@ -349,120 +352,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
         infile_file.close()
 
-########################### GET PARTICLE INDICES ###########################
 
-def get_particle_indices(base_halo_data,SortedIDs,SortedIndices,PartIDs,PartTypes,snap_taken,snap_desired):
-
-    """
-    get_particle_indices : function
-	----------
-
-    Given a list of particle IDs, find their index and type in particle data at the desired snap.
-
-	Parameters
-	----------
-    base_halo_data : list of dict
-        Base halo data from gen_base_halo_data.
-
-    SortedIDs : dict of lists
-        Lists of sorted particle IDs from particle histories. 
-
-    SortedIndices : dict of lists
-        Lists of sorted particle indices from particle histories. 
-
-    PartIDs : list of int
-        The IDs to search for at the desired snap. 
-
-    PartTypes : list of int
-        The corresponding types of the IDs above. 
-
-    snap_taken : int
-        The snap at which the IDs were taken.
-
-    snap_desired : int
-        The snap at which to find the indices.
-
-    Returns
-	----------
-    Tuple of Indices, Types.
-
-    Indices : list of int
-        The indices in particle data of the IDs at snap_desired. 
-
-    Types : list of int
-        The corresponding types for indices above. 
-
-    """
-    #Number of particle IDs parsed
-    npart=len(PartIDs)
-
-    #Indicating whether we are searching for future or past particles
-    search_after=snap_desired>snap_taken #flag as to whether index is desired after the ID was taken
-    search_now=snap_desired==snap_taken #flag as to whether index is desired at the snap the ID was taken
-    
-    #Particle types from dictionary of particle histories
-    parttype_keys=list(SortedIDs.keys())
-    parttypes=[int(parttype_key) for parttype_key in parttype_keys]
-    
-    #For each particle type, determine which lists will need to be searched
-    search_types={}
-    if len(parttypes)>2:
-        if search_now:#if searching current snap, particles will always be same type
-            for itype in parttypes:
-                search_types[str(itype)]=[itype]
-        else:# if past or future
-            search_types[str(1)]=[1]#dm particle will always be dm
-            if search_after:# if searching for particles after IDs were taken 
-                search_types[str(0)]=[0,4,5]#gas particles in future could be gas, star or BH
-                search_types[str(4)]=[4,5]#star particles in future could be star or BH
-                search_types[str(5)]=[5]#BH particles in future could be only BH
-            else:# if searching for particles before IDs were taken 
-                search_types[str(0)]=[0]#gas particles in past can only be gas
-                search_types[str(4)]=[4,0]#star particles in past can only be star or gas
-                search_types[str(5)]=[4,0,5]#BH particles in past can be gas, star or BH
-    else:
-        search_types={'0':[0],'1':[1]}
-    
-    #Initialising outputs
-    historyindices_atsnap=np.zeros(npart)-1
-    partindices_atsnap=np.zeros(npart)-1
-    parttypes_atsnap=np.zeros(npart)-1
-    
-    #Iterate through particles and type, history index and partdata index at the desited snap
-    ipart=0
-    for ipart,ipart_id,ipart_type in zip(list(range(npart)),PartIDs,PartTypes):
-        #find new type
-        search_in=search_types[str(ipart_type)]
-        if len(search_in)==1:
-            out_type=search_in[0]
-        else:
-            for itype in search_in:
-                test_index=binary_search(items=[ipart_id],sorted_list=SortedIDs[f'{itype}'],check_entries=True)[0]
-                if test_index>=0:
-                    out_type=itype
-                    break
-                else:
-                    continue
-        parttypes_atsnap[ipart]=out_type
-
-    for itype in parttypes:
-        itype_mask=np.where(parttypes_atsnap==itype)
-        itype_indices=binary_search(items=np.array(PartIDs)[itype_mask],sorted_list=SortedIDs[f'{itype}'],check_entries=False)
-        historyindices_atsnap[itype_mask]=itype_indices
-    
-    #Convert types and indices to integet
-    parttypes_atsnap=parttypes_atsnap.astype(int)
-    historyindices_atsnap=historyindices_atsnap.astype(int)
-
-    #Use the parttypes and history indices to find the particle data indices
-    partindices_atsnap=np.array([SortedIndices[str(ipart_type)][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
-
-    #Return types, history indices, and particle data indices
-    return parttypes_atsnap,historyindices_atsnap,partindices_atsnap
-
-########################### GENERATE ACCRETION DATA ###########################
-
-def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1):
     
     """
 
@@ -518,22 +408,33 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         There is a group for each halo: ihalo_xxxxxx
         
         Inflow:
+            For each particle type /PartTypeX/:
+                Each of the following datasets will have n_in particles - the n_in initially selected as accretion "candidates" from being in the particle list at snap 2. 
+                The particles are categorised by their type at SNAP 1 (i.e. prior to entering the halo)
 
-            '/Inflow/PartTypeX/ParticleIDs': ParticleID (in particle data for given type) of all accreted particles.
-            '/Inflow/PartTypeX/Masses': Mass (in particle data for given type) of all accreted particles.
-            '/Inflow/PartTypeX/Fidelity': Whether this particle stayed in the halo at the given fidelity gap. 
-            '/Inflow/PartTypeX/PreviousHost': Which structure was this particle host to (-1: not in any fof object, >0: ID of previous halo).
-            '/Inflow/PartTypeX/Processed_L1': How many snaps has this particle been part of any structure in the past. 
-            '/Inflow/PartTypeX/Processed_L2': How many snaps has this particle been part of halos with no substructure in the past. 
-            + more for PartType0 if add_gas_particle_data is run. 
+                'ParticleIDs': ParticleID (in particle data for given type) of all accreted particles.
+                'snap1_FOF':  Is the candidate particle included in the FOF list at snap 1?
+                'snap1_SO':  Is the candidate particle included in the SO list at snap 1?
+                'snap1_Processed': How many snaps has this particle been part of any structure in the past.
+                'snap2_Bound': Is the candidate particle bound (in the FOF list) at snap 2?
+                'snap2_FOF': Is the candidate particle included in the FOF at snap 2? (if 0, only in SO list)
+                'snap3_Bound': Is the candidate particle bound (in the FOF list) at snap 3?
+                'snap3_FOF': Is the candidate particle included in the FOF at snap 3? 
+                'snap3_SO': Is the candidate particle included in the SO list at snap 3?
 
         Outflow: 
+            For each particle type /PartTypeX/:
+                Each of the following datasets will have n_out particles - the n initially selected as outflow "candidates" from disappearing from the SO particle list of the halo at snap 2 from snap 1. 
+                The particles are categorised by their type at SNAP 2 (i.e. after entering the halo)
 
-            '/Outflow/PartTypeX/ParticleIDs': ParticleID (in particle data for given type) of all outflow particles.
-            '/Outflow/PartTypeX/Masses': Mass (in particle data for given type) of all outflow particles.
-            '/Outflow/PartTypeX/Destination_S2': Where did the particle end up after outflow at snap 2 (-1: not in halo or group, 0: CGM (only subhalos), >1: ID of destination subhalo in same field halo)
-            '/Outflow/PartTypeX/Destination_S3': Where did the particle end up after outflow at snap 3 (-1: not in halo or group, 0: CGM (only subhalos), 1: reaccreted, >1: ID of destination subhalo in same field halo)
-            + more for PartType0 if add_gas_particle_data is run. 
+                'ParticleIDs': ParticleID (in particle data for given type) of all accreted particles.
+                'snap1_FOF': Was the candidate particle included in the FOF at snap 1? (if 0, only in SO list)
+                'snap2_Destination': Is the candidate particle bound (in the FOF list) at snap 2?
+                'snap2_FOF': Is the candidate particle included in the FOF at snap 2?
+                'snap3_Bound': Is the candidate particle bound (in the FOF list) at snap 3?
+                'snap3_FOF': Is the candidate particle included in the FOF at snap 3?
+                'snap3_SO': Is the candidate particle included in the SO list at snap 3?
+
 
         Where there will be num_total_halos ihalo datasets. 
     
@@ -717,28 +618,31 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     #Load in particle histories: snap 1
     print(f'Retrieving & organising particle histories for snap = {snap1} ...')
     Part_Histories_File_snap1=h5py.File("part_histories/PartHistory_"+str(snap1).zfill(3)+"_"+run_outname+".hdf5",'r')
-    Part_Histories_IDs_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes}
-    Part_Histories_Index_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes}
-    Part_Histories_HostStructure_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes}
-    Part_Histories_Processed_L1_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L1'] for parttype in [0,1]}
-    Part_Histories_Processed_L2_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L2'] for parttype in [0,1]}
+    Part_Histories_IDs_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIDs'].value for parttype in PartTypes}
+    Part_Histories_Index_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIndex'].value for parttype in PartTypes}
+    Part_Histories_HostStructure_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/HostStructure'].value for parttype in PartTypes}
+    Part_Histories_Processed_L1_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L1'].value for parttype in [0,1]}
+    Part_Histories_Processed_L2_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L2'].value for parttype in [0,1]}
     Part_Histories_npart_snap1={str(parttype):len(Part_Histories_IDs_snap1[str(parttype)]) for parttype in PartTypes}
 
     #Load in particle histories: snap 2
     print(f'Retrieving & organising particle histories for snap = {snap2} ...')
     Part_Histories_File_snap2=h5py.File("part_histories/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
-    Part_Histories_IDs_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'] for parttype in PartTypes}
-    Part_Histories_Index_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'] for parttype in PartTypes}
-    Part_Histories_HostStructure_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'] for parttype in PartTypes}
+    Part_Histories_IDs_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'].value for parttype in PartTypes}
+    Part_Histories_Index_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'].value for parttype in PartTypes}
+    Part_Histories_HostStructure_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'].value for parttype in PartTypes}
     Part_Histories_npart_snap2={str(parttype):len(Part_Histories_IDs_snap2[str(parttype)]) for parttype in PartTypes}
 
     #Load in particle lists from VR
     print('Retrieving VR halo particle lists ...')
-    snap_1_halo_particles=get_particle_lists(base_halo_data[snap1],halo_index_list=halo_index_list_snap1,include_unbound=True,add_subparts_to_fofs=True)
-    snap_2_halo_particles=get_particle_lists(base_halo_data[snap2],halo_index_list=halo_index_list_snap2,include_unbound=True,add_subparts_to_fofs=True)
-    snap_3_halo_particles=get_particle_lists(base_halo_data[snap3],halo_index_list=halo_index_list_snap3,include_unbound=True,add_subparts_to_fofs=True)
-
+    snap_1_halo_particles_nosp=get_FOF_particle_lists(base_halo_data,snap1,halo_index_list=halo_index_list_snap1,add_subparts_to_fofs=False)
+    snap_2_halo_particles_nosp=get_FOF_particle_lists(base_halo_data,snap2,halo_index_list=halo_index_list_snap2,add_subparts_to_fofs=False)
+    snap_3_halo_particles_nosp=get_FOF_particle_lists(base_halo_data,snap3,halo_index_list=halo_index_list_snap3,add_subparts_to_fofs=False)
+    snap_1_halo_particles_wsp=get_FOF_particle_lists(base_halo_data,snap1,halo_index_list=halo_index_list_snap1,add_subparts_to_fofs=True)
+    snap_2_halo_particles_wsp=get_FOF_particle_lists(base_halo_data,snap2,halo_index_list=halo_index_list_snap2,add_subparts_to_fofs=True)
+    snap_3_halo_particles_wsp=get_FOF_particle_lists(base_halo_data,snap3,halo_index_list=halo_index_list_snap3,add_subparts_to_fofs=True)
     t2_io=time.time()
+
     print()
     print('*********************************************************')
     print(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
@@ -751,17 +655,9 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     halos_done=0
     num_halos_thisprocess=len(halo_index_list_snap2)
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
-        with open(fname_log,"a") as progress_file:
-            progress_file.write(f' \n')
-            progress_file.write(f'Starting with ihalo {ihalo_s2} ...\n')
-        progress_file.close()
 
         t1_halo=time.time()
         t1_preamble=time.time()
-        # Create group for this halo in output file
-        ihalo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
-        ihalo_in_hdf5=ihalo_hdf5.create_group('Inflow')
-        ihalo_out_hdf5=ihalo_hdf5.create_group('Outflow')
 
         # Find halo progenitor and descendants 
         ihalo_s1=halo_index_list_snap1[iihalo]#find progenitor
@@ -772,6 +668,56 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
         except:
             idhalo_s1=np.nan
             idhalo_s3=np.nan
+        
+        ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)#track if have both progenitor and descendant
+        structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]#structure type
+        numsubstruct=base_halo_data[snap2]["numSubStruct"][ihalo_s2]
+
+        # If we have a subhalo, find its progenitor host group
+        if structuretype>10:
+            isub=True
+            ifield=False
+            try:
+                current_hostgroupID=base_halo_data[snap2]["hostHaloID"][ihalo_s2]
+                current_hostindex=np.where(current_hostgroupID==base_halo_data[snap2]["ID"])[0][0]
+                prev_hostindex=find_progen_index(base_halo_data,index2=current_hostindex,snap2=snap2,depth=1) #host index at previous snapshot 
+                prev_hostgroupID=base_halo_data[snap1]["ID"][prev_hostindex] #the host halo ID of this subhalo at the previous snapshot
+            except:#if can't find progenitor, don't try to compare for CGM accretion
+                prev_hostHaloID=np.nan
+                prev_hostgroupID=np.nan
+        else:
+            isub=False
+            ifield=True
+            prev_hostHaloID=np.nan
+            prev_hostgroupID=np.nan
+        
+        # Create group for this halo in output file
+        ihalo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
+        if isub:
+            ihalo_types=[3]
+            ihalo_hdf5_gal=ihalo_hdf5.create_group('subhalo')
+            ihalo_hdf5_gal.attrs.create('HaloType',data=3)#satellite
+            ihalo_hdf5_gal.create_group('Inflow');ihalo_hdf5_gal.create_group('Outflow')
+
+        if ifield:
+            if numsubstruct>0:
+                ihalo_types=[0,2]
+                ihalo_hdf5_gal=ihalo_hdf5.create_group('subhalo')
+                ihalo_hdf5_gal.attrs.create('HaloType',data=2)#central
+                ihalo_hdf5_gal.create_group('Inflow');ihalo_hdf5_gal.create_group('Outflow')
+                ihalo_hdf5_group=ihalo_hdf5.create_group('halo')
+                ihalo_hdf5_group.attrs.create('HaloType',data=0)#group halo
+                ihalo_hdf5_group.create_group('Inflow');ihalo_hdf5_group.create_group('Outflow')
+            else:
+                ihalo_types=[1]
+                ihalo_hdf5_group=ihalo_hdf5.create_group('halo')
+                ihalo_hdf5_group.attrs.create('halotype',data=1)#field halo
+                ihalo_hdf5_group.create_group('Inflow');ihalo_hdf5_group.create_group('Outflow')
+        
+        with open(fname_log,"a") as progress_file:
+            progress_file.write(f' \n')
+            progress_file.write(f'Starting with ihalo {ihalo_s2}: types {ihalo_types}... \n')
+        progress_file.close()
 
         #Record halo position and velocity
         if ihalo_s1>=0:
@@ -792,27 +738,8 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
             ihalo_hdf5.attrs.create('snap3_R200',data=base_halo_data[snap3]['R_200crit'][ihalo_s3],dtype=np.float32)
             ihalo_hdf5.attrs.create('snap3_M200',data=base_halo_data[snap3]['Mass_200crit'][ihalo_s3]*10**10,dtype=np.float32)
             ihalo_hdf5.attrs.create('snap3_Vmax',data=base_halo_data[snap3]['Vmax'][ihalo_s3],dtype=np.float32)
-        ihalo_tracked=(ihalo_s1>-1 and ihalo_s3>-1)#track if have both progenitor and descendant
-        structuretype=base_halo_data[snap2]["Structuretype"][ihalo_s2]#structure type
 
-        # If we have a subhalo, find its progenitor host group (for CGM accretion)
-        if structuretype>10:
-            isub=True
-            ifield=False
-            try:
-                current_hostgroupID=base_halo_data[snap2]["hostHaloID"][ihalo_s2]
-                current_hostindex=np.where(current_hostgroupID==base_halo_data[snap2]["ID"])[0][0]
-                prev_hostindex=find_progen_index(base_halo_data,index2=current_hostindex,snap2=snap2,depth=1) #host index at previous snapshot 
-                prev_hostgroupID=base_halo_data[snap1]["ID"][prev_hostindex] #the host halo ID of this subhalo at the previous snapshot
-            except:#if can't find progenitor, don't try to compare for CGM accretion
-                prev_hostHaloID=np.nan
-                prev_hostgroupID=np.nan
-                print("Couldn't find the progenitor group - not checking for CGM accretion")
-        else:
-            isub=False
-            ifield=True
-            prev_hostHaloID=np.nan
-            prev_hostgroupID=np.nan
+
         # Print halo data for outputs 
         print()
         print('**********************************************')
@@ -829,160 +756,220 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
 
         # If this halo is going to be tracked (and is not a subsubhalo) then we continue
         if ihalo_tracked and structuretype<25:# if we found both the progenitor and the descendent (and it's not a subsubhalo)
-            snap1_IDs_temp=snap_1_halo_particles['Particle_IDs'][iihalo]#IDs in the halo at the previous snap
-            snap1_Types_temp=snap_1_halo_particles['Particle_Types'][iihalo]#Types of particles in the halo at the previous snap
-            snap2_IDs_temp=snap_2_halo_particles['Particle_IDs'][iihalo]#IDs in the halo at the current snap
-            snap2_Types_temp=snap_2_halo_particles['Particle_Types'][iihalo]# Types of particles in the halo at the current snap
-            snap3_IDs_temp_set=set(snap_3_halo_particles['Particle_IDs'][iihalo])# Set of IDs in the halo at the subsequent snapshot (to compare with)
+            snap1_IDs_temp_wsp=snap_1_halo_particles_wsp['Particle_IDs'][str(ihalo_s1)]#IDs in the halo at the previous snap
+            snap1_Types_temp_wsp=snap_1_halo_particles_wsp['Particle_Types'][str(ihalo_s1)]#Types of particles in the halo at the previous snap
+            snap2_IDs_temp_wsp=snap_2_halo_particles_wsp['Particle_IDs'][str(ihalo_s2)]#IDs in the halo at the current snap
+            snap2_Types_temp_wsp=snap_2_halo_particles_wsp['Particle_Types'][str(ihalo_s2)]# Types of particles in the halo at the current snap
+            snap2_Bound_temp_wsp=snap_2_halo_particles_wsp['Particle_Bound'][str(ihalo_s2)]# Types of particles in the halo at the current snap
+
+            snap1_IDs_temp_nosp=snap_1_halo_particles_nosp['Particle_IDs'][str(ihalo_s1)]#IDs in the halo at the previous snap
+            snap1_Types_temp_nosp=snap_1_halo_particles_nosp['Particle_Types'][str(ihalo_s1)]#Types of particles in the halo at the previous snap
+            snap2_IDs_temp_nosp=snap_2_halo_particles_nosp['Particle_IDs'][str(ihalo_s2)]#IDs in the halo at the current snap
+            snap2_Types_temp_nosp=snap_2_halo_particles_nosp['Particle_Types'][str(ihalo_s2)]# Types of particles in the halo at the current snap
+            snap2_Bound_temp_nosp=snap_2_halo_particles_nosp['Particle_Bound'][str(ihalo_s2)]# Types of particles in the halo at the current snap
             
             ############ GRABBING DATA FOR INFLOW PARTICLES (at snap 1) ############
             # Returns mask for s2 of particles which are in s2 but not in s1
-            print(f"Finding and indexing new particles to ihalo {ihalo_s2} ...")
-            t1_new=time.time()
-            new_particle_IDs_mask_snap2=np.isin(snap2_IDs_temp,snap1_IDs_temp,assume_unique=True,invert=True)
-            new_particle_IDs_where_snap2=np.where(new_particle_IDs_mask_snap2)
-            new_particle_IDs=snap2_IDs_temp[new_particle_IDs_where_snap2]
-            new_particle_Types_snap2=snap2_Types_temp[new_particle_IDs_where_snap2]
-            new_particle_Types_snap1,new_particle_historyindices_snap1,new_particle_partindices_snap1=get_particle_indices(base_halo_data=base_halo_data,
-                                                                    SortedIDs=Part_Histories_IDs_snap1,
-                                                                    SortedIndices=Part_Histories_Index_snap1,
-                                                                    PartIDs=new_particle_IDs,
-                                                                    PartTypes=new_particle_Types_snap2,
-                                                                    snap_taken=snap2,
-                                                                    snap_desired=snap1)
-            new_particle_tranformed=np.logical_not(new_particle_Types_snap1==new_particle_Types_snap2)
-            ihalo_nin=np.sum(new_particle_IDs_mask_snap2)
-            print(f"n(in) = {ihalo_nin}")
-            t2_new=time.time()
-
-            ihalo_snap1_inflow_type=new_particle_Types_snap1
-            ihalo_snap1_inflow_transformed=new_particle_tranformed
-            ihalo_snap1_inflow_history_L1=np.zeros(ihalo_nin)
-            ihalo_snap1_inflow_history_L2=np.zeros(ihalo_nin)
-            ihalo_snap1_inflow_structure=np.zeros(ihalo_nin)+np.nan
-            ihalo_snap1_inflow_fidelity=np.zeros(ihalo_nin)
-            ihalo_snap1_inflow_masses=np.zeros(ihalo_nin)+np.nan
-
-            # Find processing history, previous host, fidelity
-            for iipartin,ipartin_ID,ipartin_snap1_type,ipartin_snap1_historyindex,ipartin_snap1_partindex in zip(list(range(ihalo_nin)),new_particle_IDs,new_particle_Types_snap1,new_particle_historyindices_snap1,new_particle_partindices_snap1):
-                if ipartin_snap1_type==0 or ipartin_snap1_type==1:#if DM or gas, this has been recorded
-                    ihalo_snap1_inflow_history_L1[iipartin]=Part_Histories_Processed_L1_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
-                    ihalo_snap1_inflow_history_L2[iipartin]=Part_Histories_Processed_L2_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
-                else:#assume stars have been processed
-                    ihalo_snap1_inflow_history_L1[iipartin]=1
-                    ihalo_snap1_inflow_history_L2[iipartin]=1
-                ihalo_snap1_inflow_structure[iipartin]=Part_Histories_HostStructure_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
-                ihalo_snap1_inflow_fidelity[iipartin]=int(ipartin_ID in snap3_IDs_temp_set)
-
-            # Find mass
-            for itype in PartTypes:
-                ihalo_itype_snap1_inflow_mask=ihalo_snap1_inflow_type==itype
-                ihalo_itype_snap1_inflow_where=np.where(ihalo_itype_snap1_inflow_mask)
-                ihalo_itype_snap1_inflow_n=np.sum(ihalo_itype_snap1_inflow_mask)
-                ihalo_itype_snap1_inflow_partindices=new_particle_partindices_snap1[ihalo_itype_snap1_inflow_where]
-                if constant_mass[str(itype)]:
-                    ihalo_itype_snap1_inflow_masses=np.ones(ihalo_itype_snap1_inflow_n)*Part_Data_Masses_Snap1[str(itype)]
+            iihalo_type=0
+            for ihalo_type in ihalo_types:
+                iihalo_type=iihalo_type+1
+                if ihalo_type==0 or ihalo_type==1:
+                    ihalo_key='halo'
                 else:
-                    ihalo_itype_snap1_inflow_masses=np.array([Part_Data_Masses_Snap1[str(itype)][ihalo_itype_snap1_inflow_partindex] for ihalo_itype_snap1_inflow_partindex in ihalo_itype_snap1_inflow_partindices])
-                ihalo_snap1_inflow_masses[ihalo_itype_snap1_inflow_where]=ihalo_itype_snap1_inflow_masses
-            
-            ############ GRABBING DATA FOR OUTFLOW PARTICLES (at snap 2) ############
-            # # Returns mask for s1 of particles which are in s1 but not in s2
-            print(f"Finding and indexing particles which left ihalo {ihalo_s2} ...")
-            t1_out=time.time()
-            out_particle_IDs_mask_snap1=np.isin(snap1_IDs_temp,snap2_IDs_temp,assume_unique=True,invert=True)
-            out_particle_IDs_where_snap1=np.where(out_particle_IDs_mask_snap1)
-            out_particle_IDs=snap1_IDs_temp[out_particle_IDs_where_snap1]
-            out_particle_Types_snap1=snap1_Types_temp[out_particle_IDs_where_snap1]
-            out_particle_Types_snap2,out_particle_historyindices_snap2,out_particle_partindices_snap2=get_particle_indices(base_halo_data=base_halo_data,
-                                                        SortedIDs=Part_Histories_IDs_snap2,
-                                                        SortedIndices=Part_Histories_Index_snap2,
-                                                        PartIDs=out_particle_IDs,
-                                                        PartTypes=out_particle_Types_snap1,
-                                                        snap_taken=snap1,
-                                                        snap_desired=snap2)
-            out_particle_tranformed=np.logical_not(np.array(out_particle_Types_snap1)==np.array(out_particle_Types_snap2))
-            # if np.sum(out_particle_tranformed)>0:
-            #     print('******************************')
-            #     print('Particles have been transformed!')
-            ihalo_nout=np.sum(out_particle_IDs_mask_snap1)
-            t2_out=time.time()
-            print(f"n(out) = {ihalo_nout}")
-            
-            with open(fname_log,"a") as progress_file:
-                progress_file.write(f'       n(in): total = {ihalo_nin}\n')
-                progress_file.write(f'       n(out): total = {ihalo_nout}\n')
-            progress_file.close()
-            
-            ihalo_snap2_outflow_type=out_particle_Types_snap2
-            ihalo_snap2_outflow_transformed=out_particle_tranformed
-            ihalo_snap2_outflow_destination=np.zeros(ihalo_nout)+np.nan
-            ihalo_snap3_outflow_recycled=np.zeros(ihalo_nout)+np.nan
-            ihalo_snap2_outflow_masses=np.zeros(ihalo_nout)+np.nan
+                    ihalo_key='subhalo'
 
-            # Find processing history, previous host, fidelity
-            for iipartout,ipartout_ID,ipartout_snap2_type,ipartout_snap2_historyindex,ipartout_snap2_partindex in zip(list(range(ihalo_nout)),out_particle_IDs,out_particle_Types_snap2,out_particle_historyindices_snap2,out_particle_partindices_snap2):
-                ihalo_snap2_outflow_destination[iipartout]=Part_Histories_HostStructure_snap2[str(ipartout_snap2_type)][ipartout_snap2_historyindex]
-                ihalo_snap3_outflow_recycled[iipartout]=int(ipartout_ID in snap3_IDs_temp_set)
-            
-            # Find mass
-            for itype in PartTypes:
-                ihalo_itype_snap2_outflow_mask=ihalo_snap2_outflow_type==itype
-                ihalo_itype_snap2_outflow_where=np.where(ihalo_itype_snap2_outflow_mask)
-                ihalo_itype_snap2_outflow_n=np.sum(ihalo_itype_snap2_outflow_mask)
-                ihalo_itype_snap2_outflow_partindices=out_particle_partindices_snap2[ihalo_itype_snap2_outflow_where]
-                if constant_mass[str(itype)]:
-                    ihalo_itype_snap2_outflow_masses=np.ones(ihalo_itype_snap2_outflow_n)*Part_Data_Masses_Snap2[str(itype)]
+                print(f'Processing for ihalo {ihalo_s2} halo type {ihalo_type} ({iihalo_type}/{len(ihalo_types)})')
+                with open(fname_log,"a") as progress_file:
+                    progress_file.write(f'Processing for ihalo type {ihalo_type} ...\n')
+                
+                print(f"Finding and indexing new particles to ihalo {ihalo_s2} ...")
+                t1_new=time.time()
+                if ihalo_type==0:
+                    snap3_IDs_temp_set=set(snap_3_halo_particles_wsp['Particle_IDs'][str(ihalo_s3)])
+                    new_particle_IDs_mask_snap2=np.isin(snap2_IDs_temp_wsp,snap1_IDs_temp_wsp,assume_unique=True,invert=True)
+                    new_particle_IDs_where_snap2=np.where(new_particle_IDs_mask_snap2)
+                    new_particle_IDs=snap2_IDs_temp_wsp[new_particle_IDs_where_snap2]
+                    new_particle_Types_snap2=snap2_Types_temp_wsp[new_particle_IDs_where_snap2]
+                    new_particle_Bound_snap2=snap2_Bound_temp_wsp[new_particle_IDs_where_snap2]
                 else:
-                    ihalo_itype_snap2_outflow_masses=np.array([Part_Data_Masses_Snap2[str(itype)][ihalo_itype_snap2_outflow_partindex] for ihalo_itype_snap2_outflow_partindex in ihalo_itype_snap2_outflow_partindices])
-                ihalo_snap2_outflow_masses[ihalo_itype_snap2_outflow_where]=ihalo_itype_snap2_outflow_masses
+                    snap3_IDs_temp_set=set(snap_3_halo_particles_nosp['Particle_IDs'][str(ihalo_s3)])
+                    new_particle_IDs_mask_snap2=np.isin(snap2_IDs_temp_nosp,snap1_IDs_temp_nosp,assume_unique=True,invert=True)
+                    new_particle_IDs_where_snap2=np.where(new_particle_IDs_mask_snap2)
+                    new_particle_IDs=snap2_IDs_temp_nosp[new_particle_IDs_where_snap2]
+                    new_particle_Types_snap2=snap2_Types_temp_nosp[new_particle_IDs_where_snap2]
+                    new_particle_Bound_snap2=snap2_Bound_temp_nosp[new_particle_IDs_where_snap2]
+                
+                ihalo_nin=np.nansum(new_particle_IDs_mask_snap2)
+                print(f"n(in) = {ihalo_nin}")
 
-            ############ SAVE DATA FOR INLFOW & OUTFLOW PARTICLES ###########
-            for iitype, itype in enumerate(PartTypes):
+                new_particle_Types_snap1,new_particle_historyindices_snap1,new_particle_partindices_snap1=get_particle_indices(base_halo_data=base_halo_data,
+                                                                        IDs_sorted=Part_Histories_IDs_snap1,
+                                                                        indices_sorted=Part_Histories_Index_snap1,
+                                                                        IDs_taken=new_particle_IDs,
+                                                                        types_taken=new_particle_Types_snap2,
+                                                                        snap_taken=snap2,
+                                                                        snap_desired=snap1)
+                new_particle_tranformed=np.logical_not(new_particle_Types_snap1==new_particle_Types_snap2)
 
-                # Saving INFLOW data for this parttype of the halo to file 
-                ihalo_itype_snap1_inflow_mask=ihalo_snap1_inflow_type==itype#type the inflow particles based on snap 1 state
-                ihalo_itype_snap1_inflow_where=np.where(ihalo_itype_snap1_inflow_mask)
+                t2_new=time.time()
 
-                ihalo_in_parttype_hdf5=ihalo_in_hdf5.create_group('PartType'+str(itype))
-                ihalo_in_parttype_hdf5.create_dataset('ParticleIDs',data=np.array(new_particle_IDs[ihalo_itype_snap1_inflow_where]),dtype=np.int64)#######
-                ihalo_in_parttype_hdf5.create_dataset('Transformed',data=np.array(ihalo_snap1_inflow_transformed[ihalo_itype_snap1_inflow_where]),dtype=np.int64)
-                ihalo_in_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_snap1_inflow_history_L1[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
-                ihalo_in_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_snap1_inflow_history_L2[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
-                ihalo_in_parttype_hdf5.create_dataset('PreviousHost',data=ihalo_snap1_inflow_structure[ihalo_itype_snap1_inflow_where],dtype=np.int64)
-                ihalo_in_parttype_hdf5.create_dataset('Fidelity',data=ihalo_snap1_inflow_fidelity[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
-                ihalo_in_parttype_hdf5.create_dataset('Masses',data=ihalo_snap1_inflow_masses[ihalo_itype_snap1_inflow_where],dtype=np.float64)
+                ihalo_snap1_inflow_type=new_particle_Types_snap1
+                ihalo_snap1_inflow_transformed=new_particle_tranformed
+                ihalo_snap1_inflow_history_L1=np.zeros(ihalo_nin)
+                ihalo_snap1_inflow_history_L2=np.zeros(ihalo_nin)
+                ihalo_snap1_inflow_structure=np.zeros(ihalo_nin)+np.nan
+                ihalo_snap1_inflow_fidelity=np.zeros(ihalo_nin)
+                ihalo_snap1_inflow_masses=np.zeros(ihalo_nin)
+                ihalo_snap2_inflow_bound=new_particle_Bound_snap2
 
-                # Saving OUTFLOW data for this parttype of the halo to file 
-                ihalo_itype_snap2_outflow_mask=ihalo_snap2_outflow_type==itype#type the inflow particles based on snap 1 state
-                ihalo_itype_snap2_outflow_where=np.where(ihalo_itype_snap2_outflow_mask)
+                # Find processing history, previous host, fidelity
+                for iipartin,ipartin_ID,ipartin_snap1_type,ipartin_snap1_historyindex,ipartin_snap1_partindex in zip(list(range(ihalo_nin)),new_particle_IDs,new_particle_Types_snap1,new_particle_historyindices_snap1,new_particle_partindices_snap1):
+                    if ipartin_snap1_type>=0:
+                        if ipartin_snap1_type==0 or ipartin_snap1_type==1:#if DM or gas, this has been recorded
+                            ihalo_snap1_inflow_history_L1[iipartin]=Part_Histories_Processed_L1_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
+                            ihalo_snap1_inflow_history_L2[iipartin]=Part_Histories_Processed_L2_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
+                        else:#assume stars have been processed
+                            ihalo_snap1_inflow_history_L1[iipartin]=1
+                            ihalo_snap1_inflow_history_L2[iipartin]=1
+                        ihalo_snap1_inflow_structure[iipartin]=Part_Histories_HostStructure_snap1[str(ipartin_snap1_type)][ipartin_snap1_historyindex]
 
-                ihalo_out_parttype_hdf5=ihalo_out_hdf5.create_group('PartType'+str(itype))
-                ihalo_out_parttype_hdf5.create_dataset('ParticleIDs',data=out_particle_IDs[ihalo_itype_snap2_outflow_where],dtype=np.int64)#######
-                ihalo_out_parttype_hdf5.create_dataset('Transformed',data=ihalo_snap2_outflow_transformed[ihalo_itype_snap2_outflow_where],dtype=np.uint8)
-                ihalo_out_parttype_hdf5.create_dataset('Destination',data=ihalo_snap2_outflow_destination[ihalo_itype_snap2_outflow_where],dtype=np.int64)
-                ihalo_out_parttype_hdf5.create_dataset('Recycled',data=ihalo_snap3_outflow_recycled[ihalo_itype_snap2_outflow_where],dtype=np.uint8)
-                ihalo_out_parttype_hdf5.create_dataset('Masses',data=ihalo_snap2_outflow_masses[ihalo_itype_snap2_outflow_where],dtype=np.float64)
+                    ihalo_snap1_inflow_fidelity[iipartin]=int(ipartin_ID in snap3_IDs_temp_set)
+
+                # Find mass
+                for itype in PartTypes:
+                    ihalo_itype_snap1_inflow_mask=ihalo_snap1_inflow_type==itype
+                    ihalo_itype_snap1_inflow_where=np.where(ihalo_itype_snap1_inflow_mask)
+                    ihalo_itype_snap1_inflow_n=np.nansum(ihalo_itype_snap1_inflow_mask)
+                    ihalo_itype_snap1_inflow_partindices=new_particle_partindices_snap1[ihalo_itype_snap1_inflow_where]
+                    if constant_mass[str(itype)]:
+                        ihalo_itype_snap1_inflow_masses=np.ones(ihalo_itype_snap1_inflow_n)*Part_Data_Masses_Snap1[str(itype)]
+                    else:
+                        ihalo_itype_snap1_inflow_masses=np.array([Part_Data_Masses_Snap1[str(itype)][ihalo_itype_snap1_inflow_partindex] for ihalo_itype_snap1_inflow_partindex in ihalo_itype_snap1_inflow_partindices])
+                    ihalo_snap1_inflow_masses[ihalo_itype_snap1_inflow_where]=ihalo_itype_snap1_inflow_masses
+                
+                ############ GRABBING DATA FOR OUTFLOW PARTICLES (at snap 2) ############
+                # # Returns mask for s1 of particles which are in s1 but not in s2
+                print(f"Finding and indexing particles which left ihalo {ihalo_s2} ...")
+                t1_out=time.time()
+                if ihalo_type==0:
+                    out_particle_IDs_mask_snap1=np.isin(snap1_IDs_temp_wsp,snap2_IDs_temp_wsp,assume_unique=True,invert=True)
+                    out_particle_IDs_where_snap1=np.where(out_particle_IDs_mask_snap1)
+                    out_particle_IDs=snap1_IDs_temp_wsp[out_particle_IDs_where_snap1]
+                    out_particle_Types_snap1=snap1_Types_temp_wsp[out_particle_IDs_where_snap1]
+                else:
+                    out_particle_IDs_mask_snap1=np.isin(snap1_IDs_temp_nosp,snap2_IDs_temp_nosp,assume_unique=True,invert=True)
+                    out_particle_IDs_where_snap1=np.where(out_particle_IDs_mask_snap1)
+                    out_particle_IDs=snap1_IDs_temp_nosp[out_particle_IDs_where_snap1]
+                    out_particle_Types_snap1=snap1_Types_temp_nosp[out_particle_IDs_where_snap1]
+                
+                ihalo_nout=np.nansum(out_particle_IDs_mask_snap1)
+                print(f"n(out) = {ihalo_nout}")
+
+                out_particle_Types_snap2,out_particle_historyindices_snap2,out_particle_partindices_snap2=get_particle_indices(base_halo_data=base_halo_data,
+                                                            IDs_sorted=Part_Histories_IDs_snap2,
+                                                            indices_sorted=Part_Histories_Index_snap2,
+                                                            IDs_taken=out_particle_IDs,
+                                                            types_taken=out_particle_Types_snap1,
+                                                            snap_taken=snap1,
+                                                            snap_desired=snap2)
+
+                out_particle_tranformed=np.logical_not(np.array(out_particle_Types_snap1)==np.array(out_particle_Types_snap2))
+                t2_out=time.time()
+
+                with open(fname_log,"a") as progress_file:
+                    progress_file.write(f'       n(in): total = {ihalo_nin}\n')
+                    progress_file.write(f'       n(out): total = {ihalo_nout}\n')
+                progress_file.close()
+                
+                ihalo_snap2_outflow_type=out_particle_Types_snap2
+                ihalo_snap2_outflow_transformed=out_particle_tranformed
+                ihalo_snap2_outflow_destination=np.zeros(ihalo_nout)+np.nan
+                ihalo_snap3_outflow_recycled=np.zeros(ihalo_nout)+np.nan
+                ihalo_snap2_outflow_masses=np.zeros(ihalo_nout)
+
+                # Find processing history, previous host, fidelity
+                for iipartout,ipartout_ID,ipartout_snap2_type,ipartout_snap2_historyindex,ipartout_snap2_partindex in zip(list(range(ihalo_nout)),out_particle_IDs,out_particle_Types_snap2,out_particle_historyindices_snap2,out_particle_partindices_snap2):
+                    if ipartout_snap2_type>=0:
+                        ihalo_snap2_outflow_destination[iipartout]=Part_Histories_HostStructure_snap2[str(ipartout_snap2_type)][ipartout_snap2_historyindex]
+                    ihalo_snap3_outflow_recycled[iipartout]=int(ipartout_ID in snap3_IDs_temp_set)
+                
+                # Find mass
+                for itype in PartTypes:
+                    ihalo_itype_snap2_outflow_mask=ihalo_snap2_outflow_type==itype
+                    ihalo_itype_snap2_outflow_where=np.where(ihalo_itype_snap2_outflow_mask)
+                    ihalo_itype_snap2_outflow_n=np.nansum(ihalo_itype_snap2_outflow_mask)
+                    ihalo_itype_snap2_outflow_partindices=out_particle_partindices_snap2[ihalo_itype_snap2_outflow_where]
+                    if constant_mass[str(itype)]:
+                        ihalo_itype_snap2_outflow_masses=np.ones(ihalo_itype_snap2_outflow_n)*Part_Data_Masses_Snap2[str(itype)]
+                    else:
+                        ihalo_itype_snap2_outflow_masses=np.array([Part_Data_Masses_Snap2[str(itype)][ihalo_itype_snap2_outflow_partindex] for ihalo_itype_snap2_outflow_partindex in ihalo_itype_snap2_outflow_partindices])
+                    ihalo_snap2_outflow_masses[ihalo_itype_snap2_outflow_where]=ihalo_itype_snap2_outflow_masses
+
+                ############ SAVE DATA FOR INLFOW & OUTFLOW PARTICLES ###########
+                if ihalo_type ==0:
+                    print(f'Saving accretion data for ihalo {ihalo_s2}: group halo (TRACKED)')
+                elif ihalo_type==1:
+                    print(f'Saving accretion data for ihalo {ihalo_s2}: field halo (TRACKED)')
+                elif ihalo_type==2:
+                    print(f'Saving accretion data for ihalo {ihalo_s2}: central halo (TRACKED)')
+                elif ihalo_type==3:
+                    print(f'Saving accretion data for ihalo {ihalo_s2}: satellite halo (TRACKED)')
+
+                for iitype, itype in enumerate(PartTypes):
+
+                    # Saving INFLOW data for this parttype of the halo to file 
+                    ihalo_itype_snap1_inflow_mask=ihalo_snap1_inflow_type==itype#type the inflow particles based on snap 1 state
+                    ihalo_itype_snap1_inflow_where=np.where(ihalo_itype_snap1_inflow_mask)
+                    
+                    ihalo_in_parttype_hdf5=ihalo_hdf5[ihalo_key]['Inflow'].create_group('PartType'+str(itype))
+                    ihalo_in_parttype_hdf5.create_dataset('ParticleIDs',data=np.array(new_particle_IDs[ihalo_itype_snap1_inflow_where]),dtype=np.int64)#######
+                    ihalo_in_parttype_hdf5.create_dataset('Transformed',data=np.array(ihalo_snap1_inflow_transformed[ihalo_itype_snap1_inflow_where]),dtype=np.int64)
+                    ihalo_in_parttype_hdf5.create_dataset('Processed_L1',data=ihalo_snap1_inflow_history_L1[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
+                    ihalo_in_parttype_hdf5.create_dataset('Processed_L2',data=ihalo_snap1_inflow_history_L2[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
+                    ihalo_in_parttype_hdf5.create_dataset('PreviousHost',data=ihalo_snap1_inflow_structure[ihalo_itype_snap1_inflow_where],dtype=np.int64)
+                    ihalo_in_parttype_hdf5.create_dataset('Fidelity',data=ihalo_snap1_inflow_fidelity[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
+                    ihalo_in_parttype_hdf5.create_dataset('Masses',data=ihalo_snap1_inflow_masses[ihalo_itype_snap1_inflow_where],dtype=np.float64)
+                    ihalo_in_parttype_hdf5.create_dataset('Bound',data=ihalo_snap2_inflow_bound[ihalo_itype_snap1_inflow_where],dtype=np.uint8)
+
+                    # Saving OUTFLOW data for this parttype of the halo to file 
+                    ihalo_itype_snap2_outflow_mask=ihalo_snap2_outflow_type==itype#type the inflow particles based on snap 1 state
+                    ihalo_itype_snap2_outflow_where=np.where(ihalo_itype_snap2_outflow_mask)
+                    
+                    ihalo_out_parttype_hdf5=ihalo_hdf5[ihalo_key]['Outflow'].create_group('PartType'+str(itype))
+                    ihalo_out_parttype_hdf5.create_dataset('ParticleIDs',data=out_particle_IDs[ihalo_itype_snap2_outflow_where],dtype=np.int64)#######
+                    ihalo_out_parttype_hdf5.create_dataset('Transformed',data=ihalo_snap2_outflow_transformed[ihalo_itype_snap2_outflow_where],dtype=np.uint8)
+                    ihalo_out_parttype_hdf5.create_dataset('Destination',data=ihalo_snap2_outflow_destination[ihalo_itype_snap2_outflow_where],dtype=np.int64)
+                    ihalo_out_parttype_hdf5.create_dataset('Recycled',data=ihalo_snap3_outflow_recycled[ihalo_itype_snap2_outflow_where],dtype=np.uint8)
+                    ihalo_out_parttype_hdf5.create_dataset('Masses',data=ihalo_snap2_outflow_masses[ihalo_itype_snap2_outflow_where],dtype=np.float64)
 
         else:#if halo not tracked, return np.nan for fidelity, ids, prevhost
-            for itype in PartTypes:
-                # print(f'Saving {PartNames[itype]} data for ihalo {ihalo_s2} (not tracked) to hdf5 ...')
-                ihalo_in_parttype_hdf5=ihalo_in_hdf5.create_group('PartType'+str(itype))
-                ihalo_in_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
-                ihalo_in_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
-                ihalo_in_parttype_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float16)
-                ihalo_in_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
-                ihalo_in_parttype_hdf5.create_dataset('Processed_L1',data=np.nan,dtype=np.float16)
-                ihalo_in_parttype_hdf5.create_dataset('Processed_L2',data=np.nan,dtype=np.float16)
-                ihalo_in_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
+            print(f'Saving accretion data for ihalo {ihalo_s2} (NOT TRACKED)')
+            iihalo_type=0
+            for ihalo_type in ihalo_types:
+                iihalo_type=iihalo_type+1
+                if ihalo_type==0 or ihalo_type==1:
+                    ihalo_key='halo'
+                else:
+                    ihalo_key='subhalo'
 
-                # Saving OUTFLOW data for this parttype of the halo to file 
-                ihalo_out_parttype_hdf5=ihalo_out_hdf5.create_group('PartType'+str(itype))
-                ihalo_out_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
-                ihalo_out_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
-                ihalo_out_parttype_hdf5.create_dataset('Destination',data=np.nan,dtype=np.float16)
-                ihalo_out_parttype_hdf5.create_dataset('Recycled',data=np.nan,dtype=np.float16)
-                ihalo_out_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
+                for itype in PartTypes:    
+                    # Saving INFLOW data for this parttype of the halo to file 
+                    ihalo_in_parttype_hdf5=ihalo_hdf5[ihalo_key]['Inflow'].create_group('PartType'+str(itype))
+                    ihalo_in_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)#######
+                    ihalo_in_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
+                    ihalo_in_parttype_hdf5.create_dataset('Processed_L1',data=np.nan,dtype=np.float16)
+                    ihalo_in_parttype_hdf5.create_dataset('Processed_L2',data=np.nan,dtype=np.float16)
+                    ihalo_in_parttype_hdf5.create_dataset('PreviousHost',data=np.nan,dtype=np.float16)
+                    ihalo_in_parttype_hdf5.create_dataset('Fidelity',data=np.nan,dtype=np.float16)
+                    ihalo_in_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
+                    ihalo_in_parttype_hdf5.create_dataset('Bound',data=np.nan,dtype=np.float16)
+                    # Saving OUTFLOW data for this parttype of the halo to file 
+                    ihalo_out_parttype_hdf5=ihalo_hdf5[ihalo_key]['Outflow'].create_group('PartType'+str(itype))
+                    ihalo_out_parttype_hdf5.create_dataset('ParticleIDs',data=np.nan,dtype=np.float16)
+                    ihalo_out_parttype_hdf5.create_dataset('Masses',data=np.nan,dtype=np.float16)
+                    ihalo_out_parttype_hdf5.create_dataset('Destination',data=np.nan,dtype=np.float16)
+                    ihalo_out_parttype_hdf5.create_dataset('Recycled',data=np.nan,dtype=np.float16)
+                    ihalo_out_parttype_hdf5.create_dataset('Transformed',data=np.nan,dtype=np.float16)
                 
         t2_halo=time.time()
 
@@ -997,9 +984,6 @@ def gen_accretion_data_fof_serial(base_halo_data,snap=None,halo_index_list=None,
     #Close the output file, finish up
     output_hdf5.close()
 
-########################### POSTPROCESS/SUM ACCRETION DATA ###########################
-
-def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     """
 
     postprocess_acc_data_serial : function
@@ -1018,7 +1002,7 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     Combined_AccData.hdf5: hdf5 file with datasets:
         summed outputs
         ---------------
-        In group '/Inflow':
+        In group '/(sub)halo/Inflow':
         '/PartTypeX/All_TotalDeltaN': Total number of particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_TotalDeltaM': Total mass of particles of type X new to the halo  (length: num_total_halos)
         '/PartTypeX/All_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: num_total_halos)
@@ -1029,7 +1013,6 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
         '/PartTypeX/All_ProcessedCosmologicalDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)    
         '/PartTypeX/All_TransferredDeltaN': Total number of clumpy origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/All_TransferredDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
-
 
         '/PartTypeX/Stable_TotalDeltaN': Total number of particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/Stable_TotalDeltaM': Total mass of particles of type X new to the halo  (length: num_total_halos)
@@ -1042,6 +1025,18 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
         '/PartTypeX/Stable_TransferredDeltaN': Total number of clumpy origin particles of type X new to the halo (length: num_total_halos)
         '/PartTypeX/Stable_TransferredDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
 
+        '/PartTypeX/BoundStable_TotalDeltaN': Total number of particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/BoundStable_TotalDeltaM': Total mass of particles of type X new to the halo  (length: num_total_halos)
+        '/PartTypeX/BoundStable_CosmologicalDeltaN': Total number of cosmological origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/BoundStable_CosmologicalDeltaM': Total mass of cosmological origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/BoundStable_PrimordialDeltaN': Total number of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/BoundStable_PrimordialDeltaM': Total mass of primordial (i.e. entirely unprocessed) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/BoundStable_ProcessedCosmologicalDeltaN': Total number of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/BoundStable_ProcessedCosmologicalDeltaM': Total mass of recycled (i.e. processed at l2 but not at this time) origin particles of type X new to the halo (length: num_total_halos)    
+        '/PartTypeX/BoundStable_TransferredDeltaN': Total number of clumpy origin particles of type X new to the halo (length: num_total_halos)
+        '/PartTypeX/BoundStable_TransferredDeltaM': Total mass of clumpy origin particles of type X new to the halo (length: num_total_halos)
+
+        In group '/(sub)halo/Outflow':
 
         '/Header' contains attributes: 
         't1'
@@ -1061,6 +1056,7 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     acc_data_filelist=os.listdir(accdata_dir)
     acc_data_filelist=sorted(acc_data_filelist)
     acc_data_filelist_trunc=[filename for filename in acc_data_filelist if (('px' not in filename) and ('FOF' in filename) and ('DS' not in filename) and ('summed' not in filename))]
+    
     print('Summing accretion data from the following files:')
     print(np.array(acc_data_filelist_trunc))
     acc_data_filelist=acc_data_filelist_trunc
@@ -1133,7 +1129,17 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     'Stable_PrimordialDeltaN_In',
     'Stable_PrimordialDeltaM_In',
     'Stable_ProcessedCosmologicalDeltaN_In',
-    'Stable_ProcessedCosmologicalDeltaM_In'
+    'Stable_ProcessedCosmologicalDeltaM_In',
+    "StableBound_TotalDeltaM_In",
+    "StableBound_TotalDeltaN_In",
+    "StableBound_CosmologicalDeltaN_In",
+    'StableBound_CosmologicalDeltaM_In',
+    'StableBound_TransferredDeltaN_In',
+    'StableBound_TransferredDeltaM_In',
+    'StableBound_PrimordialDeltaN_In',
+    'StableBound_PrimordialDeltaM_In',
+    'StableBound_ProcessedCosmologicalDeltaN_In',
+    'StableBound_ProcessedCosmologicalDeltaM_In'
     ]
 
     new_outputs_outflow=[
@@ -1144,704 +1150,947 @@ def postprocess_acc_data_serial(base_halo_data,accdata_dir):
     "All_TransferredDeltaM_Out",
     "All_TransferredDeltaN_Out",
     "All_RecycledDeltaN_Out",#at snap 3
-    "All_RecycledDeltaM_Out"]#at snap 3
+    "All_RecycledDeltaM_Out",
+    "Stable_TotalDeltaM_Out",
+    "Stable_TotalDeltaN_Out",
+    "Stable_FieldDeltaM_Out",
+    "Stable_FieldDeltaN_Out",
+    "Stable_TransferredDeltaM_Out",
+    "Stable_TransferredDeltaN_Out"]#at snap 3
 
 
     # Initialise all new outputs
     first_file=acc_data_hdf5files[0]
     first_halo_group=[key for key in list(first_file.keys()) if 'ihalo' in key][0]
-    first_halo_inflow_keys=list(first_file[first_halo_group]['Inflow'].keys())
-    no_parttypes=len(first_halo_inflow_keys)#grab from first file
-    print(f'Grabbing data for part types: {first_halo_inflow_keys}')
-    itypes=[0,1,4,5][:no_parttypes]
+    first_halo_parttype_keys=list(first_file[first_halo_group]['halo']['Inflow'].keys())
+    first_halo_inflow_keys=list(first_file[first_halo_group]['halo']['Inflow']['PartType0'].keys())
+    first_halo_outflow_keys=list(first_file[first_halo_group]['halo']['Outflow']['PartType0'].keys())
+    parttypes=[int(parttype_key.split('Type')[-1]) for parttype_key in first_halo_parttype_keys]
+    print(f'Grabbing data for part types: {parttypes}')
+
+    new_outputs_keys_bytype_in=[f'Inflow/PartType{itype}/'+field for field in new_outputs_inflow for itype in parttypes]
+    new_outputs_keys_bytype_out=[f'Outflow/PartType{itype}/'+field for field in new_outputs_outflow for itype in parttypes]
+
     summed_acc_data={}
-    new_outputs_keys_bytype_in=[f'Inflow/PartType{itype}/'+field for field in new_outputs_inflow for itype in itypes]
-    new_outputs_keys_bytype_out=[f'Outflow/PartType{itype}/'+field for field in new_outputs_outflow for itype in itypes]
-    for outfield in new_outputs_keys_bytype_out:
-        summed_acc_data[outfield]=np.zeros(total_num_halos)+np.nan
     for infield in new_outputs_keys_bytype_in:
-        summed_acc_data[infield]=np.zeros(total_num_halos)+np.nan
-    
+        summed_acc_data['subhalo/'+infield]=np.zeros(total_num_halos)+np.nan
+        summed_acc_data['halo/'+infield]=np.zeros(total_num_halos)+np.nan
+        
+    for outfield in new_outputs_keys_bytype_out:
+        summed_acc_data['subhalo/'+outfield]=np.zeros(total_num_halos)+np.nan
+        summed_acc_data['halo/'+outfield]=np.zeros(total_num_halos)+np.nan
+
     #Loop through each acc data file
     iihalo=0
     for ifile,acc_data_filetemp in enumerate(acc_data_hdf5files):
         print(f"Reading from file {ifile+1}/{len(acc_data_hdf5files)}: {acc_data_filetemp}")
         ihalo_group_list_all=list(acc_data_filetemp.keys())
         ihalo_group_list=[ihalo_group for ihalo_group in ihalo_group_list_all if ihalo_group.startswith('ihalo')]
+        
         #Loop through each halo group in this acc data file
         for ihalo_group in ihalo_group_list:
+            print(ihalo_group)
             iihalo=iihalo+1
             ihalo=int(ihalo_group.split('_')[-1])
-            #Loop through each particle type group in this ihalo group 
-            for itype in itypes:
-                # Load in the details of particles new to this halo
-                try:#if can't load, skip itype for this halo
-                    fidelities=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Fidelity'].value
-                    masses=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Masses'].value
-                    prevhosts=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/PreviousHost'].value
-                    processed_l1=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Processed_L1'].value
-                    processed_l2=acc_data_filetemp[ihalo_group+f'/Inflow/PartType{itype}/Processed_L2'].value
-                except:#skip
-                    continue
-                
-                #Load in the details of particles which left this halo
-                try:#if can't load, skip itype for this halo
-                    masses_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Masses'].value
-                    destination_s2_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Destination'].value
-                    recycled_out=acc_data_filetemp[ihalo_group+f'/Outflow/PartType{itype}/Recycled'].value
-                except:#skip
-                    continue
+            ihalo_keys=list(acc_data_filetemp[ihalo_group].keys()) #halo and/or subhalo
+            
+            #Loop through each calc type for this halo
+            for ihalo_key in ihalo_keys:
+                #Loop through each particle type group in this ihalo group and calc 
+                ihalo_itype_inflow_data={}
+                ihalo_itype_outflow_data={}
+                for itype in parttypes:
+                    # Load in the details of particles new to this halo
+                    # try:#if can't load, skip itype for this halo
+                    for inflow_key in first_halo_inflow_keys:
+                        ihalo_itype_inflow_data[inflow_key]=acc_data_filetemp[ihalo_group+f'/{ihalo_key}/Inflow/PartType{itype}/{inflow_key}'].value
+                    # except:#skip
+                    #     continue
+                    
+                    #Load in the details of particles which left this halo
+                    # try:#if can't load, skip itype for this halo
+                    for outflow_key in first_halo_outflow_keys:
+                        ihalo_itype_outflow_data[outflow_key]=acc_data_filetemp[ihalo_group+f'/{ihalo_key}/Outflow/PartType{itype}/{outflow_key}'].value
+                    # except:#skip
+                    #     continue
 
-                if not np.isfinite(np.sum(fidelities)):
-                    continue
+                    if type(ihalo_itype_inflow_data['Fidelity'])==np.float16:
+                        continue
+                    
+                    ############################ PROCESS/CALCULATE INFLOW ############################
 
-                # Define masks based on particle properties
-                stable_mask=fidelities>0
-                cosmological_mask=prevhosts<0
-                transfer_mask=prevhosts>0
-                primordial_mask=processed_l1==0
-                recycled_mask=np.logical_and(np.logical_or(cgm_mask,cosmological_mask),np.logical_not(primordial_mask))
+                    # Define masks based on particle properties
+                    stable_mask=ihalo_itype_inflow_data['Fidelity']>0
+                    bound_mask=ihalo_itype_inflow_data['Bound']>0
+                    cosmological_mask=ihalo_itype_inflow_data['PreviousHost']<0
+                    transfer_mask=ihalo_itype_inflow_data['PreviousHost']>0
+                    primordial_mask=ihalo_itype_inflow_data['Processed_L1']==0
+                    processed_mask=ihalo_itype_inflow_data['Processed_L1']>0
+                    processed_cosmological_mask=np.logical_and(processed_mask,cosmological_mask)
 
-                stable_cosmological_mask=np.logical_and(stable_mask,cosmological_mask)
-                stable_transfer_mask=np.logical_and(stable_mask,transfer_mask)
-                stable_primordial_mask=np.logical_and(stable_mask,primordial_mask)
-                stable_processedcosmological_mask=np.logical_and(stable_mask,recycled_mask)
+                    stable_cosmological_mask=np.logical_and(stable_mask,cosmological_mask)
+                    stable_primordial_mask=np.logical_and(stable_cosmological_mask,primordial_mask)
+                    stable_processedcosmological_mask=np.logical_and(stable_cosmological_mask,processed_mask)
+                    stable_transfer_mask=np.logical_and(stable_mask,transfer_mask)
 
-                # Save the summed data for this itype, halo and file to our running dictionary
-                summed_acc_data[f'Inflow/PartType{itype}/All_TotalDeltaN_In'][ihalo]=np.size(masses)
-                summed_acc_data[f'Inflow/PartType{itype}/All_TotalDeltaM_In'][ihalo]=np.sum(masses)
-                summed_acc_data[f'Inflow/PartType{itype}/All_CosmologicalDeltaN_In'][ihalo]=np.size(np.compress(cosmological_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_CosmologicalDeltaM_In'][ihalo]=np.sum(np.compress(cosmological_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_TransferredDeltaN_In'][ihalo]=np.size(np.compress(transfer_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_TransferredDeltaM_In'][ihalo]=np.sum(np.compress(transfer_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_PrimordialDeltaN_In'][ihalo]=np.size(np.compress(primordial_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_PrimordialDeltaM_In'][ihalo]=np.sum(np.compress(primordial_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_ProcessedCosmologicalDeltaN_In'][ihalo]=np.size(np.compress(recycled_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/All_ProcessedCosmologicalDeltaM_In'][ihalo]=np.sum(np.compress(recycled_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_TotalDeltaN_In'][ihalo]=np.size(np.compress(stable_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_TotalDeltaM_In'][ihalo]=np.sum(np.compress(stable_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_CosmologicalDeltaN_In'][ihalo]=np.size(np.compress(stable_cosmological_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_CosmologicalDeltaM_In'][ihalo]=np.sum(np.compress(stable_cosmological_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_TransferredDeltaN_In'][ihalo]=np.size(np.compress(stable_transfer_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_TransferredDeltaM_In'][ihalo]=np.sum(np.compress(stable_transfer_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_PrimordialDeltaN_In'][ihalo]=np.size(np.compress(stable_primordial_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_PrimordialDeltaM_In'][ihalo]=np.sum(np.compress(stable_primordial_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_ProcessedCosmologicalDeltaN_In'][ihalo]=np.size(np.compress(stable_processedcosmological_mask,masses))
-                summed_acc_data[f'Inflow/PartType{itype}/Stable_ProcessedCosmologicalDeltaM_In'][ihalo]=np.sum(np.compress(stable_processedcosmological_mask,masses))
+                    stable_bound_mask=np.logical_and(stable_mask,bound_mask)
+                    stable_bound_cosmological_mask=np.logical_and(stable_bound_mask,cosmological_mask)
+                    stable_bound_primordial_mask=np.logical_and(stable_bound_mask,primordial_mask)
+                    stable_bound_processedcosmological_mask=np.logical_and(stable_bound_mask,processed_cosmological_mask)
+                    stable_bound_transfer_mask=np.logical_and(stable_bound_mask,transfer_mask)
 
-                outfield_mask=(destination_s2_out==-1)
-                outhalo_mask=(destination_s2_out>1)
-                reaccreted_mask=recycled_out==1
+                    # Save the inflow data for this itype, halo and file to our running dictionary
+                    masses=ihalo_itype_inflow_data['Masses']
 
-                summed_acc_data[f'Outflow/PartType{itype}/All_TotalDeltaN_Out'][ihalo]=np.size(masses_out)
-                summed_acc_data[f'Outflow/PartType{itype}/All_TotalDeltaM_Out'][ihalo]=np.sum(masses_out)
-                summed_acc_data[f'Outflow/PartType{itype}/All_FieldDeltaN_Out'][ihalo]=np.size(np.compress(outfield_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_FieldDeltaM_Out'][ihalo]=np.sum(np.compress(outfield_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_TransferredDeltaN_Out'][ihalo]=np.size(np.compress(outhalo_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_TransferredDeltaM_Out'][ihalo]=np.sum(np.compress(outhalo_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_RecycledDeltaN_Out'][ihalo]=np.size(np.compress(reaccreted_mask,masses_out))
-                summed_acc_data[f'Outflow/PartType{itype}/All_RecycledDeltaM_Out'][ihalo]=np.sum(np.compress(reaccreted_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_TotalDeltaN_In'][ihalo]=np.size(masses)
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_TotalDeltaM_In'][ihalo]=np.nansum(masses)
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_CosmologicalDeltaN_In'][ihalo]=np.size(np.compress(cosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_CosmologicalDeltaM_In'][ihalo]=np.nansum(np.compress(cosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_TransferredDeltaN_In'][ihalo]=np.size(np.compress(transfer_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_TransferredDeltaM_In'][ihalo]=np.nansum(np.compress(transfer_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_PrimordialDeltaN_In'][ihalo]=np.size(np.compress(primordial_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_PrimordialDeltaM_In'][ihalo]=np.nansum(np.compress(primordial_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_ProcessedCosmologicalDeltaN_In'][ihalo]=np.size(np.compress(processed_cosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/All_ProcessedCosmologicalDeltaM_In'][ihalo]=np.nansum(np.compress(processed_cosmological_mask,masses))
+
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_TotalDeltaN_In'][ihalo]=np.size(np.compress(stable_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_TotalDeltaM_In'][ihalo]=np.nansum(np.compress(stable_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_CosmologicalDeltaN_In'][ihalo]=np.size(np.compress(stable_cosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_CosmologicalDeltaM_In'][ihalo]=np.nansum(np.compress(stable_cosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_TransferredDeltaN_In'][ihalo]=np.size(np.compress(stable_transfer_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_TransferredDeltaM_In'][ihalo]=np.nansum(np.compress(stable_transfer_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_PrimordialDeltaN_In'][ihalo]=np.size(np.compress(stable_primordial_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_PrimordialDeltaM_In'][ihalo]=np.nansum(np.compress(stable_primordial_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_ProcessedCosmologicalDeltaN_In'][ihalo]=np.size(np.compress(stable_processedcosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/Stable_ProcessedCosmologicalDeltaM_In'][ihalo]=np.nansum(np.compress(stable_processedcosmological_mask,masses))
+
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_TotalDeltaN_In'][ihalo]=np.size(np.compress(stable_bound_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_TotalDeltaM_In'][ihalo]=np.nansum(np.compress(stable_bound_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_CosmologicalDeltaN_In'][ihalo]=np.size(np.compress(stable_bound_cosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_CosmologicalDeltaM_In'][ihalo]=np.nansum(np.compress(stable_bound_cosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_TransferredDeltaN_In'][ihalo]=np.size(np.compress(stable_bound_transfer_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_TransferredDeltaM_In'][ihalo]=np.nansum(np.compress(stable_bound_transfer_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_PrimordialDeltaN_In'][ihalo]=np.size(np.compress(stable_bound_primordial_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_PrimordialDeltaM_In'][ihalo]=np.nansum(np.compress(stable_bound_primordial_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_ProcessedCosmologicalDeltaN_In'][ihalo]=np.size(np.compress(stable_bound_processedcosmological_mask,masses))
+                    summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/StableBound_ProcessedCosmologicalDeltaM_In'][ihalo]=np.nansum(np.compress(stable_bound_processedcosmological_mask,masses))
+                    
+                    ############################ PROCESS/CALCULATE OUTFLOW ############################
+
+                    outfield_mask=ihalo_itype_outflow_data['Destination']==-1
+                    outhalo_mask=ihalo_itype_outflow_data['Destination']>0
+                    reaccreted_mask=ihalo_itype_outflow_data['Recycled']==1
+
+                    stable_mask=np.logical_not(reaccreted_mask)
+                    stable_outfield_mask=np.logical_and(stable_mask,outfield_mask)
+                    stable_outhalo_mask=np.logical_and(stable_mask,outhalo_mask)
+
+                    # Save the outflow data for this itype, halo and file to our running dictionary
+                    masses_out=ihalo_itype_outflow_data['Masses']
+
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/All_TotalDeltaN_Out'][ihalo]=np.size(masses_out)
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/All_TotalDeltaM_Out'][ihalo]=np.nansum(masses_out)
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/All_FieldDeltaN_Out'][ihalo]=np.size(np.compress(outfield_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/All_FieldDeltaM_Out'][ihalo]=np.nansum(np.compress(outfield_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/All_TransferredDeltaN_Out'][ihalo]=np.size(np.compress(outhalo_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/All_TransferredDeltaM_Out'][ihalo]=np.nansum(np.compress(outhalo_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/All_RecycledDeltaN_Out'][ihalo]=np.size(np.compress(reaccreted_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/All_RecycledDeltaM_Out'][ihalo]=np.nansum(np.compress(reaccreted_mask,masses_out))
+
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/Stable_TotalDeltaN_Out'][ihalo]=np.size(np.compress(stable_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/Stable_TotalDeltaM_Out'][ihalo]=np.nansum(np.compress(stable_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/Stable_FieldDeltaN_Out'][ihalo]=np.size(np.compress(stable_outfield_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/Stable_FieldDeltaM_Out'][ihalo]=np.nansum(np.compress(stable_outfield_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/Stable_TransferredDeltaN_Out'][ihalo]=np.size(np.compress(stable_outhalo_mask,masses_out))
+                    summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/Stable_TransferredDeltaM_Out'][ihalo]=np.nansum(np.compress(stable_outhalo_mask,masses_out))
 
     # Create groups for output hdf5
-    collated_output_file_inflow=collated_output_file.create_group('Inflow')
-    collated_output_file_outflow=collated_output_file.create_group('Outflow')
+    collated_output_file_halos=collated_output_file.create_group('halo');collated_output_file_subhalos=collated_output_file.create_group('subhalo')
+    collated_output_file_halos_inflow=collated_output_file_halos.create_group('Inflow');collated_output_file_halos_outflow=collated_output_file_halos.create_group('Outflow')
+    collated_output_file_subhalos_inflow=collated_output_file_subhalos.create_group('Inflow');collated_output_file_subhalos_outflow=collated_output_file_subhalos.create_group('Outflow')
 
     # Loop through each particle type
-    for itype in itypes:
-        collated_output_file_inflow_itype=collated_output_file_inflow.create_group(f'PartType{itype}')
-        collated_output_file_outflow_itype=collated_output_file_outflow.create_group(f'PartType{itype}')
-        #Save data from collated dictionary to output file
-        for new_field in new_outputs_inflow:
-            collated_output_file_inflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'Inflow/PartType{itype}/'+new_field],dtype=np.float32)
-        for new_field in new_outputs_outflow:
-            collated_output_file_outflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'Outflow/PartType{itype}/'+new_field],dtype=np.float32)
+    for ihalo_key in ['subhalo','halo']:
+        for itype in parttypes:
+            collated_output_file_inflow_itype=collated_output_file[ihalo_key]['Inflow'].create_group(f'PartType{itype}')
+            collated_output_file_outflow_itype=collated_output_file[ihalo_key]['Outflow'].create_group(f'PartType{itype}')
+            #Save data from collated dictionary to output file
+            for new_field in new_outputs_inflow:
+                collated_output_file_inflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'{ihalo_key}/Inflow/PartType{itype}/'+new_field],dtype=np.float32)
+            for new_field in new_outputs_outflow:
+                collated_output_file_outflow_itype.create_dataset(name=new_field,data=summed_acc_data[f'{ihalo_key}/Outflow/PartType{itype}/'+new_field],dtype=np.float32)
     collated_output_file.close()
 
     t2=time.time()
     print(f'Finished collating files in {t2-t1} sec')
     return None
 
-########################### ADD PARTICLE DATA TO ACC DATA ###########################
+########################### GENERATE DETAILED ACCRETION DATA ###########################
 
-def add_particle_acc_data(base_halo_data,accdata_path,datasets=None):
+def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,compression=False):
+    
     """
 
-    add_particle_acc_data : function 
+    gen_accretion_data_detailed_serial : function
 	----------
 
-    Add EAGLE particle data to the particles in accretion files. 
+    Generate and save accretion rates for each particle type by comparing particle lists from VELOCIraptor FOF outputs. 
+
+    ** note: particle histories, base_halo_data and halo particle data must have been generated as per gen_particle_history_serial (this file),
+             gen_base_halo_data in STFTools.py and dump_structure_particle_data in STFTools.py
 
 	Parameters
 	----------
-    base_halo_data: dict
-        The base halo data dictionary (encodes particle data filepath, snap, particle histories).
+    base_halo_data : list of dictionaries
+        The minimal halo data list of dictionaries previously generated ("B1" is sufficient)
 
-    accdata_path : str
-        The file path to the base hdf5 accretion data file. 
+    snap : int
+        The index in the base_halo_data for which to calculate accretion rates (should be actual snap index)
+        We will retrieve particle data based on the flags at this index
+    
+    halo_index_list : dict
+        "iprocess": int
+        "indices: list of int
+        List of the halo indices for which to calculate accretion rates. If 'None',
+        find for all halos in the base_halo_data dictionary at the desired snapshot. 
 
-    datasets: list 
-        Dictionary for each parttype of the desired datasets.
+    pre_depth : int
+        How many snaps to skip back to when comparing particle lists.
+        Initial snap for calculation will be snap-pre_depth. 
 
-    Returns
+    pre_depth : int
+        How many snaps to skip back to when comparing particle lists.
+        Initial snap (s1) for calculation will be s1=snap-pre_depth, and we will check particle histories at s1.
+
+	Returns
 	----------
-        Requested gas datasets for snap 1 and snap 2, saved to file at accdata_path. 
+    FOF_AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}_px.hdf5: hdf5 file with datasets
+        Header contains attributes:
+            "snap1"
+            "snap2"
+            "snap3"
+            "snap1_LookbackTime"
+            "snap2_LookbackTime"
+            "snap3_LookbackTime"
+            "ave_LookbackTime" (snap 1 -> snap 2)
+            "delta_LookbackTime" (snap 1 -> snap 2)
+            "snap1_z"
+            "snap2_z"
+            "snap3_z"
+            "ave_z (snap 1 -> snap 2)
 
+        There is a group for each halo: ihalo_xxxxxx
+            - we iterate through each SO region and find the corresponding halo. 
+            - return nan datasets if cannot find match for halo.
+
+        Each halo group with attributes:
+        "snapx_com"
+        "snapx_cminpot"
+        "snapx_cmbp"
+        "snapx_vmax"
+        "snapx_v"
+        "snapx_M_200crit"
+        "snapx_R_200mean"
+        "snapx_R_200crit"
+        
+        Inflow:
+            For each particle type /PartTypeX/:
+                Each of the following datasets will have n_in particles - the n_in initially selected as accretion "candidates" from being in the SO particle list at snap 2. 
+                The particles are categorised by their type at SNAP 1 (i.e. prior to entering the halo)
+
+                'ParticleIDs': ParticleID (in particle data for given type) of all accreted particles.
+                'Masses': Mass of all accretion candidates at snap 1. 
+                
+                'snap1_Processed': How many snaps has this particle been part of any structure in the past.
+                'snap1_FOF': Is the candidate particle included in the FOF at snap 1? 
+                'snap1_Bound': Is the candidate particle bound (in the FOF list) at snap 1?
+                'snap1_Coordinates': The absolute coordinates of the particle at snap 1. 
+                'snap1_Velocity': The absolute instantaneous velocity of the particle at snap 1. 
+                'snap1_r_xx': The relative coordinate of the particle at snap 1 relative to halo center from xx. 
+                'snap1_rabs_xx': The radius of the particle at snap 1 relative to halo center from xx. 
+                'snap1_vrad': The instantaneous radial velocity of the particle at snap 1 relative to halo (using com). 
+                'snap1_vtan': The instantaneous tangential velocity of the particle at snap 1 relative to halo (using com). 
+                'snap2_FOF': Is the candidate particle included in the FOF at snap 2? 
+                'snap2_Bound': Is the candidate particle bound (in the FOF list) at snap 2?
+                'snap2_Coordinates': The absolute coordinates of the particle at snap 2. 
+                'snap2_Velocity': The absolute instantaneous velocity of the particle at snap 2. 
+                'snap2_r_xx': The relative coordinate of the particle at snap 2 relative to halo center from xx. 
+                'snap2_rabs_xx': The radius of the particle at snap 2 relative to halo center from xx. 
+                'snap2_vrad': The instantaneous radial velocity of the particle at snap 2 relative to halo (using com). 
+                'snap2_vtan': The instantaneous tangential velocity of the particle at snap 2 relative to halo (using com). 
+                'snap3_FOF': Is the candidate particle included in the FOF at snap 3? 
+                'snap3_Bound': Is the candidate particle bound (in the FOF list) at snap 3?
+                'ave_vrad_xx': Average radial velocity from snap1_r -> snap2_r, where r is taken relative to halo center from xx. 
+                
+                Where xx can be from com, cminpot, or cmbp. 
+
+        Outflow: 
+            For each particle type /PartTypeX/:
+                Each of the following datasets will have n_out particles - the n initially selected by being in the particle list at snap 1.
+                The particles are categorised by their type at SNAP 2 (i.e. after entering the halo)
+
+                'ParticleIDs': ParticleID (in particle data for given type) of all accreted particles.
+                'Masses': Mass of all accretion candidates at snap 1. 
+                'snap1_Processed': How many snaps has this particle been part of any structure in the past.
+                'snap1_FOF': Is the candidate particle included in the FOF at snap 1? 
+                'snap1_Bound': Is the candidate particle bound (in the FOF list) at snap 1?
+                'snap1_Coordinates': The absolute coordinates of the particle at snap 1. 
+                'snap1_Velocity': The absolute instantaneous velocity of the particle at snap 1. 
+                'snap1_r_xx': The relative coordinate of the particle at snap 1 relative to halo center from xx. 
+                'snap1_rabs_xx': The radius of the particle at snap 1 relative to halo center from xx. 
+                'snap1_vrad': The instantaneous radial velocity of the particle at snap 1 relative to halo (using com). 
+                'snap1_vtan': The instantaneous tangential velocity of the particle at snap 1 relative to halo (using com). 
+                'snap2_FOF': Is the candidate particle included in the FOF at snap 2? 
+                'snap2_Bound': Is the candidate particle bound (in the FOF list) at snap 2?
+                'snap2_Coordinates': The absolute coordinates of the particle at snap 2. 
+                'snap2_Velocity': The absolute instantaneous velocity of the particle at snap 2. 
+                'snap2_r_xx': The relative coordinate of the particle at snap 2 relative to halo center from xx. 
+                'snap2_rabs_xx': The radius of the particle at snap 2 relative to halo center from xx. 
+                'snap2_vrad': The instantaneous radial velocity of the particle at snap 2 relative to halo (using com). 
+                'snap2_vtan': The instantaneous tangential velocity of the particle at snap 2 relative to halo (using com). 
+                'snap3_FOF': Is the candidate particle included in the FOF at snap 3? 
+                'snap3_Bound': Is the candidate particle bound (in the FOF list) at snap 3?
+                'ave_vrad_xx': Average radial velocity from snap1_r -> snap2_r, where r is taken relative to halo center from xx. 
+
+                Where xx can be from com, cminpot, or cmbp. 
+
+        Where there will be num_total_halos ihalo datasets. 
+    
     """
-    print('Starting with I/O for adding particle data ...')
+    
+    
+    # Initialising halo index list
     t1_io=time.time()
 
-    partdata_filetype=base_halo_data[-1]['Part_FileType']
-    partdata_outname=base_halo_data[-1]['outname']
-
-    #Determine particle types to extract from data type
-    if 'EAGLE' in partdata_filetype:
-        parttypes=[0,1,4,5]
-    else:
-        parttypes=[0,1]
-
-    #Load in the accretion file and header details
-    acc_file=h5py.File(accdata_path,'r+')
-    snap3=acc_file['Header'].attrs['snap3']
-    snap2=acc_file['Header'].attrs['snap2']
-    snap1=acc_file['Header'].attrs['snap1']
-    pre_depth=snap2-snap1
-    post_depth=snap3-snap2
-    ihalo_groups=sorted(list(acc_file.keys()))
-    ihalo_groups_trunc=[ihalo_group for ihalo_group in ihalo_groups if 'ihalo_' in ihalo_group]
-    ihalo_count=len(ihalo_groups_trunc)
-    
-    #Get the calculation data
-    acc_filename=accdata_path.split('/')[-1]
-    acc_directory_split=accdata_path.split('/')[:-1]
-    for idir in acc_directory_split:#grab the directory
-        if 'pre' in idir:
-            calc_dir=idir
-        else:
-            pass
-    if 'test' in calc_dir:
+    if halo_index_list==None:
+        halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
+        iprocess="x"
+        num_processes=1
         test=True
     else:
-        test=False
-    num_processes=int((calc_dir.split('np')[-1]).split('_')[0])
-    iprocess=int(acc_filename.split('_p')[-1][:3])
-    
-    #Initialise log file
+        try:
+            halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
+            iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
+            print(f'iprocess {iprocess} has {len(halo_index_list_snap2)} halo indices: {halo_index_list_snap2}')
+            num_processes=halo_index_list["np"]
+            test=halo_index_list["test"]
+        except:
+            print('Not parsed a valud halo index list. Exiting.')
+            return None
+
+    # Create log file and directories
     acc_log_dir=f"job_logs/acc_logs/"
     if not os.path.exists(acc_log_dir):
         os.mkdir(acc_log_dir)
     if test:
-        run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_test/"
+        run_log_dir=f"job_logs/acc_logs/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_test/"
     else:
-        run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}/"
+        run_log_dir=f"job_logs/acc_logs/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}/"
+
     if not os.path.exists(run_log_dir):
         try:
             os.mkdir(run_log_dir)
         except:
             pass
-    run_snap_log_dir=run_log_dir+f'snap_{str(snap2).zfill(3)}/'
+
+    run_snap_log_dir=run_log_dir+f'snap_{str(snap).zfill(3)}/'
+
     if not os.path.exists(run_snap_log_dir):
         try:
             os.mkdir(run_snap_log_dir)
         except:
-            pass    
+            pass
     if test:
-        fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(3)}_n{str(ihalo_count).zfill(6)}_test.log'
+        fname_log=run_snap_log_dir+f"progress_p{str(iprocess).zfill(3)}_n{str(len(halo_index_list_snap2)).zfill(6)}_test.log"
+        print(f'iprocess {iprocess} will save progress to log file: {fname_log}')
+
     else:
-        fname_log=run_snap_log_dir+f'partdata_p{str(iprocess).zfill(3)}_n{str(ihalo_count).zfill(6)}.log'
+        fname_log=run_snap_log_dir+f"progress_p{str(iprocess).zfill(3)}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
+
     if os.path.exists(fname_log):
         os.remove(fname_log)
-
-    #Write progress to log file
-    with open(fname_log,"w") as progress_file:
-        progress_file.write('Loading in data ...')
-    progress_file.close()
-
-    #START WITH I/O
-    #Load particle histories
-    parthist_file_snap2=h5py.File(f'part_histories/PartHistory_{str(snap2).zfill(3)}_{partdata_outname}.hdf5','r')
-    parthist_file_snap1=h5py.File(f'part_histories/PartHistory_{str(snap1).zfill(3)}_{partdata_outname}.hdf5','r')
-    parthist_IDs_snap1={str(itype):parthist_file_snap1[f'PartType{itype}']['ParticleIDs'].value for itype in parttypes}
-    parthist_indices_snap1={str(itype):parthist_file_snap1[f'PartType{itype}']['ParticleIndex'].value for itype in parttypes}
-    parthist_IDs_snap2={str(itype):parthist_file_snap2[f'PartType{itype}']['ParticleIDs'].value for itype in parttypes}
-    parthist_indices_snap2={str(itype):parthist_file_snap2[f'PartType{itype}']['ParticleIndex'].value for itype in parttypes}
-   
-    #Load particle data (depending on simulation type)
-    if 'EAGLE' in partdata_filetype:
-        #Default datasets (will be added for snap1 and snap2)
-        if datasets==None:
-            datasets={}
-            gas_datasets=['Coordinates',
-                          'Velocity']
-            dm_datasets=['Coordinates',
-                          'Velocity']
-            star_datasets=['Coordinates',
-                          'Velocity']
-            bh_datasets=['Coordinates',
-                          'Velocity']
-            datasets={'0':gas_datasets,'1':dm_datasets,'4':star_datasets,'5':bh_datasets}
-        
-        #record parttypes as those parsed
-        parttypes=[int(key) for key in list(datasets.keys())]
-
-        print('Reading in EAGLE snapshot data ...')
-        EAGLE_boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
-        EAGLE_Snap_1=read_eagle.EagleSnapshot(base_halo_data[snap1]['Part_FilePath'])
-        EAGLE_Snap_1.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-        EAGLE_Snap_2=read_eagle.EagleSnapshot(base_halo_data[snap2]['Part_FilePath'])
-        EAGLE_Snap_2.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-        
-        particle_datasets_snap1={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-        particle_datasets_snap2={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-        for itype in parttypes:
-            for dataset in datasets[str(itype)]:
-                particle_datasets_snap1[str(itype)][dataset]=EAGLE_Snap_1.read_dataset(itype,dataset)
-                particle_datasets_snap2[str(itype)][dataset]=EAGLE_Snap_2.read_dataset(itype,dataset)
-
-    else:#non-eagle file -- GADGET OR SWIFT (don't have read routine)
-        partdata_filetype='GADGET'
-        if datasets==None:
-            datasets={}
-            gas_datasets=['ParticleIDs',
-                        'Coordinates',
-                        'Density',
-                        'InternalEnergy',
-                        'Velocity']
-            dm_datasets=['ParticleIDs',
-                        'Coordinates',
-                        'Velocity']
-            datasets={'0':gas_datasets,'1':dm_datasets}
-        
-        #record parttypes as those parsed
-        parttypes=[int(key) for key in list(datasets.keys())]
-
-        PartFile_Snap_1=h5py.File(base_halo_data[snap1]['Part_FilePath'],'r')
-        PartFile_Snap_2=h5py.File(base_halo_data[snap2]['Part_FilePath'],'r')
-
-        particle_datasets_snap1={{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-        particle_datasets_snap2={{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-        for itype in parttypes:
-            for dataset in datasets[str(itype)]:
-                particle_datasets_snap1[str(itype)][dataset]=EAGLE_Snap_1.read_dataset(itype,dataset)
-                particle_datasets_snap2[str(itype)][dataset]=EAGLE_Snap_2.read_dataset(itype,dataset)
     
-    t2_io=time.time()
-
-    #Save the shape and type of each dataset for each particle
-    dataset_shapes={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-    dataset_types={str(itype):{dataset:[] for dataset in datasets[str(itype)]} for itype in parttypes}
-    for itype in parttypes:
-        for dataset in datasets[str(itype)]:
-            dataset_shapes[str(itype)][dataset]=np.size(particle_datasets_snap2[str(itype)][dataset][0])
-            dataset_types[str(itype)][dataset]=np.float32
-        dataset_types[str(itype)]['ParticleIDs']=np.int64
-    print(f'Finished with I/O for adding particle data in {t2_io-t1_io:.2f} sec')
-    
-    #Write progress to log file
     with open(fname_log,"a") as progress_file:
-        progress_file.write(" \n")
-        progress_file.write(f'Finished I/O in {t2_io-t1_io}! Entering main halo loop... \n')
+        progress_file.write('Initialising and loading in data ...\n')
     progress_file.close()
+
+    # Assigning snap
+    if snap==None:
+        snap=len(base_halo_data)-1#if not given snap, just use the last one
+
+    if compression==False:
+        compression=None
+    else:
+        compression='gzip'
+
+    # Find previous snap (to compare halo particles) and subsequent snap (to check accretion fidelity)
+    snap1=snap-pre_depth
+    snap2=snap
+    snap3=snap+post_depth
+    snaps=[snap1,snap2,snap3]
+
+    # Find the indices of halos at snap1 and snap3 (ordered by snap2 halo indices)
+    halo_index_list_snap1=[find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=pre_depth) for ihalo in halo_index_list_snap2]
+    halo_index_list_snap3=[find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=post_depth) for ihalo in halo_index_list_snap2]
+
+    # Initialising outputs
+    if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
+        os.mkdir('acc_data')
+    if test:
+        calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_test/'
+    else:
+        calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}/'
+
+    if not os.path.exists(calc_dir):#create folder for outputs if doesn't already exist
+        try:
+            os.mkdir(calc_dir)
+        except:
+            pass
+    calc_snap_dir=calc_dir+f'snap_{str(snap2).zfill(3)}/'
     
-    #Enter main halo loop
-    for iihalo,ihalo_group in enumerate(ihalo_groups_trunc):
+    if not os.path.exists(calc_snap_dir):#create folder for outputs if doesn't already exist
+        try:
+            os.mkdir(calc_snap_dir)
+        except:
+            pass
+
+    run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
+    outfile_name=calc_snap_dir+'Detailed_AccretionData_pre'+str(pre_depth).zfill(2)+'_post'+str(post_depth).zfill(2)+'_snap'+str(snap).zfill(3)+'_p'+str(iprocess).zfill(3)+'.hdf5'
+    
+    if not os.path.exists(outfile_name):#if the accretion file doesn't exists, initialise with header
+        print(f'Initialising output file at {outfile_name}...')
+        output_hdf5=h5py.File(outfile_name,"w")#initialise file object
+        # Make header for accretion data  based on base halo data 
+        header_hdf5=output_hdf5.create_group("Header")
+        lt_ave=(base_halo_data[snap1]['SimulationInfo']['LookbackTime']+base_halo_data[snap2]['SimulationInfo']['LookbackTime'])/2
+        z_ave=(base_halo_data[snap1]['SimulationInfo']['z']+base_halo_data[snap2]['SimulationInfo']['z'])/2
+        dt=(base_halo_data[snap1]['SimulationInfo']['LookbackTime']-base_halo_data[snap2]['SimulationInfo']['LookbackTime'])
+        t1=base_halo_data[snap1]['SimulationInfo']['LookbackTime']
+        t2=base_halo_data[snap2]['SimulationInfo']['LookbackTime']
+        t3=base_halo_data[snap3]['SimulationInfo']['LookbackTime']
+        z1=base_halo_data[snap1]['SimulationInfo']['z']
+        z2=base_halo_data[snap2]['SimulationInfo']['z']
+        z3=base_halo_data[snap3]['SimulationInfo']['z']
+        header_hdf5.attrs.create('ave_LookbackTime',data=lt_ave,dtype=np.float16)
+        header_hdf5.attrs.create('ave_z',data=z_ave,dtype=np.float16)
+        header_hdf5.attrs.create('delta_LookbackTime',data=dt,dtype=np.float16)
+        header_hdf5.attrs.create('snap1_LookbackTime',data=t1,dtype=np.float16)
+        header_hdf5.attrs.create('snap2_LookbackTime',data=t2,dtype=np.float16)
+        header_hdf5.attrs.create('snap3_LookbackTime',data=t3,dtype=np.float16)
+        header_hdf5.attrs.create('snap1_z',data=z1,dtype=np.float16)
+        header_hdf5.attrs.create('snap2_z',data=z2,dtype=np.float16)
+        header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
+        header_hdf5.attrs.create('snap1',data=snap1,dtype=np.int16)
+        header_hdf5.attrs.create('snap2',data=snap2,dtype=np.int16)
+        header_hdf5.attrs.create('snap3',data=snap3,dtype=np.int16)
+        header_hdf5.attrs.create('pre_depth',data=snap2-snap1,dtype=np.int16)
+        header_hdf5.attrs.create('post_depth',data=snap3-snap2,dtype=np.int16)
+        header_hdf5.attrs.create('outname',data=np.string_(base_halo_data[snap2]['outname']))
+        header_hdf5.attrs.create('total_num_halos',data=base_halo_data[snap2]['Count'])
+
+    else:
+        print(f'Opening existing output file at {outfile_name} ...')
+        output_hdf5=h5py.File(outfile_name,"r+")#initialise file object
+
+    # Now find which simulation type we're dealing with
+    part_filetype=base_halo_data[snap]["Part_FileType"]
+    print(f'Particle data type: {part_filetype}')
+
+    # Standard particle type names from simulation
+    PartNames=['gas','DM','','','star','BH']
+
+    # Assign the particle types we're considering 
+    if part_filetype=='EAGLE':
+        PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
+        Mass_DM=base_halo_data[snap2]['SimulationInfo']['Mass_DM_Physical']
+        Mass_Gas=base_halo_data[snap2]['SimulationInfo']['Mass_Gas_Physical']
+
+    #Load in FOF particle lists: snap 1, snap 2, snap 3
+    FOF_Part_Data={}
+    FOF_Part_Data[str(snap1)]=get_FOF_particle_lists(base_halo_data,snap1,halo_index_list=halo_index_list_snap1)
+    FOF_Part_Data[str(snap2)]=get_FOF_particle_lists(base_halo_data,snap2,halo_index_list=halo_index_list_snap2)
+    FOF_Part_Data[str(snap3)]=get_FOF_particle_lists(base_halo_data,snap3,halo_index_list=halo_index_list_snap3)
+    FOF_Part_Data_fields=list(FOF_Part_Data[str(snap1)].keys())
+
+    #Particle data filepath
+    hval=base_halo_data[snap1]['SimulationInfo']['h_val'];scalefactors={}
+    scalefactors={str(snap):base_halo_data[snap]['SimulationInfo']['ScaleFactor'] for snap in snaps}
+    Part_Data_FilePaths={str(snap):base_halo_data[snap]['Part_FilePath'] for snap in snaps}
+    Part_Data_fields=['Coordinates','Velocity','Mass','ParticleIDs']
+    Part_Data_cube_fields=['Coordinates','Velocity','Mass','ParticleTypes']
+    Part_Data_comtophys={str(snap):{'Coordinates':scalefactors[str(snap)]/hval,'Velocity':scalefactors[str(snap)]/hval,'Mass':1.0/hval,'ParticleIDs':1} for snap in snaps}
+    
+    #Load in particle histories: snap 1
+    print(f'Retrieving & organising particle histories for snap = {snap1} ...')
+    Part_Histories_File_snap1=h5py.File("part_histories/PartHistory_"+str(snap1).zfill(3)+"_"+run_outname+".hdf5",'r')
+    Part_Histories_IDs_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIDs'].value for parttype in PartTypes}
+    Part_Histories_Index_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIndex'].value for parttype in PartTypes}
+    Part_Histories_npart_snap1={str(parttype):len(Part_Histories_IDs_snap1[str(parttype)]) for parttype in PartTypes}
+    Part_Histories_HostStructure_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/HostStructure'].value for parttype in PartTypes}
+    Part_Histories_Processed_L1_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/Processed_L1'].value for parttype in [0,1]}
+    Part_Histories_Processed_L1_snap1[str(4)]=np.ones(Part_Histories_npart_snap1[str(4)]);Part_Histories_Processed_L1_snap1[str(5)]=np.ones(Part_Histories_npart_snap1[str(5)])
+
+    #Load in particle histories: snap 2
+    print(f'Retrieving & organising particle histories for snap = {snap2} ...')
+    Part_Histories_File_snap2=h5py.File("part_histories/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
+    Part_Histories_IDs_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'].value for parttype in PartTypes}
+    Part_Histories_Index_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'].value for parttype in PartTypes}
+    Part_Histories_HostStructure_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'].value for parttype in PartTypes}
+    Part_Histories_npart_snap2={str(parttype):len(Part_Histories_IDs_snap2[str(parttype)]) for parttype in PartTypes}
+    
+    print()
+    t2_io=time.time()
+    print('*********************************************************')
+    print(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...')
+    print('*********************************************************')
+
+    with open(fname_log,"a") as progress_file:
+        progress_file.write(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...\n')
+    progress_file.close()
+
+    num_halos_thisprocess=len(halo_index_list_snap2)
+    for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
         t1_halo=time.time()
-        #Write progress to log file
-        print(f'Processing {ihalo_group}')
+
+        #Create group for this halo in output file
+        try:
+            ihalo_hdf5=output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
+            ihalo_hdf5.create_group('Inflow');ihalo_hdf5.create_group('Outflow')
+            ihalo_hdf5.create_group('Metadata')
+            for itype in PartTypes:
+                ihalo_hdf5['Inflow'].create_group(f'PartType{itype}')
+                ihalo_hdf5['Outflow'].create_group(f'PartType{itype}')
+        except:
+            ihalo_hdf5=output_hdf5['ihalo_'+str(ihalo_s2).zfill(6)]
+            ihalo_hdf5_inkeys=list(ihalo_hdf5['Inflow'].keys());ihalo_hdf5_outkeys=list(ihalo_hdf5['Outflow'].keys());ihalo_hdf5_mdkeys=list(ihalo_hdf5['Metadata'].keys())
+            for itype in PartTypes:
+                for ihalo_hdf5_inkey in ihalo_hdf5_inkeys: del ihalo_hdf5['Inflow'][f'PartType{itype}'][ihalo_hdf5_inkey]
+                for ihalo_hdf5_outkey in ihalo_hdf5_outkeys: del ihalo_hdf5['Outflow'][f'PartType{itype}'][ihalo_hdf5_inkey]
+                for ihalo_hdf5_mdkey in ihalo_hdf5_inkeys: del ihalo_hdf5['Metadata'][f'PartType{itype}'][ihalo_hdf5_mdkey]
+
+        # Find halo progenitor and descendants
+        ihalo_indices={str(snap1):halo_index_list_snap1[iihalo],str(snap2):ihalo_s2,str(snap3):halo_index_list_snap3[iihalo]}
+        
+        #Record halo properties as attributes 
+        ihalo_tracked=(ihalo_indices[str(snap1)]>-1 and ihalo_indices[str(snap3)]>-1)#track if have both progenitor and descendant
+        structuretype=base_halo_data[snap2]["Structuretype"][ihalo_indices[str(snap2)]]#structure type
+        numsubstruct=base_halo_data[snap2]["numSubStruct"][ihalo_indices[str(snap2)]]
+        sublevel=int(np.floor((structuretype-0.01)/10))
+
+        # Print progress to terminal
+        print()
+        print('**********************************************')
+        print('Halo index: ',ihalo_s2,f' - {numsubstruct} substructures')
+        print(f'Progenitor: {ihalo_indices[str(snap1)]} | Descendant: {ihalo_indices[str(snap3)]}')
+        print('**********************************************')
+        print()
+
+        # Print progress to output file
         with open(fname_log,"a") as progress_file:
-            progress_file.write(" \n")
-            progress_file.write(f'Processing halo {ihalo_group} ({iihalo+1} out of {ihalo_count}) \n')
+            progress_file.write(f' \n')
+            progress_file.write(f'Starting with ihalo {ihalo_s2} ... \n')
         progress_file.close()
-
-        #Load the particle IDs for inflow and outflow for this halo 
-        IDs_in_snap1={str(itype):acc_file[ihalo_group]['Inflow'][f'PartType{itype}']['ParticleIDs'].value for itype in parttypes}
-        IDs_out_snap2={str(itype):acc_file[ihalo_group]['Outflow'][f'PartType{itype}']['ParticleIDs'].value for itype in parttypes}
         
-        #Initialise datasets
-        ihalo_datasets_inflow={str(itype):{} for itype in parttypes}
-        ihalo_datasets_outflow={str(itype):{} for itype in parttypes}
+        if ihalo_tracked:
+            for isnap,snap in enumerate(snaps):
+                ihalo_isnap=ihalo_indices[str(snap)]
+                if ihalo_isnap>=0:
+                    ihalo_hdf5['Metadata'].create_dataset(f'snap{isnap+1}_com',data=[base_halo_data[snap]['Xc'][ihalo_indices[str(snap)]],base_halo_data[snap]['Yc'][ihalo_indices[str(snap)]],base_halo_data[snap]['Zc'][ihalo_indices[str(snap)]]],dtype=np.float32,shape=(1,3))
+                    ihalo_hdf5['Metadata'].create_dataset(f'snap{isnap+1}_cminpot',data=[base_halo_data[snap]['Xcminpot'][ihalo_indices[str(snap)]],base_halo_data[snap]['Ycminpot'][ihalo_indices[str(snap)]],base_halo_data[snap]['Zcminpot'][ihalo_indices[str(snap)]]],dtype=np.float32,shape=(1,3))
+                    ihalo_hdf5['Metadata'].create_dataset(f'snap{isnap+1}_vcom',data=[base_halo_data[snap]['VXc'][ihalo_indices[str(snap)]],base_halo_data[snap]['VYc'][ihalo_indices[str(snap)]],base_halo_data[snap]['VZc'][ihalo_indices[str(snap)]]],dtype=np.float32,shape=(1,3))
+                    ihalo_hdf5['Metadata'].create_dataset(f'snap{isnap+1}_R_200crit',data=base_halo_data[snap]['R_200crit'][ihalo_indices[str(snap)]],dtype=np.float32)
+                    ihalo_hdf5['Metadata'].create_dataset(f'snap{isnap+1}_R_200mean',data=base_halo_data[snap]['R_200mean'][ihalo_indices[str(snap)]],dtype=np.float32)
+                    ihalo_hdf5['Metadata'].create_dataset(f'snap{isnap+1}_Mass_200crit',data=base_halo_data[snap]['Mass_200crit'][ihalo_indices[str(snap)]]*10**10,dtype=np.float32)
+                    ihalo_hdf5['Metadata'].create_dataset(f'snap{isnap+1}_vmax',data=base_halo_data[snap]['Vmax'][ihalo_indices[str(snap)]],dtype=np.float32)
+                    ihalo_hdf5['Metadata'].create_dataset(f'snap{isnap+1}_vesc_crit',data=np.sqrt(2*base_halo_data[snap]['Mass_200crit'][ihalo_indices[str(snap)]]*base_halo_data[snap]['SimulationInfo']['Gravity']/base_halo_data[snap]['R_200crit'][ihalo_indices[str(snap)]]),dtype=np.float32)
 
-        #Check if halo is valid
-        if np.size(IDs_in_snap1['0'])==1 and type(IDs_in_snap1['0'])==np.float16:#if an invalid halo, save nan datasets
-            print(f'Not processing {ihalo_group}')
-            for itype in parttypes:
-                for dataset in datasets[str(itype)]:
-                    ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.nan
-                    ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.nan
-                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.nan
-                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.nan
+            ihalo_hdf5['Metadata'].create_dataset('sublevel',data=sublevel,dtype=np.int16)
+            ihalo_hdf5['Metadata'].create_dataset('ave_R_200crit',data=0.5*base_halo_data[snap1]['R_200crit'][ihalo_indices[str(snap1)]]+0.5*base_halo_data[snap2]['R_200crit'][ihalo_indices[str(snap2)]],dtype=np.int16)
 
-        #If we have a valid halo, proceed to extract datasets for particles
-        else:            
-            for itype in parttypes:
-                #initialise empty halo datasets
-                for dataset in datasets[str(itype)]:
-                    ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}']=np.zeros((len(IDs_in_snap1[str(itype)]),dataset_shapes[str(itype)][dataset]))
-                    ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}']=np.zeros((len(IDs_in_snap1[str(itype)]),dataset_shapes[str(itype)][dataset]))
-                    ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}']=np.zeros((len(IDs_out_snap2[str(itype)]),dataset_shapes[str(itype)][dataset]))
-                    ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}']=np.zeros((len(IDs_out_snap2[str(itype)]),dataset_shapes[str(itype)][dataset]))  
+            #Grab the FOF particle data
+            ihalo_fof_particles={}
+            for snap in snaps:
+                ihalo_fof_particles[str(snap)]={field:FOF_Part_Data[str(snap)][field][str(ihalo_indices[str(snap)])] for field in FOF_Part_Data_fields}
+                ihalo_fof_particles[str(snap)]['SortedIndices']=np.argsort(ihalo_fof_particles[str(snap)]['Particle_IDs'])
+                ihalo_fof_particles[str(snap)]['SortedIDs']=ihalo_fof_particles[str(snap)]['Particle_IDs'][(ihalo_fof_particles[str(snap)]['SortedIndices'],)]
+                ihalo_fof_particles[str(snap)]['ParticleIDs_set']=set(ihalo_fof_particles[str(snap)]['Particle_IDs'])
+
+            #Grab/slice EAGLE datacubes
+            print(f'Retrieving datacubes for ihalo {ihalo_s2} ...')
+            use='cminpot'
+            ihalo_com_physical={str(snap):ihalo_hdf5['Metadata'][f'snap{isnap+1}_{use}'].value for isnap,snap in enumerate(snaps)}
+            ihalo_com_comoving={str(snap):ihalo_hdf5['Metadata'][f'snap{isnap+1}_{use}'].value/Part_Data_comtophys[str(snap)]['Coordinates'] for isnap,snap in enumerate(snaps)}
+            ihalo_vcom_physical={str(snap):ihalo_hdf5['Metadata'][f'snap{isnap+1}_vcom'].value for isnap,snap in enumerate(snaps)}
+
+            ihalo_cube_rfac=1.25
+            ihalo_cuberadius_physical={str(snap):ihalo_hdf5['Metadata'][f'snap{isnap+1}_R_200mean'].value*ihalo_cube_rfac for snap in snaps}
+            ihalo_cuberadius_comoving={str(snap):ihalo_hdf5['Metadata'][f'snap{isnap+1}_R_200mean'].value/Part_Data_comtophys[str(snap)]['Coordinates']*ihalo_cube_rfac for isnap,snap in enumerate(snaps)}
             
-            #Iterate through each parttype to find particle data
-            for itype in parttypes:
-                ihalo_itype_npart_in=len(IDs_in_snap1[str(itype)])
-                ihalo_itype_npart_out=len(IDs_out_snap2[str(itype)])
-                
-                #Find index and type data for INFLOW particles at snap 1 and snap 2
-                # snap 1 - types were taken here
-                ihalo_itype_inflow_data_snap1=get_particle_indices(base_halo_data,
-                                                    SortedIDs=parthist_IDs_snap1,
-                                                    SortedIndices=parthist_indices_snap1,
-                                                    PartIDs=IDs_in_snap1[str(itype)],
-                                                    PartTypes=np.array(np.ones(ihalo_itype_npart_in)*itype,dtype=int),
-                                                    snap_taken=snap1,
-                                                    snap_desired=snap1)
-                #snap 2 - types were taken at snap 1 so transformation may have occurred
-                ihalo_itype_inflow_data_snap2=get_particle_indices(base_halo_data,
-                                                    SortedIDs=parthist_IDs_snap2,
-                                                    SortedIndices=parthist_indices_snap2,
-                                                    PartIDs=IDs_in_snap1[str(itype)],
-                                                    PartTypes=np.array(np.ones(ihalo_itype_npart_in)*itype,dtype=int),
-                                                    snap_taken=snap1,
-                                                    snap_desired=snap2)
-                #Find index and type data for OUTFLOW particles at snap 1 and snap 2
-                # snap 1 - types were taken at snap 2 so transformation may have occurred
-                ihalo_itype_outflow_data_snap1=get_particle_indices(base_halo_data,
-                                                    SortedIDs=parthist_IDs_snap1,
-                                                    SortedIndices=parthist_indices_snap1,
-                                                    PartIDs=IDs_out_snap2[str(itype)],
-                                                    PartTypes=np.array(np.ones(ihalo_itype_npart_out)*itype,dtype=int),
-                                                    snap_taken=snap2,
-                                                    snap_desired=snap1)
-                # snap 2 - types were taken here
-                ihalo_itype_outflow_data_snap2=get_particle_indices(base_halo_data,
-                                                    SortedIDs=parthist_IDs_snap2,
-                                                    SortedIndices=parthist_indices_snap2,
-                                                    PartIDs=IDs_out_snap2[str(itype)],
-                                                    PartTypes=np.array(np.ones(ihalo_itype_npart_out)*itype,dtype=int),
-                                                    snap_taken=snap2,
-                                                    snap_desired=snap2)
-                
-                #the above tuples have (type | historyindex | particleindex)
+            #Read EAGLE datacubes
+            ihalo_cube_particles={str(snap):{field:[] for field in Part_Data_fields} for snap in snaps}
+            ihalo_cube_npart={str(snap):{} for snap in snaps}
+            t1_slicing=time.time()
+            for snap in snaps:
 
-                #Now iterate through each dataset and each particle (inflow and outflow) and find its data
-                for dataset in datasets[str(itype)]:
-                    dataset_size=dataset_shapes[str(itype)][dataset];dataset_type=dataset_types[str(itype)][dataset]
-                    
-                    #inflow particles
-                    for iipart_inflow in range(ihalo_itype_npart_in):
-                        ipart_inflow_snap1_type=ihalo_itype_inflow_data_snap1[0][iipart_inflow]
-                        ipart_inflow_snap1_partdataindex=ihalo_itype_inflow_data_snap1[2][iipart_inflow]
-                        ipart_inflow_snap2_type=ihalo_itype_inflow_data_snap2[0][iipart_inflow]#maybe transformed
-                        ipart_inflow_snap2_partdataindex=ihalo_itype_inflow_data_snap2[2][iipart_inflow]#maybe transformed
-                        
-                        #non-transformed
-                        ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'][iipart_inflow]=particle_datasets_snap1[str(ipart_inflow_snap1_type)][dataset][ipart_inflow_snap1_partdataindex]
-                        #transformed
-                        try:
-                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=particle_datasets_snap2[str(ipart_inflow_snap2_type)][dataset][ipart_inflow_snap2_partdataindex]
-                        except:
-                            nan_output=np.array([np.nan]*dataset_shapes[str(itype)][dataset])
-                            if np.size(nan_output)==1:
-                                nan_output=nan_output[0]
-                            ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'][iipart_inflow]=nan_output
-                    
-                    #outflow particles
-                    for iipart_outflow in range(ihalo_itype_npart_out):
-                        ipart_outflow_snap1_type=ihalo_itype_outflow_data_snap1[0][iipart_outflow]#maybe transformed
-                        ipart_outflow_snap1_partdataindex=ihalo_itype_outflow_data_snap1[2][iipart_outflow]#maybe transformed
-                        ipart_outflow_snap2_type=ihalo_itype_outflow_data_snap2[0][iipart_outflow]
-                        ipart_outflow_snap2_partdataindex=ihalo_itype_outflow_data_snap2[2][iipart_outflow]
-                        
-                        #non-transformed
-                        ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'][iipart_outflow]=particle_datasets_snap2[str(ipart_outflow_snap2_type)][dataset][ipart_outflow_snap2_partdataindex]
-                        #transformed
-                        try:
-                            ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=particle_datasets_snap1[str(ipart_outflow_snap1_type)][dataset][ipart_outflow_snap1_partdataindex]
-                        except:
-                            nan_output=np.array([np.nan]*dataset_shapes[str(itype)][dataset])
-                            if np.size(nan_output)==1:
-                                nan_output=nan_output[0]
-                            ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'][iipart_outflow]=nan_output
+                ihalo_EAGLE_snap=read_eagle.EagleSnapshot(Part_Data_FilePaths[str(snap)])
+                ihalo_EAGLE_snap.select_region(xmin=ihalo_com_comoving[str(snap)][0][0]-ihalo_cuberadius_comoving[str(snap)],xmax=ihalo_com_comoving[str(snap)][0][0]+ihalo_cuberadius_comoving[str(snap)],
+                                            ymin=ihalo_com_comoving[str(snap)][0][1]-ihalo_cuberadius_comoving[str(snap)],ymax=ihalo_com_comoving[str(snap)][0][1]+ihalo_cuberadius_comoving[str(snap)],
+                                            zmin=ihalo_com_comoving[str(snap)][0][2]-ihalo_cuberadius_comoving[str(snap)],zmax=ihalo_com_comoving[str(snap)][0][2]+ihalo_cuberadius_comoving[str(snap)])
+                ihalo_EAGLE_types=[]
+                for itype in PartTypes:       
+                    for ifield,field in enumerate(Part_Data_fields):
+                        if not (field=='Mass' and itype==1):
+                            data=ihalo_EAGLE_snap.read_dataset(itype,field)*Part_Data_comtophys[str(snap)][field];ihalo_cube_npart[str(snap)][str(itype)]=len(data)     
+                        else:
+                            data=np.ones(ihalo_cube_npart[str(snap)]['1'])*Mass_DM
+                        ihalo_cube_particles[str(snap)][field].extend(data)
+                    ihalo_EAGLE_types.extend((np.ones(ihalo_cube_npart[str(snap)][str(itype)])*itype).astype(int))
+                
+                ihalo_cube_particles[str(snap)]['ParticleTypes']=np.array(ihalo_EAGLE_types)
+                for field in Part_Data_fields:
+                    ihalo_cube_particles[str(snap)][field]=np.array(ihalo_cube_particles[str(snap)][field])
 
-        #Convert coordinates and velocities to physical
-        h_val=base_halo_data[-1]['SimulationInfo']['h_val']
-        scalefactor_snap1=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']
-        scalefactor_snap2=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']
-        for itype in parttypes:
-            for dataset in datasets[str(itype)]:
-                if dataset=='Coordinates' or dataset=='Velocity':
-                    ihalo_datasets_inflow[str(itype)]['snap1_'+dataset]=ihalo_datasets_inflow[str(itype)]['snap1_'+dataset]*scalefactor_snap1/h_val
-                    ihalo_datasets_inflow[str(itype)]['snap2_'+dataset]=ihalo_datasets_inflow[str(itype)]['snap2_'+dataset]*scalefactor_snap2/h_val
-                    ihalo_datasets_outflow[str(itype)]['snap1_'+dataset]=ihalo_datasets_outflow[str(itype)]['snap1_'+dataset]*scalefactor_snap1/h_val
-                    ihalo_datasets_outflow[str(itype)]['snap2_'+dataset]=ihalo_datasets_outflow[str(itype)]['snap2_'+dataset]*scalefactor_snap2/h_val
+                ihalo_cube_particles[str(snap)]['SortedIndices']=np.argsort(ihalo_cube_particles[str(snap)]['ParticleIDs'])
+                ihalo_cube_particles[str(snap)]['SortedIDs']=ihalo_cube_particles[str(snap)]['ParticleIDs'][(ihalo_cube_particles[str(snap)]['SortedIndices'],)]
+
+            t2_slicing=time.time()
+            print(f'Finished datacubes for ihalo {ihalo_s2} in {t2_slicing-t1_slicing:.2f} sec')
+            
+            ############################## INFLOW ##############################
+            ####################################################################
+
+            # SELECT INFLOW CANDIDATES AS THOSE WITHIN R200crit OR the FOF envelope at snap 2
+            ihalo_ave_R_200crit_physical=(ihalo_hdf5['Metadata']['snap1_R_200crit'].value+ihalo_hdf5['Metadata']['snap2_R_200crit'].value)/2
+            ihalo_cube_rminpot_snap2=np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap2)]['Coordinates']-ihalo_com_physical[str(snap2)]),axis=1))
+            ihalo_cube_radialcut_snap2=np.where(ihalo_cube_rminpot_snap2<ihalo_ave_R_200crit_physical)
+            ihalo_cube_inflow_candidate_data_snap2={field:ihalo_cube_particles[str(snap2)][field] for field in Part_Data_fields}
+            ihalo_fof_inflow_candidate_data_snap2={field:ihalo_fof_particles[str(snap2)][field] for field in FOF_Part_Data_fields}
+            ihalo_combined_inflow_candidate_IDs=np.concatenate([ihalo_fof_inflow_candidate_data_snap2['Particle_IDs'],ihalo_cube_inflow_candidate_data_snap2['ParticleIDs']])
+            ihalo_combined_inflow_candidate_inFOF=np.concatenate([np.ones(len(ihalo_fof_inflow_candidate_data_snap2['Particle_IDs'])),np.zeros(len(ihalo_cube_inflow_candidate_data_snap2['ParticleIDs']))])
+            ihalo_combined_inflow_candidate_IDs_unique,ihalo_combined_inflow_candidate_IDs_unique_indices=np.unique(ihalo_combined_inflow_candidate_IDs,return_index=True)
+            ihalo_combined_inflow_candidate_IDs_unique=np.array(ihalo_combined_inflow_candidate_IDs_unique,dtype=np.int64)
+            ihalo_combined_inflow_candidate_count=len(ihalo_combined_inflow_candidate_IDs_unique)
+
+            #GRAB DATA FOR EACH INFLOW CANDIDATE
+            ihalo_combined_inflow_candidate_data={}
+
+            # OUTPUTS FROM DATACUBE: Coordinates, Velocity, Mass, Type 
+            ihalo_combined_inflow_candidate_cubeindices={}
+            print(f'num inflow candidates for ihalo {ihalo_s2}: {ihalo_combined_inflow_candidate_count}')
+            for isnap,snap in enumerate(snaps):
         
-        #Save all to file
-        for itype in parttypes: 
-            for dataset in datasets[str(itype)]:
-                try:
-                    del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap2_{dataset}']
-                    del acc_file[ihalo_group]['Inflow'][f'PartType{itype}'][f'snap1_{dataset}']
-                    del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap2_{dataset}']
-                    del acc_file[ihalo_group]['Outflow'][f'PartType{itype}'][f'snap1_{dataset}']
-                    print(f'Overwriting data for {ihalo}, dataset {dataset}')
+                #find the indices of the IDs in the (sorted) datacube for this halo (will return nan if not in the cube) - outputs index
+                ihalo_combined_inflow_candidate_IDindices_temp=binary_search(ihalo_combined_inflow_candidate_IDs_unique,sorted_list=ihalo_cube_particles[str(snap)]['SortedIDs'],check_entries=True)
+                #use the indices from the sorted IDs above to extract the cube indices (will return nan if not in the cube) - outputs index
+                ihalo_combined_inflow_candidate_cubeindices[str(snap)]=mask_wnans(array=ihalo_cube_particles[str(snap)]['SortedIndices'],indices=ihalo_combined_inflow_candidate_IDindices_temp)
+                #use the cube indices to extract particle data, record which particles couldn't be found
+                
 
-                    acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                except:
+                #for snaps 1 & 2, grab detailed particle data
+                if not isnap==2:
+                    for field in ['Coordinates','Velocity','Mass','ParticleIDs','ParticleTypes']:
+                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_cube_particles[str(snap)][field],indices=ihalo_combined_inflow_candidate_cubeindices[str(snap)])
+                    
+                    #derive other cubdata outputs
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vtan_com']=np.sqrt(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vabs_com'])-np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vrad_com']))
+                
+                #for snap 3, just grab particle type
+                else:
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_ParticleTypes']=mask_wnans(array=ihalo_cube_particles[str(snap)]['ParticleTypes'],indices=ihalo_combined_inflow_candidate_cubeindices[str(snap)])
+                    
+                ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Particle_InCube']=np.isfinite(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_ParticleTypes'])
 
-                    acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_inflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap2_{dataset}'],dtype=dataset_types[str(itype)][dataset])
-                    acc_file[ihalo_group]['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{dataset}',data=ihalo_datasets_outflow[str(itype)][f'snap1_{dataset}'],dtype=dataset_types[str(itype)][dataset])
+            #include average radial velocity
+            vel_conversion=978.462 #Mpc/Gyr to km/s
+            ihalo_combined_inflow_candidate_data[f'ave_vrad_com']=(ihalo_combined_inflow_candidate_data[f'snap2_rabs_com']-ihalo_combined_inflow_candidate_data[f'snap1_rabs_com'])/dt*vel_conversion
+        
+            # OUTPUTS FROM FOF: InFOF, Bound
+            ihalo_combined_inflow_candidate_fofindices={}
+            for isnap,snap in enumerate(snaps):
+                #find the indices of the IDs in the (sorted) fof IDs for this halo (will return nan if not in the fof) - outputs index
+                ihalo_combined_inflow_candidate_IDindices_temp=binary_search(ihalo_combined_inflow_candidate_IDs_unique,sorted_list=ihalo_fof_particles[str(snap)]['SortedIDs'],check_entries=True)
+                #use the indices from the sorted IDs above to extract the fof indices (will return nan if not in the fof) - outputs index
+                ihalo_combined_inflow_candidate_fofindices[str(snap)]=mask_wnans(array=ihalo_fof_particles[str(snap)]['SortedIndices'],indices=ihalo_combined_inflow_candidate_IDindices_temp)
+                
+                #use the fof indices to extract particle data, record which particles couldn't be found
+                ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Particle_InFOF']=np.isfinite(ihalo_combined_inflow_candidate_IDindices_temp)
+                ihalo_combined_inflow_candidate_fofdata_notinfofmask=np.where(np.logical_not(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Particle_InFOF']))
+                ihalo_combined_inflow_candidate_fofdata_notinfofmask_count=len(ihalo_combined_inflow_candidate_fofdata_notinfofmask[0])
+                for field in ['Particle_Bound','Particle_InHost']:
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_fof_particles[str(snap)][field],indices=ihalo_combined_inflow_candidate_fofindices[str(snap)])
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_{field}'][ihalo_combined_inflow_candidate_fofdata_notinfofmask]=np.zeros(ihalo_combined_inflow_candidate_fofdata_notinfofmask_count)
+
+            # OUTPUTS FROM HISTORIES: Processed, Structure (by particle type)
+            ihalo_combined_inflow_candidate_partindices={}
+            ihalo_combined_inflow_candidate_data['snap1_Structure']=np.zeros(ihalo_combined_inflow_candidate_count)
+            ihalo_combined_inflow_candidate_data['snap1_Processed']=np.zeros(ihalo_combined_inflow_candidate_count)
             
+            for itype in PartTypes:
+                ihalo_combined_inflow_candidate_typemask_snap1=np.where(ihalo_combined_inflow_candidate_data['snap1_ParticleTypes']==itype)
+                ihalo_combined_inflow_candidate_IDs_unique_itype=ihalo_combined_inflow_candidate_IDs_unique[ihalo_combined_inflow_candidate_typemask_snap1]
+                #find the indices of the IDs in the (sorted) fof IDs for this halo (will return nan if not in the fof) - outputs index
+                ihalo_combined_inflow_candidate_IDindices_temp=binary_search(ihalo_combined_inflow_candidate_IDs_unique_itype,sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=False)
+                #use the indices from the sorted IDs above to extract the partdata indices (will return nan if not in the fof) - outputs index
+                ihalo_combined_inflow_candidate_partindices[str(itype)]=Part_Histories_Index_snap1[str(itype)][(ihalo_combined_inflow_candidate_IDindices_temp,)]
+                #extract host structure and processing
+                ihalo_combined_inflow_candidate_data['snap1_Structure'][ihalo_combined_inflow_candidate_typemask_snap1]=Part_Histories_HostStructure_snap1[str(itype)][ihalo_combined_inflow_candidate_partindices[str(itype)]]
+                ihalo_combined_inflow_candidate_data['snap1_Processed'][ihalo_combined_inflow_candidate_typemask_snap1]=Part_Histories_Processed_L1_snap1[str(itype)][ihalo_combined_inflow_candidate_partindices[str(itype)]]
+
+            # SAVE TO FILE 
+            output_fields_dtype={}
+            output_fields_float16=['ave_vrad_com',"r_com","rabs_com","vrad_com","vtan_com","Mass"]
+            for field in output_fields_float16:
+                output_fields_dtype[field]=np.float16
+
+            output_fields_int64=["ParticleIDs","Structure"]
+            for field in output_fields_int64:
+                output_fields_dtype[field]=np.int64
+            
+            output_fields_int8=["Processed","Particle_InFOF","Particle_Bound","Particle_InHost","Particle_InCube"]
+            for field in output_fields_int8:
+                output_fields_dtype[field]=np.int8        
+
+            for itype in PartTypes:
+                # Candidate particle types and masses taken at snap 1 (before "entering" halo)
+                ihalo_itype_mask=np.where(ihalo_combined_inflow_candidate_data["snap1_ParticleTypes"]==itype)
+                ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset('ParticleIDs',data=ihalo_combined_inflow_candidate_IDs_unique[ihalo_itype_mask],dtype=output_fields_dtype["ParticleIDs"],compression=compression)
+                ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset('Mass',data=ihalo_combined_inflow_candidate_data['snap1_Mass'][ihalo_itype_mask],dtype=output_fields_dtype["Mass"],compression=compression)
+                ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset('ave_vrad_com',data=ihalo_combined_inflow_candidate_data['ave_vrad_com'][ihalo_itype_mask],dtype=output_fields_dtype["ave_vrad_com"],compression=compression)
+
+                #Rest of fields: snap 1
+                ihalo_snap1_inflow_outputs=["Structure","Processed","r_com","rabs_com","vrad_com","vtan_com","Particle_InFOF","Particle_Bound","Particle_InHost","Particle_InCube"]
+                for ihalo_snap1_inflow_output in ihalo_snap1_inflow_outputs:
+                    ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{ihalo_snap1_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap1_{ihalo_snap1_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap1_inflow_output],compression=compression)
+                
+                #Rest of fields: snap 2
+                ihalo_snap2_inflow_outputs=["r_com","rabs_com","vrad_com","vtan_com","Particle_InFOF","Particle_Bound","Particle_InHost"]
+
+                for ihalo_snap2_inflow_output in ihalo_snap2_inflow_outputs:
+                    ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{ihalo_snap2_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap2_{ihalo_snap2_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_inflow_output],compression=compression)
+                
+                #Rest of fields: snap 3
+                ihalo_snap3_inflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost"]
+
+                for ihalo_snap3_inflow_output in ihalo_snap3_inflow_outputs:
+                    ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset(f'snap3_{ihalo_snap3_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap3_{ihalo_snap3_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap3_inflow_output],compression=compression)
+        
+
+            ############################## OUTFLOW ##############################
+            ####################################################################
+
+            # SELECT OUFLOW CANDIDATES AS THOSE WITHIN R200crit OR the FOF envelope at snap 1
+            ihalo_ave_R_200crit_physical=(ihalo_hdf5['Metadata']['snap1_R_200crit'].value+ihalo_hdf5['Metadata']['snap2_R_200crit'].value)/2
+            ihalo_cube_rminpot_snap1=np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap1)]['Coordinates']-ihalo_com_physical[str(snap1)]),axis=1))
+            ihalo_cube_radialcut_snap1=np.where(ihalo_cube_rminpot_snap1<ihalo_ave_R_200crit_physical)
+            ihalo_cube_outflow_candidate_data_snap1={field:ihalo_cube_particles[str(snap1)][field] for field in Part_Data_fields}
+            ihalo_fof_outflow_candidate_data_snap1={field:ihalo_fof_particles[str(snap1)][field] for field in FOF_Part_Data_fields}
+            ihalo_combined_outflow_candidate_IDs=np.concatenate([ihalo_fof_outflow_candidate_data_snap1['Particle_IDs'],ihalo_cube_outflow_candidate_data_snap1['ParticleIDs']])
+            ihalo_combined_outflow_candidate_IDs_unique=np.array(np.unique(ihalo_combined_outflow_candidate_IDs),dtype=np.int64)
+            ihalo_combined_outflow_candidate_count=len(ihalo_combined_outflow_candidate_IDs_unique)
+
+            # GRAB DATA FOR EACH OUTFLOW CANDIDATE
+            ihalo_combined_outflow_candidate_data={}
+
+            # OUTPUTS FROM DATACUBE: Coordinates, Velocity, Mass, Type 
+            ihalo_combined_outflow_candidate_cubeindices={}
+            print(f'num outflow candidates for ihalo {ihalo_s2}: {ihalo_combined_outflow_candidate_count}')
+            for isnap,snap in enumerate(snaps):
+                #find the indices of the IDs in the (sorted) datacube for this halo (will return nan if not in the cube) - outputs index
+                ihalo_combined_outflow_candidate_IDindices_temp=binary_search(ihalo_combined_outflow_candidate_IDs_unique,sorted_list=ihalo_cube_particles[str(snap)]['SortedIDs'],check_entries=True)
+                #use the indices from the sorted IDs above to extract the cube indices (will return nan if not in the cube) - outputs index
+                ihalo_combined_outflow_candidate_cubeindices[str(snap)]=mask_wnans(array=ihalo_cube_particles[str(snap)]['SortedIndices'],indices=ihalo_combined_outflow_candidate_IDindices_temp)
+                #use the cube indices to extract particle data, record which particles couldn't be found
+                
+                #for snaps 1 & 2, grab detailed particle data
+                if not isnap==2:
+                    for field in ['Coordinates','Velocity','Mass','ParticleIDs','ParticleTypes']:
+                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_cube_particles[str(snap)][field],indices=ihalo_combined_outflow_candidate_cubeindices[str(snap)])
+                    
+                    #derive other cubdata outputs
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vtan_com']=np.sqrt(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com'])-np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']))
+                
+                #for snap 3, just grab particle type
+                else:
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_ParticleTypes']=mask_wnans(array=ihalo_cube_particles[str(snap)]['ParticleTypes'],indices=ihalo_combined_outflow_candidate_cubeindices[str(snap)])
+                    
+                ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Particle_InCube']=np.isfinite(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_ParticleTypes'])
+
+            #include average radial velocity
+            vel_conversion=978.462 #Mpc/Gyr to km/s
+            ihalo_combined_outflow_candidate_data[f'ave_vrad_com']=(ihalo_combined_outflow_candidate_data[f'snap2_rabs_com']-ihalo_combined_outflow_candidate_data[f'snap1_rabs_com'])/dt*vel_conversion
+        
+            # OUTPUTS FROM FOF: InFOF, Bound
+            ihalo_combined_outflow_candidate_fofindices={}
+            for isnap,snap in enumerate(snaps):
+                #find the indices of the IDs in the (sorted) fof IDs for this halo (will return nan if not in the fof) - outputs index
+                ihalo_combined_outflow_candidate_IDindices_temp=binary_search(ihalo_combined_outflow_candidate_IDs_unique,sorted_list=ihalo_fof_particles[str(snap)]['SortedIDs'],check_entries=True)
+                #use the indices from the sorted IDs above to extract the fof indices (will return nan if not in the fof) - outputs index
+                ihalo_combined_outflow_candidate_fofindices[str(snap)]=mask_wnans(array=ihalo_fof_particles[str(snap)]['SortedIndices'],indices=ihalo_combined_outflow_candidate_IDindices_temp)
+                
+                #use the fof indices to extract particle data, record which particles couldn't be found
+                ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Particle_InFOF']=np.isfinite(ihalo_combined_outflow_candidate_IDindices_temp)
+                ihalo_combined_outflow_candidate_fofdata_notinfofmask=np.where(np.logical_not(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Particle_InFOF']))
+                ihalo_combined_outflow_candidate_fofdata_notinfofmask_count=len(ihalo_combined_outflow_candidate_fofdata_notinfofmask[0])
+                for field in ['Particle_Bound','Particle_InHost']:
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_fof_particles[str(snap)][field],indices=ihalo_combined_outflow_candidate_fofindices[str(snap)])
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_{field}'][ihalo_combined_outflow_candidate_fofdata_notinfofmask]=np.zeros(ihalo_combined_outflow_candidate_fofdata_notinfofmask_count)
+
+            # OUTPUTS FROM HISTORIES: Processed, Structure (by particle type) at snap 2
+            ihalo_combined_outflow_candidate_partindices={}
+            ihalo_combined_outflow_candidate_data['snap2_Structure']=np.zeros(ihalo_combined_outflow_candidate_count)
+            
+            for itype in PartTypes:
+                ihalo_combined_outflow_candidate_typemask_snap2=np.where(ihalo_combined_outflow_candidate_data['snap2_ParticleTypes']==itype)
+                ihalo_combined_outflow_candidate_IDs_unique_itype=ihalo_combined_outflow_candidate_IDs_unique[ihalo_combined_outflow_candidate_typemask_snap2]
+                #find the indices of the IDs in the (sorted) fof IDs for this halo (will return nan if not in the fof) - outputs index
+                ihalo_combined_outflow_candidate_IDindices_temp=binary_search(ihalo_combined_outflow_candidate_IDs_unique_itype,sorted_list=Part_Histories_IDs_snap2[str(itype)],check_entries=False)
+                #use the indices from the sorted IDs above to extract the partdata indices (will return nan if not in the fof) - outputs index
+                ihalo_combined_outflow_candidate_partindices[str(itype)]=Part_Histories_Index_snap2[str(itype)][(ihalo_combined_outflow_candidate_IDindices_temp,)]
+                #extract host structure and processing
+                ihalo_combined_outflow_candidate_data['snap2_Structure'][ihalo_combined_outflow_candidate_typemask_snap2]=Part_Histories_HostStructure_snap2[str(itype)][ihalo_combined_outflow_candidate_partindices[str(itype)]]
+
+            # SAVE TO FILE 
+
+            for itype in PartTypes:
+                # Candidate particle types and masses taken at snap 2 (after "leaving" halo)
+                ihalo_itype_mask=np.where(ihalo_combined_outflow_candidate_data["snap2_ParticleTypes"]==itype)
+                ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset('ParticleIDs',data=ihalo_combined_outflow_candidate_IDs_unique[ihalo_itype_mask],dtype=output_fields_dtype["ParticleIDs"],compression=compression)
+                ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset('Mass',data=ihalo_combined_outflow_candidate_data['snap2_Mass'][ihalo_itype_mask],dtype=output_fields_dtype["Mass"],compression=compression)
+                ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset('ave_vrad_com',data=ihalo_combined_outflow_candidate_data[f'ave_vrad_com'][ihalo_itype_mask],dtype=output_fields_dtype["ave_vrad_com"],compression=compression)
+
+                #Rest of fields: snap 1
+                ihalo_snap1_outflow_outputs=["r_com","rabs_com","vrad_com","vtan_com","Particle_InFOF","Particle_Bound","Particle_InHost"]
+                for ihalo_snap1_outflow_output in ihalo_snap1_outflow_outputs:
+                    ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{ihalo_snap1_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap1_{ihalo_snap1_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap1_outflow_output],compression=compression)
+                
+                #Rest of fields: snap 2
+                ihalo_snap2_outflow_outputs=["r_com","rabs_com","vrad_com","vtan_com","Particle_InFOF","Particle_Bound","Particle_InHost","Particle_InCube","Structure"]
+
+                for ihalo_snap2_outflow_output in ihalo_snap2_outflow_outputs:
+                    ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{ihalo_snap2_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap2_{ihalo_snap2_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_outflow_output],compression=compression)
+                
+                #Rest of fields: snap 3
+                ihalo_snap3_outflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost","Particle_InCube"]
+
+                for ihalo_snap3_outflow_output in ihalo_snap3_outflow_outputs:
+                    ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset(f'snap3_{ihalo_snap3_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap3_{ihalo_snap3_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap3_outflow_output],compression=compression)
+        
+        else:
+            print(f'Skipping ihalo {ihalo_s2}')
+        
         t2_halo=time.time()
-        print(f'Done processing halo {ihalo_group} ({iihalo+1} out of {ihalo_count}) - took {t2_halo-t1_halo} \n')
-        with open(fname_log,"a") as progress_file:
-            progress_file.write(" \n")
-            progress_file.write(f'Done processing halo {ihalo_group} ({iihalo+1} out of {ihalo_count}) - took {t2_halo-t1_halo} \n')
-            progress_file.write(f'Progress: {(iihalo+1)/ihalo_count*100:.1f}%\n')
-        progress_file.close()
+        print(f"Took {t2_halo-t1_halo:.2f} sec on ihalo {ihalo_s2}")
+        print()
 
-    acc_file.close()
+        with open(fname_log,"a") as progress_file:
+            progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
+            progress_file.write(f"[Took {t2_halo-t1_halo:.2f} sec]\n")
+            progress_file.write(f" \n")
+        progress_file.close()
+        
+    #Finished with output file
+    output_hdf5.close()
     return None
 
-########################### READ ALL ACC DATA ###########################
+########################### SUM DETAILED ACCRETION DATA ###########################
 
-def get_particle_acc_data(base_halo_data,accdata_dir):
-    """
+def postprocess_accretion_data(base_halo_data,path):
 
-    get_particle_acc_data : function 
-	----------
+    """ sum from gen_accretion_data_detailed_serial """
 
-    Read particle accretion data from a directory of accretion files. 
+    if not path.endswith('/'): path=path+'/'
+    snap=path.split('snap_')[-1]
+    if snap.endswith('/'): snap=snap[:-1]
+    snap=int(snap)
 
-	Parameters
-	----------
-    base_halo_data: dict
-        The base halo data dictionary (encodes particle data filepath, snap, particle histories).
+    allfiles=os.listdir(path)
+    accfile_paths=[path+fname for fname in allfiles if ('AccretionData' in fname and 'summed' not in fname)]
+    nfiles=len(accfile_paths)
 
-    accdata_dir : str
-        The directory path containing the hdf5 accretion data files. 
+    outfile_path=accfile_paths[0][:-10]+'_summed.hdf5'
+    if os.path.exists(outfile_path):
+        os.remove(outfile_path)
 
-    Returns
-	----------
-    acc_metadata : dict
+    #Initialise output file with  header
+    outfile=h5py.File(outfile_path,'w')
+    outfile.create_group('Header')
+    exfile=h5py.File(accfile_paths[0],'r+')
+    header_keys=list(exfile['Header'].attrs)
+    for header_key in header_keys:
+        outfile['Header'].attrs.create(header_key,exfile['Header'].attrs[header_key])
 
-        Metadata from the accretion calculation. 
+
+    #Initialise output file output groups and datasets
+    num_total_halos=base_halo_data[snap]['Count']
+    outfile.create_group('FOF') # full halo scale for each field halo
+    outfile.create_group('SO') #for field halos WITH substructure: central, for subhalos the corresponding satellite
     
-    acc_data : dict
+    #params
+    r200_facs=[0.125,0.25,0.5,0.75,1,1.25,1.5,2]
+    vmax_facs=[0,0.125,0.25,0.375,0.5,1]
 
-        All particle accretion data from the parsed directory. 
+    for accfile_path in accfile_paths:
+        accfile=h5py.File(accfile_path,'r')
+        accfile_allkeys=list(accfile.keys())
+        accfile_halokeys=[key for key in accfile_allkeys if 'halo' in key]
+        accfile_parttype_keys=list(accfile[accfile_halokeys[0]]['Inflow'].keys())
+        accfile_parttypes=[int(parttype_key.split('PartType')[-1]) for parttype_key in accfile_parttype_keys]
 
-    """
+        for accfile_halokey in accfile_halokeys:
+            ihalo=int(accfile_halokey.split('ihalo_')[-1])
+            ihalo_metadata={field:accfile[accfile_halokey]['Metadata'][field].value for field in list(accfile[accfile_halokey]['Metadata'].keys())}
+            ihalo_numsubstruct=base_halo_data[snap]['numSubStruct'][ihalo]
 
-    #Read the halo groups from file
-    t1=time.time()
-    if not accdata_dir.endswith('/'):
-        accdata_dir=accdata_dir+'/'
-    accdata_filelist=os.listdir(accdata_dir)
-    accdata_filelist_trunc=sorted([accdata_dir+accfile for accfile in accdata_filelist if (('summed' not in accfile) and ('px' not in accfile) and ('DS' not in accfile))])
-    accdata_files=[h5py.File(accdata_filename,'r') for accdata_filename in accdata_filelist_trunc]
-    accdata_halo_lists=[sorted(list(accdata_file.keys()))[1:] for accdata_file in accdata_files]
-    accdata_halo_lists_flattened=flatten(accdata_halo_lists)
+            if len(list(ihalo_metadata.keys()))>0:
+                ihalo_metadata['ave_R_200crit']=(ihalo_metadata['snap1_R_200crit']+ihalo_metadata['snap2_R_200crit'])*0.5
+                ihalo_metadata['ave_vmax']=(ihalo_metadata['snap1_vmax']+ihalo_metadata['snap2_vmax'])*0.5
+                for itype,itype_key in zip(accfile_parttypes,accfile_parttype_keys):
 
-    #Read total number of halos from accretion file header
-    halo_index_list=list(range(accdata_files[0]['Header'].attrs['total_num_halos']))
-    desired_num_halos=len(halo_index_list)
-    ihalo_files=np.ones(desired_num_halos)+np.nan
+                    ######## INFLOW ########
+                    ihalo_itype_inflow_group=accfile[accfile_halokey]["Inflow"][itype_key]
+                    ihalo_itype_inflow_vrad_masks=[-ihalo_itype_inflow_group["snap1_vrad_com"].value>vmax_fac*ihalo_metadata['ave_vmax'] for vmax_fac in vmax_facs]
 
-    # Load in metadata
-    acc_metadata=dict()
-    hdf5header_attrs=list(accdata_files[0]['/Header'].attrs)
-    for attribute in hdf5header_attrs:
-        acc_metadata[attribute]=accdata_files[0]['/Header'].attrs[attribute]
+                    ###FOF
+                    ihalo_itype_inflow_crossed_FOF_boundary_mask=np.logical_and(ihalo_itype_inflow_group["snap2_Particle_InFOF"].value,np.logical_not(ihalo_itype_inflow_group["snap1_Particle_InFOF"].value))
+                    ihalo_itype_inflow_crossed_FOF_boundary_vrad_masks=[np.logical_and(ihalo_itype_inflow_crossed_FOF_boundary_mask,ihalo_itype_inflow_vrad_mask) for ihalo_itype_inflow_vrad_mask in ihalo_itype_inflow_vrad_masks]
+                    ihalo_itype_inflow_stable_FOF_snap3=ihalo_itype_inflow_group["snap3_Particle_InFOF"].value
+                    
+                    ###SO
+                    ihalo_itype_inflow_crossed_r200_boundary_masks=[np.logical_and(ihalo_itype_inflow_group["snap2_rabs_com"].value<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_itype_inflow_group["snap1_rabs_com"].value>r200_fac*ihalo_metadata['ave_R_200crit']) for r200_fac in r200_facs]
+                    
+                    if itype==0:
+                        print('****************')
+                        print(f'ihalo {ihalo}')
+                        print('---FOF gas inflow---')
+                        print(f'All FOF inflow: {np.sum(ihalo_itype_inflow_crossed_FOF_boundary_mask):.0f}')
+                        print(f'Stable FOF inflow: {np.sum(np.logical_and(ihalo_itype_inflow_crossed_FOF_boundary_mask,ihalo_itype_inflow_stable_FOF_snap3)):.0f}')
+                        print(f'All FOF inflow with vrad cuts:')
+                        print(f'{np.column_stack((vmax_facs,[np.sum(ihalo_itype_inflow_crossed_FOF_boundary_vrad_mask) for ihalo_itype_inflow_crossed_FOF_boundary_vrad_mask in ihalo_itype_inflow_crossed_FOF_boundary_vrad_masks]))}')
+                        print('---SO gas inflow---')
+                        print(f'All SO inflow with R200 cuts:')
+                        print(f'{np.column_stack((r200_facs,[np.sum(ihalo_itype_inflow_crossed_r200_boundary_mask) for ihalo_itype_inflow_crossed_r200_boundary_mask in ihalo_itype_inflow_crossed_r200_boundary_masks]))}')
+                    
 
-    if not type(acc_metadata['outname'])==str:
-        acc_metadata['outname']=acc_metadata['outname'].decode('utf-8')
-    if 'pre_depth' not in hdf5header_attrs:
-        acc_metadata['pre_depth']=int(accdata_path.split('pre')[-1][:2])
-    if 'post_depth' not in hdf5header_attrs:
-        acc_metadata['post_depth']=int(accdata_path.split('post')[-1][:2])
-    if 'outname' not in hdf5header_attrs:
-        acc_metadata['outname']=str(base_halo_data[-1]['outname'])
-    
-    print(f'Indexing halos ...')
-    #Save which file each halo's data is contained in
-    for iihalo,ihalo in enumerate(halo_index_list):
-        for ifile,ihalo_list in enumerate(accdata_halo_lists):
-            if f'ihalo_'+str(ihalo).zfill(6) in ihalo_list:
-                ihalo_files[iihalo]=ifile
-                break
             else:
-                pass
-    t2=time.time()
-
-    print(f'Done indexing halos in {t2-t1:.1f} sec')
-
-    #Assign particle types to read from base halo data
-    if base_halo_data[-1]['Part_FileType']=='EAGLE':
-        parttypes=[0,1,4,5]
-    else:
-        parttypes=[0,1]
-
-    #Read the outputs for inflow/outflow from the file
-    partfields_in={}
-    partfields_out={}
-    for itype in parttypes:
-        ihalo_group0=list(accdata_files[0].keys())[-1]
-        fields_in_itype=list(accdata_files[0][ihalo_group0]['Inflow'][f'PartType{itype}'].keys())
-        fields_out_itype=list(accdata_files[0][ihalo_group0]['Outflow'][f'PartType{itype}'].keys())
-        partfields_in[str(itype)]=fields_in_itype
-        partfields_out[str(itype)]=fields_out_itype
-    particle_acc_data_in={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_in[str(itype)]} for itype in parttypes}
-    particle_acc_data_out={f"PartType{itype}":{field: [[] for i in range(desired_num_halos)] for field in partfields_out[str(itype)]} for itype in parttypes}
-    particle_acc_files=[]    
-
-    #Grab all outputs from the above lists
-    print('Now retrieving halo data from file ...')
-    t1=time.time()
-    for iihalo,ihalo in enumerate(halo_index_list):
-        ihalo_name='ihalo_'+str(ihalo).zfill(6)
-        ifile=ihalo_files[iihalo]
-        if iihalo%10==0:
-            print(f'{iihalo/desired_num_halos*100:.1f}% of halo data loaded')
-        for itype in parttypes:
-            for field in partfields_in[str(itype)]:
-                try:
-                    ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Inflow/PartType{itype}/'+field].value
-                    particle_acc_data_in[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
-                except:
-                    particle_acc_data_in[f'PartType{itype}'][field][iihalo]=np.nan
-            for field in partfields_out[str(itype)]:
-                try:
-                    ihalo_itype_ifield=accdata_files[int(ihalo_files[iihalo])][ihalo_name+f'/Outflow/PartType{itype}/'+field].value
-                    particle_acc_data_out[f'PartType{itype}'][field][iihalo]=ihalo_itype_ifield
-                except:
-                    particle_acc_data_out[f'PartType{itype}'][field][iihalo]=np.nan
-        
-    #Return dictionary of outputs
-    acc_data={"Inflow":particle_acc_data_in,"Outflow":particle_acc_data_out}
-    dump_pickle(path=accdata_filelist_trunc[0].split('_p0')[0]+'-ALL.dat',data=(acc_metadata,acc_data))
-
-    t2=time.time()
-    print(f'Done in {t2-t1}')
-    return acc_metadata,acc_data
- 
-########################### READ SUMMED ACC DATA ###########################
-
-def get_summed_acc_data(base_halo_data,accdata_path):
-
-    """
-
-    get_particle_acc_data : function 
-	----------
-
-    Read accretion data from a summed accretion file. 
-
-	Parameters
-	----------
-    base_halo_data: dict
-        The base halo data dictionary (encodes particle data filepath, snap, particle histories).
-
-    accdata_path : str
-        The path to the summed hdf5 accretion data file. 
-
-    Returns
-	----------
-    acc_metadata : dict
-
-        Metadata from the accretion calculation. 
-    
-    acc_data : dict
-
-        All summed accretion data from the parsed file. 
-
-    """
-    
-
-    # Load collated file
-    hdf5file=h5py.File(accdata_path,'r')
-
-    # Load in metadata
-    acc_metadata=dict()
-    hdf5header_attrs=list(hdf5file['/Header'].attrs)
-    for attribute in hdf5header_attrs:
-        acc_metadata[attribute]=hdf5file['/Header'].attrs[attribute]
-
-    if 'pre_depth' not in hdf5header_attrs:
-        acc_metadata['pre_depth']=int(accdata_path.split('pre')[-1][:2])
-    if 'post_depth' not in hdf5header_attrs:
-        acc_metadata['post_depth']=int(accdata_path.split('post')[-1][:2])
-    if 'outname' not in hdf5header_attrs:
-        acc_metadata['outname']=str(base_halo_data[-1]['outname'])
-
-    if not type(acc_metadata['outname'])==str:
-        acc_metadata['outname']=acc_metadata['outname'].decode('utf-8')
-
-    # Initialise output data
-    total_num_halos=acc_metadata['total_num_halos']
-    group_list=list(hdf5file.keys())
-    part_group_list=['PartType'+str(itype) for itype in [0,1,4]]
-    acc_data_inflow={part_group:{} for part_group in part_group_list}
-    acc_data_outflow={part_group:{} for part_group in part_group_list}
-    
-    # Define output fields
-    acc_fields_inflow=[
-    "All_TotalDeltaM_In",
-    "All_TotalDeltaN_In",
-    "All_CosmologicalDeltaN_In",
-    'All_CosmologicalDeltaM_In',
-    'All_CGMDeltaN_In',
-    'All_CGMDeltaM_In',
-    'All_ClumpyDeltaN_In',
-    'All_ClumpyDeltaM_In',
-    'All_PrimordialDeltaN_In',
-    'All_PrimordialDeltaM_In',
-    'All_ProcessedCosmologicalDeltaN_In',
-    'All_ProcessedCosmologicalDeltaM_In',   
-    "Stable_TotalDeltaM_In",
-    "Stable_TotalDeltaN_In",
-    "Stable_CosmologicalDeltaN_In",
-    'Stable_CosmologicalDeltaM_In',
-    'Stable_CGMDeltaN_In',
-    'Stable_CGMDeltaM_In',
-    'Stable_ClumpyDeltaN_In',
-    'Stable_ClumpyDeltaM_In',
-    'Stable_PrimordialDeltaN_In',
-    'Stable_PrimordialDeltaM_In',
-    'Stable_ProcessedCosmologicalDeltaN_In',
-    'Stable_ProcessedCosmologicalDeltaM_In'
-    ]
-
-    acc_fields_outflow=[
-    "All_TotalDeltaM_Out",
-    "All_TotalDeltaN_Out",
-    "All_FieldDeltaM_Out",
-    "All_FieldDeltaN_Out",
-    "All_CGMDeltaM_Out",
-    "All_CGMDeltaN_Out",
-    "All_OtherHaloDeltaM_Out",
-    "All_OtherHaloDeltaN_Out",
-    "All_RecycledDeltaN_Out",#at snap 3
-    "All_RecycledDeltaM_Out"]#at snap 3
-
-    for part_group_name in part_group_list:
-        for dataset in acc_fields_inflow:
-            try:
-                acc_data_inflow[part_group_name][dataset]=hdf5file['Inflow/'+part_group_name+'/'+dataset].value
-            except:
-                # print(f'Couldnt retrieve {part_group_name}/{dataset}')
+                print(f'Skipping halo {ihalo}')
                 pass
 
-    for part_group_name in part_group_list:
-        for dataset in acc_fields_outflow:
-            try:
-                acc_data_outflow[part_group_name][dataset]=hdf5file['Outflow/'+part_group_name+'/'+dataset].value    
-            except:
-                # print(f'Couldnt retrieve {part_group_name}/{dataset}')
-                pass
-    acc_data={'Inflow':acc_data_inflow,'Outflow':acc_data_outflow}
-    
-    return acc_metadata, acc_data
+
+
+
+
+
+
 
