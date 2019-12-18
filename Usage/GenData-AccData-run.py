@@ -8,7 +8,7 @@ import sys
 if 'Users' in os.listdir('/'):
     chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
 else:
-    chummdir='/home/rwright/'
+    chummdir='/home/rwright/CHUMM/'
 
 sys.path.append(chummdir)
 run_script=chummdir+'Usage/GenData-AccData.py'

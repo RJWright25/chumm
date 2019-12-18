@@ -26,14 +26,12 @@ import h5py
 import astropy.units as u
 import read_eagle
 import time
-import hdfdict
 
 from GenPythonTools import *
 from VRPythonTools import *
 from STFTools import *
 from ParticleTools import *
 from pandas import DataFrame as df
-from silx.io.dictdump import h5todict
 
 ########################### CREATE PARTICLE HISTORIES ###########################
 

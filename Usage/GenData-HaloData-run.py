@@ -11,12 +11,12 @@ else:
     chummdir='/home/rwright/'
 
 sys.path.append(chummdir)
-run_script=chummdir+'Usage/GenData-AccData.py'
+run_script=chummdir+'Usage/GenData-HaloData.py'
 
 #job
 slurm=False
 email=True
-total_mem_perprocess= 6#GB
+total_mem=40#GB
 wall_time="0-04:00:00"
 
 #calc
@@ -47,7 +47,7 @@ if slurm:
         jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
         jobfile.writelines(f"#SBATCH --nodes=1\n")
         jobfile.writelines(f"#SBATCH --ntasks-per-node={num_processes}\n")
-        jobfile.writelines(f"#SBATCH --mem={total_mem_perprocess*num_processes}GB\n")
+        jobfile.writelines(f"#SBATCH --mem={total_mem}GB\n")
         jobfile.writelines(f"#SBATCH --time={wall_time}\n")
         jobfile.writelines(f"#SBATCH --output=job_logs/{jobname}.out\n")
         jobfile.writelines(f"#SBATCH --error=job_logs/{jobname}.err\n")
