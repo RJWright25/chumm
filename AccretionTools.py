@@ -1759,15 +1759,19 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
 
             # SELECT INFLOW CANDIDATES AS THOSE WITHIN R200crit OR the FOF envelope at snap 2
             ihalo_ave_R_200crit_physical=(ihalo_hdf5['Metadata']['snap1_R_200crit'].value+ihalo_hdf5['Metadata']['snap2_R_200crit'].value)/2
-            ihalo_cube_rminpot_snap2=np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap2)]['Coordinates']-ihalo_com_physical[str(snap2)]),axis=1))
-            ihalo_cube_radialcut_snap2=np.where(ihalo_cube_rminpot_snap2<ihalo_ave_R_200crit_physical)
-            ihalo_cube_inflow_candidate_data_snap2={field:ihalo_cube_particles[str(snap2)][field] for field in Part_Data_fields}
-            ihalo_fof_inflow_candidate_data_snap2={field:ihalo_fof_particles[str(snap2)][field] for field in FOF_Part_Data_fields}
-            ihalo_combined_inflow_candidate_IDs=np.concatenate([ihalo_fof_inflow_candidate_data_snap2['Particle_IDs'],ihalo_cube_inflow_candidate_data_snap2['ParticleIDs']])
-            ihalo_combined_inflow_candidate_inFOF=np.concatenate([np.ones(len(ihalo_fof_inflow_candidate_data_snap2['Particle_IDs'])),np.zeros(len(ihalo_cube_inflow_candidate_data_snap2['ParticleIDs']))])
-            ihalo_combined_inflow_candidate_IDs_unique,ihalo_combined_inflow_candidate_IDs_unique_indices=np.unique(ihalo_combined_inflow_candidate_IDs,return_index=True)
-            ihalo_combined_inflow_candidate_IDs_unique=np.array(ihalo_combined_inflow_candidate_IDs_unique,dtype=np.int64)
-            ihalo_combined_inflow_candidate_count=len(ihalo_combined_inflow_candidate_IDs_unique)
+            try:
+                ihalo_cube_rminpot_snap2=np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap2)]['Coordinates']-ihalo_com_physical[str(snap2)]),axis=1))
+                ihalo_cube_radialcut_snap2=np.where(ihalo_cube_rminpot_snap2<ihalo_ave_R_200crit_physical)
+                ihalo_cube_inflow_candidate_data_snap2={field:ihalo_cube_particles[str(snap2)][field] for field in Part_Data_fields}
+                ihalo_fof_inflow_candidate_data_snap2={field:ihalo_fof_particles[str(snap2)][field] for field in FOF_Part_Data_fields}
+                ihalo_combined_inflow_candidate_IDs=np.concatenate([ihalo_fof_inflow_candidate_data_snap2['Particle_IDs'],ihalo_cube_inflow_candidate_data_snap2['ParticleIDs']])
+                ihalo_combined_inflow_candidate_inFOF=np.concatenate([np.ones(len(ihalo_fof_inflow_candidate_data_snap2['Particle_IDs'])),np.zeros(len(ihalo_cube_inflow_candidate_data_snap2['ParticleIDs']))])
+                ihalo_combined_inflow_candidate_IDs_unique,ihalo_combined_inflow_candidate_IDs_unique_indices=np.unique(ihalo_combined_inflow_candidate_IDs,return_index=True)
+                ihalo_combined_inflow_candidate_IDs_unique=np.array(ihalo_combined_inflow_candidate_IDs_unique,dtype=np.int64)
+                ihalo_combined_inflow_candidate_count=len(ihalo_combined_inflow_candidate_IDs_unique)
+            except:
+                print(f'Skipping ihalo {ihalo_s2} (couldnt retrieve data cube)')
+                continue
 
             #GRAB DATA FOR EACH INFLOW CANDIDATE
             ihalo_combined_inflow_candidate_data={}

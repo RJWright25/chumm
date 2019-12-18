@@ -129,7 +129,7 @@ if gen_dhd:
     snap_indices=gen_mp_indices(indices=snaps,n=n_processes)
 
     # kwargs for gen_detailed_halo_data
-    kwargs=[{'snaps':iprocess_snap_indices,'vr_halo_fields':None,'outname':run_name,'extra_halo_fields':extra_halo_fields} for iprocess_snap_indices in snap_indices]
+    kwargs=[{'snaps':iprocess_snap_indices,'vr_halo_fields':None,'extra_halo_fields':extra_halo_fields} for iprocess_snap_indices in snap_indices]
     processes=[]
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
