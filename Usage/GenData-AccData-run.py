@@ -32,8 +32,8 @@ pre=1
 post=1
 gen_ad=1
 sum_ad=1
-hil_lo=50
-hil_hi=100
+hil_lo=-1
+hil_hi=-1
 
 if hil_lo==-1:
     test=False
