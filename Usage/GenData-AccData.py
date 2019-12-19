@@ -97,11 +97,11 @@ if True:
     if halo_index_list_lo==-1:
         test=False
         halo_index_list_massordered=np.argsort(base_halo_data[snap]["Mass_200crit"])[::-1]
-        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered,n=n_processes,test=test)
+        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered,n=n_processes_calc,test=test)
     else:
         test=True
         halo_index_list=list(range(halo_index_list_lo,halo_index_list_hi))
-        halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes,test=test)
+        halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes_calc,test=test)
 
     # Determine output directory for this calculation
     if detailed:
