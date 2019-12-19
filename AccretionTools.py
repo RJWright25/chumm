@@ -2066,7 +2066,7 @@ def postprocess_accretion_data(base_halo_data,path):
 
         for accfile_halokey in accfile_halokeys:
             iihalo=iihalo+1
-            if iihalo%1000==0:
+            if iihalo%10==0:
                 print(f'{iihalo/num_total_halos*100:.2f} % done summing accretion data')
             ihalo=int(accfile_halokey.split('ihalo_')[-1])
             ihalo_metadata={field:accfile[accfile_halokey]['Metadata'][field].value for field in list(accfile[accfile_halokey]['Metadata'].keys())}
@@ -2085,6 +2085,8 @@ def postprocess_accretion_data(base_halo_data,path):
 
                     ######## INFLOW ########
                     ihalo_itype_inflow_group=accfile[accfile_halokey]["Inflow"][itype_key]
+
+                    ihalo_itype_snap1_load=['']
                     
                     #masks
                     ihalo_itype_inflow_vradvmax_masks={'vmax_fac_'+str(ivmax_fac+1):-ihalo_itype_inflow_group["snap1_vrad_com"].value>vmax_fac*ihalo_metadata['ave_vmax'] for ivmax_fac,vmax_fac in enumerate(vmax_facs)}
