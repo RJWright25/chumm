@@ -62,8 +62,10 @@ if True:
                         help='Flag: generate accretion data')
     parser.add_argument('-sum_ad', type=int,default=1,
                         help='Flag: sum the generated accretion data')
-    parser.add_argument('-np', type=int, default=1,
-                        help='number of processes to use')
+    parser.add_argument('-np_use', type=int, default=1,
+                        help='number of processes to use')    
+    parser.add_argument('-np_calc', type=int, default=1,
+                        help='number of processes for accretion calc')
     
     detailed=bool(parser.parse_args().detailed)
     compression=bool(parser.parse_args().compression)
@@ -74,13 +76,14 @@ if True:
     halo_index_list_hi=parser.parse_args().hil_hi
     gen_ad=bool(parser.parse_args().gen_ad)
     sum_ad=bool(parser.parse_args().sum_ad)
-    n_processes = parser.parse_args().np
+    n_processes_use = parser.parse_args().np_use
+    n_processes_calc = parser.parse_args().np_calc
     
     print()
     print('**********************************************************************************************************************')
     print('Arguments parsed:')
     print(f'Generate accretion data: {gen_ad}, sum accretion data: {sum_ad} (at snap {snap})')
-    print(f'Detailed accretion data: {detailed} (with n_processes: {n_processes}, compress: {compression}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
+    print(f'Detailed accretion data: {detailed} (with n_processes(calc): {np_calc}, compress: {compression}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
     print('**********************************************************************************************************************')
     print()
 
@@ -103,14 +106,14 @@ if True:
     # Determine output directory for this calculation
     if detailed:
         if test:
-            calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
+            calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}_test/'
         else:
-            calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}/'
+            calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}/'
     else:
         if test:
-            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}_test/'
         else:
-            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}/'
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}/'
 
     output_dir=calc_dir+f'snap_{str(snap).zfill(3)}/'
 
@@ -128,7 +131,7 @@ if gen_ad:
 
     # Multiprocessing arguments
     processes=[]
-    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'compression':compression} for iprocess in range(n_processes)]
+    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'compression':compression} for iprocess in range(n_processes_use)]
 
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):

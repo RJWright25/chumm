@@ -2048,12 +2048,13 @@ def postprocess_accretion_data(base_halo_data,path):
 
     #Initialise output file output groups and datasets
     num_total_halos=base_halo_data[snap]['Count']
-    outfile.create_group('FOF') # full halo scale for each field halo
-    outfile.create_group('SO') #for field halos WITH substructure: central, for subhalos the corresponding satellite
+    outfile.create_group('FOF-haloscale');outfile.create_group('FOF-subhaloscale')
+    outfile.create_group('SO')
     
     #params
     r200_facs=[0.125,0.25,0.5,0.75,1,1.25,1.5,2]
     vmax_facs=[0,0.125,0.25,0.375,0.5,1]
+    cgm_r200_fac=1.5
 
     for accfile_path in accfile_paths:
         accfile=h5py.File(accfile_path,'r')
@@ -2066,6 +2067,11 @@ def postprocess_accretion_data(base_halo_data,path):
             ihalo=int(accfile_halokey.split('ihalo_')[-1])
             ihalo_metadata={field:accfile[accfile_halokey]['Metadata'][field].value for field in list(accfile[accfile_halokey]['Metadata'].keys())}
             ihalo_numsubstruct=base_halo_data[snap]['numSubStruct'][ihalo]
+            ihalo_hostHaloID=base_halo_data[snap]['hostHaloID'][ihalo]
+            if ihalo_hostHaloID==-1: 
+                ihalo_field=True;ihalo_sat=False
+            else:
+                ihalo_field=False,ihalo_sat=True
 
             if len(list(ihalo_metadata.keys()))>0:
                 ihalo_metadata['ave_R_200crit']=(ihalo_metadata['snap1_R_200crit']+ihalo_metadata['snap2_R_200crit'])*0.5
@@ -2074,28 +2080,24 @@ def postprocess_accretion_data(base_halo_data,path):
 
                     ######## INFLOW ########
                     ihalo_itype_inflow_group=accfile[accfile_halokey]["Inflow"][itype_key]
-                    ihalo_itype_inflow_vrad_masks=[-ihalo_itype_inflow_group["snap1_vrad_com"].value>vmax_fac*ihalo_metadata['ave_vmax'] for vmax_fac in vmax_facs]
+                    
+                    #masks
+                    ihalo_itype_inflow_vradvmax_masks={'vmax_fac_'+str(ivmax_fac+1):-ihalo_itype_inflow_group["snap1_vrad_com"].value>vmax_fac*ihalo_metadata['ave_vmax'] for vmax_fac in vmax_facs}
+                    ihalo_itype_inflow_origin_masks={'field':ihalo_itype_inflow_group["snap1_Structure"]==-1,'merger':ihalo_itype_inflow_group["snap1_Structure"]>0,
+                                                     'cgm':np.logical_and(ihalo_itype_inflow_group["snap1_Structure"]==-1,ihalo_itype_inflow_group["snap1_rabs_com"]<cgm_r200_fac*ihalo_metadata['ave_R_200crit'])}
+                    ihalo_itype_inflow_processed_masks={'primordial':ihalo_itype_inflow_group["snap1_Processed"]==0,'processed':ihalo_itype_inflow_group["snap1_Processed"]>0}
+
 
                     ###FOF
-                    ihalo_itype_inflow_crossed_FOF_boundary_mask=np.logical_and(ihalo_itype_inflow_group["snap2_Particle_InFOF"].value,np.logical_not(ihalo_itype_inflow_group["snap1_Particle_InFOF"].value))
-                    ihalo_itype_inflow_crossed_FOF_boundary_vrad_masks=[np.logical_and(ihalo_itype_inflow_crossed_FOF_boundary_mask,ihalo_itype_inflow_vrad_mask) for ihalo_itype_inflow_vrad_mask in ihalo_itype_inflow_vrad_masks]
-                    ihalo_itype_inflow_stable_FOF_snap3=ihalo_itype_inflow_group["snap3_Particle_InFOF"].value
+                    ihalo_itype_inflow_FOF_mask=np.logical_and(ihalo_itype_inflow_group["snap2_Particle_InFOF"].value,np.logical_not(ihalo_itype_inflow_group["snap1_Particle_InFOF"].value))
+                    ihalo_itype_inflow_FOF_central_mask=np.logical_and(ihalo_itype_inflow_group["snap2_Particle_InHost"].value,np.logical_not(ihalo_itype_inflow_group["snap1_Particle_InHost"].value))
+                    ihalo_itype_inflow_FOF_snap3_mask=ihalo_itype_inflow_group["snap3_Particle_InFOF"]==1
+                    ihalo_itype_inflow_FOF_central_snap3_mask=ihalo_itype_inflow_group["snap3_Particle_InHost"]==1
                     
                     ###SO
-                    ihalo_itype_inflow_crossed_r200_boundary_masks=[np.logical_and(ihalo_itype_inflow_group["snap2_rabs_com"].value<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_itype_inflow_group["snap1_rabs_com"].value>r200_fac*ihalo_metadata['ave_R_200crit']) for r200_fac in r200_facs]
+                    ihalo_itype_inflow_r200_masks={'r200_fac_'+str(ir200_fac):np.logical_and(ihalo_itype_inflow_group["snap2_rabs_com"].value<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_itype_inflow_group["snap1_rabs_com"].value>r200_fac*ihalo_metadata['ave_R_200crit']) for ir200_fac,r200_fac in enumerate(r200_facs)]
                     
-                    if itype==0:
-                        print('****************')
-                        print(f'ihalo {ihalo}')
-                        print('---FOF gas inflow---')
-                        print(f'All FOF inflow: {np.sum(ihalo_itype_inflow_crossed_FOF_boundary_mask):.0f}')
-                        print(f'Stable FOF inflow: {np.sum(np.logical_and(ihalo_itype_inflow_crossed_FOF_boundary_mask,ihalo_itype_inflow_stable_FOF_snap3)):.0f}')
-                        print(f'All FOF inflow with vrad cuts:')
-                        print(f'{np.column_stack((vmax_facs,[np.sum(ihalo_itype_inflow_crossed_FOF_boundary_vrad_mask) for ihalo_itype_inflow_crossed_FOF_boundary_vrad_mask in ihalo_itype_inflow_crossed_FOF_boundary_vrad_masks]))}')
-                        print('---SO gas inflow---')
-                        print(f'All SO inflow with R200 cuts:')
-                        print(f'{np.column_stack((r200_facs,[np.sum(ihalo_itype_inflow_crossed_r200_boundary_mask) for ihalo_itype_inflow_crossed_r200_boundary_mask in ihalo_itype_inflow_crossed_r200_boundary_masks]))}')
-                    
+            
 
             else:
                 print(f'Skipping halo {ihalo}')
