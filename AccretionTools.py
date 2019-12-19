@@ -2066,7 +2066,7 @@ def postprocess_accretion_data(base_halo_data,path):
 
         for accfile_halokey in accfile_halokeys:
             iihalo=iihalo+1
-            if ihalo%1000==0:
+            if iihalo%1000==0:
                 print(f'{iihalo/num_total_halos*100:.2f} % done summing accretion data')
             ihalo=int(accfile_halokey.split('ihalo_')[-1])
             ihalo_metadata={field:accfile[accfile_halokey]['Metadata'][field].value for field in list(accfile[accfile_halokey]['Metadata'].keys())}
