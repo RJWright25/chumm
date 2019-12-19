@@ -2056,6 +2056,7 @@ def postprocess_accretion_data(base_halo_data,path):
     vmax_facs=[0,0.125,0.25,0.375,0.5,1]
     cgm_r200_fac=1.5
 
+    iihalo=0
     for accfile_path in accfile_paths:
         accfile=h5py.File(accfile_path,'r')
         accfile_allkeys=list(accfile.keys())
@@ -2064,10 +2065,14 @@ def postprocess_accretion_data(base_halo_data,path):
         accfile_parttypes=[int(parttype_key.split('PartType')[-1]) for parttype_key in accfile_parttype_keys]
 
         for accfile_halokey in accfile_halokeys:
+            iihalo=iihalo+1
+            if ihalo%1000==0:
+                print(f'{iihalo/num_total_halos*100:.2f} % done summing accretion data')
             ihalo=int(accfile_halokey.split('ihalo_')[-1])
             ihalo_metadata={field:accfile[accfile_halokey]['Metadata'][field].value for field in list(accfile[accfile_halokey]['Metadata'].keys())}
             ihalo_numsubstruct=base_halo_data[snap]['numSubStruct'][ihalo]
             ihalo_hostHaloID=base_halo_data[snap]['hostHaloID'][ihalo]
+            
             if ihalo_hostHaloID==-1: 
                 ihalo_field=True;ihalo_sat=False
             else:
@@ -2097,7 +2102,7 @@ def postprocess_accretion_data(base_halo_data,path):
                     ###SO
                     ihalo_itype_inflow_r200_masks={'r200_fac_'+str(ir200_fac):np.logical_and(ihalo_itype_inflow_group["snap2_rabs_com"].value<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_itype_inflow_group["snap1_rabs_com"].value>r200_fac*ihalo_metadata['ave_R_200crit']) for ir200_fac,r200_fac in enumerate(r200_facs)]
                     
-            
+
 
             else:
                 print(f'Skipping halo {ihalo}')
