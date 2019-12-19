@@ -2076,7 +2076,7 @@ def postprocess_accretion_data(base_halo_data,path):
             if ihalo_hostHaloID==-1: 
                 ihalo_field=True;ihalo_sat=False
             else:
-                ihalo_field=False,ihalo_sat=True
+                ihalo_field=False;ihalo_sat=True
 
             if len(list(ihalo_metadata.keys()))>0:
                 ihalo_metadata['ave_R_200crit']=(ihalo_metadata['snap1_R_200crit']+ihalo_metadata['snap2_R_200crit'])*0.5
