@@ -2088,16 +2088,16 @@ def postprocess_accretion_data(base_halo_data,path):
                     
                     #masks
                     ihalo_itype_inflow_vradvmax_masks={'vmax_fac_'+str(ivmax_fac+1):-ihalo_itype_inflow_group["snap1_vrad_com"].value>vmax_fac*ihalo_metadata['ave_vmax'] for ivmax_fac,vmax_fac in enumerate(vmax_facs)}
-                    ihalo_itype_inflow_origin_masks={'field':ihalo_itype_inflow_group["snap1_Structure"]==-1,'merger':ihalo_itype_inflow_group["snap1_Structure"]>0,
-                                                     'cgm':np.logical_and(ihalo_itype_inflow_group["snap1_Structure"]==-1,ihalo_itype_inflow_group["snap1_rabs_com"]<cgm_r200_fac*ihalo_metadata['ave_R_200crit'])}
-                    ihalo_itype_inflow_processed_masks={'primordial':ihalo_itype_inflow_group["snap1_Processed"]==0,'processed':ihalo_itype_inflow_group["snap1_Processed"]>0}
+                    ihalo_itype_inflow_origin_masks={'field':ihalo_itype_inflow_group["snap1_Structure"].value==-1,'merger':ihalo_itype_inflow_group["snap1_Structure"].value>0,
+                                                     'cgm':np.logical_and(ihalo_itype_inflow_group["snap1_Structure"].value==-1,ihalo_itype_inflow_group["snap1_rabs_com"].value<cgm_r200_fac*ihalo_metadata['ave_R_200crit'])}
+                    ihalo_itype_inflow_processed_masks={'primordial':ihalo_itype_inflow_group["snap1_Processed"].value==0,'processed':ihalo_itype_inflow_group["snap1_Processed"].value>0}
 
 
                     ###FOF
                     ihalo_itype_inflow_FOF_mask=np.logical_and(ihalo_itype_inflow_group["snap2_Particle_InFOF"].value,np.logical_not(ihalo_itype_inflow_group["snap1_Particle_InFOF"].value))
                     ihalo_itype_inflow_FOF_central_mask=np.logical_and(ihalo_itype_inflow_group["snap2_Particle_InHost"].value,np.logical_not(ihalo_itype_inflow_group["snap1_Particle_InHost"].value))
-                    ihalo_itype_inflow_FOF_snap3_mask=ihalo_itype_inflow_group["snap3_Particle_InFOF"]==1
-                    ihalo_itype_inflow_FOF_central_snap3_mask=ihalo_itype_inflow_group["snap3_Particle_InHost"]==1
+                    ihalo_itype_inflow_FOF_snap3_mask=ihalo_itype_inflow_group["snap3_Particle_InFOF"].value==1
+                    ihalo_itype_inflow_FOF_central_snap3_mask=ihalo_itype_inflow_group["snap3_Particle_InHost"].value==1
                     
                     ###SO
                     ihalo_itype_inflow_r200_masks={'r200_fac_'+str(ir200_fac):np.logical_and(ihalo_itype_inflow_group["snap2_rabs_com"].value<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_itype_inflow_group["snap1_rabs_com"].value>r200_fac*ihalo_metadata['ave_R_200crit']) for ir200_fac,r200_fac in enumerate(r200_facs)}
