@@ -83,7 +83,7 @@ if True:
     print('**********************************************************************************************************************')
     print('Arguments parsed:')
     print(f'Generate accretion data: {gen_ad}, sum accretion data: {sum_ad} (at snap {snap})')
-    print(f'Detailed accretion data: {detailed} (with n_processes(calc): {np_calc}, compress: {compression}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
+    print(f'Detailed accretion data: {detailed} (with n_processes(calc): {n_processes_calc}, compress: {compression}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
     print('**********************************************************************************************************************')
     print()
 
