@@ -131,7 +131,7 @@ if gen_ad:
 
     # Multiprocessing arguments
     processes=[]
-    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'compression':compression} for iprocess in range(n_processes_use)]
+    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'compression':compression} for iprocess in range(n_processes_calc)]
 
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
