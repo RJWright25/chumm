@@ -171,8 +171,8 @@ print()
 
 if gen_ad:
     print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc} sec')
-# if sum_ad:
-#     print(f'Summed accretion data for snap {snap} in {t2_sum-t1_sum} sec')
+if sum_ad:
+    print(f'Summed accretion data for snap {snap} in {t2_sum-t1_sum} sec')
 
     
 print()

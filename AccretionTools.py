@@ -1616,7 +1616,7 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
     Part_Data_FilePaths={str(snap):base_halo_data[snap]['Part_FilePath'] for snap in snaps}
     Part_Data_fields=['Coordinates','Velocity','Mass','ParticleIDs']
     Part_Data_cube_fields=['Coordinates','Velocity','Mass','ParticleTypes']
-    Part_Data_comtophys={str(snap):{'Coordinates':scalefactors[str(snap)]/hval,'Velocity':scalefactors[str(snap)]/hval,'Mass':1.0/hval,'ParticleIDs':1} for snap in snaps}
+    Part_Data_comtophys={str(snap):{'Coordinates':scalefactors[str(snap)]/hval,'Velocity':scalefactors[str(snap)]/hval,'Mass':10.0**10/hval,'ParticleIDs':1} for snap in snaps}
     
     #Load in particle histories: snap 1
     print(f'Retrieving & organising particle histories for snap = {snap1} ...')
@@ -2030,80 +2030,181 @@ def postprocess_accretion_data(base_halo_data,path):
     snap=int(snap)
 
     allfiles=os.listdir(path)
-    accfile_paths=[path+fname for fname in allfiles if ('AccretionData' in fname and 'summed' not in fname)]
+    accfile_paths=sorted([path+fname for fname in allfiles if ('AccretionData' in fname and 'summed' not in fname)])[::-1][:2]
     nfiles=len(accfile_paths)
-
-    outfile_path=accfile_paths[0][:-10]+'_summed.hdf5'
+    
+    outfile_path=accfile_paths[0][:-10]+'_summed_2.hdf5'
     if os.path.exists(outfile_path):
+        print(f'Removing {outfile_path}')
         os.remove(outfile_path)
 
+    outlog_path=path+'progress.log'
+    if os.path.exists(outlog_path):
+        print(f'Removing {outlog_path}')
+        os.remove(outlog_path)
+
+    time.sleep(1)
     #Initialise output file with  header
     outfile=h5py.File(outfile_path,'w')
     outfile.create_group('Header')
     exfile=h5py.File(accfile_paths[0],'r+')
+    exfile_keys=list(exfile.keys());exfile_halokeys=[exfile_key for exfile_key in exfile_keys if 'ihalo' in exfile_key]
+    parttype_keys=list(exfile[exfile_halokeys[0]]['Inflow'].keys())
+    parttypes=[int(parttype_key.split('PartType')[-1]) for parttype_key in parttype_keys]
     header_keys=list(exfile['Header'].attrs)
     for header_key in header_keys:
         outfile['Header'].attrs.create(header_key,exfile['Header'].attrs[header_key])
 
+    #params
+    r200_facs=[0.125,0.25,0.5,0.75,1,1.25,1.5,2]
+    vmax_facs=[-1,0,0.125,0.25,0.375,0.5,0.75,1]
+    cgm_r200_fac=1.5
 
     #Initialise output file output groups and datasets
     num_total_halos=base_halo_data[snap]['Count']
-    outfile.create_group('FOF-haloscale');outfile.create_group('FOF-subhaloscale')
-    outfile.create_group('SO')
-    
-    #params
-    r200_facs=[0.125,0.25,0.5,0.75,1,1.25,1.5,2]
-    vmax_facs=[0,0.125,0.25,0.375,0.5,1]
-    cgm_r200_fac=1.5
+    num_total_halos_infiles=len(flatten([list(h5py.File(accfile_path,'r').keys()) for accfile_path in accfile_paths]))-len(accfile_paths)
+
+    FOF_haloscale_inflow_output_fields=['Total_DeltaM_In','Field_DeltaM_In','CGM_DeltaM_In','Merger_DeltaM_In']#for all halos
+    FOF_subhaloscale_inflow_output_fields=['Total_DeltaM_In','Field_DeltaM_In','CGM_DeltaM_In','Merger_DeltaM_In']#just for substructure (host or satellites)
+    SO_inflow_outputs_fields=['Total_DeltaM_In','Field_DeltaM_In','Merger_DeltaM_In']#for all radial bins
+
+    outfile.create_group('Inflow')
+    outfile['Inflow'].create_group('FOF-haloscale');outfile['Inflow'].create_group('FOF-subhaloscale')
+    for ir200_fac,r200_fac in enumerate(r200_facs):
+        outfile['Inflow'].create_group(f'SO-r200_fac_{ir200_fac+1}')
+        outfile['Inflow'][f'SO-r200_fac_{ir200_fac+1}'].attrs.create('r200_fac',data=r200_fac)
+
+    for ivmax_fac, vmax_fac in enumerate(vmax_facs):
+        ivmax_key=f'vmax_fac_{ivmax_fac+1}'
+        outfile['Inflow']['FOF-haloscale'].create_group(ivmax_key);outfile['Inflow']['FOF-haloscale'][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+        for itype in parttypes:
+            itype_key=f'PartType{itype}'
+            outfile['Inflow'][f'FOF-haloscale'][ivmax_key].create_group(itype_key)
+            for dataset in FOF_haloscale_inflow_output_fields:
+                outfile['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key].create_dataset(dataset,data=np.zeros(num_total_halos)+np.nan,dtype=np.float32)
+        outfile['Inflow']['FOF-subhaloscale'].create_group(ivmax_key);outfile['Inflow']['FOF-subhaloscale'][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+        for itype in parttypes:
+            itype_key=f'PartType{itype}'
+            outfile['Inflow'][f'FOF-subhaloscale'][ivmax_key].create_group(itype_key)
+            for dataset in FOF_subhaloscale_inflow_output_fields:
+                outfile['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key].create_dataset(dataset,data=np.zeros(num_total_halos)+np.nan,dtype=np.float32)
+        for ir200_fac,r200_fac in enumerate(r200_facs):
+            ir200_key=f'SO-r200_fac_{ir200_fac+1}'
+            outfile['Inflow'][ir200_key].create_group(ivmax_key);outfile['Inflow'][ir200_key][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+            for itype in parttypes:
+                itype_key=f'PartType{itype}'
+                outfile['Inflow'][ir200_key][ivmax_key].create_group(itype_key)
+                for dataset in SO_inflow_outputs_fields:
+                    outfile['Inflow'][ir200_key][ivmax_key][itype_key].create_dataset(dataset,data=np.zeros(num_total_halos)+np.nan,dtype=np.float32)
 
     iihalo=0
     for accfile_path in accfile_paths:
+        print('Loading from ',accfile_path)
         accfile=h5py.File(accfile_path,'r')
         accfile_allkeys=list(accfile.keys())
         accfile_halokeys=[key for key in accfile_allkeys if 'halo' in key]
-        accfile_parttype_keys=list(accfile[accfile_halokeys[0]]['Inflow'].keys())
-        accfile_parttypes=[int(parttype_key.split('PartType')[-1]) for parttype_key in accfile_parttype_keys]
 
         for accfile_halokey in accfile_halokeys:
             iihalo=iihalo+1
+            # Print progress to output file
+
+            with open(outlog_path,"a") as progress_file:
+                progress_file.write(f' \n')
+                progress_file.write(f'Starting with iihalo {iihalo} / {num_total_halos_infiles} ({iihalo/num_total_halos_infiles*100:.1f}% done)... \n')
+            progress_file.close()
+
             if iihalo%10==0:
-                print(f'{iihalo/num_total_halos*100:.2f} % done summing accretion data')
+                print(f'{iihalo/num_total_halos_infiles*100:.1f} % done summing accretion data')
+
             ihalo=int(accfile_halokey.split('ihalo_')[-1])
             ihalo_metadata={field:accfile[accfile_halokey]['Metadata'][field].value for field in list(accfile[accfile_halokey]['Metadata'].keys())}
             ihalo_numsubstruct=base_halo_data[snap]['numSubStruct'][ihalo]
             ihalo_hostHaloID=base_halo_data[snap]['hostHaloID'][ihalo]
 
-            if ihalo_hostHaloID==-1: 
-                ihalo_field=True;ihalo_sat=False
-            else:
-                ihalo_field=False;ihalo_sat=True
-
             if len(list(ihalo_metadata.keys()))>0:
                 ihalo_metadata['ave_R_200crit']=(ihalo_metadata['snap1_R_200crit']+ihalo_metadata['snap2_R_200crit'])*0.5
                 ihalo_metadata['ave_vmax']=(ihalo_metadata['snap1_vmax']+ihalo_metadata['snap2_vmax'])*0.5
-                for itype,itype_key in zip(accfile_parttypes,accfile_parttype_keys):
+                
+                for itype,itype_key in zip(parttypes,parttype_keys):
 
                     ######## INFLOW ########
                     ihalo_itype_inflow_group=accfile[accfile_halokey]["Inflow"][itype_key]
+                    try:
+                        ihalo_itype_inflow_masses=ihalo_itype_inflow_group["Mass"].value
+                    except:
+                        print(f'Skipping halo {ihalo} part type {itype}')
+                        continue
 
-                    ihalo_itype_snap1_load=['']
+                    try:
+                        if ihalo_itype_inflow_masses[0]<10**6:
+                            ihalo_itype_inflow_masses=ihalo_itype_inflow_masses*10**10
+                    except:
+                        pass
                     
                     #masks
-                    ihalo_itype_inflow_vradvmax_masks={'vmax_fac_'+str(ivmax_fac+1):-ihalo_itype_inflow_group["snap1_vrad_com"].value>vmax_fac*ihalo_metadata['ave_vmax'] for ivmax_fac,vmax_fac in enumerate(vmax_facs)}
+                    ihalo_itype_inflow_vmax_masks={'vmax_fac_'+str(ivmax_fac+1):-ihalo_itype_inflow_group["snap1_vrad_com"].value>vmax_fac*ihalo_metadata['ave_vmax'] for ivmax_fac,vmax_fac in enumerate(vmax_facs)}
+                    
                     ihalo_itype_inflow_origin_masks={'field':ihalo_itype_inflow_group["snap1_Structure"].value==-1,'merger':ihalo_itype_inflow_group["snap1_Structure"].value>0,
                                                      'cgm':np.logical_and(ihalo_itype_inflow_group["snap1_Structure"].value==-1,ihalo_itype_inflow_group["snap1_rabs_com"].value<cgm_r200_fac*ihalo_metadata['ave_R_200crit'])}
-                    ihalo_itype_inflow_processed_masks={'primordial':ihalo_itype_inflow_group["snap1_Processed"].value==0,'processed':ihalo_itype_inflow_group["snap1_Processed"].value>0}
-
-
-                    ###FOF
+                    
+                    # FOF
                     ihalo_itype_inflow_FOF_mask=np.logical_and(ihalo_itype_inflow_group["snap2_Particle_InFOF"].value,np.logical_not(ihalo_itype_inflow_group["snap1_Particle_InFOF"].value))
                     ihalo_itype_inflow_FOF_central_mask=np.logical_and(ihalo_itype_inflow_group["snap2_Particle_InHost"].value,np.logical_not(ihalo_itype_inflow_group["snap1_Particle_InHost"].value))
-                    ihalo_itype_inflow_FOF_snap3_mask=ihalo_itype_inflow_group["snap3_Particle_InFOF"].value==1
-                    ihalo_itype_inflow_FOF_central_snap3_mask=ihalo_itype_inflow_group["snap3_Particle_InHost"].value==1
+                     
+                    # SO
+                    ihalo_itype_inflow_r200_masks={'r200_fac_'+str(ir200_fac+1):np.logical_and(ihalo_itype_inflow_group["snap2_rabs_com"].value<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_itype_inflow_group["snap1_rabs_com"].value>r200_fac*ihalo_metadata['ave_R_200crit']) for ir200_fac,r200_fac in enumerate(r200_facs)}
                     
-                    ###SO
-                    ihalo_itype_inflow_r200_masks={'r200_fac_'+str(ir200_fac):np.logical_and(ihalo_itype_inflow_group["snap2_rabs_com"].value<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_itype_inflow_group["snap1_rabs_com"].value>r200_fac*ihalo_metadata['ave_R_200crit']) for ir200_fac,r200_fac in enumerate(r200_facs)}
-                    
+                    ### SAVE TO OUTPUT dictionary
+                    # FOFs
+                    for ivmax_fac, vmax_fac in enumerate(vmax_facs):
+                        ivmax_key=f'vmax_fac_{ivmax_fac+1}'
+                        ivmax_mask=ihalo_itype_inflow_vmax_masks[ivmax_key]
+
+                        #halo scale
+                        ivmax_fof_haloscale_inflow_mask=np.logical_and(ivmax_mask,ihalo_itype_inflow_FOF_mask)
+                        total_mass_where=np.where(ivmax_fof_haloscale_inflow_mask)
+                        field_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_inflow_mask,ihalo_itype_inflow_origin_masks['field']))
+                        cgm_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_inflow_mask,ihalo_itype_inflow_origin_masks['cgm']))
+                        merger_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_inflow_mask,ihalo_itype_inflow_origin_masks['merger']))
+
+                        outfile['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[total_mass_where])
+                        outfile['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[field_mass_where])
+                        outfile['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[cgm_mass_where])
+                        outfile['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[merger_mass_where])
+
+                        if ihalo_numsubstruct>0 or ihalo_hostHaloID>0:
+
+
+                            #subhalo scale
+                            ivmax_fof_subhaloscale_inflow_mask=np.logical_and(ivmax_mask,ihalo_itype_inflow_FOF_central_mask)
+                            total_mass_where=np.where(ivmax_fof_subhaloscale_inflow_mask)
+                            field_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_inflow_mask,ihalo_itype_inflow_origin_masks['field']))
+                            cgm_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_inflow_mask,ihalo_itype_inflow_origin_masks['cgm']))
+                            merger_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_inflow_mask,ihalo_itype_inflow_origin_masks['merger']))
+
+                            outfile['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[total_mass_where])
+                            outfile['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[field_mass_where])
+                            outfile['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[cgm_mass_where])
+                            outfile['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[merger_mass_where])
+
+                    #SOs
+                    for ir200_fac, r200_fac in enumerate(r200_facs):
+                        ir200_key='SO-r200_fac_'+str(ir200_fac+1)
+                        ir200_inflow_mask=ihalo_itype_inflow_r200_masks[ir200_key[3:]]
+                        
+                        for ivmax_fac, vmax_fac in enumerate(vmax_facs):
+                            ivmax_key=f'vmax_fac_{ivmax_fac+1}'
+                            ivmax_mask=ihalo_itype_inflow_vmax_masks[ivmax_key]
+                            ivmax_ir200_inflow_mask=np.logical_and(ivmax_mask,ir200_inflow_mask)
+                            
+                            total_mass_where=np.where(ivmax_ir200_inflow_mask)
+                            field_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ihalo_itype_inflow_origin_masks['field']))
+                            cgm_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ihalo_itype_inflow_origin_masks['cgm']))
+                            merger_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ihalo_itype_inflow_origin_masks['merger']))
+
+                            outfile['Inflow'][ir200_key][ivmax_key][itype_key]['Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[total_mass_where])
+                            outfile['Inflow'][ir200_key][ivmax_key][itype_key]['Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[field_mass_where])
+                            outfile['Inflow'][ir200_key][ivmax_key][itype_key]['Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[merger_mass_where])
 
 
             else:

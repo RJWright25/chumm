@@ -17,12 +17,12 @@ run_script=chummdir+'Usage/GenData-AccData.py'
 #job
 slurm=False
 email=True
-total_mem_perprocess= 6#GB
 wall_time="0-04:00:00"
 
 #multiprocessing
-num_processes=1
-total_mem_perprocess= 6#GB
+num_processes_calc=16
+num_processes_use=1
+total_mem_perprocess=8#GB
 
 #calc
 detailed=1
@@ -30,7 +30,7 @@ compression=1
 snaps=[27]
 pre=1
 post=1
-gen_ad=1
+gen_ad=0
 sum_ad=1
 hil_lo=-1
 hil_hi=-1
@@ -52,9 +52,9 @@ if not os.path.exists('job_logs'):
 if slurm:
     for snap in snaps:
         if test:
-            jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes).zfill(3)}_test'
+            jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}_test'
         else:
-            jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes).zfill(3)}'
+            jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}'
         jobscriptfilepath=f'job_logs/submit-{jobname}.slurm'
         if os.path.exists(jobscriptfilepath):
             os.remove(jobscriptfilepath)
@@ -62,8 +62,8 @@ if slurm:
             jobfile.writelines(f"#!/bin/sh\n")
             jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
             jobfile.writelines(f"#SBATCH --nodes=1\n")
-            jobfile.writelines(f"#SBATCH --ntasks-per-node={num_processes}\n")
-            jobfile.writelines(f"#SBATCH --mem={total_mem_perprocess*num_processes}GB\n")
+            jobfile.writelines(f"#SBATCH --ntasks-per-node={num_processes_use}\n")
+            jobfile.writelines(f"#SBATCH --mem={total_mem_perprocess*num_processes_use}GB\n")
             jobfile.writelines(f"#SBATCH --time={wall_time}\n")
             jobfile.writelines(f"#SBATCH --output=job_logs/{jobname}.out\n")
             jobfile.writelines(f"#SBATCH --error=job_logs/{jobname}.err\n")
@@ -75,7 +75,7 @@ if slurm:
             jobfile.writelines(f"date\n")
             jobfile.writelines(f"echo CPU DETAILS\n")
             jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script} -detailed {detailed} -compression {compression} -np {num_processes} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -sum_ad {sum_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+            jobfile.writelines(f"python {run_script} -detailed {detailed} -compression {compression} -np_use {num_processes_use} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -sum_ad {sum_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
             jobfile.writelines(f"echo JOB END TIME\n")
             jobfile.writelines(f"date\n")
         jobfile.close()
@@ -84,4 +84,4 @@ if slurm:
 else:
     # Loop through desired calcs and submit
     for snap in snaps:
-        os.system(f"python {run_script} -detailed {detailed} -compression {compression} -np {num_processes} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -sum_ad {sum_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+        os.system(f"python {run_script} -detailed {detailed} -compression {compression} -np_use {num_processes_use} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -sum_ad {sum_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
