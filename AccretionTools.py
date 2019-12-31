@@ -1646,7 +1646,55 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
         progress_file.write(f'Done with I/O in {(t2_io-t1_io):.2f} sec - entering main halo loop ...\n')
     progress_file.close()
 
+
+    # Initialise summed outputs
+    # default params
+    r200_facs=[0.125,0.25,0.5,0.75,1,1.25,1.5,2]
+    vmax_facs=[-1,0,0.125,0.25,0.375,0.5,0.75,1]
+    cgm_r200_fac=1.5
+
     num_halos_thisprocess=len(halo_index_list_snap2)
+    integrated_output_hdf5=output_hdf5.create_group('integrated_output')
+    integrated_output_hdf5.create_dataset('ihalo',data=halo_index_list_snap2)
+    
+    output_fields={'Inflow':['Total_DeltaM_In','Field_DeltaM_In','CGM_DeltaM_In','Merger_DeltaM_In'],#for all halos
+                  'Outflow':['Total_DeltaM_Out','Field_DeltaM_Out','CGM_DeltaM_Out','Transfer_DeltaM_Out']}
+    
+    for output_group in ['Inflow','Outflow']:
+        integrated_output_hdf5.create_group(output_group)
+        integrated_output_hdf5[output_group].create_group('FOF-haloscale');integrated_output_hdf5[output_group].create_group('FOF-subhaloscale')
+
+        for ir200_fac,r200_fac in enumerate(r200_facs):
+            integrated_output_hdf5[output_group].create_group(f'SO-r200_fac_{ir200_fac+1}')
+            integrated_output_hdf5[output_group][f'SO-r200_fac_{ir200_fac+1}'].attrs.create('r200_fac',data=r200_fac)
+
+        for ivmax_fac, vmax_fac in enumerate(vmax_facs):
+            ivmax_key=f'vmax_fac_{ivmax_fac+1}'
+            
+            #haloscale
+            integrated_output_hdf5[output_group]['FOF-haloscale'].create_group(ivmax_key);integrated_output_hdf5[output_group]['FOF-haloscale'][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+            for itype in parttypes:
+                itype_key=f'PartType{itype}'
+                integrated_output_hdf5[output_group][f'FOF-haloscale'][ivmax_key].create_group(itype_key)
+                for dataset in output_fields[output_group]:
+                    integrated_output_hdf5[output_group][f'FOF-haloscale'][ivmax_key][itype_key].create_dataset(dataset,data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+            #subhaloscale
+            integrated_output_hdf5[output_group]['FOF-subhaloscale'].create_group(ivmax_key);integrated_output_hdf5[output_group]['FOF-subhaloscale'][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+            for itype in parttypes:
+                itype_key=f'PartType{itype}'
+                integrated_output_hdf5[output_group][f'FOF-subhaloscale'][ivmax_key].create_group(itype_key)
+                for dataset in output_fields[output_group]:
+                    integrated_output_hdf5[output_group][f'FOF-subhaloscale'][ivmax_key][itype_key].create_dataset(dataset,data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+            #SO
+            for ir200_fac,r200_fac in enumerate(r200_facs):
+                ir200_key=f'SO-r200_fac_{ir200_fac+1}'
+                integrated_output_hdf5[output_group][ir200_key].create_group(ivmax_key);integrated_output_hdf5[output_group][ir200_key][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+                for itype in parttypes:
+                    itype_key=f'PartType{itype}'
+                    integrated_output_hdf5[output_group][ir200_key][ivmax_key].create_group(itype_key)
+                    for dataset in output_fields[output_group]:
+                        integrated_output_hdf5[output_group][ir200_key][ivmax_key][itype_key].create_dataset(dataset,data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo at snap 2
         t1_halo=time.time()
 
@@ -1789,24 +1837,18 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                     #use the cube indices to extract particle data, record which particles couldn't be found
                     
 
-                    #for snaps 1 & 2, grab detailed particle data
-                    if not isnap==2:
-                        for field in ['Coordinates','Velocity','Mass','ParticleIDs','ParticleTypes']:
-                            ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_cube_particles[str(snap)][field],indices=ihalo_combined_inflow_candidate_cubeindices[str(snap)])
+                    #for each snap, grab detailed particle data
+                    for field in ['Coordinates','Velocity','Mass','ParticleIDs','ParticleTypes']:
+                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_cube_particles[str(snap)][field],indices=ihalo_combined_inflow_candidate_cubeindices[str(snap)])
                         
-                        #derive other cubdata outputs
-                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
-                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
-                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
-                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
-                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
-                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
-                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vtan_com']=np.sqrt(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vabs_com'])-np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vrad_com']))
-                    
-                    #for snap 3, just grab particle type
-                    else:
-                        ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_ParticleTypes']=mask_wnans(array=ihalo_cube_particles[str(snap)]['ParticleTypes'],indices=ihalo_combined_inflow_candidate_cubeindices[str(snap)])
-                        
+                    #derive other cubdata outputs
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
+                    ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vtan_com']=np.sqrt(np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vabs_com'])-np.square(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_vrad_com']))
                     ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_Particle_InCube']=np.isfinite(ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_ParticleTypes'])
 
                 #include average radial velocity
@@ -1860,30 +1902,124 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                     output_fields_dtype[field]=np.int8        
 
                 for itype in PartTypes:
+                    itype_key=f'PartType{itype}'
+                
+                    ### PARTICLE OUTPUTS
                     # Candidate particle types and masses taken at snap 1 (before "entering" halo)
                     ihalo_itype_mask=np.where(ihalo_combined_inflow_candidate_data["snap1_ParticleTypes"]==itype)
-                    ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset('ParticleIDs',data=ihalo_combined_inflow_candidate_IDs_unique[ihalo_itype_mask],dtype=output_fields_dtype["ParticleIDs"],compression=compression)
-                    ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset('Mass',data=ihalo_combined_inflow_candidate_data['snap1_Mass'][ihalo_itype_mask],dtype=output_fields_dtype["Mass"],compression=compression)
-                    ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset('ave_vrad_com',data=ihalo_combined_inflow_candidate_data['ave_vrad_com'][ihalo_itype_mask],dtype=output_fields_dtype["ave_vrad_com"],compression=compression)
+                    
+                    ihalo_hdf5['Inflow'][itype_key].create_dataset('ParticleIDs',data=ihalo_combined_inflow_candidate_IDs_unique[ihalo_itype_mask],dtype=output_fields_dtype["ParticleIDs"],compression=compression)
+                    ihalo_hdf5['Inflow'][itype_key].create_dataset('Mass',data=ihalo_combined_inflow_candidate_data['snap1_Mass'][ihalo_itype_mask],dtype=output_fields_dtype["Mass"],compression=compression)
+                    ihalo_hdf5['Inflow'][itype_key].create_dataset('ave_vrad_com',data=ihalo_combined_inflow_candidate_data['ave_vrad_com'][ihalo_itype_mask],dtype=output_fields_dtype["ave_vrad_com"],compression=compression)
 
                     #Rest of fields: snap 1
                     ihalo_snap1_inflow_outputs=["Structure","Processed","r_com","rabs_com","vrad_com","vtan_com","Particle_InFOF","Particle_Bound","Particle_InHost","Particle_InCube"]
                     for ihalo_snap1_inflow_output in ihalo_snap1_inflow_outputs:
-                        ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{ihalo_snap1_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap1_{ihalo_snap1_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap1_inflow_output],compression=compression)
+                        ihalo_hdf5['Inflow'][itype_key].create_dataset(f'snap1_{ihalo_snap1_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap1_{ihalo_snap1_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap1_inflow_output],compression=compression)
                     
                     #Rest of fields: snap 2
                     ihalo_snap2_inflow_outputs=["r_com","rabs_com","vrad_com","vtan_com","Particle_InFOF","Particle_Bound","Particle_InHost"]
 
                     for ihalo_snap2_inflow_output in ihalo_snap2_inflow_outputs:
-                        ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{ihalo_snap2_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap2_{ihalo_snap2_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_inflow_output],compression=compression)
+                        ihalo_hdf5['Inflow'][itype_key].create_dataset(f'snap2_{ihalo_snap2_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap2_{ihalo_snap2_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_inflow_output],compression=compression)
                     
                     #Rest of fields: snap 3
-                    ihalo_snap3_inflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost"]
+                    ihalo_snap3_inflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost",'rabs_com']
 
                     for ihalo_snap3_inflow_output in ihalo_snap3_inflow_outputs:
-                        ihalo_hdf5['Inflow'][f'PartType{itype}'].create_dataset(f'snap3_{ihalo_snap3_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap3_{ihalo_snap3_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap3_inflow_output],compression=compression)
+                        ihalo_hdf5['Inflow'][itype_key].create_dataset(f'snap3_{ihalo_snap3_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap3_{ihalo_snap3_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap3_inflow_output],compression=compression)
             
+                    ### SUMMED OUTPUTS
+                    ihalo_itype_inflow_masses=ihalo_combined_inflow_candidate_data['snap1_Mass'][ihalo_itype_mask]
+ 
+                    # masks
+                    ihalo_itype_inflow_vmax_masks={'vmax_fac_'+str(ivmax_fac+1):-ihalo_combined_inflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_hdf5['Metadata']['ave_vmax'][ihalo_itype_mask] for ivmax_fac,vmax_fac in enumerate(vmax_facs)}
+                    ihalo_itype_inflow_origin_masks={'field':ihalo_combined_inflow_candidate_data["snap1_Structure"][ihalo_itype_mask]=-1,'merger':ihalo_combined_inflow_candidate_data["snap1_Structure"][ihalo_itype_mask]>0}
+                    
+                    # FOF
+                    ihalo_itype_inflow_FOF_full_mask=np.logical_and(ihalo_combined_inflow_candidate_data["snap2_Particle_InFOF"][ihalo_itype_mask],np.logical_not(ihalo_combined_inflow_candidate_data["snap1_Particle_InFOF"][ihalo_itype_mask]))
+                    ihalo_itype_inflow_FOF_fullsnap3_mask=ihalo_combined_inflow_candidate_data["snap3_Particle_InFOF"][ihalo_itype_mask]
+                    ihalo_itype_inflow_FOF_central_mask=np.logical_and(ihalo_combined_inflow_candidate_data["snap2_Particle_InHost"][ihalo_itype_mask],np.logical_not(ihalo_combined_inflow_candidate_data["snap1_Particle_InHost"][ihalo_itype_mask]))
+                    ihalo_itype_inflow_FOF_centralsnap3_mask=np.logical_and(ihalo_combined_inflow_candidate_data["snap2_Particle_InHost"][ihalo_itype_mask],np.logical_not(ihalo_combined_inflow_candidate_data["snap1_Particle_InHost"][ihalo_itype_mask]))
+                    #cgm origin masks: full - anything not in the fof but within cgm_r200_fac*r200, central: anything not in the host 6dfof but within within cgm_r200_fac*r200
+                    ihalo_itype_inflow_FOF_full_cgm_mask=np.logical_and(ihalo_combined_inflow_candidate_data["snap1_Structure"][ihalo_itype_mask]==-1,ihalo_combined_inflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]<cgm_r200_fac*ihalo_hdf5['Metadata']['ave_R_200crit'].value)
+                    ihalo_itype_inflow_FOF_central_cgm_mask=np.logical_and(np.logical_or(ihalo_combined_inflow_candidate_data["snap1_Structure"][ihalo_itype_mask]==-1,ihalo_combined_inflow_candidate_data["snap1_Particle_InHost"][ihalo_itype_mask]==0),ihalo_combined_inflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]<cgm_r200_fac*ihalo_hdf5['Metadata']['ave_R_200crit'].value)
 
+                    # SO
+                    ihalo_itype_inflow_r200_masks={'r200_fac_'+str(ir200_fac+1):np.logical_and(ihalo_combined_inflow_candidate_data["snap2_rabs_com"][ihalo_itype_mask]<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_combined_inflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]>r200_fac*ihalo_metadata['ave_R_200crit']) for ir200_fac,r200_fac in enumerate(r200_facs)}
+                    ihalo_itype_inflow_r200_snap3_masks={'r200_fac_'+str(ir200_fac+1):ihalo_combined_inflow_candidate_data["snap3_rabs_com"][ihalo_itype_mask]<r200_fac*ihalo_metadata['ave_R_200crit'] for ir200_fac,r200_fac in enumerate(r200_facs)}
+                    #cgm origin masks: anything outside r200fac*r200, but within cgm_r200_fac*r200
+                    ihalo_itype_inflow_r200_cgm_masks={'r200_fac_'+str(ir200_fac+1):np.logical_and(ihalo_combined_inflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]>r200_fac*ihalo_hdf5['Metadata']['ave_R_200crit'].value,ihalo_combined_inflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]<cgm_r200_fac*ihalo_hdf5['Metadata']['ave_R_200crit'].value) for ir200_fac,r200_fac in enumerate(r200_facs)}
+
+                    #ITERATE THROUGH VMAX CUTS
+                    for ivmax_fac, vmax_fac in enumerate(vmax_facs):
+                        ivmax_key=f'vmax_fac_{ivmax_fac+1}'
+                        ivmax_mask=ihalo_itype_inflow_vmax_masks[ivmax_key]
+
+                        #halo scale
+                        ivmax_fof_haloscale_inflow_mask=np.logical_and(ivmax_mask,ihalo_itype_inflow_FOF_full_mask)
+                        ivmax_fof_haloscale_stableinflow_mask=np.logical_and(ivmax_fof_haloscale_inflow_mask,ihalo_itype_inflow_FOF_fullsnap3_mask)
+                        total_mass_where=np.where(ivmax_fof_haloscale_inflow_mask);stable_total_mass_where=np.where(ivmax_fof_haloscale_stableinflow_mask)
+                        field_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_inflow_mask,ihalo_itype_inflow_origin_masks['field']));stable_field_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_stableinflow_mask,ihalo_itype_inflow_origin_masks['field']))
+                        merger_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_inflow_mask,ihalo_itype_inflow_origin_masks['merger']));stable_merger_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_stableinflow_mask,ihalo_itype_inflow_origin_masks['merger']))
+                        cgm_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_inflow_mask,ihalo_itype_inflow_FOF_full_cgm_mask));stable_cgm_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_stableinflow_mask,ihalo_itype_inflow_FOF_full_cgm_mask))
+
+                        integrated_output_hdf5['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['All_Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[total_mass_where])
+                        integrated_output_hdf5['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['All_Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[field_mass_where])
+                        integrated_output_hdf5['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['All_Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[merger_mass_where])
+                        integrated_output_hdf5['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['All_CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[cgm_mass_where])                        
+                        integrated_output_hdf5['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Stable_Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[stable_total_mass_where])
+                        integrated_output_hdf5['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Stable_Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[stable_field_mass_where])
+                        integrated_output_hdf5['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Stable_Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[stable_merger_mass_where])
+                        integrated_output_hdf5['Inflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Stable_CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[stable_cgm_mass_where])
+                        
+                        #subhalo scale
+                        if ihalo_numsubstruct>0 or ihalo_hostHaloID>0:
+
+                            ivmax_fof_subhaloscale_inflow_mask=np.logical_and(ivmax_mask,ihalo_itype_inflow_FOF_central_mask)
+                            ivmax_fof_subhaloscale_stableinflow_mask=np.logical_and(ivmax_fof_haloscale_inflow_mask,ihalo_itype_inflow_FOF_centralsnap3_mask)
+
+                            total_mass_where=np.where(ivmax_fof_subhaloscale_inflow_mask);stable_total_mass_where=np.where(ivmax_fof_subhaloscale_stableinflow_mask)
+                            field_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_inflow_mask,ihalo_itype_inflow_origin_masks['field']));stable_field_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_stableinflow_mask,ihalo_itype_inflow_origin_masks['field']))
+                            merger_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_inflow_mask,ihalo_itype_inflow_origin_masks['merger']));stable_merger_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_stableinflow_mask,ihalo_itype_inflow_origin_masks['merger']))
+                            cgm_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_inflow_mask,ihalo_itype_inflow_FOF_central_cgm_mask));stable_cgm_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_stableinflow_mask,ihalo_itype_inflow_FOF_central_cgm_mask))
+
+                            integrated_output_hdf5['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['All_Total_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[total_mass_where])
+                            integrated_output_hdf5['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['All_Field_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[field_mass_where])
+                            integrated_output_hdf5['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['All_Merger_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[merger_mass_where])
+                            integrated_output_hdf5['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['All_CGM_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[cgm_mass_where])
+                            integrated_output_hdf5['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Stable_Total_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[stable_total_mass_where])
+                            integrated_output_hdf5['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Stable_Field_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[stable_field_mass_where])
+                            integrated_output_hdf5['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Stable_Merger_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[stable_merger_mass_where])
+                            integrated_output_hdf5['Inflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Stable_CGM_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[stable_cgm_mass_where])
+
+                        #SO scale
+                        for ir200_fac, r200_fac in enumerate(r200_facs):
+                            ir200_key='SO-r200_fac_'+str(ir200_fac+1)
+                            ir200_inflow_mask=ihalo_itype_inflow_r200_masks[ir200_key[3:]]
+                            ir200_cgm_mask=ihalo_itype_inflow_r200_cgm_masks[ir200_key[3:]]
+                            ir200_stable_mass_mask=ihalo_itype_inflow_r200_snap3_masks[ir200_key[3:]
+
+                            for ivmax_fac, vmax_fac in enumerate(vmax_facs):
+                                ivmax_key=f'vmax_fac_{ivmax_fac+1}'
+                                ivmax_mask=ihalo_itype_inflow_vmax_masks[ivmax_key]
+                                ivmax_ir200_inflow_mask=np.logical_and(ivmax_mask,ir200_inflow_mask)
+                                ivmax_ir200_stableinflow_mask=np.logical_and(ivmax_ir200_inflow_mask,ir200_stable_mass_mask)
+
+                                total_mass_where=np.where(ivmax_ir200_inflow_mask);stable_total_mass_where=np.where(ivmax_ir200_stableinflow_mask)
+                                field_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ihalo_itype_inflow_origin_masks['field']));stable_field_mass_where=np.where(np.logical_and(ivmax_ir200_stableinflow_mask,ihalo_itype_inflow_origin_masks['field']))
+                                merger_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ihalo_itype_inflow_origin_masks['merger']));stable_merger_mass_where=np.where(np.logical_and(ivmax_ir200_stableinflow_mask,ihalo_itype_inflow_origin_masks['merger']))
+                                cgm_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ir200_cgm_mask));stable_cgm_mass_where=np.where(np.logical_and(ivmax_ir200_stableinflow_mask,ir200_cgm_mask))
+
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['All_Total_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[total_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['All_Field_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[field_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['All_Merger_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[merger_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['All_CGM_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[cgm_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['Stable_Total_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[stable_total_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['Stable_Field_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[stable_field_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['Stable_Merger_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[stable_merger_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['Stable_CGM_DeltaM_In'][iihalo]=np.nansum(ihalo_itype_inflow_masses[stable_cgm_mass_where])
+                
                 ############################## OUTFLOW ##############################
                 ####################################################################
 
@@ -1909,27 +2045,19 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                     #use the indices from the sorted IDs above to extract the cube indices (will return nan if not in the cube) - outputs index
                     ihalo_combined_outflow_candidate_cubeindices[str(snap)]=mask_wnans(array=ihalo_cube_particles[str(snap)]['SortedIndices'],indices=ihalo_combined_outflow_candidate_IDindices_temp)
                     #use the cube indices to extract particle data, record which particles couldn't be found
-                    
-                    #for snaps 1 & 2, grab detailed particle data
-                    if not isnap==2:
-                        for field in ['Coordinates','Velocity','Mass','ParticleIDs','ParticleTypes']:
-                            ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_cube_particles[str(snap)][field],indices=ihalo_combined_outflow_candidate_cubeindices[str(snap)])
-                        
-                        #derive other cubdata outputs
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vtan_com']=np.sqrt(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com'])-np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']))
-                    
-                    #for snap 3, just grab particle type
-                    else:
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_ParticleTypes']=mask_wnans(array=ihalo_cube_particles[str(snap)]['ParticleTypes'],indices=ihalo_combined_outflow_candidate_cubeindices[str(snap)])
-                        
-                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Particle_InCube']=np.isfinite(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_ParticleTypes'])
 
+                    for field in ['Coordinates','Velocity','Mass','ParticleIDs','ParticleTypes']:
+                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_cube_particles[str(snap)][field],indices=ihalo_combined_outflow_candidate_cubeindices[str(snap)])
+                    
+                    #derive other cubdata outputs
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
+                    ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vtan_com']=np.sqrt(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com'])-np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']))
+                
                 #include average radial velocity
                 vel_conversion=978.462 #Mpc/Gyr to km/s
                 ihalo_combined_outflow_candidate_data[f'ave_vrad_com']=(ihalo_combined_outflow_candidate_data[f'snap2_rabs_com']-ihalo_combined_outflow_candidate_data[f'snap1_rabs_com'])/dt*vel_conversion
@@ -1967,29 +2095,120 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                 # SAVE TO FILE 
 
                 for itype in PartTypes:
+                    itype_key=f'PartType{itype}'
+
+                    ### PARTICLE OUTPUTS
                     # Candidate particle types and masses taken at snap 2 (after "leaving" halo)
                     ihalo_itype_mask=np.where(ihalo_combined_outflow_candidate_data["snap2_ParticleTypes"]==itype)
-                    ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset('ParticleIDs',data=ihalo_combined_outflow_candidate_IDs_unique[ihalo_itype_mask],dtype=output_fields_dtype["ParticleIDs"],compression=compression)
-                    ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset('Mass',data=ihalo_combined_outflow_candidate_data['snap2_Mass'][ihalo_itype_mask],dtype=output_fields_dtype["Mass"],compression=compression)
-                    ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset('ave_vrad_com',data=ihalo_combined_outflow_candidate_data[f'ave_vrad_com'][ihalo_itype_mask],dtype=output_fields_dtype["ave_vrad_com"],compression=compression)
+                    ihalo_hdf5['Outflow'][itype_key].create_dataset('ParticleIDs',data=ihalo_combined_outflow_candidate_IDs_unique[ihalo_itype_mask],dtype=output_fields_dtype["ParticleIDs"],compression=compression)
+                    ihalo_hdf5['Outflow'][itype_key].create_dataset('Mass',data=ihalo_combined_outflow_candidate_data['snap2_Mass'][ihalo_itype_mask],dtype=output_fields_dtype["Mass"],compression=compression)
+                    ihalo_hdf5['Outflow'][itype_key].create_dataset('ave_vrad_com',data=ihalo_combined_outflow_candidate_data[f'ave_vrad_com'][ihalo_itype_mask],dtype=output_fields_dtype["ave_vrad_com"],compression=compression)
 
                     #Rest of fields: snap 1
                     ihalo_snap1_outflow_outputs=["r_com","rabs_com","vrad_com","vtan_com","Particle_InFOF","Particle_Bound","Particle_InHost"]
                     for ihalo_snap1_outflow_output in ihalo_snap1_outflow_outputs:
-                        ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset(f'snap1_{ihalo_snap1_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap1_{ihalo_snap1_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap1_outflow_output],compression=compression)
+                        ihalo_hdf5['Outflow'][itype_key].create_dataset(f'snap1_{ihalo_snap1_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap1_{ihalo_snap1_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap1_outflow_output],compression=compression)
                     
                     #Rest of fields: snap 2
                     ihalo_snap2_outflow_outputs=["r_com","rabs_com","vrad_com","vtan_com","Particle_InFOF","Particle_Bound","Particle_InHost","Particle_InCube","Structure"]
 
                     for ihalo_snap2_outflow_output in ihalo_snap2_outflow_outputs:
-                        ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset(f'snap2_{ihalo_snap2_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap2_{ihalo_snap2_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_outflow_output],compression=compression)
+                        ihalo_hdf5['Outflow'][itype_key].create_dataset(f'snap2_{ihalo_snap2_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap2_{ihalo_snap2_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_outflow_output],compression=compression)
                     
                     #Rest of fields: snap 3
-                    ihalo_snap3_outflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost","Particle_InCube"]
+                    ihalo_snap3_outflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost","Particle_InCube","rabs_com"]
 
                     for ihalo_snap3_outflow_output in ihalo_snap3_outflow_outputs:
-                        ihalo_hdf5['Outflow'][f'PartType{itype}'].create_dataset(f'snap3_{ihalo_snap3_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap3_{ihalo_snap3_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap3_outflow_output],compression=compression)
-            
+                        ihalo_hdf5['Outflow'][itype_key].create_dataset(f'snap3_{ihalo_snap3_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap3_{ihalo_snap3_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap3_outflow_output],compression=compression)
+                    
+                    ### SUMMED OUTPUTS
+                    ihalo_itype_outflow_masses=ihalo_combined_outflow_candidate_data['snap1_Mass'][ihalo_itype_mask]
+ 
+                    # masks
+                    ihalo_itype_outflow_vmax_masks={'vmax_fac_'+str(ivmax_fac+1):ihalo_combined_outflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_hdf5['Metadata']['ave_vmax'][ihalo_itype_mask] for ivmax_fac,vmax_fac in enumerate(vmax_facs)}
+                    ihalo_itype_outflow_destination_masks={'field':ihalo_combined_outflow_candidate_data["snap2_Structure"][ihalo_itype_mask]=-1,'merger':ihalo_combined_outflow_candidate_data["snap2_Structure"][ihalo_itype_mask]>0}
+                    
+                    # FOF
+                    ihalo_itype_outflow_FOF_full_mask=np.logical_and(ihalo_combined_outflow_candidate_data["snap1_Particle_InFOF"][ihalo_itype_mask],np.logical_not(ihalo_combined_outflow_candidate_data["snap2_Particle_InFOF"][ihalo_itype_mask]))
+                    ihalo_itype_outflow_FOF_central_mask=np.logical_and(ihalo_combined_outflow_candidate_data["snap1_Particle_InHost"][ihalo_itype_mask],np.logical_not(ihalo_combined_outflow_candidate_data["snap2_Particle_InHost"][ihalo_itype_mask]))
+                    ihalo_itype_stableoutflow_FOF_full_mask=np.logical_and(ihalo_itype_outflow_FOF_full_mask,np.logical_not(ihalo_combined_outflow_candidate_data["snap3_Particle_InFOF"]))
+                    ihalo_itype_stableoutflow_FOF_central_mask=np.logical_and(ihalo_itype_outflow_FOF_central_mask,np.logical_not(ihalo_combined_outflow_candidate_data["snap3_Particle_InHost"]))
+
+                    #cgm destination masks: full - anything not in the fof but within cgm_r200_fac*r200, central: anything not in the host 6dfof but within within cgm_r200_fac*r200
+                    ihalo_itype_outflow_FOF_full_cgm_mask=np.logical_and(ihalo_combined_outflow_candidate_data["snap2_Structure"][ihalo_itype_mask]==-1,ihalo_combined_outflow_candidate_data["snap2_rabs_com"][ihalo_itype_mask]<cgm_r200_fac*ihalo_hdf5['Metadata']['ave_R_200crit'].value)
+                    ihalo_itype_outflow_FOF_central_cgm_mask=np.logical_and(np.logical_or(ihalo_combined_outflow_candidate_data["snap1_Structure"][ihalo_itype_mask]==-1,ihalo_combined_outflow_candidate_data["snap1_Particle_InHost"][ihalo_itype_mask]==0),ihalo_combined_outflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]<cgm_r200_fac*ihalo_hdf5['Metadata']['ave_R_200crit'].value)
+
+                    # SO
+                    ihalo_itype_outflow_r200_masks={'r200_fac_'+str(ir200_fac+1):np.logical_and(ihalo_combined_outflow_candidate_data["snap2_rabs_com"][ihalo_itype_mask]<r200_fac*ihalo_metadata['ave_R_200crit'],ihalo_combined_outflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]>r200_fac*ihalo_metadata['ave_R_200crit']) for ir200_fac,r200_fac in enumerate(r200_facs)}
+                    ihalo_itype_stableoutflow_r200_masks={'r200_fac_'+str(ir200_fac+1):np.logical_and(ihalo_itype_outflow_r200_masks['r200_fac_'+str(ir200_fac+1)],ihalo_combined_outflow_candidate_data["snap3_rabs_com"][ihalo_itype_mask]>r200_fac*ihalo_metadata['ave_R_200crit']) for ir200_fac,r200_fac in enumerate(r200_facs)}
+                    #cgm origin masks: anything outside r200fac*r200, but within cgm_r200_fac*r200
+                    ihalo_itype_outflow_r200_cgm_masks={'r200_fac_'+str(ir200_fac+1):np.logical_and(ihalo_combined_outflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]>r200_fac*ihalo_hdf5['Metadata']['ave_R_200crit'].value,ihalo_combined_outflow_candidate_data["snap1_rabs_com"][ihalo_itype_mask]<cgm_r200_fac*ihalo_hdf5['Metadata']['ave_R_200crit'].value) for ir200_fac,r200_fac in enumerate(r200_facs)}
+
+                    #ITERATE THROUGH VMAX CUTS
+                    for ivmax_fac, vmax_fac in enumerate(vmax_facs):
+                        ivmax_key=f'vmax_fac_{ivmax_fac+1}'
+                        ivmax_mask=ihalo_itype_outflow_vmax_masks[ivmax_key]
+
+                        #halo scale
+                        ivmax_fof_haloscale_outflowmask=np.logical_and(ivmax_mask,ihalo_itype_outflow_FOF_full_mask)
+                        ivmax_fof_haloscale_stableoutflow_mask=np.logical_and(ivmax_mask,ihalo_itype_stableoutflow_FOF_full_mask)
+                        
+                        total_mass_where=np.where(ivmax_fof_haloscale_outflow_mask);stable_total_mass_where=np.where(ivmax_fof_haloscale_stableoutflow_mask)
+                        field_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_outflow_mask,ihalo_itype_outflow_origin_masks['field']));stable_field_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_stableoutflow_mask,ihalo_itype_outflow_origin_masks['field']))
+                        merger_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_outflow_mask,ihalo_itype_outflow_origin_masks['merger']));stable_merger_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_stableoutflow_mask,ihalo_itype_outflow_origin_masks['merger']))
+                        cgm_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_outflow_mask,ihalo_itype_outflow_FOF_full_cgm_mask));stable_cgm_mass_where=np.where(np.logical_and(ivmax_fof_haloscale_stableoutflow_mask,ihalo_itype_outflow_FOF_full_cgm_mask))
+
+                        integrated_output_hdf5['Outflow'][f'FOF-haloscale'][ivmax_key][itype_key]['All_Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[total_mass_where])
+                        integrated_output_hdf5['Outflow'][f'FOF-haloscale'][ivmax_key][itype_key]['All_Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[field_mass_where])
+                        integrated_output_hdf5['Outflow'][f'FOF-haloscale'][ivmax_key][itype_key]['All_Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[merger_mass_where])
+                        integrated_output_hdf5['Outflow'][f'FOF-haloscale'][ivmax_key][itype_key]['All_CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[cgm_mass_where])
+                        integrated_output_hdf5['Outflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Stable_Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[stable_total_mass_where])
+                        integrated_output_hdf5['Outflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Stable_Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[stable_field_mass_where])
+                        integrated_output_hdf5['Outflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Stable_Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[stable_merger_mass_where])
+                        integrated_output_hdf5['Outflow'][f'FOF-haloscale'][ivmax_key][itype_key]['Stable_CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[stable_cgm_mass_where])
+                        
+                        #subhalo scale
+                        if ihalo_numsubstruct>0 or ihalo_hostHaloID>0:
+
+                            ivmax_fof_subhaloscale_inflow_mask=np.logical_and(ivmax_mask,ihalo_itype_inflow_FOF_central_mask)
+                            ivmax_fof_subhaloscale_stableinflow_mask=np.logical_and(ivmax_mask,ihalo_itype_stableinflow_FOF_central_mask)
+                            
+                            total_mass_where=np.where(ivmax_fof_subhaloscale_outflow_mask);stable_total_mass_where=np.where(ivmax_fof_subhaloscale_stableoutflow_mask)
+                            field_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_outflow_mask,ihalo_itype_outflow_origin_masks['field']));stable_field_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_stableoutflow_mask,ihalo_itype_outflow_origin_masks['field']))
+                            merger_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_outflow_mask,ihalo_itype_outflow_origin_masks['merger']));stable_merger_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_stableoutflow_mask,ihalo_itype_outflow_origin_masks['merger']))
+                            cgm_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_outflow_mask,ihalo_itype_outflow_FOF_full_cgm_mask));stable_cgm_mass_where=np.where(np.logical_and(ivmax_fof_subhaloscale_stableoutflow_mask,ihalo_itype_outflow_FOF_full_cgm_mask))
+                            
+                            integrated_output_hdf5['Outflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['All_Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[total_mass_where])
+                            integrated_output_hdf5['Outflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['All_Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[field_mass_where])
+                            integrated_output_hdf5['Outflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['All_Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[merger_mass_where])
+                            integrated_output_hdf5['Outflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['All_CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[cgm_mass_where])
+                            integrated_output_hdf5['Outflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Stable_Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[stable_total_mass_where])
+                            integrated_output_hdf5['Outflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Stable_Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[stable_field_mass_where])
+                            integrated_output_hdf5['Outflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Stable_Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[stable_merger_mass_where])
+                            integrated_output_hdf5['Outflow'][f'FOF-subhaloscale'][ivmax_key][itype_key]['Stable_CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_outflow_masses[stable_cgm_mass_where])
+                        
+                        #SO scale
+                        for ir200_fac, r200_fac in enumerate(r200_facs):
+                            ir200_key='SO-r200_fac_'+str(ir200_fac+1)
+                            ir200_outflow_mask=ihalo_itype_outflow_r200_masks[ir200_key[3:]]
+                            ir200_stableoutflow_mask=ihalo_itype_outflow_r200_masks[ir200_key[3:]]
+                            ir200_cgm_mask=ihalo_itype_inflow_r200_cgm_masks[ir200_key[3:]]
+
+                            for ivmax_fac, vmax_fac in enumerate(vmax_facs):
+                                ivmax_key=f'vmax_fac_{ivmax_fac+1}'
+                                ivmax_mask=ihalo_itype_inflow_vmax_masks[ivmax_key]
+                                ivmax_ir200_inflow_mask=np.logical_and(ivmax_mask,ir200_inflow_mask)
+                                
+                                total_mass_where=np.where(ivmax_ir200_inflow_mask)
+                                field_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ihalo_itype_inflow_origin_masks['field']))
+                                merger_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ihalo_itype_inflow_origin_masks['merger']))
+                                cgm_mass_where=np.where(np.logical_and(ivmax_ir200_inflow_mask,ir200_cgm_mask))
+
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['Total_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[total_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['Field_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[field_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['Merger_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[merger_mass_where])
+                                integrated_output_hdf5['Inflow'][ir200_key][ivmax_key][itype_key]['CGM_DeltaM_In'][ihalo]=np.nansum(ihalo_itype_inflow_masses[cgm_mass_where])
+
             else:
                 print(f'Skipping ihalo {ihalo_s2}')
                 with open(fname_log,"a") as progress_file:

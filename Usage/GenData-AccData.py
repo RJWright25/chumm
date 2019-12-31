@@ -16,11 +16,8 @@
 #   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
                                                                                                                                                                   
                                                                                                                                                                   
-# GenData-AccData.py - Miscellaneous python tools for use in the rest of the package. 
+# GenData-AccData.py - Generation script for accretion data. 
 # Author: RUBY WRIGHT 
-
-# Halo data must first have been generated as per GenData-HaloData.py.
-# Particle histories must also have been generated as per GenData-PartData.py. 
 
 # PREAMBLE
 import warnings

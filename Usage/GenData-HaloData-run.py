@@ -1,34 +1,46 @@
-# Submit script for acc data
+#   ______   __    __  __    __  __       __  __       __ 
+#  /      \ /  |  /  |/  |  /  |/  \     /  |/  \     /  |
+# /$$$$$$  |$$ |  $$ |$$ |  $$ |$$  \   /$$ |$$  \   /$$ |
+# $$ |  $$/ $$ |__$$ |$$ |  $$ |$$$  \ /$$$ |$$$  \ /$$$ |
+# $$ |      $$    $$ |$$ |  $$ |$$$$  /$$$$ |$$$$  /$$$$ |
+# $$ |   __ $$$$$$$$ |$$ |  $$ |$$ $$ $$/$$ |$$ $$ $$/$$ |
+# $$ \__/  |$$ |  $$ |$$ \__$$ |$$ |$$$/ $$ |$$ |$$$/ $$ |
+# $$    $$/ $$ |  $$ |$$    $$/ $$ | $/  $$ |$$ | $/  $$ |
+#  $$$$$$/  $$/   $$/  $$$$$$/  $$/      $$/ $$/      $$/
+
+#    _____          _         __             _    _       _                        _    _ __  __       _       _   _                      __   __  __               
+#   / ____|        | |       / _|           | |  | |     | |                      | |  | |  \/  |     | |     | | (_)                    / _| |  \/  |              
+#  | |     ___   __| | ___  | |_ ___  _ __  | |__| | __ _| | ___     __ _  ___ ___| |  | | \  / |_   _| | __ _| |_ _  ___  _ __     ___ | |_  | \  / | __ _ ___ ___ 
+#  | |    / _ \ / _` |/ _ \ |  _/ _ \| '__| |  __  |/ _` | |/ _ \   / _` |/ __/ __| |  | | |\/| | | | | |/ _` | __| |/ _ \| '_ \   / _ \|  _| | |\/| |/ _` / __/ __|
+#  | |___| (_) | (_| |  __/ | || (_) | |    | |  | | (_| | | (_) | | (_| | (_| (__| |__| | |  | | |_| | | (_| | |_| | (_) | | | | | (_) | |   | |  | | (_| \__ \__ \
+#   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
+                                                                                                                                                                  
+                                                                                                                                                                  
+# GenData-HaloData-run.py - Script to run the generate halo data script.
+# Author: RUBY WRIGHT 
+
 import warnings
 warnings.filterwarnings("ignore")
 import os
 import sys
 
-#finding system
-if 'Users' in os.listdir('/'):
-    chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
-else:
-    chummdir='/home/rwright/'
-
-sys.path.append(chummdir)
-run_script=chummdir+'Usage/GenData-HaloData.py'
+run_script='GenData-HaloData.py'
 
 #job
-slurm=False
+slurm=True
 email=True
 total_mem=40#GB
 wall_time="0-04:00:00"
 
 #calc
-num_processes=0
+num_processes=4
 gen_bhd=1
-gen_dhd=0
-sum_dhd=0
-com_dhd=0
-add_hpd=0
+gen_dhd=1
+sum_dhd=1
+com_dhd=1
+add_hpd=1
 
 ####################
-
 # Get run info for outputs
 filename=sys.argv[0]
 runcwd=os.getcwd()
@@ -36,9 +48,8 @@ runname=runcwd.split('-')[-1]
 if not os.path.exists('job_logs'):
     os.mkdir('job_logs')
 
-
 if slurm:
-    jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes).zfill(3)}'
+    jobname=f'{runname}-halodata'
     jobscriptfilepath=f'job_logs/submit-{jobname}.slurm'
     if os.path.exists(jobscriptfilepath):
         os.remove(jobscriptfilepath)
