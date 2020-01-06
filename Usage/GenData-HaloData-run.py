@@ -29,16 +29,15 @@ run_script='GenData-HaloData.py'
 #job
 slurm=True
 email=True
-total_mem=40#GB
+total_mem=25#GB
 wall_time="0-04:00:00"
 
 #calc
-num_processes=4
-gen_bhd=1
+num_processes=1
+gen_bhd=0
 gen_dhd=1
 sum_dhd=1
 com_dhd=1
-add_hpd=1
 
 ####################
 # Get run info for outputs
@@ -70,11 +69,11 @@ if slurm:
         jobfile.writelines(f"date\n")
         jobfile.writelines(f"echo CPU DETAILS\n")
         jobfile.writelines(f"lscpu\n")
-        jobfile.writelines(f"python {run_script} -np {num_processes} -gen_bhd {gen_bhd} -gen_dhd {gen_dhd} -sum_dhd {sum_dhd} -com_dhd {com_dhd} -add_hpd {add_hpd}")
+        jobfile.writelines(f"python {run_script} -np {num_processes} -gen_bhd {gen_bhd} -gen_dhd {gen_dhd} -sum_dhd {sum_dhd} -com_dhd {com_dhd} \n")
         jobfile.writelines(f"echo JOB END TIME\n")
         jobfile.writelines(f"date\n")
     jobfile.close()
     os.system(f"sbatch {jobscriptfilepath}")
 
 else:
-    os.system(f"python {run_script} -np {num_processes} -gen_bhd {gen_bhd} -gen_dhd {gen_dhd} -sum_dhd {sum_dhd} -com_dhd {com_dhd} -add_hpd {add_hpd}")
+    os.system(f"python {run_script} -np {num_processes} -gen_bhd {gen_bhd} -gen_dhd {gen_dhd} -sum_dhd {sum_dhd} -com_dhd {com_dhd}  \n")

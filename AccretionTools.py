@@ -35,320 +35,320 @@
 
 # ########################### CREATE PARTICLE HISTORIES ###########################
 
-# def gen_particle_history_serial(base_halo_data,snaps=None):
+def gen_particle_history_serial(base_halo_data,snaps=None):
 
-#     """
+    """
 
-#     gen_particle_history_serial : function
-# 	----------
+    gen_particle_history_serial : function
+	----------
 
-#     Generate and save particle history data from velociraptor property and particle files.
+    Generate and save particle history data from velociraptor property and particle files.
 
-# 	Parameters
-# 	----------
-#     base_halo_data : list of dictionaries
-#         The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain information
-#         re: the type of particle file be reading. 
+	Parameters
+	----------
+    base_halo_data : list of dictionaries
+        The halo data list of dictionaries previously generated (by gen_base_halo_data). Should contain information
+        re: the type of particle file be reading. 
 
-#     snaps : list of ints
-#         The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
-#         particles in halos or subhalos (and save accordingly). The running lists will build on the previous snap. 
+    snaps : list of ints
+        The list of absolute snaps (corresponding to index in base_halo_data) for which we will add 
+        particles in halos or subhalos (and save accordingly). The running lists will build on the previous snap. 
 
-# 	Returns
-# 	----------
-#     None.
+	Returns
+	----------
+    None.
 
-#     Saves to file:
-#     PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
+    Saves to file:
+    PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
 
-#         '/PartTypeX/PartID' - SORTED particle IDs from simulation.
-#         '/PartTypeX/PartIndex' - Corresponding indices of particles. 
-#         '/PartTypeX/HostStructure' - Host structure (from STF) of particles. (-1: no host structure)
+        '/PartTypeX/PartID' - SORTED particle IDs from simulation.
+        '/PartTypeX/PartIndex' - Corresponding indices of particles. 
+        '/PartTypeX/HostStructure' - Host structure (from STF) of particles. (-1: no host structure)
     
-# 	"""
+	"""
 
-#     # If not given snaps, do for all snaps in base_halo_data (can deal with padded snaps)
-#     if snaps==None:
-#         snaps=list(range(len(base_halo_data)))
+    # If not given snaps, do for all snaps in base_halo_data (can deal with padded snaps)
+    if snaps==None:
+        snaps=list(range(len(base_halo_data)))
 
-#     # Find which snaps are valid/not padded and which aren't 
-#     try:
-#         valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
-#         valid_snaps=np.compress(valid_snaps,snaps)
-#         run_outname=base_halo_data[valid_snaps[0]]['outname']
+    # Find which snaps are valid/not padded and which aren't 
+    try:
+        valid_snaps=[len(base_halo_data[snap].keys())>3 for snap in snaps] #which indices of snaps are valid
+        valid_snaps=np.compress(valid_snaps,snaps)
+        run_outname=base_halo_data[valid_snaps[0]]['outname']
 
-#     except:
-#         print("Couldn't validate snaps")
-#         return []
+    except:
+        print("Couldn't validate snaps")
+        return []
 
-#     # Standard names of particle types
-#     PartNames=['gas','DM','','','star','BH']
+    # Standard names of particle types
+    PartNames=['gas','DM','','','star','BH']
 
-#     # Which simulation type do we have?
-#     if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
-#         PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
-#         SimType='EAGLE'
-#     else:
-#         PartTypes=[0,1] #Gas, DM
-#         SimType='OtherHydro'
+    # Which simulation type do we have?
+    if base_halo_data[valid_snaps[0]]['Part_FileType']=='EAGLE':
+        PartTypes=[0,1,4,5] #Gas, DM, Stars, BH
+        SimType='EAGLE'
+    else:
+        PartTypes=[0,1] #Gas, DM
+        SimType='OtherHydro'
 
-#     # If the directory with particle histories doesn't exist yet, make it (where we have run the python script)
-#     if not os.path.isdir("part_histories"):
-#         os.mkdir("part_histories")
+    # If the directory with particle histories doesn't exist yet, make it (where we have run the python script)
+    if not os.path.isdir("part_histories"):
+        os.mkdir("part_histories")
 
-#     # Iterate through snapshots and flip switches as required
-#     isnap=0
-#     for snap in valid_snaps:
-#         # Initialise output file (will be truncated if already exists)
-#         outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
-#         if os.path.exists(outfile_name):
-#             os.remove(outfile_name)
+    # Iterate through snapshots and flip switches as required
+    isnap=0
+    for snap in valid_snaps:
+        # Initialise output file (will be truncated if already exists)
+        outfile_name="part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5"
+        if os.path.exists(outfile_name):
+            os.remove(outfile_name)
 
-#         outfile=h5py.File(outfile_name,'w')
+        outfile=h5py.File(outfile_name,'w')
 
-#         # Load the EAGLE data for this snapshot
-#         if SimType=='EAGLE':
-#             t1=time.time()
-#             EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
-#             EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
-#             EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
-#             t2=time.time()
-#             print(f"Loaded and sliced EAGLE data from snapshot {snap} in {t2-t1} sec")
+        # Load the EAGLE data for this snapshot
+        if SimType=='EAGLE':
+            t1=time.time()
+            EAGLE_boxsize=base_halo_data[snap]['SimulationInfo']['BoxSize_Comoving']
+            EAGLE_Snap=read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath'])
+            EAGLE_Snap.select_region(xmin=0,xmax=EAGLE_boxsize,ymin=0,ymax=EAGLE_boxsize,zmin=0,zmax=EAGLE_boxsize)
+            t2=time.time()
+            print(f"Loaded and sliced EAGLE data from snapshot {snap} in {t2-t1} sec")
 
-#         # Load the Halo particle lists for this snapshot for each particle type
-#         t1=time.time()
-#         snap_Halo_Particle_Lists=get_FOF_particle_lists(base_halo_data,snap,add_subparts_to_fofs=False)#don't need to add subhalo particles as we have each subhalo separately
-#         n_halos=len(snap_Halo_Particle_Lists["Particle_IDs"])
-#         n_halo_particles=[len(snap_Halo_Particle_Lists["Particle_IDs"][ihalo]) for ihalo in range(n_halos)]
-#         allhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='int64')*haloid for ihalo,haloid in enumerate(base_halo_data[snap]['ID'])])
-#         structure_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostStructureID":allhalo_Particle_hosts},dtype=np.int64).sort_values(["ParticleIDs"])
-#         structure_Particles_bytype={str(itype):np.array(structure_Particles[["ParticleIDs","HostStructureID"]].loc[structure_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
-#         n_structure_particles=np.nansum([len(structure_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
-#         t2=time.time()
-#         print(f"Loaded, concatenated and sorted halo particle lists for snap {snap} in {t2-t1} sec")
-#         print(f"There are {np.nansum(n_structure_particles)} particles in structure")
+        # Load the Halo particle lists for this snapshot for each particle type
+        t1=time.time()
+        snap_Halo_Particle_Lists=get_FOF_particle_lists(base_halo_data,snap,add_subparts_to_fofs=False)#don't need to add subhalo particles as we have each subhalo separately
+        n_halos=len(snap_Halo_Particle_Lists["Particle_IDs"])
+        n_halo_particles=[len(snap_Halo_Particle_Lists["Particle_IDs"][ihalo]) for ihalo in range(n_halos)]
+        allhalo_Particle_hosts=np.concatenate([np.ones(n_halo_particles[ihalo],dtype='int64')*haloid for ihalo,haloid in enumerate(base_halo_data[snap]['ID'])])
+        structure_Particles=df({'ParticleIDs':np.concatenate(snap_Halo_Particle_Lists['Particle_IDs']),'ParticleTypes':np.concatenate(snap_Halo_Particle_Lists['Particle_Types']),"HostStructureID":allhalo_Particle_hosts},dtype=np.int64).sort_values(["ParticleIDs"])
+        structure_Particles_bytype={str(itype):np.array(structure_Particles[["ParticleIDs","HostStructureID"]].loc[structure_Particles["ParticleTypes"]==itype]) for itype in PartTypes}
+        n_structure_particles=np.nansum([len(structure_Particles_bytype[str(itype)][:,0]) for itype in PartTypes])
+        t2=time.time()
+        print(f"Loaded, concatenated and sorted halo particle lists for snap {snap} in {t2-t1} sec")
+        print(f"There are {np.nansum(n_structure_particles)} particles in structure")
 
-#         # Map IDs to indices from particle data, and initialise array
-#         Particle_History_Flags=dict()
+        # Map IDs to indices from particle data, and initialise array
+        Particle_History_Flags=dict()
         
-#         for itype in PartTypes:
-#             t1=time.time()
-#             # Load new snap data
-#             if SimType=='EAGLE': 
-#                 try:
-#                     Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
-#                     print(f'{PartNames[itype]} IDs loaded')
-#                     print(f'There are n = {len(Particle_IDs_Unsorted_itype)} PartType{itype} particles loaded for snap {snap}')
-#                 except:
-#                     print(f'No {PartNames[itype]} IDs found')
-#                     Particle_IDs_Unsorted_itype=[]
+        for itype in PartTypes:
+            t1=time.time()
+            # Load new snap data
+            if SimType=='EAGLE': 
+                try:
+                    Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
+                    print(f'{PartNames[itype]} IDs loaded')
+                    print(f'There are n = {len(Particle_IDs_Unsorted_itype)} PartType{itype} particles loaded for snap {snap}')
+                except:
+                    print(f'No {PartNames[itype]} IDs found')
+                    Particle_IDs_Unsorted_itype=[]
 
-#                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
-#             else:
-#                 h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
-#                 Particle_IDs_Unsorted_itype=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
-#                 N_Particles_itype=len(Particle_IDs_Unsorted_itype)
+                N_Particles_itype=len(Particle_IDs_Unsorted_itype)
+            else:
+                h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
+                Particle_IDs_Unsorted_itype=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
+                N_Particles_itype=len(Particle_IDs_Unsorted_itype)
 
-#             # Initialise flag data structure with mapped IDs
-#             print(f"Mapping IDs to indices for all {PartNames[itype]} particles at snap {snap} ...")
-#             Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"HostStructureID":np.ones(N_Particles_itype,dtype='int64')-np.int64(2)}
-#             t2=time.time()
-#             print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1} sec")
+            # Initialise flag data structure with mapped IDs
+            print(f"Mapping IDs to indices for all {PartNames[itype]} particles at snap {snap} ...")
+            Particle_History_Flags[str(itype)]={"ParticleIDs_Sorted":np.sort(Particle_IDs_Unsorted_itype),"ParticleIndex_Original":np.argsort(Particle_IDs_Unsorted_itype),"HostStructureID":np.ones(N_Particles_itype,dtype='int64')-np.int64(2)}
+            t2=time.time()
+            print(f"Mapped IDs to indices for all {PartNames[itype]} particles at snap {snap} in {t2-t1} sec")
             
-#             # Flip switches of new particles
-#             print("Adding host indices ...")
-#             t1=time.time()
-#             ipart_switch=0
-#             all_Structure_IDs_itype=structure_Particles_bytype[str(itype)][:,0]
-#             all_Structure_HostStructureID_itype=structure_Particles_bytype[str(itype)][:,1]
-#             all_Structure_IDs_itype_partindex=binary_search(sorted_list=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"],items=all_Structure_IDs_itype)
-#             for ipart_switch, ipart_index in enumerate(all_Structure_IDs_itype_partindex):#for each particle in structure, add its host structure to the array (if not in structure, HostStructure=-1)
-#                 if ipart_switch%100000==0:
-#                     print(ipart_switch/len(all_Structure_IDs_itype_partindex)*100,f'% done adding host halos for {PartNames[itype]} particles')
-#                 Particle_History_Flags[str(itype)]["HostStructureID"][ipart_index]=np.int64(all_Structure_HostStructureID_itype[ipart_switch])
-#             t2=time.time()
-#             print(f"Added host halos in {t2-t1} sec for {PartNames[itype]} particles")
+            # Flip switches of new particles
+            print("Adding host indices ...")
+            t1=time.time()
+            ipart_switch=0
+            all_Structure_IDs_itype=structure_Particles_bytype[str(itype)][:,0]
+            all_Structure_HostStructureID_itype=structure_Particles_bytype[str(itype)][:,1]
+            all_Structure_IDs_itype_partindex=binary_search(sorted_list=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"],items=all_Structure_IDs_itype)
+            for ipart_switch, ipart_index in enumerate(all_Structure_IDs_itype_partindex):#for each particle in structure, add its host structure to the array (if not in structure, HostStructure=-1)
+                if ipart_switch%100000==0:
+                    print(ipart_switch/len(all_Structure_IDs_itype_partindex)*100,f'% done adding host halos for {PartNames[itype]} particles')
+                Particle_History_Flags[str(itype)]["HostStructureID"][ipart_index]=np.int64(all_Structure_HostStructureID_itype[ipart_switch])
+            t2=time.time()
+            print(f"Added host halos in {t2-t1} sec for {PartNames[itype]} particles")
 
-#         # Done with processing, now save to hdf5 file with PartType groups
-#         print(f'Dumping data to file')
-#         t1=time.time()
-#         for itype in PartTypes:
-#             dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype=np.int64,compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
-#             dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype=np.int32,compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
-#             dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype=np.int64,compression='gzip',data=Particle_History_Flags[str(itype)]["HostStructureID"])
-#         outfile.close()
-#         t2=time.time()
-#         print(f'Dumped snap {snap} data to file in {t2-t1} sec')
+        # Done with processing, now save to hdf5 file with PartType groups
+        print(f'Dumping data to file')
+        t1=time.time()
+        for itype in PartTypes:
+            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIDs',dtype=np.int64,compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIDs_Sorted"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/ParticleIndex',dtype=np.int32,compression='gzip',data=Particle_History_Flags[str(itype)]["ParticleIndex_Original"])
+            dset_write=outfile.create_dataset(f'/PartType{itype}/HostStructure',dtype=np.int64,compression='gzip',data=Particle_History_Flags[str(itype)]["HostStructureID"])
+        outfile.close()
+        t2=time.time()
+        print(f'Dumped snap {snap} data to file in {t2-t1} sec')
 
-#         isnap+=1#go to next snap
+        isnap+=1#go to next snap
 
-#     return None #Don't return anything just save the data 
+    return None #Don't return anything just save the data 
 
-# ########################### POSTPROCESS PARTICLE HISTORIES ###########################
+########################### POSTPROCESS PARTICLE HISTORIES ###########################
 
-# def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
+def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
-#     """
+    """
 
-#     postprocess_particle_history_serial : function
-# 	----------
+    postprocess_particle_history_serial : function
+	----------
 
-#     Process the existing particle histories to generate a flag for each particle at each snap as to whether it had been processed at any time UP TO this snap. 
+    Process the existing particle histories to generate a flag for each particle at each snap as to whether it had been processed at any time UP TO this snap. 
 
-# 	Parameters
-# 	----------
-#     path : str
-#         The location of the existing particle histories. 
+	Parameters
+	----------
+    path : str
+        The location of the existing particle histories. 
 
 
-#     Returns
-#     ----------
-#     None.
+    Returns
+    ----------
+    None.
 
-#     Saves to file:
-#     PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
+    Saves to file:
+    PartHistory_xxx-outname.hdf5 : hdf5 file with datasets
 
-#         /PartTypeX/Processed_L1 #no_snaps this particle has been in a halo with substructure
-#         /PartTypeX/Processed_L2 #no_snaps this particle has been in a halo with NO substructure (<Processed_L1)
-#         /PartTypeX/HostStructure
-#         /PartTypeX/ParticleIDs
-#         /PartTypeX/ParticleIndex
+        /PartTypeX/Processed_L1 #no_snaps this particle has been in a halo with substructure
+        /PartTypeX/Processed_L2 #no_snaps this particle has been in a halo with NO substructure (<Processed_L1)
+        /PartTypeX/HostStructure
+        /PartTypeX/ParticleIDs
+        /PartTypeX/ParticleIndex
 
-#     """
+    """
 
-#     ordered_parthistory_files=sorted(os.listdir(path))
+    ordered_parthistory_files=sorted(os.listdir(path))
 
-#     for isnap,history_filename in enumerate(ordered_parthistory_files):
+    for isnap,history_filename in enumerate(ordered_parthistory_files):
         
-#         infile_file=h5py.File(path+'/'+history_filename,'r+')
-#         snap_abs=int(history_filename.split('_')[1])
+        infile_file=h5py.File(path+'/'+history_filename,'r+')
+        snap_abs=int(history_filename.split('_')[1])
 
-#         print(f"Arranging halo data for snap {snap_abs}...")
-#         t1=time.time()
-#         halo_l2_IDs=set([base_halo_data[snap_abs]["ID"][ihalo] for ihalo in np.where(base_halo_data[snap_abs]["numSubStruct"]==0)[0]])# no substructure
-#         t2=time.time()
-#         print(f'Done in {t2-t1}')
+        print(f"Arranging halo data for snap {snap_abs}...")
+        t1=time.time()
+        halo_l2_IDs=set([base_halo_data[snap_abs]["ID"][ihalo] for ihalo in np.where(base_halo_data[snap_abs]["numSubStruct"]==0)[0]])# no substructure
+        t2=time.time()
+        print(f'Done in {t2-t1}')
 
-#         ##### DARK MATTER
-#         print(f'Processing DM Data for snap {snap_abs}...')
-#         t1=time.time()
-#         current_hosts_DM=infile_file["PartType1/HostStructure"].value##ordered by ID
-#         if isnap==0:#initialise our arrays
-#             n_part_DM=len(current_hosts_DM)
-#             DM_flags_L1=np.array(np.zeros(n_part_DM),dtype=np.int8)
-#             DM_flags_L2=np.array(np.zeros(n_part_DM),dtype=np.int8)
+        ##### DARK MATTER
+        print(f'Processing DM Data for snap {snap_abs}...')
+        t1=time.time()
+        current_hosts_DM=infile_file["PartType1/HostStructure"].value##ordered by ID
+        if isnap==0:#initialise our arrays
+            n_part_DM=len(current_hosts_DM)
+            DM_flags_L1=np.array(np.zeros(n_part_DM),dtype=np.int8)
+            DM_flags_L2=np.array(np.zeros(n_part_DM),dtype=np.int8)
 
-#         indices_in_structure=np.where(current_hosts_DM>0)[0]
-#         iipart=0
-#         for ipart in indices_in_structure:
-#             iipart=iipart+1
-#             if iipart%100000==0:
-#                 print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for DM particles')
-#             DM_flags_L1[ipart]=DM_flags_L1[ipart]+1
-#             host_ID=current_hosts_DM[ipart]
-#             if host_ID in halo_l2_IDs:
-#                 DM_flags_L2[ipart]=DM_flags_L2[ipart]+1
+        indices_in_structure=np.where(current_hosts_DM>0)[0]
+        iipart=0
+        for ipart in indices_in_structure:
+            iipart=iipart+1
+            if iipart%100000==0:
+                print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for DM particles')
+            DM_flags_L1[ipart]=DM_flags_L1[ipart]+1
+            host_ID=current_hosts_DM[ipart]
+            if host_ID in halo_l2_IDs:
+                DM_flags_L2[ipart]=DM_flags_L2[ipart]+1
         
-#         try:
-#             infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,compression='gzip',dtype=np.uint8)
-#             infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,compression='gzip',dtype=np.uint8)
-#         except:
-#             infile_file["PartType1"]['Processed_L1'][:]=DM_flags_L1
-#             infile_file["PartType1"]['Processed_L2'][:]=DM_flags_L2
+        try:
+            infile_file["PartType1"].create_dataset("Processed_L1",data=DM_flags_L1,compression='gzip',dtype=np.uint8)
+            infile_file["PartType1"].create_dataset("Processed_L2",data=DM_flags_L2,compression='gzip',dtype=np.uint8)
+        except:
+            infile_file["PartType1"]['Processed_L1'][:]=DM_flags_L1
+            infile_file["PartType1"]['Processed_L2'][:]=DM_flags_L2
 
-#         t2=time.time()
-#         print(f'Finished with DM for snap {snap_abs} in {t2-t1}')
+        t2=time.time()
+        print(f'Finished with DM for snap {snap_abs} in {t2-t1}')
 
-#         ##### GAS
-#         print(f'Processing gas Data for snap {snap_abs}...')
-#         t1=time.time()
-#         if isnap==0:#initialise our arrays
-#             current_IDs_gas=infile_file["PartType0/ParticleIDs"].value
-#             current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
-#             n_part_gas_now=len(current_IDs_gas)
-#             n_part_gas_prev=n_part_gas_now
-#             gas_flags_L1=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
-#             gas_flags_L2=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
-#         else:
-#             prev_IDs_gas=current_IDs_gas
-#             prev_hosts_gas=current_hosts_gas
-#             current_IDs_gas=infile_file["PartType0/ParticleIDs"].value
-#             current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
-#             n_part_gas_now=len(current_IDs_gas)
-#             n_part_gas_prev=len(prev_IDs_gas)
+        ##### GAS
+        print(f'Processing gas Data for snap {snap_abs}...')
+        t1=time.time()
+        if isnap==0:#initialise our arrays
+            current_IDs_gas=infile_file["PartType0/ParticleIDs"].value
+            current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
+            n_part_gas_now=len(current_IDs_gas)
+            n_part_gas_prev=n_part_gas_now
+            gas_flags_L1=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
+            gas_flags_L2=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
+        else:
+            prev_IDs_gas=current_IDs_gas
+            prev_hosts_gas=current_hosts_gas
+            current_IDs_gas=infile_file["PartType0/ParticleIDs"].value
+            current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
+            n_part_gas_now=len(current_IDs_gas)
+            n_part_gas_prev=len(prev_IDs_gas)
         
-#         delta_particles=n_part_gas_prev-n_part_gas_now
+        delta_particles=n_part_gas_prev-n_part_gas_now
         
-#         if delta_particles<1:
-#             print("No change in gas particle count since last snap (i.e. first snap)")
-#             indices_in_structure=np.where(current_hosts_gas>0)[0]
-#             iipart=0
-#             for ipart in indices_in_structure:
-#                 iipart=iipart+1
-#                 host_ID=current_hosts_gas[ipart]
-#                 if iipart%100000==0:
-#                     print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
-#                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
-#                 if host_ID in halo_l2_IDs:
-#                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
-#         else:
-#             print(f"Gas particle count changed by {delta_particles} - carrying over old information")
-#             gas_flags_L1_old=gas_flags_L1
-#             gas_flags_L2_old=gas_flags_L2
-#             gas_flags_L1=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
-#             gas_flags_L2=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
+        if delta_particles<1:
+            print("No change in gas particle count since last snap (i.e. first snap)")
+            indices_in_structure=np.where(current_hosts_gas>0)[0]
+            iipart=0
+            for ipart in indices_in_structure:
+                iipart=iipart+1
+                host_ID=current_hosts_gas[ipart]
+                if iipart%100000==0:
+                    print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
+                gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
+                if host_ID in halo_l2_IDs:
+                    gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
+        else:
+            print(f"Gas particle count changed by {delta_particles} - carrying over old information")
+            gas_flags_L1_old=gas_flags_L1
+            gas_flags_L2_old=gas_flags_L2
+            gas_flags_L1=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
+            gas_flags_L2=np.array(np.zeros(n_part_gas_now),dtype=np.int8)
 
-#             print('Finding old processed particles ...')
-#             particles_prev_processed_L1=[(prev_IDs_gas[ipart],gas_flags_L1_old[ipart]) for ipart in np.where(gas_flags_L1_old>0)[0]]
-#             particles_prev_processed_L2=[(prev_IDs_gas[ipart],gas_flags_L2_old[ipart]) for ipart in np.where(gas_flags_L2_old>0)[0]]
+            print('Finding old processed particles ...')
+            particles_prev_processed_L1=[(prev_IDs_gas[ipart],gas_flags_L1_old[ipart]) for ipart in np.where(gas_flags_L1_old>0)[0]]
+            particles_prev_processed_L2=[(prev_IDs_gas[ipart],gas_flags_L2_old[ipart]) for ipart in np.where(gas_flags_L2_old>0)[0]]
             
-#             ipart_L1=0
-#             for ipart_prevID, ipart_L1_level in particles_prev_processed_L1:
-#                 ipart_L1=ipart_L1+1
-#                 if ipart_L1%100000==0:  
-#                     print(f'{np.round(ipart_L1/len(particles_prev_processed_L1)*100,2)}% done with carrying over L1 flags for gas')
-#                 ipart_currentindex=binary_search(items=[ipart_prevID],sorted_list=current_IDs_gas,check_entries=True)[0]
-#                 if ipart_currentindex>-1:#if particle found
-#                     gas_flags_L1[ipart_currentindex]=ipart_L1_level
-#                 else:
-#                     pass
+            ipart_L1=0
+            for ipart_prevID, ipart_L1_level in particles_prev_processed_L1:
+                ipart_L1=ipart_L1+1
+                if ipart_L1%100000==0:  
+                    print(f'{np.round(ipart_L1/len(particles_prev_processed_L1)*100,2)}% done with carrying over L1 flags for gas')
+                ipart_currentindex=binary_search(items=[ipart_prevID],sorted_list=current_IDs_gas,check_entries=True)[0]
+                if ipart_currentindex>-1:#if particle found
+                    gas_flags_L1[ipart_currentindex]=ipart_L1_level
+                else:
+                    pass
             
-#             ipart_L2=1
-#             for ipart_prevID, ipart_L2_level in particles_prev_processed_L2:
-#                 ipart_L2=ipart_L2+1
-#                 if ipart_L2%100000==0:
-#                     print(f'{np.round(ipart_L2/len(particles_prev_processed_L2)*100,2)}% done with carrying over L2 flags')
-#                 ipart_currentindex=binary_search(items=[ipart_prevID],sorted_list=current_IDs_gas,check_entries=True)[0]
-#                 if ipart_currentindex>-1:#if particle found
-#                     gas_flags_L2[ipart_currentindex]=ipart_L2_level
-#                 else:
-#                     pass
+            ipart_L2=1
+            for ipart_prevID, ipart_L2_level in particles_prev_processed_L2:
+                ipart_L2=ipart_L2+1
+                if ipart_L2%100000==0:
+                    print(f'{np.round(ipart_L2/len(particles_prev_processed_L2)*100,2)}% done with carrying over L2 flags')
+                ipart_currentindex=binary_search(items=[ipart_prevID],sorted_list=current_IDs_gas,check_entries=True)[0]
+                if ipart_currentindex>-1:#if particle found
+                    gas_flags_L2[ipart_currentindex]=ipart_L2_level
+                else:
+                    pass
 
 
-#             print(f"Now adding new flags for gas particles")
-#             indices_in_structure=np.where(current_hosts_gas>0)[0]
-#             iipart=0
-#             for ipart in indices_in_structure:
-#                 iipart=iipart+1
-#                 host_ID=current_hosts_gas[ipart]
-#                 if iipart%10000==0:
-#                     print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
-#                 gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
-#                 if host_ID in halo_l2_IDs:
-#                     gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
-#         print('About to save: L1!=L2?', np.nansum(gas_flags_L2!=gas_flags_L1))
+            print(f"Now adding new flags for gas particles")
+            indices_in_structure=np.where(current_hosts_gas>0)[0]
+            iipart=0
+            for ipart in indices_in_structure:
+                iipart=iipart+1
+                host_ID=current_hosts_gas[ipart]
+                if iipart%10000==0:
+                    print(np.round(iipart/len(indices_in_structure)*100,2),'% done adding flags for gas particles')
+                gas_flags_L1[ipart]=gas_flags_L1[ipart]+1
+                if host_ID in halo_l2_IDs:
+                    gas_flags_L2[ipart]=gas_flags_L2[ipart]+1
+        print('About to save: L1!=L2?', np.nansum(gas_flags_L2!=gas_flags_L1))
 
-#         try:
-#             infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.uint8)
-#             infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.uint8)
-#         except:
-#             infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
-#             infile_file["PartType0"]['Processed_L2'][:]=gas_flags_L2
+        try:
+            infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.uint8)
+            infile_file["PartType0"].create_dataset("Processed_L2",data=gas_flags_L2,compression='gzip',dtype=np.uint8)
+        except:
+            infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
+            infile_file["PartType0"]['Processed_L2'][:]=gas_flags_L2
             
-#         t2=time.time()
-#         print(f'Finished with Gas for snap {snap_abs} in {t2-t1}')
+        t2=time.time()
+        print(f'Finished with Gas for snap {snap_abs} in {t2-t1}')
 
-#         infile_file.close()
+        infile_file.close()
 
 
     
