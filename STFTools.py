@@ -36,7 +36,7 @@ from VRPythonTools import *
 
 ########################### CREATE BASE HALO DATA ###########################
 
-def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filetype,tf_filelist,outname='',temporal_idval=10**12):
+def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filetype,tf_filelist,numsnaps=None,outname='',temporal_idval=10**12):
     
     """
 
@@ -123,6 +123,9 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         os.mkdir('job_logs')
 
     base_fields=['ID','hostHaloID','Structuretype',"numSubStruct",'Xc','Yc','Zc','Xcminpot','Ycminpot','Zcminpot','Xcmbp','Ycmbp','Zcmbp','VXc','VYc','VZc','R_200crit','R_200mean','Mass_200crit','Vmax']#default halo fields
+    
+    if not numsnaps>0:
+        numsnaps=len(partdata_filelist)
 
     # File lists
     part_list=partdata_filelist#particle data filepaths -- padded with None for snaps we don't have
@@ -130,7 +133,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     tf_list=tf_filelist#treefrog data filepaths -- padded with None for snaps we don't have
 
     # Get snapshot indices from number of particle data files 
-    sim_snaps=list(range(len(part_list)))
+    sim_snaps=list(range(numsnaps))
     halo_data_all=[]#initialise halo data list
     have_halo_data=[]#initialise flag list indicating existence of halo data at given snaps
     
