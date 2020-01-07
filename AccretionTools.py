@@ -301,16 +301,19 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                                                                                                           snap_desired=snap_abs)
                                                                           
             iipart_processed=0
-            for ipart_prevprocessing,ipart_prevhistoryindex,ipart_newhistoryindex,ipart_newtype in zip(gas_flags_L1_old,processed_old_indices,historyindices_atsnap,parttypes_atsnap):
-                
+            print(f'{np.nanmean(parttypes_atsnap==0)*100:.2f}% of previous gas particles are gas at this snap')
+
+            for item in historyindices_atsnap[:100]:
+                print(item)
+
+            for ipart_prevprocessing,ipart_prevhistoryindex,ipart_newhistoryindex,ipart_newtype in zip(gas_flags_L1_old,list(range(len(gas_flags_L1_old))),historyindices_atsnap,parttypes_atsnap):
                 ipart_newprocessing=ipart_prevprocessing+1
-                if iipart_processed%100000==0:  
-                    print(f'{iipart_processed/len(gas_flags_L1_old)*100:.2f}% done with carrying over L1 flags for gas')
-                
+
                 if ipart_newtype==0:#if particle still gas
                     gas_flags_L1[ipart_newhistoryindex]=ipart_newprocessing
+
                 else:
-                    print(f'Particle {processed_old_IDs[iipart_processed]} was transformed from {snap_abs-1} to {snap_abs}')
+                    # print(f'Particle {processed_old_IDs[iipart_processed]} was transformed from {snap_abs-1} to {snap_abs}')
                     pass
                 iipart_processed=iipart_processed+1
 
