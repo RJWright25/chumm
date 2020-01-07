@@ -229,8 +229,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
                     halo_data_all[isnap]['SimulationInfo']['Mass_DM_Physical']=(h5py.File(part_list[snap],'r+')['Header'].attrs['MassTable'])[1]/halo_data_all[isnap]['SimulationInfo']['h_val']*10**10
                     halo_data_all[isnap]['SimulationInfo']['Mass_Gas_Physical']=halo_data_all[isnap]['SimulationInfo']['Mass_DM_Physical']*halo_data_all[isnap]['SimulationInfo']['Omega_b_Planck']/(1-halo_data_all[isnap]['SimulationInfo']['Omega_b_Planck'])
                 except:
-                    halo_data_all[isnap]['SimulationInfo']['Mass_DM_Physical']=9.70*10**6
-                    halo_data_all[isnap]['SimulationInfo']['Mass_Gas_Physical']=1.81*10**6
+                    halo_data_all[isnap]['SimulationInfo']['Mass_DM_Physical']=0
+                    halo_data_all[isnap]['SimulationInfo']['Mass_Gas_Physical']=0
                     
             halo_data_all[isnap]['VR_FilePath']=vr_list[snap]
             halo_data_all[isnap]['VR_FileType']=vr_filetype

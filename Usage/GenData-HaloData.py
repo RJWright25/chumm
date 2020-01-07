@@ -67,6 +67,7 @@ run_name=os.getcwd().split('/')[-1]# takes the run name from the folder
 # Decide particle data type from simulation title
 if 'EAGLE' in run_name:
     partdata_filetype='EAGLE'
+    numsnaps=29
 else:
     partdata_filetype='GADGET'
 
@@ -81,36 +82,39 @@ if gen_bhd:
     print('Generating file lists...')
 
     ############ generate p filelist
-    pfiles_directory="/fred/oz009/clagos/EAGLE/L0025N0376/REFERENCE/data/"
+    pfiles_directory="/fred/oz009/clagos/EAGLE/L0050N0752/PE/REFERENCE/data/"
     pfiles_list_outer=os.listdir(pfiles_directory)
     pfiles_list_outer_trunc=[tempfile for tempfile in pfiles_list_outer if tempfile.startswith('snap')]
     pfiles_list_outer_trunc.sort()
-    pfiles_list_wdir=[pfiles_directory+tempfile+'/snap_'+tempfile[-12:]+'.0.hdf5' for tempfile in pfiles_list_outer_trunc]
-    print(np.array(pfiles_list_wdir))
+    pfiles_list_wdir=[pfiles_directory+tempfile+'/snap_'+tempfile[-12:]+'.0.hdf5' for tempfile in pfiles_list_outer_trunc][1:]
+    if partdata_filetype=='GADGET':
+        numsnaps=len(pfiles_list_wdir)
     ############ generate vr filelist
-    vrfiles_directory="/fred/oz009/clagos/vr-testing-outputs/hydro/REFERENCE/"
+    vrfiles_directory="/fred/oz009/clagos/vr-testing-outputs/hydro/L0050N0752/REFERENCE/"
     vrfiles_list_all=os.listdir(vrfiles_directory)
     vrfiles_list_all.sort()
-    vrfiles_list_split=np.unique([vrfiles_directory+tempfile.split('.')[0] for tempfile in vrfiles_list_all if '6dfof' in tempfile])[1:]#remove 0
-    print(np.array(vrfiles_list_split))
+    vrfiles_list_split=np.unique([vrfiles_directory+tempfile.split('.')[0] for tempfile in vrfiles_list_all if '6dfof' in tempfile])#remove 0
+    # print(np.array(vrfiles_list_split))
     ############ generate tf filelist
-    tffiles_directory="/fred/oz009/clagos/vr-testing-outputs/hydro/REFERENCE-treefrog/"
+    tffiles_directory="/fred/oz009/clagos/vr-testing-outputs/hydro/L0050N0752-REF-treefrog/"
     tffiles_list_all=os.listdir(tffiles_directory)
-    tffiles_list_trunc=[tffiles_directory+tempfile for tempfile in tffiles_list_all if tempfile.startswith(f'{run_name}-tfout.s')]
+    tffiles_list_trunc=[tffiles_directory+tempfile for tempfile in tffiles_list_all if ('tfout' in tempfile and 'pid' not in tempfile)]
     tffiles_list_trunc.sort()
     tffiles_list=[tempfile[:-5] for tempfile in tffiles_list_trunc]#remove the .tree
-    print(np.array(tffiles_list))
+    # print(np.array(tffiles_list))
  
     ###########padding the lists
-    pfiles_final=[]
+    pfiles_final=[None]*2
     pfiles_final.extend(pfiles_list_wdir)
-    vrfiles_final=[None]*5
+    vrfiles_final=[None]*10
     vrfiles_final.extend(list(vrfiles_list_split))
-    tffiles_final=[None]*5
+    print(np.array(vrfiles_final))
+    tffiles_final=[None]*10
     tffiles_final.extend(list(tffiles_list))
-
-    print('Generating base halo data ...')
-    gen_base_halo_data(partdata_filelist=pfiles_final,partdata_filetype=partdata_filetype,vr_filelist=vrfiles_final,vr_filetype=2,tf_filelist=tffiles_final,outname=run_name,temporal_idval=10**12)
+    print(np.array(tffiles_final))
+    
+    print(f'Generating base halo data for {len(np.array(tffiles_final))} snaps...')
+    gen_base_halo_data(numsnaps=numsnaps,partdata_filelist=pfiles_final,partdata_filetype=partdata_filetype,vr_filelist=vrfiles_final,vr_filetype=2,tf_filelist=tffiles_final,outname=run_name,temporal_idval=10**12)
     base_halo_data=open_pickle('B2_HaloData_'+run_name+'.dat')
 
 else:
