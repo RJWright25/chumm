@@ -43,7 +43,13 @@ from multiprocessing import Process, cpu_count
 parser=argparse.ArgumentParser()
 parser.add_argument('-np', type=int, default=1,
                     help='number of processes to use')
+parser.add_argument('-gen_bph', type=int, default=1,
+                    help='generate base particle histories')
+parser.add_argument('-sum_bph', type=int, default=1,
+                    help='sum base particle histories')
 n_processes = parser.parse_args().np
+gen_bph=parser.parse_args().gen_bph
+sum_bph=parser.parse_args().sum_bph
 
 # Load base halo data
 run_name=os.getcwd().split('/')[-1] #Grab simulation name from folder name
@@ -55,20 +61,21 @@ base_halo_data=open_pickle(f'B1_HaloData_{run_name}.dat')#*
 # which saves the host structure of each particle, sorts their IDs, 
 # and saves their index in particle data for future reference. 
 
-snaps_for_history=[snap for snap in range(len(base_halo_data)) if len(base_halo_data[snap])>4] #Only generate histories for non-padded snaps
-snaps_mp_lists=gen_mp_indices(snaps_for_history,n=n_processes)
-kwargs=[{'snaps':snaps_mp_lists[iprocess]['indices']} for iprocess in range(n_processes)]
+if gen_bph:
+    snaps_for_history=[snap for snap in range(len(base_halo_data)) if len(base_halo_data[snap])>4] #Only generate histories for non-padded snaps
+    snaps_mp_lists=gen_mp_indices(snaps_for_history,n=n_processes)
+    kwargs=[{'snaps':snaps_mp_lists[iprocess]['indices']} for iprocess in range(n_processes)]
 
-print(f"Distributing snaps for particle states amongst {n_processes} cores")
-processes=[]
-if __name__ == '__main__':
-    for iprocess in range(n_processes):
-        print(f'Starting process {iprocess}')
-        p=Process(target=gen_particle_history_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
-        processes.append(p)
-        p.start()
-    for p in processes:
-        p.join()
+    print(f"Distributing snaps for particle states amongst {n_processes} cores")
+    processes=[]
+    if __name__ == '__main__':
+        for iprocess in range(n_processes):
+            print(f'Starting process {iprocess}')
+            p=Process(target=gen_particle_history_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            processes.append(p)
+            p.start()
+        for p in processes:
+            p.join()
 
 ############ (2) INTEGRATE PARTICLE HISTORIES FOR EACH SNAPSHOT ############
 # This is run in serial, each snap sequentially.
@@ -77,4 +84,5 @@ if __name__ == '__main__':
 # indicating the sum of how many snaps a given particle has been part of 
 # structure in the past. 
 
-postprocess_particle_history_serial(base_halo_data,path='part_histories')
+if sum_bph:
+    postprocess_particle_history_serial(base_halo_data,path='part_histories')

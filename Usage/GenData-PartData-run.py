@@ -44,6 +44,10 @@ wall_time="0-04:00:00"
 num_processes=8
 total_mem_perprocess=8#GB
 
+#run
+gen_bph=1
+sum_bph=1
+
 # Get run info for outputs
 filename=sys.argv[0]
 runcwd=os.getcwd()
@@ -76,7 +80,7 @@ if slurm:
             jobfile.writelines(f"date\n")
             jobfile.writelines(f"echo CPU DETAILS\n")
             jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script} -np {num_processes}\n")
+            jobfile.writelines(f"python {run_script} -np {num_processes} -gen_bph {gen_bph} - sum_bph {sum_bph}\n")
             jobfile.writelines(f"echo JOB END TIME\n")
             jobfile.writelines(f"date\n")
         jobfile.close()
@@ -85,5 +89,5 @@ if slurm:
 else:
     # Loop through desired calcs and submit
     for snap in snaps:
-        os.system(f"python {run_script} -np {num_processes}\n")
+        os.system(f"python {run_script} -np {num_processes} -gen_bph {gen_bph} - sum_bph {sum_bph}\n")
 
