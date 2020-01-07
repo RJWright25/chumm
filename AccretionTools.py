@@ -127,7 +127,7 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
         ipart_hostIDs=np.concatenate([np.ones(n_part_ihalo[ihalo],dtype='int64')*haloid for ihalo,haloid in enumerate(base_halo_data[snap]['ID'])])
         
         structure_Particles={'ParticleIDs':ipart_IDs,'ParticleTypes':ipart_Types,'HostStructureID':ipart_hostIDs}
-        structure_Particles_bytype={}
+        structure_Particles_bytype={str(itype):{} for itype in PartTypes}
         
         for itype in PartTypes:
             itype_mask=np.where(structure_Particles["ParticleTypes"]==itype)
