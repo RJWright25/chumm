@@ -129,7 +129,7 @@ def get_particle_indices(base_halo_data,IDs_sorted,indices_sorted,IDs_taken,type
             # print(f'{ipart/npart*100:.2f}% done typing')
             pass
         #find new type
-        search_in=search_types[str(ipart_type)]
+        search_in=search_types[str(int(ipart_type))]
         if len(search_in)==1:
             out_type=search_in[0]
         else:

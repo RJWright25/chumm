@@ -32,6 +32,7 @@ import sys
 import argparse
 
 sys.path.append('/home/rwright/CHUMM/') # may need to specify
+sys.path.append('/Users/ruby/Documents/GitHub/CHUMM/') # may need to specify
 from STFTools import *
 from AccretionTools import *
 from VRPythonTools import *
