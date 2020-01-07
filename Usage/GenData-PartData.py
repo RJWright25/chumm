@@ -62,7 +62,7 @@ base_halo_data=open_pickle(f'B1_HaloData_{run_name}.dat')#*
 # and saves their index in particle data for future reference. 
 
 if gen_bph:
-    snaps_for_history=[snap for snap in range(len(base_halo_data)) if len(base_halo_data[snap])>4] #Only generate histories for non-padded snaps
+    snaps_for_history=[snap for snap in range(len(base_halo_data)) if base_halo_data[snap]['Part_FilePath']] #Only generate histories for non-padded snaps
     snaps_mp_lists=gen_mp_indices(snaps_for_history,n=n_processes)
     kwargs=[{'snaps':snaps_mp_lists[iprocess]['indices']} for iprocess in range(n_processes)]
 

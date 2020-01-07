@@ -145,7 +145,7 @@ def get_particle_indices(base_halo_data,IDs_sorted,indices_sorted,IDs_taken,type
         
         if out_type==-1:
             print(f'Warning: couldnt find particle {ipart_id}.')
-            print(f'When taken (snap {snap_taken}), the particle was of type {ipart_type} but (at snap {snap_desired}) could not be found in {search_in} lists')
+            print(f'When taken (snap {snap_taken}), the particle was of type {int(ipart_type)} but (at snap {snap_desired}) could not be found in {search_in} lists')
 
         parttypes_atsnap[ipart]=out_type
 

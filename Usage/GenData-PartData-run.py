@@ -45,7 +45,7 @@ num_processes=8
 total_mem_perprocess=8#GB
 
 #run
-gen_bph=1
+gen_bph=0
 sum_bph=1
 
 # Get run info for outputs

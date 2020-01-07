@@ -136,7 +136,10 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
             
         t2=time.time()
         print(f"Loaded, concatenated and sorted halo particle lists for snap {snap} in {t2-t1} sec")
-        print(f"There are {np.nansum(n_part_tot)} particles in structure")
+        if '376' in run_outname:
+            print(f"There are {n_part_tot} particles in all FOFs ({np.nansum(n_part_tot)/(2*376**3)*100:.2f}%)")
+        else:
+            print(f"There are {n_part_tot} particles in all FOFs ({np.nansum(n_part_tot)/(2*752**3)*100:.2f}%)")
 
         # Map IDs to indices from particle data, and initialise array
         Particle_History_Flags=dict()
@@ -223,7 +226,6 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
     ordered_parthistory_files=sorted(os.listdir(path))
 
-
     for isnap,history_filename in enumerate(ordered_parthistory_files):
         
         infile_file=h5py.File(path+'/'+history_filename,'r+')
@@ -250,15 +252,15 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         except:
             infile_file["PartType1"]['Processed_L1'][:]=DM_flags
         t2=time.time()
-        print(f'Finished with DM for snap {snap_abs} in {t2-t1}')
+        print(f'Finished with DM for snap {snap_abs} in {t2-t1:.1f} sec')
 
         ##### GAS
         print(f'Processing gas data for snap {snap_abs}...')
         t1=time.time()
         if isnap==0:#initialise our arrays
             print('Initialising gas processing data (first snap)')
-            current_IDs_gas=infile_file["PartType0/ParticleIDs"].value
-            current_indices_gas=infile_file["PartType0/ParticleIndex"].value
+            current_IDs_gas=Part_Histories_IDs[str(0)]
+            current_indices_gas=Part_Histories_Indices[str(0)]
             current_hosts_gas=infile_file["PartType0/HostStructure"].value ##ordered by ID
             n_part_gas_now=len(current_IDs_gas)
             n_part_gas_prev=n_part_gas_now
@@ -268,9 +270,9 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             print('Loading previous gas processing data')
             prev_IDs_gas=current_IDs_gas
             prev_hosts_gas=current_hosts_gas
-            current_IDs_gas=infile_file["PartType0/ParticleIDs"].value
-            current_indices_gas=infile_file["PartType0/ParticleIndex"].value
-            current_hosts_gas=infile_file["PartType0/HostStructure"].value##ordered by ID
+            current_IDs_gas=Part_Histories_IDs[str(0)]
+            current_indices_gas=Part_Histories_Indices[str(0)]
+            current_hosts_gas=infile_file["PartType0/HostStructure"].value
             n_part_gas_now=len(current_IDs_gas)
             n_part_gas_prev=len(prev_IDs_gas)
         
@@ -279,8 +281,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         t1=time.time()
         if delta_particles<1:
             print(f"Gas particle count changed by {delta_particles} - first processing sum")
-            indices_in_structure=np.where(current_hosts_gas>0)[0]
-            gas_flags_L1[(indices_in_structure,)]=gas_flags_L1[(indices_in_structure,)]+1
+            indices_in_structure=np.where(current_hosts_gas>0)
+            gas_flags_L1[indices_in_structure]=gas_flags_L1[indices_in_structure]+1
 
         else:
             print(f"Gas particle count changed by {delta_particles} - carrying over old information")
@@ -292,6 +294,9 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             processed_old_IDs=prev_IDs_gas[processed_old_indices]
             processed_old_flag=gas_flags_L1_old[processed_old_indices]
 
+            
+
+
             #find these IDs at this snap
             parttypes_atsnap,historyindices_atsnap,partindices_atsnap=get_particle_indices(base_halo_data,IDs_sorted=Part_Histories_IDs,
                                                                                                           indices_sorted=Part_Histories_Indices,
@@ -299,23 +304,30 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                                                                                                           types_taken=np.zeros(len(processed_old_IDs)),
                                                                                                           snap_taken=snap_abs-1,
                                                                                                           snap_desired=snap_abs)
-                                                                          
+
+            # #sanity check
+            # prev_IDs_totransferfor=processed_old_IDs
+            # new_indices_righttype=historyindices_atsnap[np.where(parttypes_atsnap==0)]
+            # new_IDs_totransferto=Part_Histories_IDs[str(0)][(new_indices_righttype,)]
+            # print('Comparing old IDs with processing data to the IDs this data will be transferred to')
+            # print(np.column_stack((prev_IDs_totransferfor[np.where(parttypes_atsnap==0)],new_IDs_totransferto)))
+            # print(f'mismatches: {np.nansum(prev_IDs_totransferfor[np.where(parttypes_atsnap==0)]!=new_IDs_totransferto)}')
+
             iipart_processed=0
-            print(f'{np.nanmean(parttypes_atsnap==0)*100:.2f}% of previous gas particles are gas at this snap')
-
-            for item in historyindices_atsnap[:100]:
-                print(item)
-
-            for ipart_prevprocessing,ipart_prevhistoryindex,ipart_newhistoryindex,ipart_newtype in zip(gas_flags_L1_old,list(range(len(gas_flags_L1_old))),historyindices_atsnap,parttypes_atsnap):
-                ipart_newprocessing=ipart_prevprocessing+1
-
+            #transferring old processing data
+            for ipart_prevprocessing,ipart_prevhistoryindex,ipart_newhistoryindex,ipart_newtype in zip(gas_flags_L1_old,processed_old_indices[0],historyindices_atsnap,parttypes_atsnap):
                 if ipart_newtype==0:#if particle still gas
-                    gas_flags_L1[ipart_newhistoryindex]=ipart_newprocessing
-
+                    gas_flags_L1[ipart_newhistoryindex]=ipart_prevprocessing
                 else:
-                    # print(f'Particle {processed_old_IDs[iipart_processed]} was transformed from {snap_abs-1} to {snap_abs}')
                     pass
                 iipart_processed=iipart_processed+1
+        
+            processed_new_IDs=Part_Histories_IDs
+
+            print('Finding new processed particles ...')
+            #adding new processing data
+            processed_new_indices=np.where(current_hosts_gas>0)
+            gas_flags_L1[processed_new_indices]=gas_flags_L1[processed_new_indices]+1
 
         try:
             infile_file["PartType0"].create_dataset("Processed_L1",data=gas_flags_L1,compression='gzip',dtype=np.uint8)
@@ -323,7 +335,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             infile_file["PartType0"]['Processed_L1'][:]=gas_flags_L1
             
         t2=time.time()
-        print(f'Finished with gas for snap {snap_abs} in {t2-t1}')
+        print(f'Finished with gas for snap {snap_abs} in {t2-t1:.1f} sec')
 
         infile_file.close()
     
