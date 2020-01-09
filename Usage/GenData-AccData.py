@@ -41,10 +41,9 @@ from multiprocessing import Process, cpu_count
 # Parse the arguments for accretion calculation
 if True:
     parser=argparse.ArgumentParser()
-    parser.add_argument('-detailed',type=int, default=1,
-                        help='Flag: generate detailed (rather than FOF) accretion data')    
-    parser.add_argument('-compression',type=int, default=1,
-                        help='Flag: compress the resulting hdf5 datasets')
+
+    parser.add_argument('-partdata',type=int, default=1,
+                        help='Flag: write particle data for each halo')
     parser.add_argument('-snap', type=int,
                         help='snap to calculate accretion for')
     parser.add_argument('-pre', type=int,default=1,
@@ -57,30 +56,26 @@ if True:
                         help='halo index list upper limit (for testing, -1=all, not test)')
     parser.add_argument('-gen_ad', type=int,default=1,
                         help='Flag: generate accretion data')
-    parser.add_argument('-sum_ad', type=int,default=1,
-                        help='Flag: sum the generated accretion data')
     parser.add_argument('-np_use', type=int, default=1,
                         help='number of processes to use')    
     parser.add_argument('-np_calc', type=int, default=1,
                         help='number of processes for accretion calc')
     
-    detailed=bool(parser.parse_args().detailed)
-    compression=bool(parser.parse_args().compression)
+    partdata=bool(parser.parse_args().partdata)
     snap = parser.parse_args().snap
     pre_depth=parser.parse_args().pre
     post_depth=parser.parse_args().post
     halo_index_list_lo=parser.parse_args().hil_lo
     halo_index_list_hi=parser.parse_args().hil_hi
     gen_ad=bool(parser.parse_args().gen_ad)
-    sum_ad=bool(parser.parse_args().sum_ad)
     n_processes_use = parser.parse_args().np_use
     n_processes_calc = parser.parse_args().np_calc
     
     print()
     print('**********************************************************************************************************************')
     print('Arguments parsed:')
-    print(f'Generate accretion data: {gen_ad}, sum accretion data: {sum_ad} (at snap {snap})')
-    print(f'Detailed accretion data: {detailed} (with n_processes(calc): {n_processes_calc}, compress: {compression}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
+    print(f'Generate accretion data: {gen_ad} (at snap {snap})')
+    print(f'with n_processes(calc): {n_processes_calc}, write particle data: {partdata}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
     print('**********************************************************************************************************************')
     print()
 
@@ -101,16 +96,11 @@ if True:
         halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes_calc,test=test)
 
     # Determine output directory for this calculation
-    if detailed:
-        if test:
-            calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}_test/'
-        else:
-            calc_dir=f'acc_data/detailed_pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}/'
+
+    if test:
+        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}_test/'
     else:
-        if test:
-            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}_test/'
-        else:
-            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}/'
+        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}/'
 
     output_dir=calc_dir+f'snap_{str(snap).zfill(3)}/'
 
@@ -128,15 +118,12 @@ if gen_ad:
 
     # Multiprocessing arguments
     processes=[]
-    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'compression':compression} for iprocess in range(n_processes_calc)]
+    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'write_partdata':partdata} for iprocess in range(n_processes_calc)]
 
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
             print(f'Starting process {iprocess}')
-            if detailed:
-                p=Process(target=gen_accretion_data_detailed_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
-            else:
-                p=Process(target=gen_accretion_data_fof_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            p=Process(target=gen_accretion_data_detailed_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
             processes.append(p)
             p.start()
         for p in processes:
@@ -145,21 +132,8 @@ if gen_ad:
     t2_acc=time.time()
 
 
-############ 2. SUM ACCRETION DATA ############
-# This is run in serial, based on the files generated above. 
-# Here, we sum the accretion data to create a database of 
-# accretion rates (of various types) for all halos in the simulation.
 
-if sum_ad:
-    t1_sum=time.time()
-
-    snap_calcdir=calc_dir+f'snap_{str(snap).zfill(3)}/'
-    postprocess_accretion_data(base_halo_data,path=snap_calcdir)
-
-    t2_sum=time.time()
-
-
-############ 4. PRINT PERFORMANCE ############
+############ PRINT PERFORMANCE ############
 # Print performance of above.
 
 print()
@@ -167,11 +141,8 @@ print('******************************************************')
 print()
 
 if gen_ad:
-    print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc} sec')
-if sum_ad:
-    print(f'Summed accretion data for snap {snap} in {t2_sum-t1_sum} sec')
+    print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc:.2f} sec')
 
-    
 print()
 print('******************************************************')
 print()

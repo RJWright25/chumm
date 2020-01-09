@@ -16,8 +16,10 @@
 #   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
                                                                                                                                                                   
                                                                                                                                                                   
-# GenData-PartData.py - Script to run the accretion data algorithm. 
+# GenData-AccData-run.py - Script to run the accretion algorithm. 
 # Author: RUBY WRIGHT 
+
+# Submit script for acc data
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -40,20 +42,18 @@ email=True
 wall_time="0-04:00:00"
 
 #multiprocessing
-num_processes_calc=16
+num_processes_calc=1
 num_processes_use=1
 total_mem_perprocess=8#GB
 
 #calc
-detailed=1
-compression=1
+partdata=1
 snaps=[27]
 pre=1
 post=1
-gen_ad=0
-sum_ad=1
-hil_lo=-1
-hil_hi=-1
+gen_ad=1
+hil_lo=100
+hil_hi=105
 
 if hil_lo==-1:
     test=False
@@ -95,7 +95,7 @@ if slurm:
             jobfile.writelines(f"date\n")
             jobfile.writelines(f"echo CPU DETAILS\n")
             jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script} -detailed {detailed} -compression {compression} -np_use {num_processes_use} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -sum_ad {sum_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+            jobfile.writelines(f"python {run_script}  -partdata {partdata} -np_use {num_processes_use} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
             jobfile.writelines(f"echo JOB END TIME\n")
             jobfile.writelines(f"date\n")
         jobfile.close()
@@ -104,4 +104,4 @@ if slurm:
 else:
     # Loop through desired calcs and submit
     for snap in snaps:
-        os.system(f"python {run_script} -detailed {detailed} -compression {compression} -np_use {num_processes_use} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -sum_ad {sum_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+        os.system(f"python {run_script}  -partdata {partdata} -np_use {num_processes_use} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
