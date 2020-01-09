@@ -44,6 +44,8 @@ if True:
 
     parser.add_argument('-partdata',type=int, default=1,
                         help='Flag: write particle data for each halo')
+    parser.add_argument('-outflow',type=int, default=0,
+                        help='Flag: include outflow data for each halo')
     parser.add_argument('-snap', type=int,
                         help='snap to calculate accretion for')
     parser.add_argument('-pre', type=int,default=1,
@@ -62,6 +64,7 @@ if True:
                         help='number of processes for accretion calc')
     
     partdata=bool(parser.parse_args().partdata)
+    outflow=bool(parser.parse_args().outflow)
     snap = parser.parse_args().snap
     pre_depth=parser.parse_args().pre
     post_depth=parser.parse_args().post
@@ -75,7 +78,7 @@ if True:
     print('**********************************************************************************************************************')
     print('Arguments parsed:')
     print(f'Generate accretion data: {gen_ad} (at snap {snap})')
-    print(f'with n_processes(calc): {n_processes_calc}, write particle data: {partdata}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
+    print(f'with n_processes(calc): {n_processes_calc}, write particle data: {partdata}, include outflows: {outflow}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
     print('**********************************************************************************************************************')
     print()
 
@@ -118,7 +121,7 @@ if gen_ad:
 
     # Multiprocessing arguments
     processes=[]
-    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'write_partdata':partdata} for iprocess in range(n_processes_calc)]
+    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'write_partdata':partdata,'outflow':outflow} for iprocess in range(n_processes_calc)]
 
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
