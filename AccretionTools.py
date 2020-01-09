@@ -714,13 +714,20 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
             integrated_output_hdf5[output_group].create_group(itype_key)
             for halo_defname in halo_defnames:
                 integrated_output_hdf5[output_group][itype_key].create_group(halo_defname)
+                if 'FOF' in halo_defname:
+                    datasets=output_datasets[output_group]
+                    processedgroups=output_processedgroups
+                else:
+                    datasets=['Gross']
+                    processedgroups=['Total']
+
                 #both calculations - each Vmax cut
                 for ivmax_fac, vmax_fac in enumerate(vmax_facs):
                     ivmax_key=f'vmax_fac{ivmax_fac+1}'
                     integrated_output_hdf5[output_group][itype_key][halo_defname].create_group(ivmax_key);integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
-                    for processedgroup in output_processedgroups:
+                    for processedgroup in processedgroups:
                         integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].create_group(processedgroup)
-                        for dataset in output_datasets[output_group]:
+                        for dataset in datasets:
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset('All_'+dataset+'_DeltaM_In',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset('All_'+dataset+'_DeltaN_In',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset('Stable_'+dataset+'_DeltaM_In',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.int16)
@@ -753,8 +760,8 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                         for ihalo_hdf5_outkey in ihalo_hdf5_outkeys: del ihalo_hdf5['Outflow'][f'PartType{itype}'][ihalo_hdf5_inkey]
                         for ihalo_hdf5_mdkey in ihalo_hdf5_inkeys: del ihalo_hdf5['Metadata'][f'PartType{itype}'][ihalo_hdf5_mdkey]
         
-        # try:     # This catches any exceptions for a given halo and prevents the code from crashing 
-        if True:
+        try:     # This catches any exceptions for a given halo and prevents the code from crashing 
+            # if True:
             ########################################################################################################################################
             ###################################################### ihalo PRE-PROCESSING ############################################################
             ########################################################################################################################################
@@ -1055,15 +1062,15 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                                     idset_key=dataset
                                     origin_mask=ihalo_itype_inflow_origin_masks[dataset]
                                     
-                                    # masks=[idef_mask,ivmax_mask,iprocessed_mask,origin_mask]
-                                    # masksname=[halo_defname,ivmax_key,processedgroup,dataset]
-                                    # if itype==0 and 'FOF' in halo_defname:
-                                    #     print(f'Calculation: {masksname}')
-                                    #     for depth in range(len(masks)):
-                                    #         print(masksname[:depth+1])
-                                    #         running_mask=np.logical_and.reduce(masks[:depth+1])
-                                    #         print(np.sum(running_mask))
-                                    #         # print(len(np.where(running_mask)[0]))
+                                    masks=[idef_mask,ivmax_mask,iprocessed_mask,origin_mask]
+                                    masksname=[halo_defname,ivmax_key,processedgroup,dataset]
+                                    if itype==0 and 'SO' in halo_defname:
+                                        print(f'Calculation: {masksname}')
+                                        for depth in range(len(masks)):
+                                            print(masksname[:depth+1])
+                                            running_mask=np.logical_and.reduce(masks[:depth+1])
+                                            print(np.sum(running_mask))
+                                            # print(len(np.where(running_mask)[0]))
 
                                     running_mask=np.logical_and.reduce([idef_mask,ivmax_mask,iprocessed_mask,origin_mask])
                                     stable_running_mask=np.logical_and(running_mask,stability_mask)
@@ -1106,8 +1113,8 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                     progress_file.write(f" \n")
                 progress_file.close()
 
-        # except: # Some other error in the main halo loop
-        else:
+        except: # Some other error in the main halo loop
+            # else:
             print(f'Skipping ihalo {ihalo_s2} - dont have the reason')
             with open(fname_log,"a") as progress_file:
                 progress_file.write(f"Skipping ihalo {ihalo_s2} - unknown reason ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
