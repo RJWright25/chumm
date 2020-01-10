@@ -774,7 +774,7 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                         for ihalo_hdf5_outkey in ihalo_hdf5_outkeys: del ihalo_hdf5['Outflow'][f'PartType{itype}'][ihalo_hdf5_inkey]
                         for ihalo_hdf5_mdkey in ihalo_hdf5_inkeys: del ihalo_hdf5['Metadata'][f'PartType{itype}'][ihalo_hdf5_mdkey]
         
-        try:     # This catches any exceptions for a given halo and prevents the code from crashing 
+        if True:     # This catches any exceptions for a given halo and prevents the code from crashing 
             # try:
             ########################################################################################################################################
             ###################################################### ihalo PRE-PROCESSING ############################################################
@@ -860,9 +860,9 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                 #get cube for each snap
                 for snap in snaps:
                     ihalo_EAGLE_snap=read_eagle.EagleSnapshot(Part_Data_FilePaths[str(snap)])
-                    ihalo_EAGLE_snap.select_region(xmin=ihalo_com_comoving[str(snap)][0]-ihalo_cuberadius_comoving[str(snap)],xmax=ihalo_com_comoving[str(snap)][0]+ihalo_cuberadius_comoving[str(snap)],
-                                                ymin=ihalo_com_comoving[str(snap)][1]-ihalo_cuberadius_comoving[str(snap)],ymax=ihalo_com_comoving[str(snap)][1]+ihalo_cuberadius_comoving[str(snap)],
-                                                zmin=ihalo_com_comoving[str(snap)][2]-ihalo_cuberadius_comoving[str(snap)],zmax=ihalo_com_comoving[str(snap)][2]+ihalo_cuberadius_comoving[str(snap)])
+                    ihalo_EAGLE_snap.select_region(xmin=ihalo_com_comoving[str(snap)][0][0]-ihalo_cuberadius_comoving[str(snap)],xmax=ihalo_com_comoving[str(snap)][0][0]+ihalo_cuberadius_comoving[str(snap)],
+                                                ymin=ihalo_com_comoving[str(snap)][0][1]-ihalo_cuberadius_comoving[str(snap)],ymax=ihalo_com_comoving[str(snap)][0][1]+ihalo_cuberadius_comoving[str(snap)],
+                                                zmin=ihalo_com_comoving[str(snap)][0][2]-ihalo_cuberadius_comoving[str(snap)],zmax=ihalo_com_comoving[str(snap)][0][2]+ihalo_cuberadius_comoving[str(snap)])
                     ihalo_EAGLE_types=[]
                     #get data for each parttype and add to running ihalo_cube_particles
                     for itype in PartTypes:       
@@ -1315,7 +1315,7 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                     progress_file.write(f" \n")
                 progress_file.close()
 
-        except: # Some other error in the main halo loop
+        else: # Some other error in the main halo loop
             # except:
             print(f'Skipping ihalo {ihalo_s2} - dont have the reason')
             with open(fname_log,"a") as progress_file:
