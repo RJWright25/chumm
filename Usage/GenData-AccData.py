@@ -57,9 +57,7 @@ if True:
     parser.add_argument('-hil_hi', type=int,default=-1,
                         help='halo index list upper limit (for testing, -1=all, not test)')
     parser.add_argument('-gen_ad', type=int,default=1,
-                        help='Flag: generate accretion data')
-    parser.add_argument('-np_use', type=int, default=1,
-                        help='number of processes to use')    
+                        help='Flag: generate accretion data')  
     parser.add_argument('-np_calc', type=int, default=1,
                         help='number of processes for accretion calc')
     
@@ -71,14 +69,13 @@ if True:
     halo_index_list_lo=parser.parse_args().hil_lo
     halo_index_list_hi=parser.parse_args().hil_hi
     gen_ad=bool(parser.parse_args().gen_ad)
-    n_processes_use = parser.parse_args().np_use
-    n_processes_calc = parser.parse_args().np_calc
+    n_processes = parser.parse_args().np_calc
     
     print()
     print('**********************************************************************************************************************')
     print('Arguments parsed:')
     print(f'Generate accretion data: {gen_ad} (at snap {snap})')
-    print(f'with n_processes(calc): {n_processes_calc}, write particle data: {partdata}, include outflows: {outflow}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
+    print(f'with n_processes: {n_processes}, write particle data: {partdata}, include outflows: {outflow}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
     print('**********************************************************************************************************************')
     print()
 
@@ -92,18 +89,18 @@ if True:
     if halo_index_list_lo==-1:
         test=False
         halo_index_list_massordered=np.argsort(base_halo_data[snap]["Mass_200crit"])[::-1]
-        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered,n=n_processes_calc,test=test)
+        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered,n=n_processes,test=test)
     else:
         test=True
         halo_index_list=list(range(halo_index_list_lo,halo_index_list_hi))
-        halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes_calc,test=test)
+        halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes,test=test)
 
     # Determine output directory for this calculation
 
     if test:
-        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}_test/'
+        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
     else:
-        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes_calc).zfill(2)}/'
+        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}/'
 
     output_dir=calc_dir+f'snap_{str(snap).zfill(3)}/'
 
@@ -121,7 +118,7 @@ if gen_ad:
 
     # Multiprocessing arguments
     processes=[]
-    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'write_partdata':partdata,'outflow':outflow} for iprocess in range(n_processes_calc)]
+    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'write_partdata':partdata,'outflow':outflow} for iprocess in range(n_processes)]
 
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):

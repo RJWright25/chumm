@@ -774,7 +774,7 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                         for ihalo_hdf5_outkey in ihalo_hdf5_outkeys: del ihalo_hdf5['Outflow'][f'PartType{itype}'][ihalo_hdf5_inkey]
                         for ihalo_hdf5_mdkey in ihalo_hdf5_inkeys: del ihalo_hdf5['Metadata'][f'PartType{itype}'][ihalo_hdf5_mdkey]
         
-        if True:     # This catches any exceptions for a given halo and prevents the code from crashing 
+        try:     # This catches any exceptions for a given halo and prevents the code from crashing 
             # try:
             ########################################################################################################################################
             ###################################################### ihalo PRE-PROCESSING ############################################################
@@ -808,9 +808,9 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                 for isnap,snap in enumerate(snaps):
                     ihalo_isnap=ihalo_indices[str(snap)]
                     if ihalo_isnap>=0:
-                        ihalo_metadata[f'snap{isnap+1}_com']=[base_halo_data[snap]['Xc'][ihalo_indices[str(snap)]],base_halo_data[snap]['Yc'][ihalo_indices[str(snap)]],base_halo_data[snap]['Zc'][ihalo_indices[str(snap)]]]
-                        ihalo_metadata[f'snap{isnap+1}_cminpot']=[base_halo_data[snap]['Xcminpot'][ihalo_indices[str(snap)]],base_halo_data[snap]['Ycminpot'][ihalo_indices[str(snap)]],base_halo_data[snap]['Zcminpot'][ihalo_indices[str(snap)]]]
-                        ihalo_metadata[f'snap{isnap+1}_vcom']=[base_halo_data[snap]['VXc'][ihalo_indices[str(snap)]],base_halo_data[snap]['VYc'][ihalo_indices[str(snap)]],base_halo_data[snap]['VZc'][ihalo_indices[str(snap)]]]
+                        ihalo_metadata[f'snap{isnap+1}_com']=np.array([base_halo_data[snap]['Xc'][ihalo_indices[str(snap)]],base_halo_data[snap]['Yc'][ihalo_indices[str(snap)]],base_halo_data[snap]['Zc'][ihalo_indices[str(snap)]]],ndmin=2)
+                        ihalo_metadata[f'snap{isnap+1}_cminpot']=np.array([base_halo_data[snap]['Xcminpot'][ihalo_indices[str(snap)]],base_halo_data[snap]['Ycminpot'][ihalo_indices[str(snap)]],base_halo_data[snap]['Zcminpot'][ihalo_indices[str(snap)]]],ndmin=2)
+                        ihalo_metadata[f'snap{isnap+1}_vcom']=np.array([base_halo_data[snap]['VXc'][ihalo_indices[str(snap)]],base_halo_data[snap]['VYc'][ihalo_indices[str(snap)]],base_halo_data[snap]['VZc'][ihalo_indices[str(snap)]]],ndmin=2)
                         ihalo_metadata[f'snap{isnap+1}_R_200crit']=base_halo_data[snap]['R_200crit'][ihalo_indices[str(snap)]]
                         ihalo_metadata[f'snap{isnap+1}_R_200mean']=base_halo_data[snap]['R_200mean'][ihalo_indices[str(snap)]]
                         ihalo_metadata[f'snap{isnap+1}_Mass_200crit']=base_halo_data[snap]['Mass_200crit'][ihalo_indices[str(snap)]]*10**10
@@ -1315,7 +1315,7 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                     progress_file.write(f" \n")
                 progress_file.close()
 
-        else: # Some other error in the main halo loop
+        except: # Some other error in the main halo loop
             # except:
             print(f'Skipping ihalo {ihalo_s2} - dont have the reason')
             with open(fname_log,"a") as progress_file:

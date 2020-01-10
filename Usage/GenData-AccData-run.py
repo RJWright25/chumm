@@ -42,7 +42,6 @@ wall_time="0-04:00:00"
 
 #multiprocessing
 num_processes_calc=1
-num_processes_use=1
 total_mem_perprocess=8#GB
 
 #calc
