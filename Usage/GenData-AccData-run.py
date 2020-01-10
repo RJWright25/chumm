@@ -46,14 +46,14 @@ total_mem_perprocess=8#GB
 
 #calc
 partdata=0
-outflow=0
+outflow=1
 snaps=[27]
 pre=1
 post=1
 gen_ad=1
 col_ad=1
 hil_lo=100
-hil_hi=101
+hil_hi=102
 
 if hil_lo==-1:
     test=False

@@ -1373,13 +1373,17 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
     print('Copying over datasets ...')
     t1_dsets=time.time()
+    collated_datasets={dataset:np.zeros(total_num_halos)+np.nan for dataset in integrated_datasets_list}
+
     for accfname in accfnames:
         accfile=h5py.File(accfname,'r')
         accfile_ihalo_list=accfile['Integrated']['ihalo_list'].value.astype(int)
         for integrated_dataset in integrated_datasets_list:
             accfile_dset_val=accfile[integrated_dataset].value
-            for iihalo,ihalo in enumerate(accfile_ihalo_list):
-                outfile[integrated_dataset][ihalo]=accfile_dset_val[iihalo]
+            collated_datasets[integrated_dataset][(accfile_ihalo_list,)]=accfile_dset_val
+
+    for integrated_dataset in integrated_datasets_list:
+        outfile[integrated_dataset][:]=collated_datasets[integrated_dataset]
 
     t2_dsets=time.time()
     print(f'Done copying over datasets in {t2_dsets-t1_dsets:.2f} sec')
