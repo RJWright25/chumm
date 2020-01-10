@@ -774,7 +774,7 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                         for ihalo_hdf5_outkey in ihalo_hdf5_outkeys: del ihalo_hdf5['Outflow'][f'PartType{itype}'][ihalo_hdf5_inkey]
                         for ihalo_hdf5_mdkey in ihalo_hdf5_inkeys: del ihalo_hdf5['Metadata'][f'PartType{itype}'][ihalo_hdf5_mdkey]
         
-        if True:     # This catches any exceptions for a given halo and prevents the code from crashing 
+        try:     # This catches any exceptions for a given halo and prevents the code from crashing 
             # try:
             ########################################################################################################################################
             ###################################################### ihalo PRE-PROCESSING ############################################################
@@ -1315,7 +1315,7 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                     progress_file.write(f" \n")
                 progress_file.close()
 
-        else: # Some other error in the main halo loop
+        except: # Some other error in the main halo loop
             # except:
             print(f'Skipping ihalo {ihalo_s2} - dont have the reason')
             with open(fname_log,"a") as progress_file:
