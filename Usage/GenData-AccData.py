@@ -58,6 +58,8 @@ if True:
                         help='halo index list upper limit (for testing, -1=all, not test)')
     parser.add_argument('-gen_ad', type=int,default=1,
                         help='Flag: generate accretion data')  
+    parser.add_argument('-col_ad', type=int,default=1,
+                        help='Flag: collate accretion data')  
     parser.add_argument('-np_calc', type=int, default=1,
                         help='number of processes for accretion calc')
     
@@ -69,6 +71,7 @@ if True:
     halo_index_list_lo=parser.parse_args().hil_lo
     halo_index_list_hi=parser.parse_args().hil_hi
     gen_ad=bool(parser.parse_args().gen_ad)
+    col_ad=bool(parser.parse_args().col_ad)
     n_processes = parser.parse_args().np_calc
     
     print()
@@ -123,7 +126,7 @@ if gen_ad:
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
             print(f'Starting process {iprocess}')
-            p=Process(target=gen_accretion_data_detailed_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            p=Process(target=gen_accretion_data_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
             processes.append(p)
             p.start()
         for p in processes:
@@ -132,6 +135,14 @@ if gen_ad:
     t2_acc=time.time()
 
 
+############ 2. COLLATE ACCRETION DATA ############
+# This is run in serial, collates the ffiles generated above. 
+
+if col_ad:
+    t1_col=time.time() 
+    output_dir=calc_dir+f'snap_{str(snap).zfill(3)}/'
+    postprocess_accretion_data_serial(base_halo_data,output_dir)        
+    t2_col=time.time()
 
 ############ PRINT PERFORMANCE ############
 # Print performance of above.
@@ -142,6 +153,9 @@ print()
 
 if gen_ad:
     print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc:.2f} sec')
+
+if gen_ad:
+    print(f'Collated accretion data for snap {snap} in {t2_col-t1_col:.2f} sec')
 
 print()
 print('******************************************************')

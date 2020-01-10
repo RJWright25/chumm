@@ -51,6 +51,7 @@ snaps=[27]
 pre=1
 post=1
 gen_ad=1
+col_ad=1
 hil_lo=100
 hil_hi=101
 
@@ -94,7 +95,7 @@ if slurm:
             jobfile.writelines(f"date\n")
             jobfile.writelines(f"echo CPU DETAILS\n")
             jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+            jobfile.writelines(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
             jobfile.writelines(f"echo JOB END TIME\n")
             jobfile.writelines(f"date\n")
         jobfile.close()
@@ -103,4 +104,4 @@ if slurm:
 else:
     # Loop through desired calcs and submit
     for snap in snaps:
-        os.system(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+        os.system(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")

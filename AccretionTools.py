@@ -341,11 +341,11 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
     
 ########################### GENERATE DETAILED ACCRETION DATA ###########################
 
-def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,outflow=False,write_partdata=False):
+def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,outflow=False,write_partdata=False):
     
     """
 
-    gen_accretion_data_detailed_serial : function
+    gen_accretion_data_serial : function
 	----------
 
     Generate and save accretion rates for each particle type by comparing particle lists from VELOCIraptor FOF outputs. 
@@ -743,9 +743,9 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
                                 suffix='Out'
 
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaM_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
-                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
-                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaM_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.int16)
-                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.int16)
+                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.int32)
+                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaM_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.int32e)
 
     ####################################################################################################################################################################################
     ####################################################################################################################################################################################
@@ -1328,4 +1328,59 @@ def gen_accretion_data_detailed_serial(base_halo_data,snap=None,halo_index_list=
     #Finished with output file
     output_hdf5.close()
     return None
+
+def postprocess_accretion_data_serial(base_halo_data,path=None):
+    """collate the summed accretion data from above into one file"""
+    
+    if not path.endswith('/'):
+        path=path+'/'
+
+    snapname=path.split('/')[-2]
+    snap=int(snapname.split('_')[-1])
+
+    allfnames=os.listdir(path)
+    accfnames=[path+fname for fname in allfnames if ('AccretionData' in fname and 'All' not in fname)]
+    integrated_datasets_list=np.array(hdf5_struct(accfnames[-1]))
+    print(f'Total num datasets: {len(integrated_datasets_list)}')
+
+    total_num_halos=len(base_halo_data[snap]["ID"])
+    outname=accfnames[-1][:-10]+'_All.hdf5'
+    if os.path.exists(outname):
+        os.system(f"rm -rf {outname}")
+    outfile=h5py.File(outname,'w')
+    
+    print('Initialising output datasets ...')
+    t1_init=time.time()
+    for integrated_dataset in integrated_datasets_list:
+        groups=integrated_dataset.split('/')[1:-1]
+        running_group=''
+        for igroup,group in enumerate(groups):
+            if igroup==0:
+                try:
+                    outfile.create_group(group)
+                except:
+                    pass
+            else:
+                try:
+                    outfile[running_group].create_group(group)
+                except:
+                    pass
+            running_group=running_group+'/'+group
+        outfile[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
+    t2_init=time.time()
+    print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
+
+    print('Copying over datasets ...')
+    t1_dsets=time.time()
+    for accfname in accfnames:
+        accfile=h5py.File(accfname,'r')
+        accfile_ihalo_list=accfile['Integrated']['ihalo_list'].value.astype(int)
+        for integrated_dataset in integrated_datasets_list:
+            accfile_dset_val=accfile[integrated_dataset].value
+            for iihalo,ihalo in enumerate(accfile_ihalo_list):
+                outfile[integrated_dataset][ihalo]=accfile_dset_val[iihalo]
+                if integrated_dataset=="/Integrated/Inflow/PartType0/SO-r200_fac3/vmax_fac1/Total/Stable_Gross_DeltaM_In":
+                    print(accfile_dset_val[iihalo])
+    t2_dsets=time.time()
+    print(f'Done copying over datasets in {t2_dsets-t1_dsets:.2f} sec')
 
