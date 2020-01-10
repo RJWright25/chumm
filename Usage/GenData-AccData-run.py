@@ -81,8 +81,8 @@ if slurm:
             jobfile.writelines(f"#!/bin/sh\n")
             jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
             jobfile.writelines(f"#SBATCH --nodes=1\n")
-            jobfile.writelines(f"#SBATCH --ntasks-per-node={num_processes_use}\n")
-            jobfile.writelines(f"#SBATCH --mem={total_mem_perprocess*num_processes_use}GB\n")
+            jobfile.writelines(f"#SBATCH --ntasks-per-node={num_processes_calc}\n")
+            jobfile.writelines(f"#SBATCH --mem={total_mem_perprocess*num_processes_calc}GB\n")
             jobfile.writelines(f"#SBATCH --time={wall_time}\n")
             jobfile.writelines(f"#SBATCH --output=job_logs/{jobname}.out\n")
             jobfile.writelines(f"#SBATCH --error=job_logs/{jobname}.err\n")
@@ -94,7 +94,7 @@ if slurm:
             jobfile.writelines(f"date\n")
             jobfile.writelines(f"echo CPU DETAILS\n")
             jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_use {num_processes_use} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+            jobfile.writelines(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
             jobfile.writelines(f"echo JOB END TIME\n")
             jobfile.writelines(f"date\n")
         jobfile.close()
@@ -103,4 +103,4 @@ if slurm:
 else:
     # Loop through desired calcs and submit
     for snap in snaps:
-        os.system(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_use {num_processes_use} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+        os.system(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
