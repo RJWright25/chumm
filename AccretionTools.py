@@ -743,9 +743,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                                 suffix='Out'
 
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaM_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
-                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.int32)
+                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaM_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
-                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.int32e)
+                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN_{suffix}',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
 
     ####################################################################################################################################################################################
     ####################################################################################################################################################################################
@@ -1340,6 +1340,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
     allfnames=os.listdir(path)
     accfnames=[path+fname for fname in allfnames if ('AccretionData' in fname and 'All' not in fname)]
+    print(accfnames)
     integrated_datasets_list=np.array(hdf5_struct(accfnames[-1]))
     print(f'Total num datasets: {len(integrated_datasets_list)}')
 
@@ -1379,8 +1380,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
             accfile_dset_val=accfile[integrated_dataset].value
             for iihalo,ihalo in enumerate(accfile_ihalo_list):
                 outfile[integrated_dataset][ihalo]=accfile_dset_val[iihalo]
-                if integrated_dataset=="/Integrated/Inflow/PartType0/SO-r200_fac3/vmax_fac1/Total/Stable_Gross_DeltaM_In":
-                    print(accfile_dset_val[iihalo])
+
     t2_dsets=time.time()
     print(f'Done copying over datasets in {t2_dsets-t1_dsets:.2f} sec')
 
