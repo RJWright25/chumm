@@ -44,10 +44,16 @@ if True:
 
     parser.add_argument('-partdata',type=int, default=1,
                         help='Flag: write particle data for each halo')
-    parser.add_argument('-outflow',type=int, default=0,
-                        help='Flag: include outflow data for each halo')
+    parser.add_argument('-r200_facs_in',type=str, default="",
+                        help='list: which factors of r200 to calculate SO accretion to',)
+    parser.add_argument('-r200_facs_out',type=str, default="",
+                        help='list: which factors of r200 to calculate SO outflow from')
+    parser.add_argument('-vmax_facs_in',type=str, default="",
+                        help='list: which factors of vmax to cut accretion at')
+    parser.add_argument('-vmax_facs_out',type=str, default="",
+                        help='list: which factors of vmax to cut outflow at')                 
     parser.add_argument('-snap', type=int,
-                        help='snap to calculate accretion for')
+                        help='snap to calculate accretion/outflow for')
     parser.add_argument('-pre', type=int,default=1,
                         help='accretion snapshot gap')
     parser.add_argument('-post', type=int,default=1,
@@ -64,7 +70,23 @@ if True:
                         help='number of processes for accretion calc')
     
     partdata=bool(parser.parse_args().partdata)
-    outflow=bool(parser.parse_args().outflow)
+    try:
+        r200_facs_in=[float(fac) for fac in parser.parse_args().r200_facs_in.split(',')]
+    except:
+        r200_facs_in=[]
+    try:
+        r200_facs_out=[float(fac) for fac in parser.parse_args().r200_facs_out.split(',')]    
+    except:
+        r200_facs_out=[]
+    try:
+        vmax_facs_in=[float(fac) for fac in parser.parse_args().vmax_facs_in.split(',')]
+    except:
+        vmax_facs_in=[]
+    try:
+        vmax_facs_out=[float(fac) for fac in parser.parse_args().vmax_facs_out.split(',')]
+    except:
+        vmax_facs_out=[]
+
     snap = parser.parse_args().snap
     pre_depth=parser.parse_args().pre
     post_depth=parser.parse_args().post
@@ -78,7 +100,11 @@ if True:
     print('**********************************************************************************************************************')
     print('Arguments parsed:')
     print(f'Generate accretion data: {gen_ad} (at snap {snap})')
-    print(f'with n_processes: {n_processes}, write particle data: {partdata}, include outflows: {outflow}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
+    print(f'with n_processes: {n_processes}, write particle data: {partdata}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
+    print(f'with r200_facs_in = {r200_facs_in}')
+    print(f'with r200_facs_out = {r200_facs_out}')
+    print(f'with vmax_facs_in = {vmax_facs_in}')
+    print(f'with vmax_facs_out = {vmax_facs_out}')
     print('**********************************************************************************************************************')
     print()
 
@@ -121,7 +147,16 @@ if gen_ad:
 
     # Multiprocessing arguments
     processes=[]
-    kwargs=[{'snap':snap,'halo_index_list':halo_index_lists[iprocess],'pre_depth':pre_depth,'post_depth':post_depth,'write_partdata':partdata,'outflow':outflow} for iprocess in range(n_processes)]
+    kwargs=[{'snap':snap,
+             'halo_index_list':halo_index_lists[iprocess],
+             'pre_depth':pre_depth,
+             'post_depth':post_depth,
+             'write_partdata':partdata,
+             'r200_facs_in':r200_facs_in,
+             'r200_facs_out':r200_facs_out,
+             'vmax_facs_in':vmax_facs_in,
+             'vmax_facs_out':vmax_facs_out} 
+             for iprocess in range(n_processes)]
 
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
@@ -154,7 +189,7 @@ print()
 if gen_ad:
     print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc:.2f} sec')
 
-if gen_ad:
+if col_ad:
     print(f'Collated accretion data for snap {snap} in {t2_col-t1_col:.2f} sec')
 
 print()

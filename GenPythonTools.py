@@ -304,7 +304,6 @@ def mask_wnans(array,indices):
                 pass
     return output_array
 
-
 def hdf5_struct(path):
     """return the structure of the hdf5 file"""
     popen=subprocess.Popen(f'h5dump -g Integrated -n {path}',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, universal_newlines=True)
@@ -312,5 +311,19 @@ def hdf5_struct(path):
     h5dump=[h5dump_dset[12:] for h5dump_dset in h5dump_raw if ('dataset' in h5dump_dset and 'Integrated' in h5dump_dset and 'ihalo_list' not in h5dump_dset)]
     return h5dump
 
-    
+def list_to_string(items,delimiter=','):
+    output=''
+    for iitem,item in enumerate(items):
+        if iitem==0:
+            idelim=''
+        else:
+            idelim=delimiter
+        if type(item)==float:
+            output=output+idelim+f'{item:.3f}'
+        else:
+            output=output+idelim+str(item)
+    if output=='':
+        output='None'
+    return output
+
 

@@ -32,6 +32,9 @@ else:
     chummdir='/home/rwright/CHUMM/'
 
 sys.path.append(chummdir)
+from GenPythonTools import *
+
+#accdata run script
 run_script=chummdir+'Usage/GenData-AccData.py'
 
 ##### CUSTOMIZE #####
@@ -46,10 +49,13 @@ total_mem_perprocess=8#GB
 
 #calc
 partdata=0
-outflow=1
 snaps=[27]
 pre=1
 post=1
+r200_facs_in=[0.125,0.25,0.375,0.5,0.75,1,1.5,2];r200_facs_in=list_to_string(r200_facs_in)
+r200_facs_out=[1];r200_facs_out=list_to_string(r200_facs_out)
+vmax_facs_in=[-1,0,0.125,0.25,0.375,0.5,0.75,1];vmax_facs_in=list_to_string(vmax_facs_in)
+vmax_facs_out=[0.125];vmax_facs_out=list_to_string(vmax_facs_out)
 gen_ad=1
 col_ad=1
 hil_lo=100
@@ -95,7 +101,7 @@ if slurm:
             jobfile.writelines(f"date\n")
             jobfile.writelines(f"echo CPU DETAILS\n")
             jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+            jobfile.writelines(f"python {run_script}  -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
             jobfile.writelines(f"echo JOB END TIME\n")
             jobfile.writelines(f"date\n")
         jobfile.close()
@@ -104,4 +110,4 @@ if slurm:
 else:
     # Loop through desired calcs and submit
     for snap in snaps:
-        os.system(f"python {run_script}  -partdata {partdata} -outflow {outflow} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+        os.system(f"python {run_script}  -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")

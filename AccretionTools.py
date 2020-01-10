@@ -339,9 +339,9 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
         infile_file.close()
     
-########################### GENERATE DETAILED ACCRETION DATA ###########################
+########################### GENERATE ACCRETION DATA ###########################
 
-def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,outflow=False,write_partdata=False):
+def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,vmax_facs_in=[-1],vmax_facs_out=[-1],r200_facs_in=[],r200_facs_out=[],write_partdata=False):
     
     """
 
@@ -482,6 +482,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     snap2=snap
     snap3=snap+post_depth
     snaps=[snap1,snap2,snap3]
+    snaps_FOF_only=[snap1,snap2]
     
     # Processing the desired halo index list
     if halo_index_list==None:
@@ -505,8 +506,24 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     halo_index_list_snap3=[find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=post_depth) for ihalo in halo_index_list_snap2]
 
     # Parameters for calculation
-    r200_facs={'Inflow':[0.125,0.25,0.375,0.5,0.75,1,1.5,2],'Outflow':[1]} # factors of r200 to calculate SO accretion/outflow to 
-    vmax_facs={'Inflow':[-1,0,0.125,0.25,0.375,0.5,0.75,1],'Outflow':[0.125]} # factors of ave_vmax to cut accretion/outflow for 
+    if r200_facs_in==[] and r200_facs_out==[]:
+        FOF_only=True
+    else:
+        FOF_only=False
+
+    if r200_facs_out==[] or vmax_facs_out==[]:
+        outflow=False
+    else:
+        outflow=True
+
+    r200_facs={'Inflow':r200_facs_in,'Outflow':r200_facs_out} # factors of r200 to calculate SO accretion/outflow to
+    if not vmax_facs_in==[]:
+        vmax_facs_in=np.concatenate([[-1],vmax_facs_in])
+    if not vmax_facs_out==[]:
+        vmax_facs_out=np.concatenate([[-1],vmax_facs_out])
+
+    vmax_facs={'Inflow':vmax_facs_in,'Outflow':vmax_facs_out} # factors of ave_vmax to cut accretion/outflow for 
+
 
     halo_defnames={}
     halo_defnames["Inflow"]=np.concatenate([['FOF-haloscale','FOF-subhaloscale'],['SO-r200_fac'+str(ir200_fac+1) for ir200_fac in range(len(r200_facs["Inflow"]))]])
@@ -660,13 +677,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     Part_Histories_Processed_L1_snap1[str(4)]=np.ones(Part_Histories_npart_snap1[str(4)]);Part_Histories_Processed_L1_snap1[str(5)]=np.ones(Part_Histories_npart_snap1[str(5)])
 
     #Load in particle histories: snap 2
-    print(f'Retrieving & organising particle histories for snap = {snap2} ...')
-    Part_Histories_File_snap2=h5py.File("part_histories/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
-    Part_Histories_IDs_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'].value for parttype in PartTypes}
-    Part_Histories_Index_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'].value for parttype in PartTypes}
-    Part_Histories_HostStructure_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/HostStructure'].value for parttype in PartTypes}
-    Part_Histories_npart_snap2={str(parttype):len(Part_Histories_IDs_snap2[str(parttype)]) for parttype in PartTypes}
+    # print(f'Retrieving & organising particle histories for snap = {snap2} ...')
+    # Part_Histories_File_snap2=h5py.File("part_histories/PartHistory_"+str(snap2).zfill(3)+"_"+run_outname+".hdf5",'r')
+    # Part_Histories_IDs_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIDs'].value for parttype in PartTypes}
+    # Part_Histories_Index_snap2={str(parttype):Part_Histories_File_snap2["PartType"+str(parttype)+'/ParticleIndex'].value for parttype in PartTypes}
+    # Part_Histories_npart_snap2={str(parttype):len(Part_Histories_IDs_snap2[str(parttype)]) for parttype in PartTypes}
     
+
     print()
     t2_init=time.time()
     print('*********************************************************')
@@ -703,8 +720,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     integrated_output_hdf5=output_hdf5.create_group('Integrated')
     integrated_output_hdf5.create_dataset('ihalo_list',data=halo_index_list_snap2)
 
-    #inflow: all, from field, from CGM, or from other structure (merger)
-    #outflow: all, to field, to CGM, or to other structure (transfer)
+    #inflow: all, from field, or from other structure (transfer)
+    #outflow: all
     output_processedgroups=['Total','Unprocessed','Processed']
 
     output_datasets={'Inflow':['Gross','Field','Transfer'],
@@ -774,7 +791,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                         for ihalo_hdf5_outkey in ihalo_hdf5_outkeys: del ihalo_hdf5['Outflow'][f'PartType{itype}'][ihalo_hdf5_inkey]
                         for ihalo_hdf5_mdkey in ihalo_hdf5_inkeys: del ihalo_hdf5['Metadata'][f'PartType{itype}'][ihalo_hdf5_mdkey]
         
-        try:     # This catches any exceptions for a given halo and prevents the code from crashing 
+        if True:     # This catches any exceptions for a given halo and prevents the code from crashing 
             # try:
             ########################################################################################################################################
             ###################################################### ihalo PRE-PROCESSING ############################################################
@@ -863,6 +880,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     ihalo_EAGLE_snap.select_region(xmin=ihalo_com_comoving[str(snap)][0][0]-ihalo_cuberadius_comoving[str(snap)],xmax=ihalo_com_comoving[str(snap)][0][0]+ihalo_cuberadius_comoving[str(snap)],
                                                 ymin=ihalo_com_comoving[str(snap)][0][1]-ihalo_cuberadius_comoving[str(snap)],ymax=ihalo_com_comoving[str(snap)][0][1]+ihalo_cuberadius_comoving[str(snap)],
                                                 zmin=ihalo_com_comoving[str(snap)][0][2]-ihalo_cuberadius_comoving[str(snap)],zmax=ihalo_com_comoving[str(snap)][0][2]+ihalo_cuberadius_comoving[str(snap)])
+        
+                    
                     ihalo_EAGLE_types=[]
                     #get data for each parttype and add to running ihalo_cube_particles
                     for itype in PartTypes:       
@@ -920,14 +939,13 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 
                 print(f'Inflow candidates for ihalo {ihalo_s2}: n = {ihalo_combined_inflow_candidate_count}')
                 for isnap,snap in enumerate(snaps):
-
                     #find the indices of the IDs in the (sorted) datacube for this halo (will return nan if not in the cube) - outputs sorted cube index
                     ihalo_combined_inflow_candidate_IDindices_temp=binary_search(ihalo_combined_inflow_candidate_IDs_unique,sorted_list=ihalo_cube_particles[str(snap)]['SortedIDs'],check_entries=True)
                     #use the indices from the sorted IDs above to extract the cube indices (will return nan if not in the cube) - outputs raw cube index
                     ihalo_combined_inflow_candidate_cubeindices[str(snap)]=mask_wnans(array=ihalo_cube_particles[str(snap)]['SortedIndices'],indices=ihalo_combined_inflow_candidate_IDindices_temp)
                     
                     #for each snap, grab detailed particle data
-                    for field in ['Coordinates','Velocity','Mass','ParticleIDs','ParticleTypes']:
+                    for field in np.concatenate([Part_Data_fields,['ParticleTypes']]):
                         ihalo_combined_inflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_cube_particles[str(snap)][field],indices=ihalo_combined_inflow_candidate_cubeindices[str(snap)])
                         
                     #derive other cubdata outputs
@@ -941,7 +959,9 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
 
                 #include average radial velocity
                 ihalo_combined_inflow_candidate_data[f'ave_vrad_com']=(ihalo_combined_inflow_candidate_data[f'snap2_rabs_com']-ihalo_combined_inflow_candidate_data[f'snap1_rabs_com'])/dt*vel_conversion
+                
                 t2_cubeoutputs=time.time()
+                print(f'Cube indexing took {t2_cubeoutputs-t1_cubeoutputs:.2f} sec')
 
                 # 2. OUTPUTS FROM FOF Data: InFOF, Bound
                 t1_fofoutputs=time.time()
@@ -1014,7 +1034,11 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                             ihalo_hdf5['Inflow'][itype_key].create_dataset(f'snap2_{ihalo_snap2_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap2_{ihalo_snap2_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_inflow_output],compression=compression)
                         
                         #Rest of fields: snap 3
-                        ihalo_snap3_inflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost",'rabs_com']
+                        if not FOF_only:
+                            ihalo_snap3_inflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost",'rabs_com']
+                        else:
+                            ihalo_snap3_inflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost"]
+
                         for ihalo_snap3_inflow_output in ihalo_snap3_inflow_outputs:
                             ihalo_hdf5['Inflow'][itype_key].create_dataset(f'snap3_{ihalo_snap3_inflow_output}',data=ihalo_combined_inflow_candidate_data[f'snap3_{ihalo_snap3_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap3_inflow_output],compression=compression)
 
@@ -1120,6 +1144,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     ihalo_cube_rcut_snap1=np.where(ihalo_cube_r_snap1<ihalo_ave_R_200crit_physical)
                     #get the particle data of the particles within r200
                     ihalo_cube_outflow_candidate_data_snap1={field:ihalo_cube_particles[str(snap1)][field] for field in Part_Data_fields}
+
                     #get the particle data of the particles in the FOF
                     ihalo_fof_outflow_candidate_data_snap1={field:ihalo_fof_particles[str(snap1)][field] for field in FOF_Part_Data_fields}
                     #concatenate the IDs of the particles within r200 and the FOF
@@ -1130,7 +1155,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     ihalo_combined_outflow_candidate_count=len(ihalo_combined_outflow_candidate_IDs_unique)
                     t2_outflow_candidates=time.time()
 
-                    ############################## GRAB DATA FOR INFLOW CANDIDATES ##############################
+                    ############################## GRAB DATA FOR OUTFLOW CANDIDATES ##############################
                     #############################################################################################
                     ihalo_combined_outflow_candidate_data={}
 
@@ -1147,20 +1172,22 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                         ihalo_combined_outflow_candidate_cubeindices[str(snap)]=mask_wnans(array=ihalo_cube_particles[str(snap)]['SortedIndices'],indices=ihalo_combined_outflow_candidate_IDindices_temp)
                         
                         #for each snap, grab detailed particle data
-                        for field in ['Coordinates','Velocity','Mass','ParticleIDs','ParticleTypes']:
+                        for field in np.concatenate([Part_Data_fields,['ParticleTypes']]):
                             ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_{field}']=mask_wnans(array=ihalo_cube_particles[str(snap)][field],indices=ihalo_combined_outflow_candidate_cubeindices[str(snap)])
-                            
-                        #derive other cubedata outputs
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
-                        ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vtan_com']=np.sqrt(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com'])-np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']))
+                        
+                        if not FOF_only:
+                            #derive other cubedata outputs
+                            ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
+                            ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
+                            ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
+                            ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
+                            ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
+                            ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
+                            ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vtan_com']=np.sqrt(np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vabs_com'])-np.square(ihalo_combined_outflow_candidate_data[f'snap{isnap+1}_vrad_com']))
 
-                    #include average radial velocity
-                    ihalo_combined_outflow_candidate_data[f'ave_vrad_com']=(ihalo_combined_outflow_candidate_data[f'snap2_rabs_com']-ihalo_combined_outflow_candidate_data[f'snap1_rabs_com'])/dt*vel_conversion
+                    if not FOF_only:
+                        #include average radial velocity
+                        ihalo_combined_outflow_candidate_data[f'ave_vrad_com']=(ihalo_combined_outflow_candidate_data[f'snap2_rabs_com']-ihalo_combined_outflow_candidate_data[f'snap1_rabs_com'])/dt*vel_conversion
                     t2_cubeoutputs=time.time()
 
                     # 2. OUTPUTS FROM FOF Data: InFOF, Bound
@@ -1210,7 +1237,10 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                                 ihalo_hdf5['Outflow'][itype_key].create_dataset(f'snap2_{ihalo_snap2_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap2_{ihalo_snap2_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_outflow_output],compression=compression)
                             
                             #Rest of fields: snap 3
-                            ihalo_snap3_outflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost",'rabs_com']
+                            if not FOF_only:
+                                ihalo_snap3_outflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost",'rabs_com']
+                            else:
+                                ihalo_snap3_outflow_outputs=["Particle_InFOF","Particle_Bound","Particle_InHost"]
                             for ihalo_snap3_outflow_output in ihalo_snap3_outflow_outputs:
                                 ihalo_hdf5['Outflow'][itype_key].create_dataset(f'snap3_{ihalo_snap3_outflow_output}',data=ihalo_combined_outflow_candidate_data[f'snap3_{ihalo_snap3_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap3_outflow_output],compression=compression)
 
@@ -1315,7 +1345,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
                     progress_file.write(f" \n")
                 progress_file.close()
 
-        except: # Some other error in the main halo loop
+        else: # Some other error in the main halo loop
             # except:
             print(f'Skipping ihalo {ihalo_s2} - dont have the reason')
             with open(fname_log,"a") as progress_file:
@@ -1329,6 +1359,8 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     output_hdf5.close()
     return None
 
+########################### COLLATE DETAILED ACCRETION DATA ###########################
+
 def postprocess_accretion_data_serial(base_halo_data,path=None):
     """collate the summed accretion data from above into one file"""
     
@@ -1340,7 +1372,6 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
     allfnames=os.listdir(path)
     accfnames=[path+fname for fname in allfnames if ('AccretionData' in fname and 'All' not in fname)]
-    print(accfnames)
     integrated_datasets_list=np.array(hdf5_struct(accfnames[-1]))
     print(f'Total num datasets: {len(integrated_datasets_list)}')
 
@@ -1349,6 +1380,13 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     if os.path.exists(outname):
         os.system(f"rm -rf {outname}")
     outfile=h5py.File(outname,'w')
+
+    print('Carring over header ...')
+    outfile.create_group('Header')
+    header_keys=list(h5py.File(accfnames[-1])['Header'].attrs)
+    for header_key in header_keys:
+        outfile['Header'].attrs.create(header_key,data=h5py.File(accfnames[-1])['Header'].attrs[header_key])
+
     
     print('Initialising output datasets ...')
     t1_init=time.time()
