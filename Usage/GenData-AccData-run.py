@@ -44,7 +44,7 @@ email=True
 wall_time="0-04:00:00"
 
 #multiprocessing
-num_processes_calc=1
+num_processes_calc=12
 total_mem_perprocess=8#GB
 
 #calc
@@ -52,14 +52,14 @@ partdata=0
 snaps=[27]
 pre=1
 post=1
-r200_facs_in=[0.125,0.25,0.375,0.5,0.75,1,1.5,2];r200_facs_in=list_to_string(r200_facs_in)
-r200_facs_out=[1];r200_facs_out=list_to_string(r200_facs_out)
-vmax_facs_in=[-1,0,0.125,0.25,0.375,0.5,0.75,1];vmax_facs_in=list_to_string(vmax_facs_in)
-vmax_facs_out=[0.125];vmax_facs_out=list_to_string(vmax_facs_out)
-gen_ad=1
+r200_facs_in=[]; r200_facs_in=list_to_string(r200_facs_in)
+r200_facs_out=[]; r200_facs_out=list_to_string(r200_facs_out)
+vmax_facs_in=[0,0.125,0.25,0.375,0.5,0.75,1]; vmax_facs_in=list_to_string(vmax_facs_in)
+vmax_facs_out=[0.125]; vmax_facs_out=list_to_string(vmax_facs_out)
+gen_ad=0
 col_ad=1
-hil_lo=100
-hil_hi=102
+hil_lo=-1
+hil_hi=-1
 
 if hil_lo==-1:
     test=False

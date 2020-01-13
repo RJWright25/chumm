@@ -511,7 +511,7 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
     else:
         FOF_only=False
 
-    if r200_facs_out==[] or vmax_facs_out==[]:
+    if vmax_facs_out==[]:
         outflow=False
     else:
         outflow=True
@@ -738,19 +738,29 @@ def gen_accretion_data_serial(base_halo_data,snap=None,halo_index_list=None,pre_
         for itype in PartTypes:
             itype_key=f'PartType{itype}'
             integrated_output_hdf5[output_group].create_group(itype_key)
-            for halo_defname in halo_defnames[output_group]:
+            
+            for ihalo_defname,halo_defname in enumerate(sorted(halo_defnames[output_group])):
                 integrated_output_hdf5[output_group][itype_key].create_group(halo_defname)
-                if 'FOF' not in halo_defname or output_group=='Outflow':
+                if 'FOF' not in halo_defname: 
                     datasets=['Gross']
                     processedgroups=['Total']
+                    ir200_fac=int(halo_defname.split('fac')[-1])-1
+                    r200_fac=r200_facs[output_group][ir200_fac]
+                    integrated_output_hdf5[output_group][itype_key][halo_defname].attrs.create('R200_fac',data=r200_fac)
+
                 else:
                     datasets=output_datasets[output_group]
                     processedgroups=output_processedgroups
+
+                if output_group=='Outflow':
+                    datasets=['Gross']
+                    processedgroups=['Total']
 
                 #both calculations - each Vmax cut
                 for ivmax_fac, vmax_fac in enumerate(vmax_facs[output_group]):
                     ivmax_key=f'vmax_fac{ivmax_fac+1}'
                     integrated_output_hdf5[output_group][itype_key][halo_defname].create_group(ivmax_key);integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+                    integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
                     for processedgroup in processedgroups:
                         integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].create_group(processedgroup)
                         for dataset in datasets:
@@ -1402,8 +1412,12 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
             else:
                 try:
                     outfile[running_group].create_group(group)
+                    group_attrs=list(h5py.File(accfnames[-1])[running_group].attrs)
+                    for attr in group_attrs:
+                        outfile[running_group].attrs.create(attr,data=h5py.File(accfnames[-1])[running_group].attrs[attr])
                 except:
                     pass
+                
             running_group=running_group+'/'+group
         outfile[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
     t2_init=time.time()
