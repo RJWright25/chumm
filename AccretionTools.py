@@ -953,35 +953,53 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     output_hdf5.close()
     return None
 
+
 ########################### COLLATE DETAILED ACCRETION DATA ###########################
 
 def postprocess_accretion_data_serial(base_halo_data,path=None):
-    """collate the summed accretion data from above into one file"""
-    
+    """
+
+    postprocess_accretion_data_serial : function
+	----------
+
+    Collate the integrated accretion data from above into one file.
+
+	Parameters
+	----------
+    base_halo_data : list of dictionaries
+        The minimal halo data list of dictionaries previously generated ("B1" is sufficient)
+
+    path : str
+        The directory in which the accretion data exists.   
+
+    """
+
     if not path.endswith('/'):
         path=path+'/'
 
     snapname=path.split('/')[-2]
     snap=int(snapname.split('_')[-1])
 
+    # Read in the hdf5 data structure of outputs
     allfnames=os.listdir(path)
     accfnames=[path+fname for fname in allfnames if ('AccretionData' in fname and 'All' not in fname)]
     integrated_datasets_list=np.array(hdf5_struct(accfnames[-1]))
     print(f'Total num datasets: {len(integrated_datasets_list)}')
 
-    total_num_halos=len(base_halo_data[snap]["ID"])
+    # Initialise outputs
     outname=accfnames[-1][:-10]+'_All.hdf5'
     if os.path.exists(outname):
         os.system(f"rm -rf {outname}")
     outfile=h5py.File(outname,'w')
 
+    # Carry over header
     print('Carring over header ...')
     outfile.create_group('Header')
     header_keys=list(h5py.File(accfnames[-1])['Header'].attrs)
     for header_key in header_keys:
         outfile['Header'].attrs.create(header_key,data=h5py.File(accfnames[-1])['Header'].attrs[header_key])
 
-    
+    # Initialise output datasets
     print('Initialising output datasets ...')
     t1_init=time.time()
     for integrated_dataset in integrated_datasets_list:
@@ -1007,8 +1025,10 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     t2_init=time.time()
     print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
 
+    # Copy over datasets to correct indices
     print('Copying over datasets ...')
     t1_dsets=time.time()
+    total_num_halos=len(base_halo_data[snap]["ID"])
     collated_datasets={dataset:np.zeros(total_num_halos)+np.nan for dataset in integrated_datasets_list}
 
     for accfname in accfnames:
