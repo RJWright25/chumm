@@ -19,7 +19,7 @@
 # GenPythonTools.py - Miscellaneous python tools for use in the rest of the package. 
 # Author: RUBY WRIGHT 
 
-# PREAMBLE
+# Preamble
 import numpy as np
 import pandas
 import pickle as pickle

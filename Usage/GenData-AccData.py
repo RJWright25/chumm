@@ -19,7 +19,7 @@
 # GenData-AccData.py - Generation script for accretion data. 
 # Author: RUBY WRIGHT 
 
-# PREAMBLE
+# Preamble
 import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
@@ -125,7 +125,6 @@ if True:
         halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes,test=test)
 
     # Determine output directory for this calculation
-
     if test:
         calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
     else:
@@ -161,7 +160,7 @@ if gen_ad:
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
             print(f'Starting process {iprocess}')
-            p=Process(target=gen_accretion_data_serial, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            p=Process(target=gen_accretion_data_eagle, args=(base_halo_data,),kwargs=kwargs[iprocess])
             processes.append(p)
             p.start()
         for p in processes:
@@ -179,19 +178,3 @@ if col_ad:
     postprocess_accretion_data_serial(base_halo_data,output_dir)        
     t2_col=time.time()
 
-############ PRINT PERFORMANCE ############
-# Print performance of above.
-
-print()
-print('******************************************************')
-print()
-
-if gen_ad:
-    print(f'Generated accretion data for snap {snap} in {t2_acc-t1_acc:.2f} sec')
-
-if col_ad:
-    print(f'Collated accretion data for snap {snap} in {t2_col-t1_col:.2f} sec')
-
-print()
-print('******************************************************')
-print()

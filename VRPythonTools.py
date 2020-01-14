@@ -19,7 +19,7 @@
 # VRPythonTools.py - Variant/extension of VELOCIraptor python tools for accretion calculations.
 # Author: ELAHI+2019
 
-# PREAMBLE
+# Preamble
 from __future__ import print_function
 
 import sys,os,os.path,string,time,re,struct

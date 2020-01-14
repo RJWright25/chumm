@@ -19,28 +19,29 @@
 # GenData-HaloData-run.py - Script to run the generate halo data script.
 # Author: RUBY WRIGHT 
 
+# Preamble
 import warnings
 warnings.filterwarnings("ignore")
 import os
 import sys
 
+# Run script
 run_script='GenData-HaloData.py'
 
-#job
+# Job details
 slurm=True
 email=True
-total_mem=25#GB
 wall_time="0-04:00:00"
-
-#calc
 num_processes=1
-gen_bhd=0
+total_mem=25#GB
+
+# Algorithm details
+gen_bhd=1
 gen_dhd=1
 sum_dhd=1
 com_dhd=1
 
-####################
-# Get run info for outputs
+# Submit/ run
 filename=sys.argv[0]
 runcwd=os.getcwd()
 runname=runcwd.split('-')[-1]

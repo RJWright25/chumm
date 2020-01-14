@@ -19,9 +19,7 @@
 # GenData-PartData.py - Script to generate integrated particle histories for a given simulation.
 # Author: RUBY WRIGHT 
 
-# Halo data must first have been generated as per GenData-HaloData.py. 
-
-# PREAMBLE
+# Preamble
 import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
@@ -33,13 +31,14 @@ import argparse
 
 sys.path.append('/home/rwright/CHUMM/') # may need to specify
 sys.path.append('/Users/ruby/Documents/GitHub/CHUMM/') # may need to specify
-from STFTools import *
-from AccretionTools import *
-from VRPythonTools import *
 from GenPythonTools import *
+from VRPythonTools import *
+from STFTools import *
+from ParticleTools import *
+from AccretionTools import *
 from multiprocessing import Process, cpu_count
 
-# Parse arguments for number of processes to use
+############ 0. ARGUMENT PROCESSING ############
 parser=argparse.ArgumentParser()
 parser.add_argument('-np', type=int, default=1,
                     help='number of processes to use')
@@ -55,7 +54,7 @@ sum_bph=parser.parse_args().sum_bph
 run_name=os.getcwd().split('/')[-1] #Grab simulation name from folder name
 base_halo_data=open_pickle(f'B1_HaloData_{run_name}.dat')#*
 
-############ (1) SAVE PARTICLE STATES FOR EACH SNAPSHOT ############
+############ 1. SAVE PARTICLE STATES FOR EACH SNAPSHOT ############
 # This is run in parallel, each snap individually.
 # Here, we run the gen_particle_history_serial tool for each snapshot,
 # which saves the host structure of each particle, sorts their IDs, 
@@ -77,7 +76,7 @@ if gen_bph:
         for p in processes:
             p.join()
 
-############ (2) INTEGRATE PARTICLE HISTORIES FOR EACH SNAPSHOT ############
+############ 2. INTEGRATE PARTICLE HISTORIES FOR EACH SNAPSHOT ############
 # This is run in serial, each snap sequentially.
 # Here, we run the postprocess_particle_history_serial tool over the 
 # result from above, which for each particle sequentially adds to a flag 

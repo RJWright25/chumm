@@ -21,7 +21,7 @@
 
 # File must be edited before use to specity directories of particle, VELOCIraptor and TreeFrog data. 
 
-# PREAMBLE
+# Preamble
 import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
@@ -41,9 +41,8 @@ from multiprocessing import Process, cpu_count
 
 # Parameters
 extra_halo_fields=['R_rel','N_peers','Subhalo_rank','M_rel','halotype']#*
-####################################################
 
-# Parse arguments
+############ 0. ARGUMENT PROCESSING ############
 parser=argparse.ArgumentParser()
 parser.add_argument('-np', type=int, default=1,
                     help='number of processes to use')
@@ -56,7 +55,6 @@ parser.add_argument('-sum_dhd', type=int, default=0,
 parser.add_argument('-com_dhd', type=int, default=0,
                     help='compress detailed halo data')
 
-
 n_processes = parser.parse_args().np
 gen_bhd=bool(parser.parse_args().gen_bhd)
 gen_dhd=bool(parser.parse_args().gen_dhd)
@@ -64,6 +62,7 @@ sum_dhd=bool(parser.parse_args().sum_dhd)
 com_dhd=bool(parser.parse_args().com_dhd)
 
 run_name=os.getcwd().split('/')[-1]# takes the run name from the folder
+
 # Decide particle data type from simulation title
 if 'EAGLE' in run_name:
     partdata_filetype='EAGLE'

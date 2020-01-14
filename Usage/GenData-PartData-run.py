@@ -19,36 +19,31 @@
 # GenData-PartData.py - Script to run the particle histories algorithm. 
 # Author: RUBY WRIGHT 
 
-# PREAMBLE
+# Preamble
 import warnings
 warnings.filterwarnings("ignore")
 import os
 import sys
 
-#finding system
+# Run Script
 if 'Users' in os.listdir('/'):
     chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
 else:
     chummdir='/home/rwright/CHUMM/'
-
-sys.path.append(chummdir)
 run_script=chummdir+'Usage/GenData-PartData.py'
 
-##### CUSTOMIZE #####
-#job
+# Job details
 slurm=False
 email=True
 wall_time="0-04:00:00"
-
-#multiprocessing
 num_processes=8
 total_mem_perprocess=8#GB
 
-#run
+# Algorithm Details
 gen_bph=0
 sum_bph=1
 
-# Get run info for outputs
+# Submit/ run
 filename=sys.argv[0]
 runcwd=os.getcwd()
 runname=runcwd.split('-')[-1]
