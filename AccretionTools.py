@@ -1291,6 +1291,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
         Part_Data_fields= {str(snap1):['Coordinates','Velocities'],str(snap2):['Coordinates','Velocities'],str(snap3):[]}
     
     Part_Data_Full={str(snap):{} for snap in snaps}
+
     for snap in snaps:
         Part_Data_Full[str(snap)]['Mass']={}
         if SimType=='EAGLE':
@@ -1306,16 +1307,15 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     Part_Data_Full[str(snap)][field][str(1)]=np.ones(len(Part_Data_Full[str(snap)]["Coordinates"][str(1)]))*Mass_DM
         else:
             Part_Data_file=h5py.File(Part_Data_FilePaths[str(snap)],'r')
-
             for field in Part_Data_fields[str(snap)]:
                 if field=='Velocities':
                     Part_Data_Full[str(snap)]['Velocity']={str(itype):Part_Data_file[f'PartType{itype}']['Velocities'].value*Part_Data_comtophys[str(snap)]['Velocity'] for itype in PartTypes}
                 else:
                     Part_Data_Full[str(snap)][field]={str(itype):Part_Data_file[f'PartType{itype}'][field].value*Part_Data_comtophys[str(snap)][field] for itype in PartTypes}
-            
-            Part_Data_Full[str(snap)]['Mass'][str(0)]=np.ones(len(Part_Data_Full[str(snap)]['Coordinates'][str(0)]))*Mass_Gas
-            Part_Data_Full[str(snap)]['Mass'][str(1)]=np.ones(len(Part_Data_Full[str(snap)]['Coordinates'][str(1)]))*Mass_DM
-    
+            Part_Data_Full[str(snap)]['Mass'][str(0)]=np.ones(512**3)*Mass_Gas
+            Part_Data_Full[str(snap)]['Mass'][str(1)]=np.ones(512**3)*Mass_DM
+            print(Part_Data_Full[str(snap)].keys())
+
     if not SimType=='EAGLE':
         Part_Data_fields={str(snap1):['Coordinates','Velocity','Mass'],str(snap2):['Coordinates','Velocity','Mass'],str(snap3):[]}
 
