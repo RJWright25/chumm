@@ -1305,6 +1305,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     Part_Data_Full[str(snap)][field][str(1)]=np.ones(len(Part_Data_Full[str(snap)]["Coordinates"][str(1)]))*Mass_DM
         else:
             Part_Data_file=h5py.File(Part_Data_FilePaths[str(snap)],'r')
+            print(Part_Data_file)
+            print(list(Part_Data_file['PartType0'].keys()))
             for field in Part_Data_fields[str(snap)]:
                 if field=='Velocities':
                     Part_Data_Full[str(snap)]['Velocity']={str(itype):Part_Data_file[f'PartType{itype}']['Velocities'].value*Part_Data_comtophys[str(snap)][field] for itype in PartTypes}
