@@ -45,6 +45,7 @@ num_processes_calc=1
 total_mem_perprocess=8#GB
 
 # Algorithm Details
+fofonly=1
 partdata=0
 snaps=[27]
 pre=1
@@ -72,10 +73,18 @@ if not os.path.exists('job_logs'):
 
 if slurm:
     for snap in snaps:
-        if test:
-            jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}_test'
+        if not fofonly:
+            if test:
+                jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}_test'
+            else:
+                jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}'
+
         else:
-            jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}'
+            if test:
+                jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}_FOFonly_test'
+            else:
+                jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}_FOFonly'
+
         jobscriptfilepath=f'job_logs/submit-{jobname}.slurm'
         if os.path.exists(jobscriptfilepath):
             os.remove(jobscriptfilepath)
@@ -96,7 +105,7 @@ if slurm:
             jobfile.writelines(f"date\n")
             jobfile.writelines(f"echo CPU DETAILS\n")
             jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script}  -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+            jobfile.writelines(f"python {run_script}  -fofonly {fofonly} -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
             jobfile.writelines(f"echo JOB END TIME\n")
             jobfile.writelines(f"date\n")
         jobfile.close()
@@ -105,4 +114,4 @@ if slurm:
 else:
     # Loop through desired calcs and submit
     for snap in snaps:
-        os.system(f"python {run_script}  -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")
+        os.system(f"python {run_script} -fofonly {fofonly} -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi}\n")

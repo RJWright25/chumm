@@ -41,7 +41,8 @@ from multiprocessing import Process, cpu_count
 # Parse the arguments for accretion calculation
 if True:
     parser=argparse.ArgumentParser()
-
+    parser.add_argument('-fofonly',type=int, default=1,
+                        help='Flag: Use fof only variant')
     parser.add_argument('-partdata',type=int, default=1,
                         help='Flag: write particle data for each halo')
     parser.add_argument('-r200_facs_in',type=str, default="",
@@ -69,15 +70,22 @@ if True:
     parser.add_argument('-np_calc', type=int, default=1,
                         help='number of processes for accretion calc')
     
+    fofonly=bool(parser.parse_args().fofonly)
     partdata=bool(parser.parse_args().partdata)
-    try:
-        r200_facs_in=[float(fac) for fac in parser.parse_args().r200_facs_in.split(',')]
-    except:
-        r200_facs_in=[]
-    try:
-        r200_facs_out=[float(fac) for fac in parser.parse_args().r200_facs_out.split(',')]    
-    except:
-        r200_facs_out=[]
+    
+    if not fofonly:
+        try:
+            r200_facs_in=[float(fac) for fac in parser.parse_args().r200_facs_in.split(',')]
+        except:
+            r200_facs_in=[]
+        try:
+            r200_facs_out=[float(fac) for fac in parser.parse_args().r200_facs_out.split(',')]    
+        except:
+            r200_facs_out=[]
+    else:
+        r200_facs_in=None
+        r200_facs_out=None
+        
     try:
         vmax_facs_in=[float(fac) for fac in parser.parse_args().vmax_facs_in.split(',')]
     except:
@@ -100,6 +108,10 @@ if True:
     print('**********************************************************************************************************************')
     print('Arguments parsed:')
     print(f'Generate accretion data: {gen_ad} (at snap {snap})')
+    if fofonly:
+        print(f'Algorithm: FOF only')
+    else:
+        print(f'Algorithm: EAGLE FOF and SO')
     print(f'with n_processes: {n_processes}, write particle data: {partdata}, pre_depth: {pre_depth}, post_depth: {post_depth}, hil_lo: {halo_index_list_lo}, hil_hi {halo_index_list_hi})')
     print(f'with r200_facs_in = {r200_facs_in}')
     print(f'with r200_facs_out = {r200_facs_out}')
@@ -125,10 +137,16 @@ if True:
         halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes,test=test)
 
     # Determine output directory for this calculation
-    if test:
-        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
+    if fofonly:
+        if test:
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_FOFonly_test/'
+        else:
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_FOFonly/'
     else:
-        calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}/'
+        if test:
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}_test/'
+        else:
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(n_processes).zfill(2)}/'
 
     output_dir=calc_dir+f'snap_{str(snap).zfill(3)}/'
 
@@ -146,21 +164,34 @@ if gen_ad:
 
     # Multiprocessing arguments
     processes=[]
-    kwargs=[{'snap':snap,
-             'halo_index_list':halo_index_lists[iprocess],
-             'pre_depth':pre_depth,
-             'post_depth':post_depth,
-             'write_partdata':partdata,
-             'r200_facs_in':r200_facs_in,
-             'r200_facs_out':r200_facs_out,
-             'vmax_facs_in':vmax_facs_in,
-             'vmax_facs_out':vmax_facs_out} 
-             for iprocess in range(n_processes)]
+    if not fofonly:
+        kwargs=[{'snap':snap,
+                'halo_index_list':halo_index_lists[iprocess],
+                'pre_depth':pre_depth,
+                'post_depth':post_depth,
+                'write_partdata':partdata,
+                'r200_facs_in':r200_facs_in,
+                'r200_facs_out':r200_facs_out,
+                'vmax_facs_in':vmax_facs_in,
+                'vmax_facs_out':vmax_facs_out} 
+                for iprocess in range(n_processes)]
+    else:
+        kwargs=[{'snap':snap,
+                'halo_index_list':halo_index_lists[iprocess],
+                'pre_depth':pre_depth,
+                'post_depth':post_depth,
+                'write_partdata':partdata,
+                'vmax_facs_in':vmax_facs_in,
+                'vmax_facs_out':vmax_facs_out} 
+                for iprocess in range(n_processes)]
 
     if __name__ == '__main__':
         for iprocess in range(len(kwargs)):
             print(f'Starting process {iprocess}')
-            p=Process(target=gen_accretion_data_eagle, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            if not fofonly:
+                p=Process(target=gen_accretion_data_eagle, args=(base_halo_data,),kwargs=kwargs[iprocess])
+            else:
+                p=Process(target=gen_accretion_data_fof, args=(base_halo_data,),kwargs=kwargs[iprocess])
             processes.append(p)
             p.start()
         for p in processes:
