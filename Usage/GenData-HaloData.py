@@ -86,8 +86,11 @@ if gen_bhd:
     pfiles_list_outer_trunc=[tempfile for tempfile in pfiles_list_outer if tempfile.startswith('snap')]
     pfiles_list_outer_trunc.sort()
     pfiles_list_wdir=[pfiles_directory+tempfile+'/snap_'+tempfile[-12:]+'.0.hdf5' for tempfile in pfiles_list_outer_trunc][1:]
+    print(pfiles_list_wdir)
     if not partdata_filetype=='EAGLE':
         numsnaps=len(pfiles_list_wdir)
+        print(f'number of snaps: {numsnaps}')
+
     ############ generate vr filelist
     vrfiles_directory="/fred/oz009/clagos/vr-testing-outputs/hydro/L0050N0752/REFERENCE/"
     vrfiles_list_all=os.listdir(vrfiles_directory)
