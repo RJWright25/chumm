@@ -1314,7 +1314,6 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     Part_Data_Full[str(snap)][field]={str(itype):Part_Data_file[f'PartType{itype}'][field].value*Part_Data_comtophys[str(snap)][field] for itype in PartTypes}
             Part_Data_Full[str(snap)]['Mass'][str(0)]=np.ones(512**3)*Mass_Gas
             Part_Data_Full[str(snap)]['Mass'][str(1)]=np.ones(512**3)*Mass_DM
-            print(Part_Data_Full[str(snap)].keys())
 
     if not SimType=='EAGLE':
         Part_Data_fields={str(snap1):['Coordinates','Velocity','Mass'],str(snap2):['Coordinates','Velocity','Mass'],str(snap3):[]}
