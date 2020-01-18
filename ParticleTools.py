@@ -116,6 +116,10 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
         # Load the Halo particle lists for this snapshot for each particle type
         t1=time.time()
         snap_fof_particle_data=get_FOF_particle_lists(base_halo_data,snap)#don't need to add subhalo particles as we have each subhalo separately
+        
+        if not type(snap_fof_particle_data)==dict:
+            continue
+
         n_halos=len(list(snap_fof_particle_data["Particle_IDs"].keys()))
         n_part_ihalo=[len(snap_fof_particle_data["Particle_IDs"][str(ihalo)]) for ihalo in range(n_halos)]
         n_part_tot=np.sum(n_part_ihalo)
@@ -236,7 +240,12 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         ##### DARK MATTER
         print(f'Processing DM data for snap {snap_abs}...')
         t1=time.time()
-        current_hosts_DM=infile_file["PartType1/HostStructure"].value##ordered by ID
+        try:
+            current_hosts_DM=infile_file["PartType1/HostStructure"].value##ordered by ID
+            
+        except:
+            print(f'Couldnt retrieve DM data for isnap {isnap}')
+            continue
         if isnap==0:#initialise our arrays
             n_part_DM=len(current_hosts_DM)
             DM_flags=np.array(np.zeros(n_part_DM),dtype=np.int8)
