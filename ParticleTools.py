@@ -246,8 +246,9 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             
         except:
             print(f'Couldnt retrieve DM data for isnap {isnap}')
+            skipped=True
             continue
-        if isnap==0:#initialise our arrays
+        if isnap==0 or skipped:#initialise our arrays
             n_part_DM=len(current_hosts_DM)
             DM_flags=np.array(np.zeros(n_part_DM),dtype=np.int8)
 
