@@ -1151,7 +1151,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
         #Logs
         acc_log_dir=f"job_logs/acc_logs/"
         if not os.path.exists(acc_log_dir):
-            os.mkdir(acc_log_dir)
+            try:
+                os.mkdir(acc_log_dir)
         if test:
             run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_FOFonly_test/"
         else:
@@ -1290,7 +1291,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
         PartTypes=[0,1] #Gas, DM, Stars, BH
         Part_Data_fields= {str(snap1):['Coordinates','Velocities'],str(snap2):['Coordinates','Velocities'],str(snap3):[]}
     
-    Part_Data_Full={str(snap):{} for snap in snaps}
+    Part_Data_Full={str(snap):{field:{} for field in Part_Data_fields[str(snap)]} for snap in snaps}
 
     for snap in snaps:
         Part_Data_Full[str(snap)]['Mass']={}
@@ -1301,9 +1302,17 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                      zmin=0,zmax=BoxSize)
             for field in Part_Data_fields[str(snap)]:
                 if not field=='Mass':
-                    Part_Data_Full[str(snap)][field]={str(itype):EAGLE_snap.read_dataset(itype,field)*Part_Data_comtophys[str(snap)][field] for itype in PartTypes}
+                    for itype in PartTypes:
+                        try:
+                            Part_Data_Full[str(snap)][field][str(itype)]=EAGLE_snap.read_dataset(itype,field)*Part_Data_comtophys[str(snap)][field]
+                        except:
+                            Part_Data_Full[str(snap)][field][str(itype)]=np.array([])
                 else:
-                    Part_Data_Full[str(snap)][field]={str(itype):EAGLE_snap.read_dataset(itype,field)*Part_Data_comtophys[str(snap)][field] for itype in [0,4,5]}
+                    for itype in [0,4,5]:
+                        try:
+                            Part_Data_Full[str(snap)][field][str(itype)]=EAGLE_snap.read_dataset(itype,field)*Part_Data_comtophys[str(snap)][field]
+                        except:
+                            Part_Data_Full[str(snap)][field][str(itype)]=np.array([])
                     Part_Data_Full[str(snap)][field][str(1)]=np.ones(len(Part_Data_Full[str(snap)]["Coordinates"][str(1)]))*Mass_DM
         else:
             Part_Data_file=h5py.File(Part_Data_FilePaths[str(snap)],'r')
