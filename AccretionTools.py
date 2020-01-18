@@ -1153,6 +1153,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
         if not os.path.exists(acc_log_dir):
             try:
                 os.mkdir(acc_log_dir)
+            except:
+                pass
         if test:
             run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_FOFonly_test/"
         else:
