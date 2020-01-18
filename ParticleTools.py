@@ -442,9 +442,12 @@ def get_particle_indices(base_halo_data,IDs_sorted,indices_sorted,IDs_taken,type
             isearch=0
             for itype in search_in:
                 test_index=bisect_left(a=IDs_sorted[f'{itype}'],x=ipart_id,hi=npart_sorted[str(itype)])
-                if IDs_sorted[f'{itype}'][test_index]==ipart_id:
-                    out_type=itype
-                    break
+                if not test_index>=npart_sorted[str(itype)]:
+                    if IDs_sorted[f'{itype}'][test_index]==ipart_id:
+                        out_type=itype
+                        break
+                    else:
+                        continue
                 else:
                     continue
                 isearch=isearch+1
