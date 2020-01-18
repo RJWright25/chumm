@@ -118,6 +118,7 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
         snap_fof_particle_data=get_FOF_particle_lists(base_halo_data,snap)#don't need to add subhalo particles as we have each subhalo separately
         
         if not type(snap_fof_particle_data)==dict:
+            print(f'Skipping histories for snap {snap} - could not retrieve FOF particle lists')
             continue
 
         n_halos=len(list(snap_fof_particle_data["Particle_IDs"].keys()))
