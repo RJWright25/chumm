@@ -264,7 +264,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         ##### GAS
         print(f'Processing gas data for snap {snap_abs}...')
         t1=time.time()
-        if isnap==0:#initialise our arrays
+        if isnap==0 or skipped:#initialise our arrays
             print('Initialising gas processing data (first snap)')
             current_IDs_gas=Part_Histories_IDs[str(0)]
             current_indices_gas=Part_Histories_Indices[str(0)]
