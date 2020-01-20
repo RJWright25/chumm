@@ -1569,8 +1569,13 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
                     #Grab particle data
                     for field in Part_Data_fields[str(snap)]:
-                        ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}']=np.array([Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx] for ipart_type,ipart_partidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_partindices)])
-                    
+                        ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros(ihalo_inflow_candidate_count)+np.nan)
+                        iipart=0
+                        for iipart,ipart_type,ipart_partidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_partindices):
+                            try:
+                                ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx]
+                            except:
+                            iipart=iipart+1
                     #Derive other simulation outputs
                     if snap==snap1 or snap==snap2:
                         ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_inflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
@@ -1713,8 +1718,13 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
                         #Grab particle data
                         for field in Part_Data_fields[str(snap)]:
-                            ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}']=np.array([Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx] for ipart_type,ipart_partidx in zip(ihalo_isnap_outflow_candidate_parttypes,ihalo_isnap_outflow_candidate_partindices)])
-                        
+                            ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros(ihalo_outflow_candidate_count)+np.nan)
+                            iipart=0
+                            for iipart,ipart_type,ipart_partidx in zip(ihalo_isnap_outflow_candidate_parttypes,ihalo_isnap_outflow_candidate_partindices):
+                                try:
+                                    ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx]
+                                except:
+                                iipart=iipart+1
                         #Derive other simulation outputs
                         if snap==snap1 or snap==snap2:
                             ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_outflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
