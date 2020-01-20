@@ -1569,7 +1569,10 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
                     #Grab particle data
                     for field in Part_Data_fields[str(snap)]:
-                        ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros(ihalo_inflow_candidate_count)+np.nan)
+                        ex_point=Part_Data_Full[str(snap)][field][str(1)][0]
+                        size=len(ex_point)
+                        print(size)
+                        ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros((ihalo_inflow_candidate_count,size))+np.nan)
                         iipart=0
                         for ipart_type,ipart_partidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_partindices):
                             try:
@@ -1719,7 +1722,11 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
                         #Grab particle data
                         for field in Part_Data_fields[str(snap)]:
-                            ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros(ihalo_outflow_candidate_count)+np.nan)
+                            ex_point=Part_Data_Full[str(snap)][field][str(1)][0]
+                            size=len(ex_point)
+                            print(size)
+                            ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros((ihalo_inflow_candidate_count,size))+np.nan)
+                            ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}']np.array(np.zeros((ihalo_outflow_candidate_count,size))+np.nan)
                             iipart=0
                             for ipart_type,ipart_partidx in zip(ihalo_isnap_outflow_candidate_parttypes,ihalo_isnap_outflow_candidate_partindices):
                                 try:
