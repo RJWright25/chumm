@@ -718,7 +718,7 @@ def compress_detailed_halo_data(detailed_halo_data,fields=None):
         fields=default_fields
 
     no_snaps=len(detailed_halo_data)
-    snap_mask=[len(detailed_halo_data_snap)>5 for detailed_halo_data_snap in detailed_halo_data]
+    snap_mask=[len(list(detailed_halo_data_snap.keys()))>5 for detailed_halo_data_snap in detailed_halo_data]
 
     output_halo_data=[{field:[] for field in fields} for isnap in range(no_snaps)]
     outname=detailed_halo_data[-1]['outname']
