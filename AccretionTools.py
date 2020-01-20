@@ -1571,7 +1571,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     for field in Part_Data_fields[str(snap)]:
                         ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros(ihalo_inflow_candidate_count)+np.nan)
                         iipart=0
-                        for iipart,ipart_type,ipart_partidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_partindices):
+                        for ipart_type,ipart_partidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_partindices):
                             try:
                                 ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx]
                             except:
@@ -1721,7 +1721,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         for field in Part_Data_fields[str(snap)]:
                             ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros(ihalo_outflow_candidate_count)+np.nan)
                             iipart=0
-                            for iipart,ipart_type,ipart_partidx in zip(ihalo_isnap_outflow_candidate_parttypes,ihalo_isnap_outflow_candidate_partindices):
+                            for ipart_type,ipart_partidx in zip(ihalo_isnap_outflow_candidate_parttypes,ihalo_isnap_outflow_candidate_partindices):
                                 try:
                                     ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx]
                                 except:
