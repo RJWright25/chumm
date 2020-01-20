@@ -1570,7 +1570,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     #Grab particle data
                     for field in Part_Data_fields[str(snap)]:
                         ex_point=Part_Data_Full[str(snap)][field][str(1)][0]
-                        size=len(ex_point)
+                        size=np.size(ex_point)
                         print(size)
                         ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros((ihalo_inflow_candidate_count,size))+np.nan)
                         iipart=0
@@ -1723,7 +1723,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         #Grab particle data
                         for field in Part_Data_fields[str(snap)]:
                             ex_point=Part_Data_Full[str(snap)][field][str(1)][0]
-                            size=len(ex_point)
+                            size=np.size(ex_point)
                             print(size)
                             ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros((ihalo_outflow_candidate_count,size))+np.nan)
                             iipart=0
