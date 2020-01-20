@@ -1438,7 +1438,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     ihalo_hdf5['Outflow'].create_group(f'PartType{itype}')        
         
         # This catches any exceptions for a given halo and prevents the code from crashing 
-        try:     
+        if True:     
             # try:
             ########################################################################################################################################
             ###################################################### ihalo PRE-PROCESSING ############################################################
@@ -1837,7 +1837,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                 progress_file.close()
         
         # Some other error in the main halo loop
-        except: 
+        else: 
             print(f'Skipping ihalo {ihalo_s2} - dont have the reason')
             with open(fname_log,"a") as progress_file:
                 progress_file.write(f"Skipping ihalo {ihalo_s2} - unknown reason ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
