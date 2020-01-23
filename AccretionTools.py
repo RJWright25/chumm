@@ -677,7 +677,8 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
                 ihalo_combined_inflow_candidate_data['snap1_Structure']=np.zeros(ihalo_combined_inflow_candidate_count)
                 ihalo_combined_inflow_candidate_data['snap1_Processed']=np.zeros(ihalo_combined_inflow_candidate_count)
                 for itype in PartTypes:
-                    ihalo_combined_inflow_candidate_IDs_unique_itype=ihalo_combined_inflow_candidate_IDs_unique[np.where(ihalo_combined_inflow_candidate_data['snap1_ParticleTypes']==itype)]
+                    ihalo_combined_inflow_candidate_typemask_snap1=np.where(ihalo_combined_inflow_candidate_data['snap1_ParticleTypes']==itype)
+                    ihalo_combined_inflow_candidate_IDs_unique_itype=ihalo_combined_inflow_candidate_IDs_unique[ihalo_combined_inflow_candidate_typemask_snap1]
                     #Find the indices of the IDs in the (sorted) fof IDs for this halo (will return nan if not in the fof) - outputs index
                     ihalo_combined_inflow_candidate_histindices[str(itype)]=binary_search(ihalo_combined_inflow_candidate_IDs_unique_itype,sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=False)
                     #Extract host structure and processing
