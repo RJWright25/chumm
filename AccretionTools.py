@@ -357,6 +357,11 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     FOF_Part_Data[str(snap1)]=get_FOF_particle_lists(base_halo_data,snap1,halo_index_list=halo_index_list_snap1)
     FOF_Part_Data[str(snap2)]=get_FOF_particle_lists(base_halo_data,snap2,halo_index_list=halo_index_list_snap2)
     FOF_Part_Data[str(snap3)]=get_FOF_particle_lists(base_halo_data,snap3,halo_index_list=halo_index_list_snap3)
+    for snap in [snap1,snap2,snap3]:
+        del FOF_Part_Data[str(snap)]["Particle_Types"]
+        del FOF_Part_Data[str(snap)]["Particle_Bound"]
+        del FOF_Part_Data[str(snap)]["Npart"]
+        del FOF_Part_Data[str(snap)]["Npart_unbound"]
     FOF_Part_Data_fields=list(FOF_Part_Data[str(snap1)].keys()) #Fields from FOF data
 
     #Particle data filepath
@@ -672,12 +677,9 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
                 ihalo_combined_inflow_candidate_data['snap1_Structure']=np.zeros(ihalo_combined_inflow_candidate_count)
                 ihalo_combined_inflow_candidate_data['snap1_Processed']=np.zeros(ihalo_combined_inflow_candidate_count)
                 for itype in PartTypes:
-                    ihalo_combined_inflow_candidate_typemask_snap1=np.where(ihalo_combined_inflow_candidate_data['snap1_ParticleTypes']==itype)
-                    ihalo_combined_inflow_candidate_IDs_unique_itype=ihalo_combined_inflow_candidate_IDs_unique[ihalo_combined_inflow_candidate_typemask_snap1]
+                    ihalo_combined_inflow_candidate_IDs_unique_itype=ihalo_combined_inflow_candidate_IDs_unique[np.where(ihalo_combined_inflow_candidate_data['snap1_ParticleTypes']==itype)]
                     #Find the indices of the IDs in the (sorted) fof IDs for this halo (will return nan if not in the fof) - outputs index
-                    ihalo_combined_inflow_candidate_IDindices_temp=binary_search(ihalo_combined_inflow_candidate_IDs_unique_itype,sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=False)
-                    #Use the indices from the sorted IDs above to extract the partdata indices (will return nan if not in the fof) - outputs index
-                    ihalo_combined_inflow_candidate_histindices[str(itype)]=ihalo_combined_inflow_candidate_IDindices_temp
+                    ihalo_combined_inflow_candidate_histindices[str(itype)]=binary_search(ihalo_combined_inflow_candidate_IDs_unique_itype,sorted_list=Part_Histories_IDs_snap1[str(itype)],check_entries=False)
                     #Extract host structure and processing
                     ihalo_combined_inflow_candidate_data['snap1_Structure'][ihalo_combined_inflow_candidate_typemask_snap1]=mask_wnans(Part_Histories_HostStructure_snap1[str(itype)],ihalo_combined_inflow_candidate_histindices[str(itype)])
                     if not Part_Histories_Constant[str(itype)]:
