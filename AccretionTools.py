@@ -688,7 +688,7 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
                     if not Part_Histories_Constant[str(itype)]:
                         ihalo_combined_inflow_candidate_data['snap1_Processed'][ihalo_combined_inflow_candidate_typemask_snap1]=mask_wnans(Part_Histories_Processed_L1_snap1[str(itype)],ihalo_combined_inflow_candidate_histindices[str(itype)])
                     else:
-                        ihalo_combined_inflow_candidate_data['snap1_Processed'][ihalo_combined_inflow_candidate_typemask_snap1]=np.ones(len(ihalo_combined_inflow_candidate_IDs_unique_itype))
+                        ihalo_combined_inflow_candidate_data['snap1_Processed'][ihalo_combined_inflow_candidate_typemask_snap1]=np.ones(len(ihalo_combined_inflow_candidate_IDs_unique_itype))+9
 
                 ############################## SAVE DATA FOR INFLOW CANDIDATES ##############################
                 #############################################################################################
@@ -738,13 +738,13 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
                     # Masks for cuts on inflow velocity as per vmax_facs
                     ihalo_itype_inflow_vmax_masks={'vmax_fac'+str(ivmax_fac+1):-ihalo_combined_inflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_metadata['ave_vmax']  for ivmax_fac,vmax_fac in enumerate(vmax_facs["Inflow"])}
                     # Masks for processing history of particles
-                    ihalo_itype_inflow_processed_masks={'Unprocessed':ihalo_combined_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask]==0.0,
-                                                        'Processed':ihalo_combined_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask]>0.0,
+                    ihalo_itype_inflow_processed_masks={'Unprocessed':ihalo_combined_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask]<0.5,
+                                                        'Processed':ihalo_combined_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask]>0.5,
                                                         'Total': np.isfinite(ihalo_combined_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask])}
                     # Masks for the origin of inflow particles
                     ihalo_itype_inflow_origin_masks={'Gross':np.isfinite(ihalo_combined_inflow_candidate_data["snap1_Structure"][ihalo_itype_mask]),
                                                      'Field':ihalo_combined_inflow_candidate_data["snap1_Structure"][ihalo_itype_mask]==-1,
-                                                     'Transfer':ihalo_combined_inflow_candidate_data["snap1_Structure"][ihalo_itype_mask]>0}
+                                                     'Transfer':ihalo_combined_inflow_candidate_data["snap1_Structure"][ihalo_itype_mask]>0.0}
                     # Masks for stability of inflow particles
                     ihalo_itype_inflow_stability={}
                     ihalo_itype_inflow_stability={'FOF-haloscale':ihalo_combined_inflow_candidate_data["snap3_Particle_InFOF"][ihalo_itype_mask],
