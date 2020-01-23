@@ -357,11 +357,13 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     FOF_Part_Data[str(snap1)]=get_FOF_particle_lists(base_halo_data,snap1,halo_index_list=halo_index_list_snap1)
     FOF_Part_Data[str(snap2)]=get_FOF_particle_lists(base_halo_data,snap2,halo_index_list=halo_index_list_snap2)
     FOF_Part_Data[str(snap3)]=get_FOF_particle_lists(base_halo_data,snap3,halo_index_list=halo_index_list_snap3)
+
     for snap in [snap1,snap2,snap3]:
         del FOF_Part_Data[str(snap)]["Particle_Types"]
         del FOF_Part_Data[str(snap)]["Particle_Bound"]
         del FOF_Part_Data[str(snap)]["Npart"]
         del FOF_Part_Data[str(snap)]["Npart_unbound"]
+        
     FOF_Part_Data_fields=list(FOF_Part_Data[str(snap1)].keys()) #Fields from FOF data
 
     #Particle data filepath
