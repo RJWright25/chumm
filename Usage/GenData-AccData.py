@@ -71,8 +71,7 @@ if True:
                         help='number of processes for accretion calc')
     
     fofonly=bool(parser.parse_args().fofonly)
-    partdata=bool(parser.parse_args().partdata)
-    
+    partdata=bool(parser.parse_args().partdata)    
     if not fofonly:
         try:
             r200_facs_in=[float(fac) for fac in parser.parse_args().r200_facs_in.split(',')]
@@ -199,6 +198,11 @@ if gen_ad:
 
     t2_acc=time.time()
 
+    print()
+    print('***************************************************')
+    print(f'Generated accretion data in {t2_acc-t1_acc:.2f} sec')
+    print('***************************************************')
+    print()
 
 ############ 2. COLLATE ACCRETION DATA ############
 # This is run in serial, collates the ffiles generated above. 
