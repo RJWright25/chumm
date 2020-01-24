@@ -217,10 +217,9 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
     # Find all particle history files in the provided directory
     ordered_parthistory_files=sorted(os.listdir(path))
-
+    isnap0_skipped=False
     # Iterate through each particle history file
     for isnap,history_filename in enumerate(ordered_parthistory_files):
-        isnap0_skipped=False
         # Initialise input file
         infile_file=h5py.File(path+'/'+history_filename,'r+')
         # Find the actual snap
@@ -322,7 +321,8 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 infile_file[f'PartType{itype}'].create_dataset('Processed_L1',data=isnap_itype_processing_level[str(itype)],dtype=np.int8)
             except:
                 infile_file[f'PartType{itype}/Processed_L1'][:]=isnap_itype_processing_level[str(itype)]
-
+        
+        isnap0_skipped=False
         print(f'Finished adding to histories for snap {snap_abs}')
 
         infile_file.close()
