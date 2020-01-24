@@ -220,6 +220,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
     
     # Iterate through each particle history file
     for isnap,history_filename in enumerate(ordered_parthistory_files):
+        isnap0_skipped=False
         # Initialise input file
         infile_file=h5py.File(path+'/'+history_filename,'r+')
         # Find the actual snap
@@ -230,17 +231,21 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         PartTypes_n={str(itype):infile_file[f'/PartType{itype}/ParticleIDs'].attrs['npart'] for itype in PartTypes}
 
         # If this is the first history snap, initialise the previous processing data structure (and sorted IDs)
-        if not isnap==0:
-            iprev_itype_processing_level=isnap_itype_processing_level
-            iprev_itype_sorted_IDs=isnap_itype_sorted_IDs
-        else:
-            iprev_itype_processing_level={str(itype):np.zeros(PartTypes_n[str(itype)]) for itype in PartTypes}
+        try:
+            if not (isnap==0 or isnap0_skipped):
+                iprev_itype_processing_level=isnap_itype_processing_level
+                iprev_itype_sorted_IDs=isnap_itype_sorted_IDs
+            else:
+                iprev_itype_processing_level={str(itype):np.zeros(PartTypes_n[str(itype)]) for itype in PartTypes}
+        except:
+            print(f'Skipping snap {snap_abs} ...')
+            isnap0_skipped=True
+            continue
 
-        
         ###############################################
         ##### Step 1: Transfer old processing level ###
         ###############################################
-        if not isnap==0:
+        if not (isnap==0 or isnap0_skipped):
             iprev_itype_processing_count=[np.sum(iprev_itype_processing_level[str(itype)]>0) for itype in PartTypes]
             iprev_all_processed_count=np.sum(iprev_itype_processing_count)
             iprev_all_processed_IDs=np.zeros(iprev_all_processed_count,dtype=np.int64)
