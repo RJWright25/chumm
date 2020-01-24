@@ -233,16 +233,11 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         print(PartTypes_keys)
 
         # If this is the first history snap, initialise the previous processing data structure (and sorted IDs)
-        try:
-            if not (isnap==0 or isnap0_skipped):
-                iprev_itype_processing_level=isnap_itype_processing_level
-                iprev_itype_sorted_IDs=isnap_itype_sorted_IDs
-            else:
-                iprev_itype_processing_level={str(itype):np.zeros(PartTypes_n[str(itype)]) for itype in PartTypes}
-        except:
-            print(f'Skipping snap {snap_abs} ...')
-            isnap0_skipped=True
-            continue
+        if not (isnap==0 or isnap0_skipped):
+            iprev_itype_processing_level=isnap_itype_processing_level
+            iprev_itype_sorted_IDs=isnap_itype_sorted_IDs
+        else:
+            iprev_itype_processing_level={str(itype):np.zeros(PartTypes_n[str(itype)]) for itype in PartTypes}
 
         ###############################################
         ##### Step 1: Transfer old processing level ###
