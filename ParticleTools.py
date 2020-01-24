@@ -237,8 +237,9 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             isnap0_skipped=True
             continue
         print(PartTypes_keys)
-        
+
         # If this is the first history snap, initialise the previous processing data structure (and sorted IDs)
+        print(snap_abs,isnap0_skipped)
         if not (isnap==0 or isnap0_skipped):
             iprev_itype_processing_level=isnap_itype_processing_level
             iprev_itype_sorted_IDs=isnap_itype_sorted_IDs
