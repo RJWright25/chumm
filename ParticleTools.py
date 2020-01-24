@@ -229,6 +229,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         # Find which particles are included
         if isnap==0 or isnap0_skipped:
             PartTypes_keys=list(infile_file.keys())
+            print(PartTypes_keys)
         else:
             oldinfile=h5py.File(ordered_parthistory_files[isnap-1])
             PartTypes_keys=list(oldinfile.keys())
