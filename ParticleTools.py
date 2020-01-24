@@ -230,8 +230,14 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         PartTypes_keys=list(infile_file.keys())
         PartTypes=[PartType_keys.split('PartType')[-1] for PartType_keys in PartTypes_keys]
         PartTypes_n={str(itype):infile_file[f'/PartType{itype}/ParticleIDs'].attrs['npart'] for itype in PartTypes}
-        print(PartTypes_keys)
 
+        # If there is no parttypes then skip this snap
+        if len(PartTypes_keys)==0:
+            print(f'Skipping snap {snap_abs}')
+            isnap0_skipped=True
+            continue
+        print(PartTypes_keys)
+        
         # If this is the first history snap, initialise the previous processing data structure (and sorted IDs)
         if not (isnap==0 or isnap0_skipped):
             iprev_itype_processing_level=isnap_itype_processing_level
@@ -254,12 +260,6 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             for iitype,itype in enumerate(PartTypes):
                 # Count number of previously processed particles of this type and assign indices
                 iprev_iitype_processing_count=iprev_itype_processing_count[iitype]
-                # If no particles of a type have been processed, just skip this snap
-                if iprev_iitype_processing_count==0:
-                    print(f'Skipping snap {snap_abs} ...')
-                    isnap0_skipped=True
-                    break
-                    
                 iprev_all_processed_index_end=iprev_all_processed_index_start+iprev_iitype_processing_count
 
                 # Get mask of previous particles which were processed
