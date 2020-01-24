@@ -217,7 +217,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
     # Find all particle history files in the provided directory
     ordered_parthistory_files=sorted(os.listdir(path))
-    
+
     # Iterate through each particle history file
     for isnap,history_filename in enumerate(ordered_parthistory_files):
         isnap0_skipped=False
@@ -225,8 +225,14 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         infile_file=h5py.File(path+'/'+history_filename,'r+')
         # Find the actual snap
         snap_abs=int(history_filename.split('_')[1])
+
         # Find which particles are included
-        PartTypes_keys=list(infile_file.keys())
+        if isnap==0 or isnap0_skipped:
+            PartTypes_keys=list(infile_file.keys())
+        else:
+            oldinfile=h5py.File(ordered_parthistory_files[isnap-1])
+            PartTypes_keys=list(oldinfile.keys())
+
         PartTypes=[PartType_keys.split('PartType')[-1] for PartType_keys in PartTypes_keys]
         PartTypes_n={str(itype):infile_file[f'/PartType{itype}/ParticleIDs'].attrs['npart'] for itype in PartTypes}
 
@@ -252,7 +258,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 print(f'Skipping snap {snap_abs} ...')
                 isnap0_skipped=True
                 continue
-            
+
             iprev_all_processed_count=np.sum(iprev_itype_processing_count)
             iprev_all_processed_IDs=np.zeros(iprev_all_processed_count,dtype=np.int64)
             iprev_all_processed_Types=np.zeros(iprev_all_processed_count,dtype=np.int8)
@@ -288,18 +294,13 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
             # Find indices, types of old IDs in new data
             print('Finding current indices and types of previously processed particles ...')
-            try:
-                iprev_processed_parttypes_atsnap,iprev_processed_historyindices_atsnap,x=get_particle_indices(base_halo_data=base_halo_data,
-                                                                                                            IDs_taken=iprev_all_processed_IDs,
-                                                                                                            IDs_sorted=isnap_itype_sorted_IDs,
-                                                                                                            types_taken=iprev_all_processed_Types,
-                                                                                                            snap_taken=snap_abs-1,
-                                                                                                            snap_desired=snap_abs,
-                                                                                                            return_partindices=False)
-            except:
-                print(f'Skipping snap {snap_abs} ...')
-                isnap0_skipped=True
-                continue
+            iprev_processed_parttypes_atsnap,iprev_processed_historyindices_atsnap,x=get_particle_indices(base_halo_data=base_halo_data,
+                                                                                                        IDs_taken=iprev_all_processed_IDs,
+                                                                                                        IDs_sorted=isnap_itype_sorted_IDs,
+                                                                                                        types_taken=iprev_all_processed_Types,
+                                                                                                        snap_taken=snap_abs-1,
+                                                                                                        snap_desired=snap_abs,
+                                                                                                        return_partindices=False)
 
             # Iterate through each of the processed particles and add to the new array
             ipart_processed=0
@@ -394,7 +395,7 @@ def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},t
     
     #For each particle type, determine which lists will need to be searched
     search_types={}
-    if len(parttypes)>2:
+    if len(parttypes)==4:
         if search_now:#if searching current snap, particles will always be same type
             for itype in parttypes:
                 search_types[str(itype)]=[itype]
@@ -410,6 +411,20 @@ def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},t
                 search_types[str(0)]=[0]#gas particles in past can only be gas
                 search_types[str(4)]=[4,0]#star particles in past can only be star or gas
                 search_types[str(5)]=[4,0,5]#BH particles in past can be gas, star or BH
+    elif len(parttypes)==3:
+        if search_now:#if searching current snap, particles will always be same type
+            for itype in parttypes:
+                search_types[str(itype)]=[itype]
+            search_types[str(-1)]=parttypes
+        else:# if past or future
+            search_types[str(1)]=[1]#dm particle will always be dm
+            search_types[str(-1)]=parttypes#if we don't have type, again have to search them all
+            if search_after:# if searching for particles after IDs were taken 
+                search_types[str(0)]=[0,4]#gas particles in future could be gas, star or BH
+                search_types[str(4)]=[4]#star particles in future could be star or BH
+            else:# if searching for particles before IDs were taken 
+                search_types[str(0)]=[0]#gas particles in past can only be gas
+                search_types[str(4)]=[4,0]#star particles in past can only be star or gas
     else:
         search_types={'0':[0],'1':[1],'-1':[0,1]}
     
