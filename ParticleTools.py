@@ -259,7 +259,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
                 isnap0_skipped=True
                 continue
 
-            iprev_all_processed_count=np.sum(iprev_itype_processing_count)
+            iprev_all_processed_count=int(np.sum(iprev_itype_processing_count))
             iprev_all_processed_IDs=np.zeros(iprev_all_processed_count,dtype=np.int64)
             iprev_all_processed_Types=np.zeros(iprev_all_processed_count,dtype=np.int8)
             iprev_all_processed_L1=np.zeros(iprev_all_processed_count,dtype=np.int8)
