@@ -254,6 +254,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
             for iitype,itype in enumerate(PartTypes):
                 # Count number of previously processed particles of this type and assign indices
                 iprev_iitype_processing_count=iprev_itype_processing_count[iitype]
+                # If no particles of a type have been processed, just skip this snap
                 if iprev_iitype_processing_count==0:
                     print(f'Skipping snap {snap_abs} ...')
                     isnap0_skipped=True
