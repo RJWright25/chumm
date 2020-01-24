@@ -380,7 +380,7 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     
     #Load in particle histories: snap 1 (only need snap 1 to check origin of inflow particles - not checking destination of outflow particles)
     print(f'Retrieving & organising particle histories for snap = {snap1} ...')
-    Part_Histories_Constant={str(0):False,str(1):False,str(4):True,str(5):True}
+    Part_Histories_Constant={str(0):False,str(1):False,str(4):False,str(5):False}
     Part_Histories_File_snap1=h5py.File("part_histories/PartHistory_"+str(snap1).zfill(3)+"_"+run_outname+".hdf5",'r')
     Part_Histories_IDs_snap1={str(parttype):Part_Histories_File_snap1["PartType"+str(parttype)+'/ParticleIDs'].value for parttype in PartTypes}
     Part_Histories_npart_snap1={str(parttype):len(Part_Histories_IDs_snap1[str(parttype)]) for parttype in PartTypes}
@@ -1173,8 +1173,6 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     halo_defnames["Outflow"]=['FOF-haloscale','FOF-subhaloscale']
     
     # Default options 
-    ihalo_cube_rfac=1.25 #cube to grab EAGLE data from
-    vel_conversion=978.462 #Mpc/Gyr to km/s
     use='cminpot' #which halo centre definition to use (from 'cminpot', 'com')
     compression='gzip'
 
@@ -1369,7 +1367,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     print(f'Retrieving & organising particle histories ...')
     Part_Histories_fields={str(snap1):["ParticleIDs",'ParticleIndex','HostStructure','Processed_L1'],str(snap2):["ParticleIDs",'ParticleIndex'],str(snap3):["ParticleIDs",'ParticleIndex']}
     Part_Histories_data={str(snap):{} for snap in snaps}
-    Part_Histories_Constant={str(0):False,str(1):False,str(4):True,str(5):True}
+    Part_Histories_Constant={str(0):False,str(1):False,str(4):False,str(5):False}
     for snap in snaps:
         Part_Histories_File_snap=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5",'r')
         for field in Part_Histories_fields[str(snap)]:
