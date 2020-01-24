@@ -230,6 +230,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
         PartTypes_keys=list(infile_file.keys())
         PartTypes=[PartType_keys.split('PartType')[-1] for PartType_keys in PartTypes_keys]
         PartTypes_n={str(itype):infile_file[f'/PartType{itype}/ParticleIDs'].attrs['npart'] for itype in PartTypes}
+        print(PartTypes_keys)
 
         # If this is the first history snap, initialise the previous processing data structure (and sorted IDs)
         try:
