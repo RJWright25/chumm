@@ -145,8 +145,8 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
                 try:
                     Particle_IDs_Unsorted_itype=EAGLE_Snap.read_dataset(itype,"ParticleIDs")
                 except:
-                    print(f'No {PartNames[itype]} IDs found')
-                    Particle_IDs_Unsorted_itype=[]
+                    print(f'No {PartNames[itype]} PartType{itype} particles found at snap {snap_abs} - skipping to next particle type')
+                    continue
             else:
                 h5py_Snap=h5py.File(base_halo_data[snap]['Part_FilePath'])
                 Particle_IDs_Unsorted_itype=h5py_Snap['PartType'+str(itype)+'/ParticleIDs']
