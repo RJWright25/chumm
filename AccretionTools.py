@@ -1648,12 +1648,12 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                             ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_inflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
                             ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_inflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
                             ihalo_inflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
-                        if not write_partdata:
-                            del ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com']
-                            del ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']
-                            del ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com']
+                            if not write_partdata:
+                                del ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com']
+                                del ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']
+                                del ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com']
 
-                ############################## SAVE DATA FOR INFLOW CANDIDATES ##############################
+                    ############################## SAVE DATA FOR INFLOW CANDIDATES ##############################
                 #############################################################################################
 
                 # Iterate through particle types
@@ -1799,7 +1799,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
                         #Grab particle data
                         for field in Part_Data_fields[str(snap)]:
-                            ex_point=Part_Data_Full[str(snap)][field][str(1)][0]
+                            ex_point=Part_Data_Full[str(snap)][field][str(0)][0]
                             size=np.size(ex_point)
                             ihalo_outflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros((ihalo_outflow_candidate_count,size))+np.nan)
                             iipart=0
@@ -1818,10 +1818,10 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                 ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_outflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
                                 ihalo_outflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_outflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
                                 
-                            if not write_partdata:
-                                del ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com']
-                                del ihalo_outflow_candidate_data[f'snap{isnap+1}_runit_com']
-                                del ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com']
+                                if not write_partdata:
+                                    del ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com']
+                                    del ihalo_outflow_candidate_data[f'snap{isnap+1}_runit_com']
+                                    del ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com']
                                                     
                     ############################## SAVE DATA FOR OUTFLOW CANDIDATES ##############################
                     #############################################################################################
