@@ -1152,7 +1152,13 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     halo_index_list_snap1=[find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=pre_depth) for ihalo in halo_index_list_snap2]
     halo_index_list_snap3=[find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=post_depth) for ihalo in halo_index_list_snap2]
 
-    # Determine whether we need to perform outflow calculationes
+    # Check whether we are doing the vmax cuts based on the infow  list
+    if vmax_facs_in==[]:
+        vmax_cut=False
+    else:
+        vmax_cut=True
+
+    # Determine whether we need to perform outflow calculations based on whether we are given outflow vmax cuts
     if vmax_facs_out==[]:
         output_groups=['Inflow']
         outflow=False
@@ -1160,12 +1166,16 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
         output_groups=['Inflow','Outflow']
         outflow=True
 
-
     # Add vmax factor of -1 to whatever the user input was
-    vmax_facs_in=np.concatenate([[-1],vmax_facs_in])
+    if vmax_cut:
+        vmax_facs_in=np.concatenate([[-1],vmax_facs_in])
     if not vmax_facs_out==[]:
         vmax_facs_out=np.concatenate([[-1],vmax_facs_out])
-    vmax_facs={'Inflow':vmax_facs_in,'Outflow':vmax_facs_out} 
+
+    if vmax_cut:
+        vmax_facs={'Inflow':vmax_facs_in,'Outflow':vmax_facs_out} 
+    else:
+        vmax_facs={'Inflow':[0],'Outflow':[0]}
 
     # Define halo calculation types
     halo_defnames={}
@@ -1319,7 +1329,13 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
         PartTypes_keys=[key for key in PartTypes_keys_all if 'PartType'  in key]
         PartTypes=[int(key.split('PartType')[-1]) for key in PartTypes_keys]
         print(f'Using parttypes: {PartTypes}')
-        Part_Data_fields={str(snap1):['Coordinates','Velocity','Mass'],str(snap2):['Coordinates','Velocity','Mass'],str(snap3):[]}
+
+        Part_Data_fields={str(snap1):['Mass'],str(snap2):['Mass'],str(snap3):[]}
+        if vmax_cut:
+            for snap in [snap1,snap2]:
+                Part_Data_fields[str(snap)].append('Coordinates')
+                Part_Data_fields[str(snap)].append('Velocity')
+
     #If not EAGLE, assume constant masses
     else:
         #Which fields do we need at each snap
@@ -1348,7 +1364,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         except:
                             Part_Data_Full[str(snap)][field][str(itype)]=np.array([])
                     
-                    Part_Data_Full[str(snap)][field][str(1)]=np.ones(len(Part_Data_Full[str(snap)]['Coordinates']))*Mass_DM
+                    Part_Data_Full[str(snap)][field][str(1)]=Mass_DM
         else:
             Mass_Constant={str(0):True,str(1):True}
             Part_Data_file=h5py.File(Part_Data_FilePaths[str(snap)],'r')
@@ -1374,7 +1390,11 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     for snap in snaps:
         Part_Histories_File_snap=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5",'r')
         for field in Part_Histories_fields[str(snap)]:
-            Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field].value for itype in PartTypes}
+            if field=='ParticleIDs':
+                Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field].value for itype in PartTypes}
+            else:
+                Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field] for itype in PartTypes}#note: no .value
+
     print(f'Done retrieving & organising particle histories')
 
     print()
@@ -1438,7 +1458,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                 for ivmax_fac, vmax_fac in enumerate(vmax_facs[output_group]):
                     #Create group
                     ivmax_key=f'vmax_fac{ivmax_fac+1}'
-                    integrated_output_hdf5[output_group][itype_key][halo_defname].create_group(ivmax_key);integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+                    integrated_output_hdf5[output_group][itype_key][halo_defname].create_group(ivmax_key)
                     #Add attribute for vmax_fac
                     integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
                     #Initialise datasets with nans
@@ -1579,7 +1599,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     ihalo_inflow_candidate_data[f'snap{isnap+1}_Particle_InFOF']=np.in1d(ihalo_inflow_candidate_IDs,ihalo_fof_particles[str(snap)]['ParticleIDs_InFOF'])
                     ihalo_inflow_candidate_data[f'snap{isnap+1}_Particle_InHost']=np.in1d(ihalo_inflow_candidate_IDs,ihalo_fof_particles[str(snap)]['ParticleIDs_InHost'])
 
-                # 2. OUTPUTS FROM SIM AND HISTORIES: Types, Coordinates, Velocity, Processed, Structure
+                # 2. OUTPUTS FROM SIM AND HISTORIES: Types,  Processed, Structure (and maybe: Coordinates, Velocity)
                 # Grab particle indices from histories and sim
                 for isnap,snap in enumerate(snaps):
                     ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_historyindices,ihalo_isnap_inflow_candidate_partindices=get_particle_indices(base_halo_data,
@@ -1588,7 +1608,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                                                                                    IDs_taken=ihalo_inflow_candidate_IDs,
                                                                                                    types_taken=ihalo_inflow_candidate_Types,
                                                                                                    snap_taken=snap2,
-                                                                                                   snap_desired=snap)
+                                                                                                   snap_desired=snap,
+                                                                                                   return_partindices=True)
                     #Dump particle type
                     ihalo_inflow_candidate_data[f'snap{isnap+1}_ParticleTypes']=ihalo_isnap_inflow_candidate_parttypes
                     
@@ -1612,18 +1633,21 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         iipart=0
                         for ipart_type,ipart_partidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_partindices):
                             try:
-                                ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx]
+                                if ipart_type==1 and field=='Mass':
+                                    ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)]
+                                else:
+                                    ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx]
                             except:
                                 pass
                             iipart=iipart+1
                     #Derive other simulation outputs
                     if snap==snap1 or snap==snap2:
-                        ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_inflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
-                        ihalo_inflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
-                        ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_inflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
-                        ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_inflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
-                        ihalo_inflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
-
+                        if vmax_cut:
+                            ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_inflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
+                            ihalo_inflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
+                            ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_inflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
+                            ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_inflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
+                            ihalo_inflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
                         if not write_partdata:
                             del ihalo_inflow_candidate_data[f'snap{isnap+1}_r_com']
                             del ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']
@@ -1645,12 +1669,20 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         ihalo_hdf5['Inflow'][itype_key].create_dataset('Mass',data=ihalo_inflow_candidate_data['snap1_Mass'][ihalo_itype_mask],dtype=output_fields_dtype["Mass"],compression=compression)
 
                         #Rest of fields: snap 1
-                        ihalo_snap1_inflow_outputs=["Structure","Processed","Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                        if vmax_cut:
+                            ihalo_snap1_inflow_outputs=["Structure","Processed","Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                        else:
+                            ihalo_snap1_inflow_outputs=["Structure","Processed","Particle_InFOF","Particle_InHost"]
+
                         for ihalo_snap1_inflow_output in ihalo_snap1_inflow_outputs:
                             ihalo_hdf5['Inflow'][itype_key].create_dataset(f'snap1_{ihalo_snap1_inflow_output}',data=ihalo_inflow_candidate_data[f'snap1_{ihalo_snap1_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap1_inflow_output],compression=compression)
                         
                         #Rest of fields: snap 2
-                        ihalo_snap2_inflow_outputs=["Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                        if vmax_cut:
+                            ihalo_snap2_inflow_outputs=["Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                        else:
+                            ihalo_snap2_inflow_outputs=["Particle_InFOF","Particle_InHost"]
+
                         for ihalo_snap2_inflow_output in ihalo_snap2_inflow_outputs:
                             ihalo_hdf5['Inflow'][itype_key].create_dataset(f'snap2_{ihalo_snap2_inflow_output}',data=ihalo_inflow_candidate_data[f'snap2_{ihalo_snap2_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_inflow_output],compression=compression)
                         
@@ -1672,8 +1704,13 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                    
                     # Use the leys of above to recall halo types
                     ihalo_itype_halodefs=list(ihalo_itype_inflow_definition.keys())
+                    
                     # Masks for cuts on inflow velocity as per vmax_facs
-                    ihalo_itype_inflow_vmax_masks={'vmax_fac'+str(ivmax_fac+1):-ihalo_inflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_metadata['ave_vmax']  for ivmax_fac,vmax_fac in enumerate(vmax_facs["Inflow"])}
+                    if vmax_cut:
+                        ihalo_itype_inflow_vmax_masks={'vmax_fac'+str(ivmax_fac+1):-ihalo_inflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_metadata['ave_vmax']  for ivmax_fac,vmax_fac in enumerate(vmax_facs["Inflow"])}
+                    else:
+                        ihalo_itype_inflow_vmax_masks={'vmax_fac_1':np.ones(len(ihalo_itype_inflow_masses))}
+
                     # Masks for processing history of particles
                     ihalo_itype_inflow_processed_masks={'Unprocessed':ihalo_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask]==0.0,
                                                         'Processed':ihalo_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask]>0.0,
@@ -1755,7 +1792,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                                                                                     IDs_taken=ihalo_outflow_candidate_IDs,
                                                                                                     types_taken=ihalo_outflow_candidate_Types,
                                                                                                     snap_taken=snap1,
-                                                                                                    snap_desired=snap)
+                                                                                                    snap_desired=snap,
+                                                                                                    return_partindices=True)
                         #Dump particle type
                         ihalo_outflow_candidate_data[f'snap{isnap+1}_ParticleTypes']=ihalo_isnap_outflow_candidate_parttypes
 
@@ -1773,13 +1811,13 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                 iipart=iipart+1
                         #Derive other simulation outputs
                         if snap==snap1 or snap==snap2:
-                            ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_outflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
-                            ihalo_outflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
-                            ihalo_outflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_outflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
-                            ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_outflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
-                            ihalo_outflow_candidate_data[f'snap{isnap+1}_vabs_com']=np.sqrt(np.sum(np.square(ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com']),axis=1))
-                            ihalo_outflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_outflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
-                            
+                            if vmax_cut:
+                                ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com']=ihalo_outflow_candidate_data[f'snap{isnap+1}_Coordinates']-ihalo_com_physical[str(snap)]
+                                ihalo_outflow_candidate_data[f'snap{isnap+1}_rabs_com']=np.sqrt(np.sum(np.square(ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com']),axis=1))
+                                ihalo_outflow_candidate_data[f'snap{isnap+1}_runit_com']=np.divide(ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com'],np.column_stack([ihalo_outflow_candidate_data[f'snap{isnap+1}_rabs_com']]*3))
+                                ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com']=ihalo_outflow_candidate_data[f'snap{isnap+1}_Velocity']-ihalo_vcom_physical[str(snap)]
+                                ihalo_outflow_candidate_data[f'snap{isnap+1}_vrad_com']=np.sum(ihalo_outflow_candidate_data[f'snap{isnap+1}_runit_com']*ihalo_outflow_candidate_data[f'snap{isnap+1}_v_com'],axis=1)
+                                
                             if not write_partdata:
                                 del ihalo_outflow_candidate_data[f'snap{isnap+1}_r_com']
                                 del ihalo_outflow_candidate_data[f'snap{isnap+1}_runit_com']
@@ -1801,12 +1839,20 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                             ihalo_hdf5['Outflow'][itype_key].create_dataset('Mass',data=ihalo_outflow_candidate_data['snap2_Mass'][ihalo_itype_mask],dtype=output_fields_dtype["Mass"],compression=compression)
 
                             #Rest of fields: snap 1
-                            ihalo_snap1_outflow_outputs=["Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                            if vmax_cut:
+                                ihalo_snap1_outflow_outputs=["Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                            else:
+                                ihalo_snap1_outflow_outputs=["Particle_InFOF","Particle_InHost"]
+
                             for ihalo_snap1_outflow_output in ihalo_snap1_outflow_outputs:
                                 ihalo_hdf5['Outflow'][itype_key].create_dataset(f'snap1_{ihalo_snap1_outflow_output}',data=ihalo_outflow_candidate_data[f'snap1_{ihalo_snap1_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap1_inflow_output],compression=compression)
                             
                             #Rest of fields: snap 2
-                            ihalo_snap2_outflow_outputs=["Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                            if vmax_cut:
+                                ihalo_snap2_outflow_outputs=["Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                            else:
+                                ihalo_snap2_outflow_outputs=["Particle_InFOF","Particle_InHost"]
+
                             for ihalo_snap2_outflow_output in ihalo_snap2_outflow_outputs:
                                 ihalo_hdf5['Outflow'][itype_key].create_dataset(f'snap2_{ihalo_snap2_outflow_output}',data=ihalo_outflow_candidate_data[f'snap2_{ihalo_snap2_outflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_inflow_output],compression=compression)
                             
@@ -1827,7 +1873,11 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                                     'FOF-subhaloscale':np.logical_and(ihalo_outflow_candidate_data["snap1_Particle_InHost"][ihalo_itype_mask],np.logical_not(ihalo_outflow_candidate_data["snap2_Particle_InHost"][ihalo_itype_mask]))}
                         
                         # Masks for cuts on outflow velocity as per vmax_facs
-                        ihalo_itype_outflow_vmax_masks={'vmax_fac'+str(ivmax_fac+1):ihalo_outflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_metadata['ave_vmax']  for ivmax_fac,vmax_fac in enumerate(vmax_facs["Outflow"])}
+                        if vmax_cut:
+                            ihalo_itype_outflow_vmax_masks={'vmax_fac'+str(ivmax_fac+1):ihalo_outflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_metadata['ave_vmax']  for ivmax_fac,vmax_fac in enumerate(vmax_facs["Outflow"])}
+                        else:
+                            ihalo_itype_outflow_vmax_masks={'vmax_fac_1':np.ones(len(ihalo_itype_outflow_masses))}
+
                         # Masks for processing history of particles
                         ihalo_itype_outflow_processed_masks={'Total': np.ones(len(ihalo_itype_outflow_masses))}
                         # Masks for the destination of outflow particles
