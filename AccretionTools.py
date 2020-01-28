@@ -1315,7 +1315,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     #If EAGLE, read masses
     if SimType=='EAGLE':
         #Which fields do we need at each snap
-        PartTypes_keys_all=list(h5py.File(base_halo_data[-1]['Part_FilePath'].keys(),'r'))
+        PartTypes_keys_all=list(h5py.File(base_halo_data[-1]['Part_FilePath']).keys(),'r')
         PartTypes_keys=[key for key in PartTypes_keys_all if 'PartType'  in key]
         PartTypes=[int(key.split('PartType')[-1]) for key in PartTypes_keys]
         print(f'Using parttypes: {PartTypes}')
