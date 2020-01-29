@@ -1390,10 +1390,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     for snap in snaps:
         Part_Histories_File_snap=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5",'r')
         for field in Part_Histories_fields[str(snap)]:
-            if field=='ParticleIDs':
-                Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field].value for itype in PartTypes}
-            else:
-                Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field] for itype in PartTypes}#note: no .value
+            Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field].value for itype in PartTypes}
 
     print(f'Done retrieving & organising particle histories')
 
