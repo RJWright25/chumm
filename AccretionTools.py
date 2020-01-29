@@ -222,6 +222,8 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
 
     # Factors of r200 to calculate SO accretion/outflow to
     r200_facs={'Inflow':r200_facs_in,'Outflow':r200_facs_out} 
+    max_r200fac_in=np.nanmax(r200_facs_in)
+    max_r200fac_out=np.nanmax(r200_facs_out)
 
     # Add vmax factor of -1 to whatever the user input was
     vmax_facs_in=np.concatenate([[-1],vmax_facs_in])
@@ -618,8 +620,8 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
 
                 #Find the mean r200 from snap 1 / snap 2
                 ihalo_ave_R_200crit_physical=(ihalo_metadata['snap1_R_200crit']+ihalo_metadata['snap2_R_200crit'])/2
-                #Find which particles are with in the mean r200
-                ihalo_cube_rcut_snap2=np.where(np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap2)]['Coordinates']-ihalo_com_physical[str(snap2)]),axis=1))<ihalo_ave_R_200crit_physical)
+                #Find which particles are with in the largest SO region requested
+                ihalo_cube_rcut_snap2=np.where(np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap2)]['Coordinates']-ihalo_com_physical[str(snap2)]),axis=1))<ihalo_ave_R_200crit_physical*max_r200fac_in)
                 #Concatenate the IDs of the particles within r200 and the FOF
                 ihalo_combined_inflow_candidate_IDs=np.concatenate([ihalo_fof_particles[str(snap2)]['Particle_IDs'],ihalo_cube_particles[str(snap2)]['ParticleIDs'][ihalo_cube_rcut_snap2]])
                 #Remove duplicates and convert to np.array with long ints
@@ -808,8 +810,8 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
                 if outflow:
                     #Find the mean r200 from snap 1 / snap 2
                     ihalo_ave_R_200crit_physical=(ihalo_metadata['snap1_R_200crit']+ihalo_metadata['snap2_R_200crit'])/2
-                    #Find which particles are with in the mean r200
-                    ihalo_cube_rcut_snap1=np.where(np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap1)]['Coordinates']-ihalo_com_physical[str(snap1)]),axis=1))<ihalo_ave_R_200crit_physical)
+                    #Find which particles are with in the max SO region requested 
+                    ihalo_cube_rcut_snap1=np.where(np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap1)]['Coordinates']-ihalo_com_physical[str(snap1)]),axis=1))<ihalo_ave_R_200crit_physical*max_r200fac_out)
                     #Concatenate the IDs of the particles within r200 and the FOF
                     ihalo_combined_outflow_candidate_IDs=np.concatenate([ihalo_fof_particles[str(snap1)]['Particle_IDs'],ihalo_cube_particles[str(snap1)]['ParticleIDs'][ihalo_cube_rcut_snap1]])
                     #Remove duplicates and convert to np.array with long ints
