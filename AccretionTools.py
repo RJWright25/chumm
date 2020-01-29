@@ -1709,7 +1709,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     if vmax_cut:
                         ihalo_itype_inflow_vmax_masks={'vmax_fac'+str(ivmax_fac+1):-ihalo_inflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_metadata['ave_vmax']  for ivmax_fac,vmax_fac in enumerate(vmax_facs["Inflow"])}
                     else:
-                        ihalo_itype_inflow_vmax_masks={'vmax_fac_1':np.ones(len(ihalo_itype_inflow_masses))}
+                        ihalo_itype_inflow_vmax_masks={'vmax_fac1':np.ones(len(ihalo_itype_inflow_masses))}
 
                     # Masks for processing history of particles
                     ihalo_itype_inflow_processed_masks={'Unprocessed':ihalo_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask]==0.0,
