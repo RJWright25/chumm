@@ -1366,7 +1366,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         except:
                             Part_Data_Full[str(snap)][field][str(itype)]=np.array([])
                     
-                    Part_Data_Full[str(snap)][field][str(1)]=Mass_DM
+                    Part_Data_Full[str(snap)][field][str(1)]=Mass_DM*np.ones(len(Part_Data_Full[str(snap)]['Mass'][str(0)]))
         else:
             Mass_Constant={str(0):True,str(1):True}
             Part_Data_file=h5py.File(Part_Data_FilePaths[str(snap)],'r')
@@ -1616,13 +1616,12 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     if snap==snap1:
                         ihalo_inflow_candidate_data[f'snap{isnap+1}_Structure']=np.array([Part_Histories_data[str(snap)]['HostStructure'][str(ipart_type)][ipart_histidx] for ipart_type,ipart_histidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_historyindices)])
                         ihalo_inflow_candidate_data[f'snap{isnap+1}_Processed']=np.zeros(len(ihalo_inflow_candidate_data[f'snap{isnap+1}_Structure']))+np.nan
-                        iipart=0
-                        for ipart_type,ipart_histidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_historyindices):
-                            if not Part_Histories_Constant[str(ipart_type)]:
-                                ihalo_inflow_candidate_data[f'snap{isnap+1}_Processed'][iipart]=Part_Histories_data[str(snap)]['Processed_L1'][str(ipart_type)][ipart_histidx]
-                            else:
-                                ihalo_inflow_candidate_data[f'snap{isnap+1}_Processed'][iipart]=1
-                            iipart==iipart+1
+                        
+                        for iipart in range(ihalo_inflow_candidate_count):
+                            ipart_type=ihalo_isnap_inflow_candidate_parttypes[iipart]
+                            ipart_histidx=ihalo_isnap_inflow_candidate_historyindices[iipart]
+                            ihalo_inflow_candidate_data[f'snap{isnap+1}_Processed'][iipart]=Part_Histories_data[str(snap)]['Processed_L1'][str(ipart_type)][ipart_histidx]
+
 
                     #Grab particle data
                     for field in Part_Data_fields[str(snap)]:
@@ -1632,10 +1631,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         iipart=0
                         for ipart_type,ipart_partidx in zip(ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_partindices):
                             try:
-                                if ipart_type==1 and field=='Mass':
-                                    ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)]
-                                else:
-                                    ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx]
+                                ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}'][iipart]=Part_Data_Full[str(snap)][field][str(ipart_type)][ipart_partidx]
                             except:
                                 pass
                             iipart=iipart+1
@@ -1652,7 +1648,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                 del ihalo_inflow_candidate_data[f'snap{isnap+1}_runit_com']
                                 del ihalo_inflow_candidate_data[f'snap{isnap+1}_v_com']
 
-                    ############################## SAVE DATA FOR INFLOW CANDIDATES ##############################
+                ############################## SAVE DATA FOR INFLOW CANDIDATES ##############################
                 #############################################################################################
 
                 # Iterate through particle types
@@ -1708,7 +1704,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     if vmax_cut:
                         ihalo_itype_inflow_vmax_masks={'vmax_fac'+str(ivmax_fac+1):-ihalo_inflow_candidate_data[f'snap1_vrad_com'][ihalo_itype_mask]>vmax_fac*ihalo_metadata['ave_vmax']  for ivmax_fac,vmax_fac in enumerate(vmax_facs["Inflow"])}
                     else:
-                        ihalo_itype_inflow_vmax_masks={'vmax_fac1':np.ones(len(ihalo_itype_inflow_masses))}
+                        ihalo_itype_inflow_vmax_masks={'vmax_fac1':np.ones(len(ihalo_inflow_candidate_data[f'snap1_Processed'][ihalo_itype_mask]))}
 
                     # Masks for processing history of particles
                     ihalo_itype_inflow_processed_masks={'Unprocessed':ihalo_inflow_candidate_data["snap1_Processed"][ihalo_itype_mask]==0.0,
@@ -1736,6 +1732,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                             for ivmax_fac, vmax_fac in enumerate(vmax_facs["Inflow"]):
                                 ivmax_key=f'vmax_fac{ivmax_fac+1}'
                                 ivmax_mask=ihalo_itype_inflow_vmax_masks[ivmax_key]
+
                                 # For each processed group
                                 for processedgroup in icalc_processedgroups:
                                     iprocessed_mask=ihalo_itype_inflow_processed_masks[processedgroup]
@@ -1751,10 +1748,12 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                         stable_dset_where=np.where(stable_running_mask)
 
                                         # Dump data to file
-                                        integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaM'][iihalo]=np.float32(np.nansum(ihalo_itype_inflow_masses[all_dset_where]))
+                                        integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaM'][iihalo]=np.float32(np.nansum(ihalo_itype_inflow_masses[all_dset_where]))            
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaN'][iihalo]=np.float32(np.nansum(running_mask))
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'Stable_{idset_key}_DeltaM'][iihalo]=np.float32(np.nansum(ihalo_itype_inflow_masses[stable_dset_where]))
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'Stable_{idset_key}_DeltaN'][iihalo]=np.float32(np.nansum(stable_running_mask))
+                                        print(f'All delta M:', np.float32(np.nansum(ihalo_itype_inflow_masses[all_dset_where])))
+                                        print(f'All delta N:', np.float32(np.nansum(running_mask)))
                 
                 ########################################################################################################################################
                 ############################################################ ihalo OUTFLOW #############################################################
