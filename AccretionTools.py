@@ -223,7 +223,8 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     # Factors of r200 to calculate SO accretion/outflow to
     r200_facs={'Inflow':r200_facs_in,'Outflow':r200_facs_out} 
     max_r200fac_in=np.nanmax(r200_facs_in)
-    max_r200fac_out=np.nanmax(r200_facs_out)
+    if outflow:
+        max_r200fac_out=np.nanmax(r200_facs_out)
 
     # Add vmax factor of -1 to whatever the user input was
     vmax_facs_in=np.concatenate([[-1],vmax_facs_in])
