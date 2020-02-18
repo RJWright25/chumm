@@ -238,7 +238,7 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     halo_defnames["Outflow"]=np.concatenate([['FOF-haloscale','FOF-subhaloscale'],['SO-r200_fac'+str(ir200_fac+1) for ir200_fac in range(len(r200_facs["Outflow"]))]])
     
     # Default options 
-    ihalo_cube_rfac=1.25 #cube to grab EAGLE data from
+    ihalo_cube_rfac=2.5 #cube to grab EAGLE data from
     vel_conversion=978.462 #Mpc/Gyr to km/s
     use='cminpot' #which halo centre definition to use (from 'cminpot', 'com')
     compression='gzip'
