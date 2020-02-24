@@ -63,6 +63,8 @@ if True:
                         help='halo index list lower limit (for testing: -1=all, not test)')
     parser.add_argument('-hil_hi', type=int,default=-1,
                         help='halo index list upper limit (for testing, -1=all, not test)')
+    parser.add_argument('-hil_cap', type=int,default=-1,
+                        help='halo index list limit')
     parser.add_argument('-gen_ad', type=int,default=1,
                         help='Flag: generate accretion data')  
     parser.add_argument('-col_ad', type=int,default=1,
@@ -99,6 +101,7 @@ if True:
     post_depth=parser.parse_args().post
     halo_index_list_lo=parser.parse_args().hil_lo
     halo_index_list_hi=parser.parse_args().hil_hi
+    halo_index_list_cap=parser.parse_args().hil_cap
     gen_ad=bool(parser.parse_args().gen_ad)
     col_ad=bool(parser.parse_args().col_ad)
     n_processes = parser.parse_args().np_calc
@@ -128,12 +131,13 @@ if True:
     # Process arguments: if we're parsed a halo index list range that isn't -1, then use testing mode
     if halo_index_list_lo==-1:
         test=False
-        halo_index_list_massordered=np.argsort(base_halo_data[snap]["Mass_200crit"])[::-1]
-        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered,n=n_processes,test=test)
+        halo_index_list_massordered=np.argsort(base_halo_data[snap]["Mass_200crit"])
+        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered[::halo_index_list_cap],n=n_processes,test=test)
     else:
         test=True
         halo_index_list=list(range(halo_index_list_lo,halo_index_list_hi))
         halo_index_lists=gen_mp_indices(indices=halo_index_list,n=n_processes,test=test)
+    
 
     # Determine output directory for this calculation
     if fofonly:

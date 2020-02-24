@@ -1469,7 +1469,6 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaM',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
-
     ####################################################################################################################################################################################
     ####################################################################################################################################################################################
     ########################################################################### MAIN HALO LOOP #########################################################################################
