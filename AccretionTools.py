@@ -238,7 +238,7 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     halo_defnames["Outflow"]=np.concatenate([['FOF-haloscale','FOF-subhaloscale'],['SO-r200_fac'+str(ir200_fac+1) for ir200_fac in range(len(r200_facs["Outflow"]))]])
     
     # Default options 
-    ihalo_cube_rfac=6 #cube to grab EAGLE data from
+    ihalo_cube_rfac=5 #cube to grab EAGLE data from
     vel_conversion=978.462 #Mpc/Gyr to km/s
     use='cminpot' #which halo centre definition to use (from 'cminpot', 'com')
     compression='gzip'
@@ -622,7 +622,7 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
                 #Find the mean r200 from snap 1 / snap 2
                 ihalo_ave_R_200crit_physical=(ihalo_metadata['snap1_R_200crit']+ihalo_metadata['snap2_R_200crit'])/2
                 #Find which particles are with in the largest SO region requested
-                ihalo_cube_rcut_snap2=np.where(np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap2)]['Coordinates']-ihalo_com_physical[str(snap2)]),axis=1))<ihalo_ave_R_200crit_physical*max_r200fac_in)
+                ihalo_cube_rcut_snap2=np.where(np.sqrt(np.sum(np.square(ihalo_cube_particles[str(snap2)]['Coordinates']-ihalo_com_physical[str(snap2)]),axis=1))<ihalo_ave_R_200crit_physical*max_r200fac_in*5)
                 #Concatenate the IDs of the particles within r200 and the FOF
                 ihalo_combined_inflow_candidate_IDs=np.concatenate([ihalo_fof_particles[str(snap2)]['Particle_IDs'],ihalo_cube_particles[str(snap2)]['ParticleIDs'][ihalo_cube_rcut_snap2]])
                 #Remove duplicates and convert to np.array with long ints

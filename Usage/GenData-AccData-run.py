@@ -58,7 +58,7 @@ gen_ad=1
 col_ad=1
 hil_lo=-1
 hil_hi=-1
-hil_cap=-1
+hil_cap=50
 
 # Submit/ run
 if hil_lo==-1:

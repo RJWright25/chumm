@@ -63,7 +63,7 @@ if True:
                         help='halo index list lower limit (for testing: -1=all, not test)')
     parser.add_argument('-hil_hi', type=int,default=-1,
                         help='halo index list upper limit (for testing, -1=all, not test)')
-    parser.add_argument('-hil_cap', type=int,default=-1,
+    parser.add_argument('-hil_cap', type=int,default=1,
                         help='halo index list limit')
     parser.add_argument('-gen_ad', type=int,default=1,
                         help='Flag: generate accretion data')  

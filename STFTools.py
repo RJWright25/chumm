@@ -743,7 +743,7 @@ def compress_detailed_halo_data(detailed_halo_data,fields=None):
 
 ########################### FIND PROGENITOR AT DEPTH ###########################
 
-def find_progen_index(base_halo_data,index2,snap2,depth): ### given halo index2 at snap 2, find progenitor index at snap1=snap2-depth
+def find_progen_index(base_halo_data,index2,snap2,depth,return_all_depths=False): ### given halo index2 at snap 2, find progenitor index at snap1=snap2-depth
     
  
     """
@@ -774,7 +774,7 @@ def find_progen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
         The index of the best matched halo at the desired snap. 
 
 	"""
-
+    index_depth=[]
     padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
     index_idepth=index2
     for idepth in range(depth):
@@ -783,12 +783,20 @@ def find_progen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
         index_idepth=np.where(base_halo_data[snap2-idepth-1]["ID"]==tail_ID)[0]
         if len(index_idepth)==0:
             index_idepth=np.nan
+            index_depth.extend([np.nan]*(depth-idepth))
             break
         else:
             index_idepth=index_idepth[0]
+            index_depth.append(index_idepth)
             if idepth==depth-1:
-                return index_idepth
-    return index_idepth
+                if return_all_depths:
+                    return index_depth
+                else:
+                    return index_idepth
+    if return_all_depths:         
+        return index_depth
+    else:
+        return index_idepth
 
 ########################### FIND DESCENDANT AT DEPTH ###########################
 
