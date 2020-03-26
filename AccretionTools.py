@@ -32,6 +32,7 @@ from VRPythonTools import *
 from STFTools import *
 from ParticleTools import *
 from pandas import DataFrame as df
+from scipy import spatial
 
 
 ########################### GENERATE ACCRETION DATA: EAGLE (memory saving + SO compatibility) ###########################
@@ -991,7 +992,6 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     output_hdf5.close()
     return None
 
-
 ########################### GENERATE ACCRETION DATA: ALL (fof-only) ###########################
 
 def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,vmax_facs_in=[-1],vmax_facs_out=[-1],write_partdata=False):
@@ -1472,6 +1472,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaM',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+
+
     ####################################################################################################################################################################################
     ####################################################################################################################################################################################
     ########################################################################### MAIN HALO LOOP #########################################################################################
@@ -1948,6 +1950,544 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     output_hdf5.close()
     return None
 
+########################### GENERATE ACCRETION DATA: ALL (r200) ###########################
+
+def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,vmax_facs_in=[-1],vmax_facs_out=[-1],r200_facs_in=[],r200_facs_out=[],write_partdata=False):
+    
+    t1_init=time.time()
+    t1_io=time.time()
+
+    ##### Processing inputs #####
+    # Processing the snap inputs
+    snap1=snap-pre_depth
+    snap2=snap
+    snap3=snap+post_depth
+    snaps=[snap1,snap2]
+    
+    # Processing the desired halo index list
+    if halo_index_list==None:
+        halo_index_list_snap2=list(range(len(base_halo_data[snap]["hostHaloID"])))#use all halos if not handed halo index list
+        iprocess="x"
+        num_processes=1
+        test=True
+    else:
+        try:
+            halo_index_list_snap2=halo_index_list["indices"] #extract index list from input dictionary
+            iprocess=str(halo_index_list["iprocess"]).zfill(2) #the process for this index list (this is just used for the output file name)
+            print(f'iprocess {iprocess} has {len(halo_index_list_snap2)} halo indices: {halo_index_list_snap2}')
+            num_processes=halo_index_list["np"]
+            test=halo_index_list["test"]
+        except:
+            print('Not parsed a valud halo index list. Exiting.')
+            return None
+    
+    # Find the indices of halos at snap1 and snap3 (ordered by snap2 halo indices)
+    halo_index_list_snap1=[find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=pre_depth) for ihalo in halo_index_list_snap2]
+    halo_index_list_snap3=[find_descen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=post_depth) for ihalo in halo_index_list_snap2]
+
+    # Check whether we are doing the vmax cuts based on the infow  list
+    if vmax_facs_in==[]:
+        vmax_cut=False
+    else:
+        vmax_cut=True
+
+    # Determine whether we need to perform outflow calculations based on whether we are given outflow vmax cuts
+    output_groups=['Inflow']
+
+    # Add vmax factor of -1 to whatever the user input was
+    vmax_facs_in=np.concatenate([[-1],vmax_facs_in])
+
+    if vmax_cut:
+        vmax_facs={'Inflow':vmax_facs_in} 
+    else:
+        vmax_facs={'Inflow':[0]}
+
+    # Define halo calculation types
+    halo_defnames={}
+    halo_defnames["Inflow"]=[f'R200_fac{ifac+1}' for ifac in range(len(r200_facs_in))]
+    
+    # Default options 
+    use='cminpot' #which halo centre definition to use (from 'cminpot', 'com')
+    compression='gzip'
+
+    # Create log file and directories, initialising outputs
+    if True:
+        #Logs
+        acc_log_dir=f"job_logs/acc_logs/"
+        if not os.path.exists(acc_log_dir):
+            try:
+                os.mkdir(acc_log_dir)
+            except:
+                pass
+        if test:
+            run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_R200only_test/"
+        else:
+            run_log_dir=f"job_logs/acc_logs/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_R200only/"
+
+        if not os.path.exists(run_log_dir):
+            try:
+                os.mkdir(run_log_dir)
+            except:
+                pass
+
+        run_snap_log_dir=run_log_dir+f'snap_{str(snap).zfill(3)}/'
+
+        if not os.path.exists(run_snap_log_dir):
+            try:
+                os.mkdir(run_snap_log_dir)
+            except:
+                pass
+        if test:
+            fname_log=run_snap_log_dir+f"progress_p{str(iprocess).zfill(3)}_n{str(len(halo_index_list_snap2)).zfill(6)}_test.log"
+            print(f'iprocess {iprocess} will save progress to log file: {fname_log}')
+
+        else:
+            fname_log=run_snap_log_dir+f"progress_p{str(iprocess).zfill(3)}_n{str(len(halo_index_list_snap2)).zfill(6)}.log"
+
+        if os.path.exists(fname_log):
+            os.remove(fname_log)
+        
+        with open(fname_log,"a") as progress_file:
+            progress_file.write('Initialising and loading in data ...\n')
+        progress_file.close()
+    
+        # Initialising outputs
+        if not os.path.exists('acc_data'):#create folder for outputs if doesn't already exist
+            os.mkdir('acc_data')
+        if test:
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_R200only_test/'
+        else:
+            calc_dir=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_np{str(num_processes).zfill(2)}_R200only/'
+
+        if not os.path.exists(calc_dir):#create folder for outputs if doesn't already exist
+            try:
+                os.mkdir(calc_dir)
+            except:
+                pass
+        calc_snap_dir=calc_dir+f'snap_{str(snap2).zfill(3)}/'
+        
+        if not os.path.exists(calc_snap_dir):#create folder for outputs if doesn't already exist
+            try:
+                os.mkdir(calc_snap_dir)
+            except:
+                pass
+
+        # Assigning snap
+        if snap==None:
+            snap=len(base_halo_data)-1#if not given snap, just use the last one
+
+    # Create output file with metadata attributes
+    run_outname=base_halo_data[snap]['outname']#extract output name (simulation name)
+    outfile_name=calc_snap_dir+'AccretionData_pre'+str(pre_depth).zfill(2)+'_post'+str(post_depth).zfill(2)+'_snap'+str(snap).zfill(3)+'_p'+str(iprocess).zfill(3)+'.hdf5'
+    
+    # Remove existing output file if exists
+    if not os.path.exists(outfile_name):
+        print(f'Initialising output file at {outfile_name}...')
+        output_hdf5=h5py.File(outfile_name,"w")
+    else:
+        print(f'Removing old file and initialising output file at {outfile_name}...')
+        os.remove(outfile_name)
+        output_hdf5=h5py.File(outfile_name,"w")
+
+    # Make header for accretion data based on base halo data 
+    if True:
+        header_hdf5=output_hdf5.create_group("Header")
+        lt_ave=(base_halo_data[snap1]['SimulationInfo']['LookbackTime']+base_halo_data[snap2]['SimulationInfo']['LookbackTime'])/2
+        z_ave=(base_halo_data[snap1]['SimulationInfo']['z']+base_halo_data[snap2]['SimulationInfo']['z'])/2
+        dt=(base_halo_data[snap1]['SimulationInfo']['LookbackTime']-base_halo_data[snap2]['SimulationInfo']['LookbackTime'])
+        t1=base_halo_data[snap1]['SimulationInfo']['LookbackTime']
+        t2=base_halo_data[snap2]['SimulationInfo']['LookbackTime']
+        t3=base_halo_data[snap3]['SimulationInfo']['LookbackTime']
+        z1=base_halo_data[snap1]['SimulationInfo']['z']
+        z2=base_halo_data[snap2]['SimulationInfo']['z']
+        z3=base_halo_data[snap3]['SimulationInfo']['z']
+        header_hdf5.attrs.create('ave_LookbackTime',data=lt_ave,dtype=np.float16)
+        header_hdf5.attrs.create('ave_z',data=z_ave,dtype=np.float16)
+        header_hdf5.attrs.create('delta_LookbackTime',data=dt,dtype=np.float16)
+        header_hdf5.attrs.create('snap1_LookbackTime',data=t1,dtype=np.float16)
+        header_hdf5.attrs.create('snap2_LookbackTime',data=t2,dtype=np.float16)
+        header_hdf5.attrs.create('snap3_LookbackTime',data=t3,dtype=np.float16)
+        header_hdf5.attrs.create('snap1_z',data=z1,dtype=np.float16)
+        header_hdf5.attrs.create('snap2_z',data=z2,dtype=np.float16)
+        header_hdf5.attrs.create('snap3_z',data=z3,dtype=np.float16)
+        header_hdf5.attrs.create('snap1',data=snap1,dtype=np.int16)
+        header_hdf5.attrs.create('snap2',data=snap2,dtype=np.int16)
+        header_hdf5.attrs.create('snap3',data=snap3,dtype=np.int16)
+        header_hdf5.attrs.create('pre_depth',data=snap2-snap1,dtype=np.int16)
+        header_hdf5.attrs.create('post_depth',data=snap3-snap2,dtype=np.int16)
+        header_hdf5.attrs.create('outname',data=np.string_(base_halo_data[snap2]['outname']))
+        header_hdf5.attrs.create('total_num_halos',data=base_halo_data[snap2]['Count'])
+    
+    # Standard particle type names from simulation
+    SimType=base_halo_data[snap2]['Part_FileType']
+    
+
+    ##### Loading in Data #####
+
+    ####Create master data structure if needed - particle coordinates/types/masses indexed identically
+
+    # Particle data - LOAD HERE
+    print('Retrieving & organising raw particle data ...')
+    PartNames=['Gas','DM','','','Star','BH']
+    hval=base_halo_data[snap1]['SimulationInfo']['h_val'];scalefactors={}
+    scalefactors={str(snap):base_halo_data[snap]['SimulationInfo']['ScaleFactor'] for snap in snaps}
+    Mass_DM=base_halo_data[snap2]['SimulationInfo']['Mass_DM_Physical']
+    Mass_Gas=base_halo_data[snap2]['SimulationInfo']['Mass_Gas_Physical']
+    BoxSize=base_halo_data[snap2]['SimulationInfo']['BoxSize_Comoving']
+
+    #Conversion factors for particle data
+    Part_Data_comtophys={str(snap):{'Coordinates':scalefactors[str(snap)]/hval, 
+                                    'Velocity':scalefactors[str(snap)]/hval,
+                                    'Mass':10.0**10/hval,
+                                    'ParticleIDs':1} for snap in snaps}
+    
+    Part_Data_FilePaths={str(snap):base_halo_data[snap]['Part_FilePath'] for snap in snaps}
+
+    #If EAGLE, read masses
+    if SimType=='EAGLE':
+        #Which fields do we need at each snap
+        PartTypes_keys_all=list(h5py.File(base_halo_data[-1]['Part_FilePath'],'r').keys())
+        PartTypes_keys=[key for key in PartTypes_keys_all if 'PartType'  in key]
+        PartTypes=[int(key.split('PartType')[-1]) for key in PartTypes_keys]
+        print(f'Using parttypes: {PartTypes}')
+
+        Part_Data_fields={str(snap1):['ParticleIDs','Mass','Coordinates'],str(snap2):['ParticleIDs','Mass','Coordinates']}
+        if vmax_cut:
+            for snap in [snap1,snap2]:
+                Part_Data_fields[str(snap)].append('Velocity')
+
+    #If not EAGLE, assume constant masses
+    else:
+        #Which fields do we need at each snap
+        PartTypes=[0,1] #Gas, DM, Stars, BH
+        Part_Data_fields= {str(snap1):['ParticleIDs','Coordinates','Velocities'],str(snap2):['ParticleIDs','Coordinates','Velocities']}
+    
+
+    # Check for existence of master array
+    Part_Master_fname=f'acc_data/pre{str(pre_depth).zfill(2)}_post{str(post_depth).zfill(2)}_snap{str(snap2).zfill(3)}_masterarray.dat'
+
+    if os.path.exists(Part_Master_fname):
+        print(f'Found existing master particle array at {Part_Master_fname} - loading ...')
+        Part_Master_Array=open_pickle(Part_Master_fname)
+
+    else:
+        print(f'No existing master particle array at {Part_Master_fname} - proceeding ...')
+        Part_Data_Full={str(snap):{field:{} for field in Part_Data_fields[str(snap)]} for snap in snaps}
+        for snap in snaps:
+            if SimType=='EAGLE':
+                EAGLE_snap=read_eagle.EagleSnapshot(Part_Data_FilePaths[str(snap)])
+                EAGLE_snap.select_region(xmin=0,xmax=BoxSize,
+                                        ymin=0,ymax=BoxSize,
+                                        zmin=0,zmax=BoxSize)
+                for field in Part_Data_fields[str(snap)]:
+                    if not field=='Mass':
+                        for itype in PartTypes:
+                            try:
+                                Part_Data_Full[str(snap)][field][str(itype)]=EAGLE_snap.read_dataset(itype,field)*Part_Data_comtophys[str(snap)][field]
+                            except:
+                                Part_Data_Full[str(snap)][field][str(itype)]=np.array([])
+                    else:
+                        for itype in [0,4,5]:
+                            try:
+                                Part_Data_Full[str(snap)][field][str(itype)]=EAGLE_snap.read_dataset(itype,field)*Part_Data_comtophys[str(snap)][field]
+                            except:
+                                Part_Data_Full[str(snap)][field][str(itype)]=np.array([])
+                        
+                        Part_Data_Full[str(snap)][field][str(1)]=Mass_DM*np.ones(len(Part_Data_Full[str(snap)]['Mass'][str(0)]))
+            else:
+                Mass_Constant={str(0):True,str(1):True}
+                Part_Data_file=h5py.File(Part_Data_FilePaths[str(snap)],'r')
+                for field in Part_Data_fields[str(snap)]:
+                    if field=='Velocities':
+                        Part_Data_Full[str(snap)]['Velocity']={str(itype):Part_Data_file[f'PartType{itype}']['Velocities'].value*Part_Data_comtophys[str(snap)]['Velocity'] for itype in PartTypes}
+                    else:
+                        Part_Data_Full[str(snap)][field]={str(itype):Part_Data_file[f'PartType{itype}'][field].value*Part_Data_comtophys[str(snap)][field] for itype in PartTypes}
+                
+                Part_Data_Full[str(snap)]['Mass'][str(0)]=h5py.File(base_halo_data[snap]['Part_FilePath'],'r')['Header'].attrs['MassTable'][0]*Part_Data_comtophys[str(snap)]['Mass']
+                Part_Data_Full[str(snap)]['Mass'][str(1)]=h5py.File(base_halo_data[snap]['Part_FilePath'],'r')['Header'].attrs['MassTable'][1]*Part_Data_comtophys[str(snap)]['Mass']
+
+        if not SimType=='EAGLE':
+            Part_Data_fields={str(snap1):['Coordinates','Velocity','Mass'],str(snap2):['Coordinates','Velocity','Mass'],str(snap3):[]}
+
+        print('Done retrieving & organising raw particle data ...')
+
+
+        # Particle histories - LOAD HERE
+        print(f'Retrieving & organising particle histories ...')
+        # Part_Histories_fields={str(snap1):["ParticleIDs",'ParticleIndex','HostStructure','Processed_L1'],str(snap2):["ParticleIDs",'ParticleIndex'],str(snap3):["ParticleIDs",'ParticleIndex']}
+        Part_Histories_fields={str(snap1):["ParticleIDs",'ParticleIndex'],str(snap2):["ParticleIDs",'ParticleIndex']}
+        Part_Histories_data={str(snap):{} for snap in snaps}
+        Part_Histories_Constant={str(0):False,str(1):False,str(4):False,str(5):False}
+        for snap in snaps:
+            Part_Histories_File_snap=h5py.File("part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5",'r')
+            for field in Part_Histories_fields[str(snap)]:
+                Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field].value for itype in PartTypes}
+        print(f'Done retrieving & organising particle histories')
+        t2_io=time.time()
+
+        print(f'I/O took {t2_io-t1_io:.1f} sec')
+
+        # Master particle array
+        print('Starting with organising master particle array ...')
+
+        t1_array=time.time()
+        print('Counting particles')
+        npart_tot=0
+        for itype in PartTypes:
+            npart_tot=npart_tot+len(Part_Data_Full[str(snap1)]['ParticleIDs'][str(itype)])
+        print(f'Total number of particles: {npart_tot}')
+
+        snap1_IDs=np.zeros((npart_tot,),dtype=np.int64)
+        snap1_Types=np.zeros((npart_tot,),dtype=np.int8)
+        snap1_Mass=np.zeros((npart_tot,),dtype=np.float32)
+        snap1_Coordinates=np.zeros((npart_tot,3),dtype=np.float32)
+        snap2_Coordinates=np.zeros((npart_tot,3),dtype=np.float32)+np.nan
+        
+        # Grabbing snap 1 IDs and Types
+        print('Recording snap1 IDs, Types & Coordinates')
+        npart_running=0
+        for itype in PartTypes:
+            print(f'At itype {itype} ...')
+            npart_itype=len(Part_Data_Full[str(snap1)]['ParticleIDs'][str(itype)])
+            snap1_IDs[npart_running:npart_running+npart_itype]=Part_Data_Full[str(snap1)]['ParticleIDs'][str(itype)]
+            snap1_Types[npart_running:npart_running+npart_itype]=np.ones(npart_itype,dtype=np.int8)*itype
+            if not itype==1:
+                snap1_Mass[npart_running:npart_running+npart_itype]=Part_Data_Full[str(snap1)]['Mass'][str(itype)]
+            else:
+                snap1_Mass[npart_running:npart_running+npart_itype]=np.ones((npart_itype,),dtype=np.float32)*Mass_DM
+            snap1_Coordinates[npart_running:npart_running+npart_itype]=Part_Data_Full[str(snap1)]['Coordinates'][str(itype)]
+            npart_running+=npart_itype
+        
+        del Part_Data_Full[str(snap1)]
+        
+        # Grabbing snap 2 Types and Coordinates
+        print('Finding snap2 Types ...')
+        snap2_Types,snap2_histidx,snap2_idx=get_particle_indices(base_halo_data=base_halo_data,IDs_taken=snap1_IDs,IDs_sorted=Part_Histories_data[str(snap2)]['ParticleIDs'],indices_sorted=Part_Histories_data[str(snap2)]['ParticleIndex'],types_taken=snap1_Types,snap_taken=snap1,snap_desired=snap2,return_partindices=True,verbose=True)
+        print('Done indexing, now extracting snap 2 Coordinates ...')
+        for iipart,(ipart_ID,ipart_Type,ipart_partidx) in enumerate(zip(snap1_IDs,snap2_Types,snap2_idx)):
+            if iipart%10000==0:
+                print(f'{iipart/npart_tot*100:.1f}% done extracting Coordinates')
+            if ipart_Type>=0:
+                snap2_Coordinates[iipart]=Part_Data_Full[str(snap2)]['Coordinates'][str(ipart_Type)][ipart_partidx]
+
+        del Part_Data_Full
+        del Part_Histories_data
+
+        #### Create KDTrees for Coordinates 
+        print('Generating KDtrees for coordinates')
+        t1_tree=time.time()
+        snap1_tree=spatial.cKDTree(snap1_Coordinates)
+        snap2_tree=spatial.cKDTree(snap2_Coordinates)
+        t2_tree=time.time()
+        print(f'Finished KDtrees for coordinates in {t2_tree-t1_tree:.1f} sec')
+
+        # Collate into final master data structure
+        Part_Master_Array={'ParticleIDs':snap1_IDs,'snap1_Types':snap1_Types,'snap2_Types':snap2_Types,'Mass':snap1_Mass,'snap1_KDtree':snap1_tree,'snap2_KDtree':snap2_tree}
+        dump_pickle(path=Part_Master_fname,data=Part_Master_Array)
+
+        t2_array=time.time()
+        print(f'Generated master particle array in {t2-t1:.1f} sec')
+
+    t2_init=time.time()
+    print()
+    print('*********************************************************')
+    print(f'Done initialising in {(t2_init-t1_init):.2f} sec - entering main halo loop ...')
+    print('*********************************************************')
+
+    with open(fname_log,"a") as progress_file:
+        progress_file.write(f'Done initialising in {(t2_init-t1_init):.2f} sec - entering main halo loop ...\n')
+    progress_file.close()
+
+    ##### Initialising outputs #####
+    # Particle
+    if write_partdata:
+        #hdf5 group
+        particle_output_hdf5=output_hdf5.create_group('Particle')
+        
+        #output dtypes
+        output_fields_dtype={}
+        output_fields_float32=["Mass","r_com","rabs_com","vrad_com","vtan_com"]
+        for field in output_fields_float32:
+            output_fields_dtype[field]=np.float32
+
+        output_fields_int64=["ParticleIDs"]
+        for field in output_fields_int64:
+            output_fields_dtype[field]=np.int64
+        
+        # output_fields_int8=["Processed","Particle_InFOF","Particle_Bound","Particle_InHost"]
+        # for field in output_fields_int8:
+        #     output_fields_dtype[field]=np.int8 
+
+    # Integrated (always written)
+    num_halos_thisprocess=len(halo_index_list_snap2)
+    integrated_output_hdf5=output_hdf5.create_group('Integrated')
+    integrated_output_hdf5.create_dataset('ihalo_list',data=halo_index_list_snap2)
+
+    #Defining which outputs for varying levels of detail
+    output_processedgroups={'Basic':['Total']}
+    output_enddatasets={'Basic':['Gross']}
+    
+    #Initialise output datasets with np.nans (len: total_num_halos)
+    for output_group in output_groups:
+        integrated_output_hdf5.create_group(output_group)
+        for itype in PartTypes:
+            itype_key=f'PartType{itype}'
+            integrated_output_hdf5[output_group].create_group(itype_key)
+            for ihalo_defname,halo_defname in enumerate(sorted(halo_defnames[output_group])):
+                #Create group 
+                integrated_output_hdf5[output_group][itype_key].create_group(halo_defname)
+                
+                #Create attribute for r200 factor
+                r200_fac=r200_facs_in[ihalo_defname]
+                integrated_output_hdf5[output_group][itype_key][halo_defname].attrs.create('r200_fac',data=r200_fac)
+
+                #Use detailed datasets for inflow variants
+                if output_group=='Inflow': 
+                    icalc_processedgroups=output_processedgroups['Basic']
+                    icalc_enddatasets=output_enddatasets['Basic']
+                else:
+                    icalc_processedgroups=output_processedgroups['Basic']
+                    icalc_enddatasets=output_enddatasets['Basic']
+
+                #Now, for each Vmax cut
+                for ivmax_fac, vmax_fac in enumerate(vmax_facs[output_group]):
+                    #Create group
+                    ivmax_key=f'vmax_fac{ivmax_fac+1}'
+                    integrated_output_hdf5[output_group][itype_key][halo_defname].create_group(ivmax_key)
+                    #Add attribute for vmax_fac
+                    integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].attrs.create('vmax_fac',data=vmax_fac)
+                    #Initialise datasets with nans
+                    for processedgroup in icalc_processedgroups:
+                        integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key].create_group(processedgroup)
+                        for dataset in icalc_enddatasets:
+                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaM',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+
+
+    for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo (index at snap 2)
+        
+        # If needed, create group for this halo in output file
+        if write_partdata:
+            ihalo_hdf5=particle_output_hdf5.create_group('ihalo_'+str(ihalo_s2).zfill(6))
+            ihalo_hdf5.create_group('Metadata')
+            if write_partdata:
+                ihalo_hdf5.create_group('Inflow')
+                for itype in PartTypes:
+                    ihalo_hdf5['Inflow'].create_group(f'PartType{itype}')
+        
+        print(ihalo_s2)
+
+        # This catches any exceptions for a given halo and prevents the code from crashing 
+        if True:     
+            # try:
+            ########################################################################################################################################
+            ###################################################### ihalo PRE-PROCESSING ############################################################
+            ########################################################################################################################################
+            t1_halo=time.time()
+            
+            # Find halo progenitor and descendants
+            ihalo_indices={str(snap1):halo_index_list_snap1[iihalo],str(snap2):ihalo_s2,str(snap3):halo_index_list_snap3[iihalo]}
+            
+            # Record halo properties 
+            ihalo_tracked=(ihalo_indices[str(snap1)]>-1 and ihalo_indices[str(snap3)]>-1)#track if have both progenitor and descendant
+            ihalo_structuretype=base_halo_data[snap2]["Structuretype"][ihalo_indices[str(snap2)]]#structure type
+            ihalo_numsubstruct=base_halo_data[snap2]["numSubStruct"][ihalo_indices[str(snap2)]]
+            ihalo_hostHaloID=base_halo_data[snap2]["hostHaloID"][ihalo_indices[str(snap2)]]
+            ihalo_sublevel=int(np.floor((ihalo_structuretype-0.01)/10))
+
+            # Print progress to terminal and output file
+            print();print('**********************************************')
+            print('Halo index: ',ihalo_s2,f' - {ihalo_numsubstruct} substructures')
+            print(f'Progenitor: {ihalo_indices[str(snap1)]} | Descendant: {ihalo_indices[str(snap3)]}')
+            print('**********************************************');print()
+            with open(fname_log,"a") as progress_file:
+                progress_file.write(f' \n')
+                progress_file.write(f'Starting with ihalo {ihalo_s2} ... \n')
+            progress_file.close()
+            
+            # This catches any halos for which we can't find a progenitor/descendant 
+            if ihalo_tracked:
+                ### GRAB HALO METADATA ###
+                ihalo_metadata={}
+                for isnap,snap in enumerate(snaps):
+                    ihalo_isnap=ihalo_indices[str(snap)]
+                    if ihalo_isnap>=0:
+                        ihalo_metadata[f'snap{isnap+1}_com']=np.array([base_halo_data[snap]['Xc'][ihalo_indices[str(snap)]],base_halo_data[snap]['Yc'][ihalo_indices[str(snap)]],base_halo_data[snap]['Zc'][ihalo_indices[str(snap)]]],ndmin=2)
+                        ihalo_metadata[f'snap{isnap+1}_cminpot']=np.array([base_halo_data[snap]['Xcminpot'][ihalo_indices[str(snap)]],base_halo_data[snap]['Ycminpot'][ihalo_indices[str(snap)]],base_halo_data[snap]['Zcminpot'][ihalo_indices[str(snap)]]],ndmin=2)
+                        ihalo_metadata[f'snap{isnap+1}_vcom']=np.array([base_halo_data[snap]['VXc'][ihalo_indices[str(snap)]],base_halo_data[snap]['VYc'][ihalo_indices[str(snap)]],base_halo_data[snap]['VZc'][ihalo_indices[str(snap)]]],ndmin=2)
+                        ihalo_metadata[f'snap{isnap+1}_R_200crit']=base_halo_data[snap]['R_200crit'][ihalo_indices[str(snap)]]
+                        ihalo_metadata[f'snap{isnap+1}_R_200mean']=base_halo_data[snap]['R_200mean'][ihalo_indices[str(snap)]]
+                        ihalo_metadata[f'snap{isnap+1}_Mass_200crit']=base_halo_data[snap]['Mass_200crit'][ihalo_indices[str(snap)]]*10**10
+                        ihalo_metadata[f'snap{isnap+1}_vmax']=base_halo_data[snap]['Vmax'][ihalo_indices[str(snap)]]
+                        ihalo_metadata[f'snap{isnap+1}_vesc_crit']=np.sqrt(2*base_halo_data[snap]['Mass_200crit'][ihalo_indices[str(snap)]]*base_halo_data[snap]['SimulationInfo']['Gravity']/base_halo_data[snap]['R_200crit'][ihalo_indices[str(snap)]])
+                
+                # Average some quantities
+                ihalo_metadata['sublevel']=ihalo_sublevel
+                ihalo_metadata['ave_R_200crit']=0.5*base_halo_data[snap1]['R_200crit'][ihalo_indices[str(snap1)]]+0.5*base_halo_data[snap2]['R_200crit'][ihalo_indices[str(snap2)]]
+                ihalo_metadata['ave_vmax']=0.5*base_halo_data[snap1]['Vmax'][ihalo_indices[str(snap1)]]+0.5*base_halo_data[snap2]['Vmax'][ihalo_indices[str(snap2)]]
+                
+                ########################################################################################################################################
+                ############################################################ ihalo INFLOW ##############################################################
+                ########################################################################################################################################
+                
+                ihalo_r200_inflow_type={}
+                ihalo_r200_inflow_mass={}
+                
+                for ir200_fac,r200_fac in enumerate(r200_facs_in):
+                    ihalo_snap1_within_r200=Part_Master_Array['snap1_tree'].query_ball_point(x=ihalo_metadata[f'snap{snap1}_cminpot'],r=r200_fac*ihalo_metadata['ave_R_200crit'])
+                    ihalo_snap2_within_r200=Part_Master_Array['snap2_tree'].query_ball_point(x=ihalo_metadata[f'snap{snap2}_cminpot'],r=r200_fac*ihalo_metadata['ave_R_200crit'])
+                    
+                    ihalo_r200_inflow_idxs=(np.compress(np.in1d(ihalo_snap2_within_r200,ihalo_snap1_within_r200,invert=True,assume_unique=True),ihalo_snap2_within_r200),)
+                    ihalo_r200_inflow_type[f'r200_fac{ir200_fac+1}']=snap1_Types[ihalo_r200_inflow_idxs]
+                    ihalo_r200_inflow_mass[f'r200_fac{ir200_fac+1}']=snap1_Mass[ihalo_r200_inflow_idxs]
+        
+                # ITERATE THROUGH THE ABOVE MASKS
+                # For each halo definition
+                for halo_defname in halo_defnames["Inflow"]:
+                    ihalo_ir200_masses=ihalo_r200_inflow_mass[halo_defname]
+                    ihalo_ir200_types=ihalo_r200_inflow_type[halo_defname]
+
+                    for itype in PartTypes:
+                        itype_key=f'PartType{itype}'
+                        itype_mask=np.where(ihalo_ir200_types==itype)
+                        ivmax_key='vmax_fac1'
+                        processedgroup='Total'
+
+                        # Dump data to file
+                        integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaM'][iihalo]=np.float32(np.nansum(ihalo_ir200_masses[itype_mask]))            
+                        integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaN'][iihalo]=np.float32(len(ihalo_ir200_masses[itype_mask]))
+                      
+                        print(f'All delta M:', integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaM'][iihalo].value)
+                        print(f'All delta N:', integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaN'][iihalo].value)
+
+
+                t2_halo=time.time()
+                        
+                with open(fname_log,"a") as progress_file:
+                    progress_file.write(f"Done with ihalo {ihalo_s2} ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
+                    progress_file.write(f"[Took {t2_halo-t1_halo:.2f} sec]\n")
+                    progress_file.write(f" \n")
+                    progress_file.close()
+
+            else:# Couldn't find the halo progenitor/descendant pair
+                print(f'Skipping ihalo {ihalo_s2} - couldnt find progenitor/descendant pair')
+                with open(fname_log,"a") as progress_file:
+                    progress_file.write(f"Skipping ihalo {ihalo_s2} - no head/tail pair ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
+                    progress_file.write(f" \n")
+                progress_file.close()
+        
+        # Some other error in the main halo loop
+        else: 
+            print(f'Skipping ihalo {ihalo_s2} - dont have the reason')
+            with open(fname_log,"a") as progress_file:
+                progress_file.write(f"Skipping ihalo {ihalo_s2} - unknown reason ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
+                progress_file.write(f" \n")
+            progress_file.close()
+            continue
+
+    #Finished with output file
+    output_hdf5.close()
+    return None
 
 ########################### COLLATE DETAILED ACCRETION DATA ###########################
 

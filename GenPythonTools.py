@@ -146,7 +146,7 @@ def dump_pickle(data,path):
         picklefile.close()
     return data
 
-def binary_search(items,sorted_list,algorithm=None,check_entries=False):
+def binary_search(items,sorted_list,algorithm=None,check_entries=False,verbose=False):
     """
 
     binary_search : function

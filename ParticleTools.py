@@ -328,7 +328,7 @@ def postprocess_particle_history_serial(base_halo_data,path='part_histories'):
 
 ########################### GET PARTICLE INDICES ###########################
 
-def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},types_taken=None,snap_taken=None,snap_desired=None,return_partindices=True):
+def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},types_taken=None,snap_taken=None,snap_desired=None,return_partindices=True,verbose=False):
 
     """
     get_particle_indices : function
@@ -438,8 +438,8 @@ def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},t
 
     for ipart,ipart_id,ipart_type in zip(list(range(npart)),IDs_taken,types_taken):
         out_type=-1
-        if ipart%500==0:
-            # print(f'{ipart/npart*100:.2f}% done typing')
+        if ipart%100000==0 and verbose:
+            print(f'{ipart/npart*100:.2f}% done typing')
             pass
         #find new type
         search_in=search_types[str(int(ipart_type))]
@@ -459,15 +459,17 @@ def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},t
                     continue
                 isearch=isearch+1
         
-        if out_type==-1:
+        if out_type==-1 and verbose:
             print(f'Warning: couldnt find particle {ipart_id}.')
             print(f'When taken (snap {snap_taken}), the particle was of type {int(ipart_type)} but (at snap {snap_desired}) could not be found in {search_in} lists')
 
         parttypes_atsnap[ipart]=out_type
 
     for itype in parttypes:
+        if verbose:
+            print(f'Getting history indices for itype {itype}')
         itype_mask=np.where(parttypes_atsnap==itype)
-        itype_indices=binary_search(items=np.array(IDs_taken)[itype_mask],sorted_list=IDs_sorted[f'{itype}'],check_entries=False)
+        itype_indices=binary_search(items=np.array(IDs_taken)[itype_mask],sorted_list=IDs_sorted[f'{itype}'],check_entries=False,verbose=True)
         historyindices_atsnap[itype_mask]=itype_indices
     
     #Convert types and indices to integet
@@ -476,7 +478,15 @@ def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},t
 
     #Use the parttypes and history indices to find the particle data indices
     if return_partindices:
-        partindices_atsnap=np.array([indices_sorted[str(ipart_type)][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=int)
+        if verbose:
+            print(f'Getting particle indices ...')
+            partindices_atsnap=np.zeros(npart,dtype=np.int32)
+            for iipart,(ipart_type,ipart_historyindex) in enumerate(zip(parttypes_atsnap,historyindices_atsnap)):
+                partindices_atsnap[iipart]=indices_sorted[str(ipart_type)][ipart_historyindex]
+                if iipart%10000==0:
+                    print(f'{iipart/npart*100:.1f} % done getting particle indices')
+        else:
+            partindices_atsnap=np.array([indices_sorted[str(ipart_type)][ipart_historyindex] for ipart_type,ipart_historyindex in zip(parttypes_atsnap,historyindices_atsnap)],dtype=np.int32)
     else:
         partindices_atsnap=None
     
