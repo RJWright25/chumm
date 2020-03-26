@@ -2004,7 +2004,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
 
     # Define halo calculation types
     halo_defnames={}
-    halo_defnames["Inflow"]=[f'R200_fac{ifac+1}' for ifac in range(len(r200_facs_in))]
+    halo_defnames["Inflow"]=[f'r200_fac{ifac+1}' for ifac in range(len(r200_facs_in))]
     
     # Default options 
     use='cminpot' #which halo centre definition to use (from 'cminpot', 'com')
