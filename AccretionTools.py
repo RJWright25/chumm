@@ -2457,8 +2457,8 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaM'][iihalo]=np.float32(np.nansum(ihalo_ir200_masses[itype_mask]))            
                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaN'][iihalo]=np.float32(len(ihalo_ir200_masses[itype_mask]))
                       
-                        print(f'All delta M:', integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaM'][iihalo].value)
-                        print(f'All delta N:', integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaN'][iihalo].value)
+                        print(f'All delta M:', integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_Gross_DeltaM'][iihalo].value)
+                        print(f'All delta N:', integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_Gross_DeltaN'][iihalo].value)
 
 
                 t2_halo=time.time()
