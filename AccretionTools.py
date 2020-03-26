@@ -2434,8 +2434,8 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
                 ihalo_r200_inflow_mass={}
                 
                 for ir200_fac,r200_fac in enumerate(r200_facs_in):
-                    ihalo_snap1_within_r200=Part_Master_Array['snap1_KDtree'].query_ball_point(x=ihalo_metadata[f'snap{snap1}_cminpot'],r=r200_fac*ihalo_metadata['ave_R_200crit'])
-                    ihalo_snap2_within_r200=Part_Master_Array['snap2_KDtree'].query_ball_point(x=ihalo_metadata[f'snap{snap2}_cminpot'],r=r200_fac*ihalo_metadata['ave_R_200crit'])
+                    ihalo_snap1_within_r200=Part_Master_Array['snap1_KDtree'].query_ball_point(x=ihalo_metadata[f'snap1_cminpot'],r=r200_fac*ihalo_metadata['ave_R_200crit'])
+                    ihalo_snap2_within_r200=Part_Master_Array['snap2_KDtree'].query_ball_point(x=ihalo_metadata[f'snap2_cminpot'],r=r200_fac*ihalo_metadata['ave_R_200crit'])
                     
                     ihalo_r200_inflow_idxs=(np.compress(np.in1d(ihalo_snap2_within_r200,ihalo_snap1_within_r200,invert=True,assume_unique=True),ihalo_snap2_within_r200),)
                     ihalo_r200_inflow_type[f'r200_fac{ir200_fac+1}']=snap1_Types[ihalo_r200_inflow_idxs]
