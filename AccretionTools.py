@@ -2289,9 +2289,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
             try:
                 os.remove(Part_Master_fname)
             except:
-                continue
-
-            continue
+                pass
 
         t2_array=time.time()
         print(f'Generated master particle array in {t2-t1:.1f} sec')
@@ -2383,7 +2381,6 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
                 for itype in PartTypes:
                     ihalo_hdf5['Inflow'].create_group(f'PartType{itype}')
         
-        print(ihalo_s2)
 
         # This catches any exceptions for a given halo and prevents the code from crashing 
         if True:     
@@ -2414,7 +2411,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
             progress_file.close()
             
             # This catches any halos for which we can't find a progenitor/descendant 
-            if ihalo_tracked:
+            if ihalo_tracked and base_halo_data[snap2]['Mass_FOF']>10**9.5:
                 ### GRAB HALO METADATA ###
                 ihalo_metadata={}
                 for isnap,snap in enumerate(snaps):
@@ -2478,7 +2475,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
                     progress_file.close()
 
             else:# Couldn't find the halo progenitor/descendant pair
-                print(f'Skipping ihalo {ihalo_s2} - couldnt find progenitor/descendant pair')
+                print(f'Skipping ihalo {ihalo_s2} - couldnt find progenitor/descendant pair or halo has mass < 10^9Msun')
                 with open(fname_log,"a") as progress_file:
                     progress_file.write(f"Skipping ihalo {ihalo_s2} - no head/tail pair ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
                     progress_file.write(f" \n")
