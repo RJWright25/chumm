@@ -2283,7 +2283,15 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
 
         # Collate into final master data structure
         Part_Master_Array={'ParticleIDs':snap1_IDs,'snap1_Types':snap1_Types,'snap2_Types':snap2_Types,'Mass':snap1_Mass,'snap1_KDtree':snap1_tree,'snap2_KDtree':snap2_tree}
-        dump_pickle(path=Part_Master_fname,data=Part_Master_Array)
+        try:
+            dump_pickle(path=Part_Master_fname,data=Part_Master_Array)
+        except:
+            try:
+                os.remove(Part_Master_fname)
+            except:
+                continue
+
+            continue
 
         t2_array=time.time()
         print(f'Generated master particle array in {t2-t1:.1f} sec')
