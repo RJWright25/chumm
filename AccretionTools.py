@@ -2402,7 +2402,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
 
             # Print progress to terminal and output file
             print();print('**********************************************')
-            print('Halo index: ',ihalo_s2,f' - {ihalo_numsubstruct} substructures, mass {base_halo_data[snap2]['Mass_200crit'][ihalo_s2]:.2e}')
+            print('Halo index: ',ihalo_s2,f" - {ihalo_numsubstruct} substructures, mass {base_halo_data[snap2]['Mass_200crit'][ihalo_s2]:.2e}")
             print(f'Progenitor: {ihalo_indices[str(snap1)]} | Descendant: {ihalo_indices[str(snap3)]}')
             print('**********************************************');print()
             with open(fname_log,"a") as progress_file:
