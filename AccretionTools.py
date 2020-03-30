@@ -2151,7 +2151,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
         PartTypes=[int(key.split('PartType')[-1]) for key in PartTypes_keys]
         print(f'Using parttypes: {PartTypes}')
 
-        Part_Data_fields={str(snap1):['ParticleIDs','Mass','Coordinates'],str(snap2):['ParticleIDs','Mass','Coordinates']}
+        Part_Data_fields={str(snap1):['ParticleIDs','Mass','Coordinates'],str(snap2):['Coordinates']}
         if vmax_cut:
             for snap in [snap1,snap2]:
                 Part_Data_fields[str(snap)].append('Velocity')
