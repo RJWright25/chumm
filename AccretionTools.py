@@ -2411,7 +2411,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
             progress_file.close()
             
             # This catches any halos for which we can't find a progenitor/descendant 
-            if ihalo_tracked and base_halo_data[snap2]['Mass_200crit'][ihalo_s2]>10**9.5/10**10:
+            if ihalo_tracked and base_halo_data[snap2]['Mass_200crit'][ihalo_s2]>10**9.0/10**10:
                 ### GRAB HALO METADATA ###
                 ihalo_metadata={}
                 for isnap,snap in enumerate(snaps):
