@@ -1769,8 +1769,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaN'][iihalo]=np.float32(np.nansum(running_mask))
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'Stable_{idset_key}_DeltaM'][iihalo]=np.float32(np.nansum(ihalo_itype_inflow_masses[stable_dset_where]))
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'Stable_{idset_key}_DeltaN'][iihalo]=np.float32(np.nansum(stable_running_mask))
-                                        if itype_key=='PartType0' and halo_defname=='FOF-haloscale' and ivmax_key=='vmax_fac1' and processedgroup=='Total' and dataset=='Gross':
-                                            integrated_output_hdf5['Inflow']['PartType0']['FOF-haloscale']['vmax_fac1']['Total']['frac_SF'][iihalo]=np.nansum(ihalo_itype_inflow_finaltypes[all_dset_where]==4)/len(ihalo_itype_inflow_finaltypes[all_dset_where])
+                                        if itype_key=='PartType0' and halo_defname=='FOF-haloscale' and ivmax_key=='vmax_fac1' and processedgroup=='Total':
+                                            integrated_output_hdf5['Inflow']['PartType0']['FOF-haloscale']['vmax_fac1']['Total']['All_'+dataset+'_fracSF'][iihalo]=np.nansum(ihalo_itype_inflow_finaltypes[all_dset_where]==4)/len(ihalo_itype_inflow_finaltypes[all_dset_where])
                                             print(f'Fraction of accreted gas transformed to stars: {np.nansum(ihalo_itype_inflow_finaltypes[all_dset_where]==4)/len(ihalo_itype_inflow_finaltypes[all_dset_where])*100:.2e}%')
                         
                 
