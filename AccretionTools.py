@@ -1426,7 +1426,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
         for field in output_fields_int64:
             output_fields_dtype[field]=np.int64
         
-        output_fields_int8=["Processed","Particle_InFOF","Particle_Bound","Particle_InHost"]
+        output_fields_int8=["Processed","Particle_InFOF","Particle_Bound","Particle_InHost",'ParticleTypes']
         for field in output_fields_int8:
             output_fields_dtype[field]=np.int8 
 
@@ -1472,6 +1472,9 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaM',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+
+    integrated_output_hdf5['Inflow']['PartType0']['FOF-haloscale']['vmax_fac1']['Total'].create_dataset('frac_SF',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+
 
 
     ####################################################################################################################################################################################
@@ -1530,7 +1533,9 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
             progress_file.close()
             
             # This catches any halos for which we can't find a progenitor/descendant 
-            if ihalo_tracked:
+            nhalo_valid=np.nansum(base_halo_data[snap2]['Mass_200crit']>10**9/10**10)
+            if ihalo_tracked and base_halo_data[snap2]['Mass_200crit'][ihalo_s2]>10**9/10**10:
+                print(f'{iihalo/nhalo_valid*100:.1f} % done with valid halos')
                 ### GRAB HALO METADATA ###
                 ihalo_metadata={}
                 for isnap,snap in enumerate(snaps):
@@ -1679,9 +1684,9 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         
                         #Rest of fields: snap 2
                         if vmax_cut:
-                            ihalo_snap2_inflow_outputs=["Particle_InFOF","Particle_InHost","r_com","rabs_com","vrad_com"]
+                            ihalo_snap2_inflow_outputs=["Particle_InFOF","Particle_InHost",'ParticleTypes',"r_com","rabs_com","vrad_com"]
                         else:
-                            ihalo_snap2_inflow_outputs=["Particle_InFOF","Particle_InHost"]
+                            ihalo_snap2_inflow_outputs=["Particle_InFOF","Particle_InHost",'ParticleTypes']
 
                         for ihalo_snap2_inflow_output in ihalo_snap2_inflow_outputs:
                             ihalo_hdf5['Inflow'][itype_key].create_dataset(f'snap2_{ihalo_snap2_inflow_output}',data=ihalo_inflow_candidate_data[f'snap2_{ihalo_snap2_inflow_output}'][ihalo_itype_mask],dtype=output_fields_dtype[ihalo_snap2_inflow_output],compression=compression)
@@ -1693,9 +1698,12 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     
                     ### INTEGRATED OUTPUTS ###
                     ########################## 
-                    
+
+
+
                     ## GRAB MASSES
                     ihalo_itype_inflow_masses=ihalo_inflow_candidate_data['snap1_Mass'][ihalo_itype_mask]
+                    ihalo_itype_inflow_finaltypes=ihalo_inflow_candidate_data['snap2_ParticleTypes'][ihalo_itype_mask]
 
                     ## DEFINE MASKS
                     # Masks for halo inflow definitions
@@ -1724,6 +1732,10 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     ihalo_itype_inflow_stability={'FOF-haloscale':ihalo_inflow_candidate_data["snap3_Particle_InFOF"][ihalo_itype_mask],
                                                   'FOF-subhaloscale':ihalo_inflow_candidate_data["snap3_Particle_InHost"][ihalo_itype_mask]}
                    
+
+                    ###### quickly save star formation frac for gas particles
+
+
                     ## ITERATE THROUGH THE ABOVE MASKS
                     # For each halo definition
                     for halo_defname in halo_defnames["Inflow"]:
@@ -1757,8 +1769,10 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'All_{idset_key}_DeltaN'][iihalo]=np.float32(np.nansum(running_mask))
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'Stable_{idset_key}_DeltaM'][iihalo]=np.float32(np.nansum(ihalo_itype_inflow_masses[stable_dset_where]))
                                         integrated_output_hdf5['Inflow'][itype_key][halo_defname][ivmax_key][processedgroup][f'Stable_{idset_key}_DeltaN'][iihalo]=np.float32(np.nansum(stable_running_mask))
-                                        print(f'All delta M:', np.float32(np.nansum(ihalo_itype_inflow_masses[all_dset_where])))
-                                        print(f'All delta N:', np.float32(np.nansum(running_mask)))
+                                        if itype_key=='PartType0' and halo_defname=='FOF-haloscale' and ivmax_key=='vmax_fac1' and processedgroup=='Total' and dataset=='Gross':
+                                            integrated_output_hdf5['Inflow']['PartType0']['FOF-haloscale']['vmax_fac1']['Total']['frac_SF'][iihalo]=np.nansum(ihalo_itype_inflow_finaltypes[all_dset_where]==4)/len(ihalo_itype_inflow_finaltypes[all_dset_where])
+                                            print(f'Fraction of accreted gas transformed to stars: {np.nansum(ihalo_itype_inflow_finaltypes[all_dset_where]==4)/len(ihalo_itype_inflow_finaltypes[all_dset_where])*100:.2e}%')
+                        
                 
                 ########################################################################################################################################
                 ############################################################ ihalo OUTFLOW #############################################################
