@@ -1400,7 +1400,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
     # Load in particle histories
     print(f'Retrieving & organising particle histories ...')
-    Part_Histories_fields={str(snap1):["ParticleIDs",'ParticleIndex','HostStructure','Processed_L1'],str(snap2):["ParticleIDs",'ParticleIndex'],str(snap3):["ParticleIDs",'ParticleIndex']}
+    Part_Histories_fields={str(snap1):["ParticleIDs",'ParticleIndex','HostStructure','Processed_L1'],str(snap2):["ParticleIDs",'ParticleIndex'],str(snap3):[]}
     Part_Histories_data={str(snap):{} for snap in snaps}
     Part_Histories_Constant={str(0):False,str(1):False,str(4):False,str(5):False}
     for snap in snaps:
@@ -1480,8 +1480,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                         for dataset in icalc_enddatasets:
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaM',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
                             integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'All_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
-                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaM',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
-                            integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+                            # integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaM',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
+                            # integrated_output_hdf5[output_group][itype_key][halo_defname][ivmax_key][processedgroup].create_dataset(f'Stable_'+dataset+f'_DeltaN',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
 
     integrated_output_hdf5['Inflow']['PartType0']['FOF-haloscale']['vmax_fac1']['Total'].create_dataset('All_Gross_fracSF',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
     integrated_output_hdf5['Inflow']['PartType0']['FOF-haloscale']['vmax_fac1']['Total'].create_dataset('All_Field_fracSF',data=np.zeros(num_halos_thisprocess)+np.nan,dtype=np.float32)
@@ -1620,7 +1620,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
                 # 2. OUTPUTS FROM SIM AND HISTORIES: Types,  Processed, Structure (and maybe: Coordinates, Velocity)
                 # Grab particle indices from histories and sim
-                for isnap,snap in enumerate(snaps):
+                for isnap,snap in enumerate(snaps[:-1]):
                     ihalo_isnap_inflow_candidate_parttypes,ihalo_isnap_inflow_candidate_historyindices,ihalo_isnap_inflow_candidate_partindices=get_particle_indices(base_halo_data,
                                                                                                    IDs_sorted=Part_Histories_data[str(snap)]['ParticleIDs'],
                                                                                                    indices_sorted=Part_Histories_data[str(snap)]['ParticleIndex'],
