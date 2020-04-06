@@ -1346,7 +1346,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     else:
         #Which fields do we need at each snap
         PartTypes=[0,1] #Gas, DM, Stars, BH
-        Part_Data_fields={str(snap1):[],str(snap2):[],str(snap3):[]}
+        Part_Data_fields={str(snap1):['Mass'],str(snap2):['Mass'],str(snap3):[]}
         if vmax_cut:
             for snap in [snap1,snap2]:
                 Part_Data_fields[str(snap)].append('Coordinates')
@@ -1381,13 +1381,13 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
             Part_Data_file=h5py.File(Part_Data_FilePaths[str(snap)],'r')
             npart=512**3
             for field in Part_Data_fields[str(snap)]:
-                if field=='Velocities':
-                    Part_Data_Full[str(snap)]['Velocity']={str(itype):Part_Data_file[f'PartType{itype}']['Velocities'].value*Part_Data_comtophys[str(snap)]['Velocity'] for itype in PartTypes}
-                else:
-                    Part_Data_Full[str(snap)][field]={str(itype):Part_Data_file[f'PartType{itype}'][field].value*Part_Data_comtophys[str(snap)][field] for itype in PartTypes}
-            for snap in snaps:
-                Part_Data_Full[str(snap)]['Mass'][str(0)]=np.ones(npart)*h5py.File(base_halo_data[snap]['Part_FilePath'],'r')['Header'].attrs['MassTable'][0]*Part_Data_comtophys[str(snap)]['Mass']
-                Part_Data_Full[str(snap)]['Mass'][str(1)]=np.ones(npart)*h5py.File(base_halo_data[snap]['Part_FilePath'],'r')['Header'].attrs['MassTable'][1]*Part_Data_comtophys[str(snap)]['Mass']
+                if not field=='Mass':
+                    if field=='Velocities':
+                        Part_Data_Full[str(snap)]['Velocity']={str(itype):Part_Data_file[f'PartType{itype}']['Velocities'].value*Part_Data_comtophys[str(snap)]['Velocity'] for itype in PartTypes}
+                    else:
+                        Part_Data_Full[str(snap)][field]={str(itype):Part_Data_file[f'PartType{itype}'][field].value*Part_Data_comtophys[str(snap)][field] for itype in PartTypes}                
+            Part_Data_Full[str(snap)]['Mass'][str(0)]=np.ones(npart)*h5py.File(base_halo_data[snap]['Part_FilePath'],'r')['Header'].attrs['MassTable'][0]*Part_Data_comtophys[str(snap)]['Mass']
+            Part_Data_Full[str(snap)]['Mass'][str(1)]=np.ones(npart)*h5py.File(base_halo_data[snap]['Part_FilePath'],'r')['Header'].attrs['MassTable'][1]*Part_Data_comtophys[str(snap)]['Mass']
 
     if not SimType=='EAGLE':
         if vmax_cut:
