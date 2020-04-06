@@ -1639,6 +1639,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
                     #Grab particle data
                     for field in Part_Data_fields[str(snap)]:
+                        print(snap)
+                        print(field)
                         ex_point=Part_Data_Full[str(snap)][field][str(0)][0]
                         size=np.size(ex_point)
                         ihalo_inflow_candidate_data[f'snap{isnap+1}_{field}']=np.array(np.zeros((ihalo_inflow_candidate_count,size))+np.nan)
@@ -1761,7 +1763,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                                         # Masks to concatenate
                                         origin_mask=ihalo_itype_inflow_origin_masks[dataset]
                                         masks=[idef_mask,ivmax_mask,iprocessed_mask,origin_mask]
-                                        running_mask=np.logical_and.reduce([idef_mask,ivmax_mask,iprocessed_mask,origin_mask])
+                                        running_mask=np.logical_and.reduce([idef_mask,ivmax_mask ,iprocessed_mask,origin_mask])
                                         stable_running_mask=np.logical_and(running_mask,stability_mask)
                                         all_dset_where=np.where(running_mask)
                                         stable_dset_where=np.where(stable_running_mask)
