@@ -1350,6 +1350,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     
     Part_Data_Full={str(snap):{field:{} for field in Part_Data_fields[str(snap)]} for snap in snaps}
 
+        
+
     for snap in snaps:
         if SimType=='EAGLE':
             EAGLE_snap=read_eagle.EagleSnapshot(Part_Data_FilePaths[str(snap)])
@@ -1372,6 +1374,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     
                     Part_Data_Full[str(snap)][field][str(1)]=Mass_DM*np.ones(len(Part_Data_Full[str(snap)]['Mass'][str(0)]))
         else:
+            for snap in snaps:
+                Part_Data_Full[str(snap)]['Mass']={}
             Mass_Constant={str(0):True,str(1):True}
             Part_Data_file=h5py.File(Part_Data_FilePaths[str(snap)],'r')
             for field in Part_Data_fields[str(snap)]:
@@ -1379,7 +1383,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     Part_Data_Full[str(snap)]['Velocity']={str(itype):Part_Data_file[f'PartType{itype}']['Velocities'].value*Part_Data_comtophys[str(snap)]['Velocity'] for itype in PartTypes}
                 else:
                     Part_Data_Full[str(snap)][field]={str(itype):Part_Data_file[f'PartType{itype}'][field].value*Part_Data_comtophys[str(snap)][field] for itype in PartTypes}
-            
+
             Part_Data_Full[str(snap)]['Mass'][str(0)]=h5py.File(base_halo_data[snap]['Part_FilePath'],'r')['Header'].attrs['MassTable'][0]*Part_Data_comtophys[str(snap)]['Mass']
             Part_Data_Full[str(snap)]['Mass'][str(1)]=h5py.File(base_halo_data[snap]['Part_FilePath'],'r')['Header'].attrs['MassTable'][1]*Part_Data_comtophys[str(snap)]['Mass']
 
@@ -1698,8 +1702,6 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
                     
                     ### INTEGRATED OUTPUTS ###
                     ########################## 
-
-
 
                     ## GRAB MASSES
                     ihalo_itype_inflow_masses=ihalo_inflow_candidate_data['snap1_Mass'][ihalo_itype_mask]
