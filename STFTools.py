@@ -35,7 +35,7 @@ from VRPythonTools import *
 
 ########################### CREATE BASE HALO DATA ###########################
 
-def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filetype,tf_filelist,numsnaps=None,outname='',temporal_idval=10**12):
+def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filetype,tf_filelist,add_descen=False,numsnaps=None,outname='',temporal_idval=10**12):
     
     """
 
@@ -219,6 +219,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             scale_factor=halo_data_all[isnap]['SimulationInfo']['ScaleFactor']
             redshift=z_at_value(cosmo.scale_factor,scale_factor,zmin=-0.5)
             lookback_time=cosmo.lookback_time(redshift).value
+
             halo_data_all[isnap]['SimulationInfo']['z']=redshift
             halo_data_all[isnap]['SimulationInfo']['LookbackTime']=lookback_time
             halo_data_all[isnap]['SimulationInfo']['Omega_b_Planck']=0.157332
@@ -242,6 +243,21 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
             halo_data_output.append(halo_data_all[isnap])
         else:
             halo_data_output.append({'Snap':snap,'Part_FilePath':part_list[snap],'Part_FileType':partdata_filetype,'outname':outname})#for padded snaps, return particle data and snapshot 
+            halo_data_output
+
+    if add_descen:
+        print('Adding descendent information ...')
+        isnap==1
+        for halo_data_snap in halo_data_output:
+
+            if len(halo_data_snap>5):
+                isnap=isnap+1
+                if not halo_tree[isnap]["Descen"]==[]:
+                    halo_data_snap["Descen"]=halo_tree[isnap]["Descen"]
+                    print(f'Added descendants for snap {halo_data_snap["Snap"]}')
+                else:
+                    print(f'Could not add descendants for snap {halo_data_snap["Snap"]}')
+
 
     # Now save all the data (with detailed TreeFrog fields) as "B2"
     print('Saving B2 halo data to file (contains detailed TreeFrog data)')
