@@ -247,7 +247,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
     if add_descen:
         print('Adding descendent information ...')
-        isnap==1
+        isnap=-1
         for halo_data_snap in halo_data_output:
             if len(halo_data_snap)>5:
                 isnap=isnap+1
