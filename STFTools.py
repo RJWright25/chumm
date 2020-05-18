@@ -253,6 +253,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
                 isnap=isnap+1
                 if not halo_tree[isnap]["Descen"]==[]:
                     halo_data_snap["Descen"]=halo_tree[isnap]["Descen"]
+                    halo_data_snap["Merit"]=halo_tree[isnap]["Merit"]
                     print(f'Added descendants for snap {halo_data_snap["Snap"]}')
                 else:
                     print(f'Could not add descendants for snap {halo_data_snap["Snap"]}')
