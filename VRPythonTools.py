@@ -1515,7 +1515,8 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 		if (iverbose):print("Processing ", len(hids))
 		if (len(hids)==0):continue
 
-		for hidval in hids:
+		for ihidval,hidval in enumerate(hids):
+			print('halo ',ihidval+1,' of ',len(hids))
 			#now for each object get the main progenitor
 			haloid=np.uint64(hidval)
 			haloindex=int(haloid%TEMPORALHALOIDVAL-1)

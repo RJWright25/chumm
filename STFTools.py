@@ -205,9 +205,9 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     # Now add merging events and progenitor links
     print('Adding mergers')
     scalefacs=[halo_data_all[isnap]['SimulationInfo']['ScaleFactor'] for isnap in range(no_tf_files)]
-    IdentifyMergers(numsnaps=no_tf_files,tree=halo_tree,numhalos=halo_data_counts,halodata=halo_data_all,
-                    boxsize=halo_data_all[-1]['SimulationInfo']['Period'],hval=halo_data_all[-1]['SimulationInfo']['h_val'],
-                    atime=scalefacs,MERGERMLIM=0.01,RADINFAC=1.2,RADOUTFAC=1.5,masscut=0.1, TEMPORALHALOIDVAL=temporal_idval, iverbose=1,pos_tree=[])
+    # IdentifyMergers(numsnaps=no_tf_files,tree=halo_tree,numhalos=halo_data_counts,halodata=halo_data_all,
+    #                 boxsize=halo_data_all[-1]['SimulationInfo']['Period'],hval=halo_data_all[-1]['SimulationInfo']['h_val'],
+    #                 atime=scalefacs,MERGERMLIM=0.01,RADINFAC=1.2,RADOUTFAC=1.5,masscut=0.1, TEMPORALHALOIDVAL=temporal_idval, iverbose=1,pos_tree=[])
 
     # GenerateProgenitorLinks(numsnaps=no_tf_files,tree=halo_tree,numhalos=halo_data_counts,halodata=halo_data_all,
     #                         nsnapsearch=4,TEMPORALHALOIDVAL=temporal_idval, iverbose=1)
