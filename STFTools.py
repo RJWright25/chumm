@@ -209,8 +209,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
                     boxsize=halo_data_all[-1]['SimulationInfo']['Period'],hval=halo_data_all[-1]['SimulationInfo']['h_val'],
                     atime=scalefacs,MERGERMLIM=0.01,RADINFAC=1.2,RADOUTFAC=1.5,masscut=0.1, TEMPORALHALOIDVAL=temporal_idval, iverbose=1,pos_tree=[])
 
-    GenerateProgenitorLinks(numsnaps=no_tf_files,tree=halo_tree,numhalos=halo_data_counts,halodata=halo_data_all,
-                            nsnapsearch=4,TEMPORALHALOIDVAL=temporal_idval, iverbose=1)
+    # GenerateProgenitorLinks(numsnaps=no_tf_files,tree=halo_tree,numhalos=halo_data_counts,halodata=halo_data_all,
+    #                         nsnapsearch=4,TEMPORALHALOIDVAL=temporal_idval, iverbose=1)
 
     print('Finished assembling descendent tree using VR python tools')
     print('Adding timesteps & filepath information')
