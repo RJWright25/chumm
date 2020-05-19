@@ -202,15 +202,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     print('Adding tree')
     BuildTemporalHeadTailDescendant(no_tf_files,halo_tree,halo_data_counts,halo_data_all,iverbose=1,TEMPORALHALOIDVAL=temporal_idval)
     
-    # Now add merging events and progenitor links
-    print('Adding mergers')
-    scalefacs=[halo_data_all[isnap]['SimulationInfo']['ScaleFactor'] for isnap in range(no_tf_files)]
-    # IdentifyMergers(numsnaps=no_tf_files,tree=halo_tree,numhalos=halo_data_counts,halodata=halo_data_all,
-    #                 boxsize=halo_data_all[-1]['SimulationInfo']['Period'],hval=halo_data_all[-1]['SimulationInfo']['h_val'],
-    #                 atime=scalefacs,MERGERMLIM=0.01,RADINFAC=1.2,RADOUTFAC=1.5,masscut=0.1, TEMPORALHALOIDVAL=temporal_idval, iverbose=1,pos_tree=[])
 
-    # GenerateProgenitorLinks(numsnaps=no_tf_files,tree=halo_tree,numhalos=halo_data_counts,halodata=halo_data_all,
-    #                         nsnapsearch=4,TEMPORALHALOIDVAL=temporal_idval, iverbose=1)
 
     print('Finished assembling descendent tree using VR python tools')
     print('Adding timesteps & filepath information')
@@ -269,7 +261,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
                 else:
                     print(f'Could not add descendants for snap {halo_data_snap["Snap"]}')
 
-
+    # Now add app progenitor links
+    gen_progen_lists(halo_data_output)
 
     # Now save all the data (with detailed TreeFrog fields) as "B2"
     print('Saving B2 halo data to file (contains detailed TreeFrog data)')
@@ -769,7 +762,7 @@ def compress_detailed_halo_data(detailed_halo_data,fields=None):
     dump_pickle(path=file_outname,data=output_halo_data)
     return output_halo_data
 
-########################### FIND PROGENITOR AT DEPTH ###########################
+########################### FIND MAIN PROGENITOR AT DEPTH ###########################
 
 def find_progen_index(base_halo_data,index2,snap2,depth,return_all_depths=False): ### given halo index2 at snap 2, find progenitor index at snap1=snap2-depth
     
@@ -826,6 +819,44 @@ def find_progen_index(base_halo_data,index2,snap2,depth,return_all_depths=False)
     else:
         return index_idepth
 
+
+########################### FIND ALL PROGENITOR AT DEPTH ###########################
+
+def find_progen_index_tree(base_halo_data,index2,snap2,depth): 
+    ### given halo index2 at snap 2, find progenitors up to depth
+ 
+    """
+
+    find_progen_index_tree : function
+	----------
+
+    Find the index of the all matching progenitor halos.
+
+	Parameters
+    ----------
+
+    base_halo_data : dictionary
+        The halo data dictionary for the relevant snapshot.
+
+    index2 : int
+        The index of the halo at the current (accretion) snap. 
+
+    snap2 : int
+        The snapshot index of the current (accretion) snap.
+    
+    depth : int
+        The number of snapshots for which to scroll back. 
+
+    Returns
+    ----------
+    progens : dict
+        Dictionary with snaps of all progenitor halos, traversing the tree towards the roots. 
+        {'27':[id1,id2,id3,...],'26':[progens of id1,id2,id3,...]}
+
+	"""
+    
+    
+
 ########################### FIND DESCENDANT AT DEPTH ###########################
 
 def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 at snap 2, find descendant index at snap3=snap2+depth
@@ -874,11 +905,25 @@ def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
                 return index_idepth
     return index_idepth
 
-########################### GENERATE LIST of PROGENITORS at EVERY PREVIOUS SNAP ###########################
+########################### GENERATE LIST of PROGENITORS ###########################
 
-def gen_progen_lists(base_halo_data,snap,merit_cut):
-    progens={str(isnap):[[] for ihalo in range(len(base_halo_data[isnap]))] for isnap in list(range(snap))}
+def gen_progen_lists(base_halo_data):
+    for snap in range(len(base_halo_data)-1):
+        print(f'Retrieving progenitors for snap {snap}')
 
+        if len(base_halo_data[snap])>6:
+            base_halo_data[snap+1]['Progens']=[[] for i in range(len(base_halo_data[snap+1]['ID']))]
+            isnap_uniqueheads=np.unique(base_halo_data[snap]['Head'])
+            for isnap_ihead in isnap_uniqueheads:
+                try:
+                    isnap_ihead_index=np.where(isnap_ihead==base_halo_data[snap+1]['ID'])[0][0]                    
+                except:
+                    continue
+                isnap_ihead_progen_indices=np.where(base_halo_data[snap]['Head']==isnap_ihead)
+                isnap_ihead_progen_IDs=base_halo_data[snap]['ID'][isnap_ihead_progen_indices]
+                base_halo_data[snap+1]['Progens'][isnap_ihead_index]=isnap_ihead_progen_IDs
+        else:
+            continue
 
 ########################### GET FOF PARTICLE LISTS into DICTIONARY ###########################
 

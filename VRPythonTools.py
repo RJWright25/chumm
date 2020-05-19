@@ -1516,7 +1516,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 		if (len(hids)==0):continue
 
 		for ihidval,hidval in enumerate(hids):
-			print('halo ',ihidval+1,' of ',len(hids))
+			# print('halo ',ihidval+1,' of ',len(hids))
 			#now for each object get the main progenitor
 			haloid=np.uint64(hidval)
 			haloindex=int(haloid%TEMPORALHALOIDVAL-1)
@@ -1534,7 +1534,12 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 			#print "starting halos ",j, hidval
 			#halo has main branch which we can wander on
 			#while object is not its own progenitor move along tree to see how many major mergers it had across its history
+			start_1=time.time()
 			while (True):
+				elapsed_1=time.time()
+				if elapsed_1-start_1>10:
+					print(f'Breaking loop for {hidval}')
+					break
 				#now for each progenitor, lets find any nearby objects within a given mass/vmax interval
 				posval=[halodata[progsnap]["Xc"][progindex],halodata[progsnap]["Yc"][progindex],halodata[progsnap]["Zc"][progindex]]
 				radval=RADINFAC*halodata[progsnap]["R_200crit"][progindex]
@@ -1573,7 +1578,12 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 									mergerstartindex=starthaloindex
 									mergerstartid=starthaloid
 									mergerstartsnap=starthalosnap
+									start_2=time.time()
 									while (halodata[starthalosnap]["Num_progen"][starthaloindex]>0 and halodata[startmergersnap]["Num_progen"][startmergerindex]>0):
+										elapsed_2=time.time()
+										if elapsed_2-start_2>10:
+											print(f'Breaking loop for {hidval}')
+											break
 										posvalrel=[halodata[starthalosnap]["Xc"][starthaloindex]-halodata[startmergersnap]["Xc"][startmergerindex],halodata[starthalosnap]["Yc"][starthaloindex]-halodata[startmergersnap]["Yc"][startmergerindex],halodata[starthalosnap]["Zc"][starthaloindex]-halodata[startmergersnap]["Zc"][startmergerindex]]
 										boxval=boxsize*atime[starthalosnap]/hval
 										for ij in range(3):
@@ -1750,22 +1760,28 @@ def GenerateProgenitorLinks(numsnaps,numhalos,halodata,nsnapsearch=4,TEMPORALHAL
 				continue
 			haloid=currenttails[0]
 			haloindex=int(haloid%TEMPORALHALOIDVAL-1)
-			halosnap=numsnaps-1-(haloid-int(haloid%TEMPORALHALOIDVAL))/TEMPORALHALOIDVAL
+			halosnap=int(numsnaps-1-(haloid-int(haloid%TEMPORALHALOIDVAL))/TEMPORALHALOIDVAL)
 			halodata[halosnap]['PreviousProgenitor'][haloindex]=np.int64(haloid)
 			for itail in range(len(currenttails)-1):
 				haloid=currenttails[itail]
 				haloindex=int(haloid%TEMPORALHALOIDVAL-1)
-				halosnap=np.inte64(numsnaps-1-(haloid-int(haloid%TEMPORALHALOIDVAL))/TEMPORALHALOIDVAL)
+				halosnap=np.int64(numsnaps-1-(haloid-int(haloid%TEMPORALHALOIDVAL))/TEMPORALHALOIDVAL)
 				haloindex=int(currenttails[itail]%TEMPORALHALOIDVAL-1)
 				nexthaloid=currenttails[itail+1]
 				nexthaloindex=int(nexthaloid%TEMPORALHALOIDVAL-1)
 				nexthalosnap=np.int64(numsnaps-1-(nexthaloid-int(nexthaloid%TEMPORALHALOIDVAL))/TEMPORALHALOIDVAL)
-				halodata[halosnap]['NextProgenitor'][haloindex]=np.int64(nexthaloid)
-				halodata[nexthalosnap]['PreviousProgenitor'][nexthaloindex]=np.int64(haloid)
-			haloid=currenttails[-1]
-			haloindex=int(haloid%TEMPORALHALOIDVAL-1)
-			halosnap=numsnaps-1-(haloid-int(haloid%TEMPORALHALOIDVAL))/TEMPORALHALOIDVAL
-			halodata[halosnap]['NextProgenitor'][haloindex]=haloid
+				try:
+					halodata[halosnap]['NextProgenitor'][haloindex]=np.int64(nexthaloid)
+					halodata[nexthalosnap]['PreviousProgenitor'][nexthaloindex]=np.int64(haloid)
+				except:
+					continue
+			try:
+				haloid=currenttails[-1]
+				haloindex=int(haloid%TEMPORALHALOIDVAL-1)
+				halosnap=int(numsnaps-1-(haloid-int(haloid%TEMPORALHALOIDVAL))/TEMPORALHALOIDVAL)
+				halodata[halosnap]['NextProgenitor'][haloindex]=haloid
+			except:
+				continue
 		if (iverbose): print("Done snap",j,time.clock()-start2)
 	print("Done progenitor links ",time.clock()-start)
 
