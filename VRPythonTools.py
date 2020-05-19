@@ -1501,7 +1501,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 				pos[j]=np.transpose(np.asarray([halodata[j]["Xc"],halodata[j]["Yc"],halodata[j]["Zc"]]))
 				print(np.nanmin(pos[j]))
 				print(np.nanmax(pos[j]))
-				print(boxval,atime[j])
+				print(boxval,atime[j],)
 				pos_tree[j]=spatial.cKDTree(pos[j],boxsize=boxval)
 		if (iverbose): print("done ",time.clock()-start)
 	#else assume tree has been passed
@@ -1509,7 +1509,8 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 		if (numhalos[j]==0): continue
 		#at snapshot look at all haloes that have not had a major merger set
 		#note that only care about objects with certain number of particles
-		partcutwdata=np.where(halodata[j]["npart"]>=NPARTCUT)
+		print(list(halodata[j].keys()))
+		partcutwdata=np.where(halodata[j]["Npart"]>=NPARTCUT)
 		mergercut=np.where(halodata[j]["LastMergerRatio"][partcutwdata]<0)
 		hids=np.asarray(halodata[j]["ID"][partcutwdata][mergercut],dtype=np.uint64)
 		start=time.clock()
