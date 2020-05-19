@@ -199,7 +199,16 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     halo_tree=ReadHaloMergerTreeDescendant(tf_filelist,ibinary=vr_filetype,iverbose=1,imerit=True,inpart=False)
 
     # Now build trees and add onto halo data array (for the valid, unpadded snaps)
+    print('Adding tree')
     BuildTemporalHeadTailDescendant(no_tf_files,halo_tree,halo_data_counts,halo_data_all,iverbose=1,TEMPORALHALOIDVAL=temporal_idval)
+    
+    # Now add merging events
+    print('Adding mergers')
+    scalefacs=[halo_data_all[isnap]['SimulationInfo']['ScaleFactor'] for isnap in range(no_tf_files)]
+    IdentifyMergers(numsnaps=no_tf_files,tree=halo_tree,numhalos=halo_data_counts,halodata=halo_data_all,
+                    boxsize=halo_data_all[-1]['SimulationInfo']['h_val'],hval=halo_data_all[-1]['SimulationInfo']['h_val'],
+                    atime=scalefacs,MERGERMLIM=0.01,RADINFAC=1.2,RADOUTFAC=1.5,NPARTCUT=100, TEMPORALHALOIDVAL=temporal_idval, iverbose=1,pos_tree=[])
+
     
     print('Finished assembling descendent tree using VR python tools')
     print('Adding timesteps & filepath information')
@@ -257,6 +266,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
                     print(f'Added descendants for snap {halo_data_snap["Snap"]}')
                 else:
                     print(f'Could not add descendants for snap {halo_data_snap["Snap"]}')
+
 
 
     # Now save all the data (with detailed TreeFrog fields) as "B2"
@@ -861,6 +871,12 @@ def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
             if idepth==depth-1:
                 return index_idepth
     return index_idepth
+
+########################### GENERATE LIST of PROGENITORS at EVERY PREVIOUS SNAP ###########################
+
+def gen_progen_lists(base_halo_data,snap,merit_cut):
+    progens={str(isnap):[[] for ihalo in range(len(base_halo_data[isnap]))] for isnap in list(range(snap))}
+
 
 ########################### GET FOF PARTICLE LISTS into DICTIONARY ###########################
 
