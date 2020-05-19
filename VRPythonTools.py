@@ -1476,7 +1476,7 @@ def GetProgenLength(halodata,haloindex,halosnap,haloid,atime,TEMPORALHALOIDVAL,e
 		progindex=int(progid%TEMPORALHALOIDVAL-1)
 	return proglen
 
-def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLIM=0.1,RADINFAC=1.2,RADOUTFAC=1.5,NPARTCUT=100,TEMPORALHALOIDVAL=1000000000000, iverbose=1,pos_tree=[]):
+def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLIM=0.1,RADINFAC=1.2,RADOUTFAC=1.5,masscut=0.1,TEMPORALHALOIDVAL=1000000000000, iverbose=1,pos_tree=[]):
 	"""
 	Using head/tail info in halodata dictionary identify mergers based on distance and mass ratios
 	#todo still testing
@@ -1507,10 +1507,11 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 		print('snap ',j)
 		#at snapshot look at all haloes that have not had a major merger set
 		#note that only care about objects with certain number of particles
-		partcutwdata=np.where(halodata[j]["Mass_200crit"]>=NPARTCUT)
+		partcutwdata=np.where(halodata[j]["Mass_200crit"]>=masscut)
 		mergercut=np.where(halodata[j]["LastMergerRatio"][partcutwdata]<0)
 		hids=np.asarray(halodata[j]["ID"][partcutwdata][mergercut],dtype=np.uint64)
 		start=time.clock()
+
 		if (iverbose):print("Processing ", len(hids))
 		if (len(hids)==0):continue
 
