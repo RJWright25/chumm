@@ -1524,7 +1524,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 			progid=halodata[halosnap]["Tail"][haloindex]
 			progsnap=halodata[halosnap]["TailSnap"][haloindex]
 			progindex=int(progid%TEMPORALHALOIDVAL-1)
-			numprog=tree[halosnap]["Num_progen"][haloindex]
+			numprog=halodata[halosnap]["Num_progen"][haloindex]
 			#if object has no progenitor set LastMergerRatio to 0 and LastMerger to 0
 			if (numprog==0):
 				halodata[halosnap]["LastMerger"][haloindex]=0
@@ -1572,7 +1572,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 									mergerstartindex=starthaloindex
 									mergerstartid=starthaloid
 									mergerstartsnap=starthalosnap
-									while (tree[starthalosnap]["Num_progen"][starthaloindex]>0 and tree[startmergersnap]["Num_progen"][startmergerindex]>0):
+									while (halodata[starthalosnap]["Num_progen"][starthaloindex]>0 and halodata[startmergersnap]["Num_progen"][startmergerindex]>0):
 										posvalrel=[halodata[starthalosnap]["Xc"][starthaloindex]-halodata[startmergersnap]["Xc"][startmergerindex],halodata[starthalosnap]["Yc"][starthaloindex]-halodata[startmergersnap]["Yc"][startmergerindex],halodata[starthalosnap]["Zc"][starthaloindex]-halodata[startmergersnap]["Zc"][startmergerindex]]
 										boxval=boxsize*atime[starthalosnap]/hval
 										for ij in range(3):
@@ -1649,7 +1649,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 				progid=halodata[halosnap]["Tail"][haloindex]
 				progsnap=halodata[halosnap]["TailSnap"][haloindex]
 				progindex=int(progid%TEMPORALHALOIDVAL-1)
-				numprog=tree[halosnap]["Num_progen"][haloindex]
+				numprog=halodata[halosnap]["Num_progen"][haloindex]
 				#if at end of line then move up and set last major merger to 0
 		if (iverbose): print("Done snap",j,time.clock()-start)
 
