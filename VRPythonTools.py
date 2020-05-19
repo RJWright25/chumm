@@ -1501,6 +1501,7 @@ def IdentifyMergers(numsnaps,tree,numhalos,halodata,boxsize,hval,atime,MERGERMLI
 				pos[j]=np.transpose(np.asarray([halodata[j]["Xc"],halodata[j]["Yc"],halodata[j]["Zc"]]))
 				print(np.nanmin(pos[j]))
 				print(np.nanmax(pos[j]))
+				print(boxval)
 				pos_tree[j]=spatial.cKDTree(pos[j],boxsize=boxval)
 		if (iverbose): print("done ",time.clock()-start)
 	#else assume tree has been passed
