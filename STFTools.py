@@ -859,21 +859,22 @@ def find_progen_index_tree(base_halo_data,index2,snap2,snap1):
     
     for idepth,snap in enumerate(snaps):
         # print(snap)
-        if idepth==0:
-            new_progens=base_halo_data[snap]['Progens'][index2]
-            progentree[str(snap-1)]=new_progens
+        if idepth==0:#this is the master snap-1
+            new_progens=base_halo_data[snap+1]['Progens'][index2]
+            progentree[str(snap)]=new_progens
         else:
             #find the progenitors of each of the previous progens
             prev_progens=progentree[str(snap+1)]
             new_progens=[]
             for prev_progen in prev_progens:
                 try:
-                    progen_index=np.where(prev_progen==base_halo_data[snap]['ID'])[0][0]
+                    #find the index of each of the old progenitors
+                    progen_index=np.where(prev_progen==base_halo_data[snap+1]['ID'])[0][0]
                 except:
                     continue
-                prev_progen_progens=base_halo_data[snap]['Progens'][progen_index]
+                prev_progen_progens=base_halo_data[snap+1]['Progens'][progen_index]
                 new_progens.extend(prev_progen_progens)
-            progentree[str(snap-1)]=new_progens
+            progentree[str(snap)]=new_progens
     
     return progentree
 
