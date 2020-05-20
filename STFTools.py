@@ -858,7 +858,7 @@ def find_progen_index_tree(base_halo_data,index2,snap2,snap1):
     progentree={str(snap):[] for snap in snaps}
     
     for idepth,snap in enumerate(snaps):
-        print(snap)
+        # print(snap)
         if idepth==0:
             new_progens=base_halo_data[snap]['Progens'][index2]
             progentree[str(snap)]=new_progens
