@@ -261,7 +261,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
                 else:
                     print(f'Could not add descendants for snap {halo_data_snap["Snap"]}')
 
-    # Now add app progenitor links
+    # Now add progenitor links
     gen_progen_lists(halo_data_output)
 
     # Now save all the data (with detailed TreeFrog fields) as "B2"
@@ -822,8 +822,8 @@ def find_progen_index(base_halo_data,index2,snap2,depth,return_all_depths=False)
 
 ########################### FIND ALL PROGENITOR AT DEPTH ###########################
 
-def find_progen_index_tree(base_halo_data,index2,snap2,depth): 
-    ### given halo index2 at snap 2, find progenitors up to depth
+def find_progen_index_tree(base_halo_data,index2,snap2,snap1): 
+    ### given halo index2 at snap 2, find progenitors up to snap1
  
     """
 
@@ -851,10 +851,35 @@ def find_progen_index_tree(base_halo_data,index2,snap2,depth):
     ----------
     progens : dict
         Dictionary with snaps of all progenitor halos, traversing the tree towards the roots. 
-        {'27':[id1,id2,id3,...],'26':[progens of id1,id2,id3,...]}
+        {'27':[id1,id2,id3,...],'26':[progens of id1,id2,id3,...],...}
 
 	"""
+    snaps=list(range(snap1,snap2))[::-1]
+    progentree={str(snap):[] for snap in snaps}
     
+    for idepth,snap in enumerate(snaps):
+        print(snap)
+        if idepth==0:
+            new_progens=base_halo_data[snap]['Progens'][index2]
+            progentree[str(snap)]=new_progens
+        else:
+            #find the progenitors of each of the previous progens
+            prev_progens=progentree[str(snap+1)]
+            new_progens=[]
+            for prev_progen in prev_progens:
+                try:
+                    progen_index=np.where(prev_progen==base_halo_data[snap]['ID'])[0][0]
+                except:
+                    continue
+                prev_progen_progens=base_halo_data[snap]['Progens'][progen_index]
+                new_progens.extend(prev_progen_progens)
+            progentree[str(snap)]=new_progens
+    
+    return progentree
+
+
+
+
     
 
 ########################### FIND DESCENDANT AT DEPTH ###########################
