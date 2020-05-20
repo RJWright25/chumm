@@ -873,7 +873,7 @@ def find_progen_index_tree(base_halo_data,index2,snap2,snap1):
                     continue
                 prev_progen_progens=base_halo_data[snap]['Progens'][progen_index]
                 new_progens.extend(prev_progen_progens)
-            progentree[str(snap)]=new_progens
+            progentree[str(snap-1)]=new_progens
     
     return progentree
 
