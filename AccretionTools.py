@@ -2608,7 +2608,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
 ########################### ADD PARTICLE DATA TO ACCRETION DATA ###########################
 
-def add_particle_data_serial(path=None,full_halo=False):
+def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
     """
 
     add_particle_data_serial : function
@@ -2689,7 +2689,7 @@ def add_particle_data_serial(path=None,full_halo=False):
         ihalo_list=sorted(accfile['Integrated']['ihalo_list'])
 
         for ihalo in ihalo_list:
-            if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
+            if base_halo_data[snap2]['Mass_FOF'][ihalo]>mass_cut:
                 print(f'Processing ihalo {ihalo}')
                 for itype in parttypes:
                     try:
