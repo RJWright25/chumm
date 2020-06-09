@@ -2634,8 +2634,7 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
                 'Density',
                 'Velocity'],
                 '1':
-                ['Coordinates',
-                    'Velocity']}
+                []}
 
 
     size_keys= {'Coordinates':3,
