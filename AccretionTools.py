@@ -2671,8 +2671,8 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
     # Load in particle histories
     print('Loading particle histories')
     parthistory_files={str(snap):h5py.File(base_folder+base_halo_data[snap]['PartHist_FilePath'],'r+') for snap in [snap1,snap2]}
-    partindices={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIndex'].value for itype in [0,1]} for snap in [snap1,snap2]}
-    partids={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIDs'].value for itype in [0,1]} for snap in [snap1,snap2]}
+    partindices={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIndex'].value for itype in parttypes} for snap in [snap1,snap2]}
+    partids={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIDs'].value for itype in parttypes} for snap in [snap1,snap2]}
 
     # # Load in EAGLE data
     partdata_files={str(snap):read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath']) for snap in [snap1,snap2]}
@@ -2680,7 +2680,7 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
         partdata_files[str(snap)].select_region(xmin=-0.1,xmax=boxsize+0.1,ymin=-0.1,ymax=boxsize+0.1,zmin=-0.1,zmax=boxsize+0.1)
         
     print('Loading particle data')
-    partdata={str(snap):{str(itype):{key:partdata_files[str(snap)].read_dataset(itype,key) for key in eagle_keys[str(itype)]} for itype in [0,1]} for snap in [snap1,snap2]}
+    partdata={str(snap):{str(itype):{key:partdata_files[str(snap)].read_dataset(itype,key) for key in eagle_keys[str(itype)]} for itype in parttypes} for snap in [snap1,snap2]}
 
     for ifile,accfile_path in enumerate(accfiles):
         print(f'Starting on file {ifile+1}/{len(accfiles)} ...')
