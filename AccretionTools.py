@@ -2688,7 +2688,7 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
         ihalo_list=sorted(accfile['Integrated']['ihalo_list'])
 
         for ihalo in ihalo_list:
-            if base_halo_data[snap2]['Mass_FOF'][ihalo]>mass_cut and ihalo==100:
+            if base_halo_data[snap2]['Mass_FOF'][ihalo]>mass_cut:
                 print(f'Processing ihalo {ihalo}')
                 for itype in parttypes:
                     try:
