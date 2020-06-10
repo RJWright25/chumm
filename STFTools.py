@@ -123,7 +123,9 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
 
     base_fields=['ID','hostHaloID','Mass_tot','Mass_FOF','Structuretype',"numSubStruct",'Xc','Yc','Zc','Xcminpot','Ycminpot','Zcminpot','Xcmbp','Ycmbp','Zcmbp','VXc','VYc','VZc','R_200crit','R_200mean','Mass_200crit','Vmax']#default halo fields
     
-    if not numsnaps>0:
+    try:
+        a=numsnaps>0:
+    except:
         numsnaps=len(partdata_filelist)
 
     # File lists
