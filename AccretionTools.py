@@ -2777,7 +2777,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
     # Load in particle histories - data
     print(f'Retrieving & organising particle histories ...')
     snaps=list(range(snap1,snap2))
-    run_outname=run_halodata[run][snaps[-1]]['outname']
+    run_outname=base_halo_data[snaps[-1]]['outname']
     run=run_outname
     log=f'job_logs/{run_outname}_Recycling-snap{str(snap2).zfill(3)}.log'
 
@@ -2796,8 +2796,8 @@ def add_recycling_data_serial(path=None,mcut=10**10):
 
     # Here we go
     snap_master=snaps[-1]
-    nhalo=len(run_halodata[run][snap_master]['Mass_200crit'])
-    ihalos_valid=np.where(np.logical_and(run_halodata[run][snap_master]['Mass_FOF']>mcut/10**10,run_halodata[run][snap_master]['hostHaloID']<0))[0][1:]
+    nhalo=len(base_halo_data[snap_master]['Mass_200crit'])
+    ihalos_valid=np.where(np.logical_and(base_halo_data[snap_master]['Mass_FOF']>mcut/10**10,base_halo_data[snap_master]['hostHaloID']<0))[0][1:]
 
     frac_mp={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
     frac_nmp={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
@@ -2829,24 +2829,24 @@ def add_recycling_data_serial(path=None,mcut=10**10):
                     logfile.close()
                 iihalo=iihalo+1
                 ihalo_key='ihalo_'+str(ihalo).zfill(6)
-                ihalo_ID=run_halodata[run][snap_master]['ID'][ihalo]
+                ihalo_ID=base_halo_data[snap_master]['ID'][ihalo]
                 try:
                     #main progens & subhalos
-                    ihalo_mainprogens=find_progen_index(base_halo_data=run_halodata[run],index2=ihalo,snap2=snap_master,depth=len(snaps)-1,return_all_depths=True)
-                    ihalo_mainprogen_IDs=[run_halodata[run][isnap]['ID'][ihalo_progen] for isnap,ihalo_progen in zip(snaps[:-1][::-1],ihalo_mainprogens)]
-                    ihalo_submainprogens=[np.where(ihalo_mainprogen_ID==run_halodata[run][isnap]['hostHaloID'])[0] for isnap,ihalo_mainprogen_ID in zip(snaps[:-1][::-1],ihalo_mainprogen_IDs)]
-                    ihalo_submainprogen_IDs=[[run_halodata[run][snap]['ID'][ihalo_isnap_subprogen] for ihalo_isnap_subprogen in  ihalo_isnap_subprogens] for snap,ihalo_isnap_subprogens in zip(snaps[:-1][::-1],ihalo_submainprogens)]
+                    ihalo_mainprogens=find_progen_index(base_halo_data=base_halo_data,index2=ihalo,snap2=snap_master,depth=len(snaps)-1,return_all_depths=True)
+                    ihalo_mainprogen_IDs=[base_halo_data[isnap]['ID'][ihalo_progen] for isnap,ihalo_progen in zip(snaps[:-1][::-1],ihalo_mainprogens)]
+                    ihalo_submainprogens=[np.where(ihalo_mainprogen_ID==base_halo_data[isnap]['hostHaloID'])[0] for isnap,ihalo_mainprogen_ID in zip(snaps[:-1][::-1],ihalo_mainprogen_IDs)]
+                    ihalo_submainprogen_IDs=[[base_halo_data[snap]['ID'][ihalo_isnap_subprogen] for ihalo_isnap_subprogen in  ihalo_isnap_subprogens] for snap,ihalo_isnap_subprogens in zip(snaps[:-1][::-1],ihalo_submainprogens)]
 
                     #all progens & subhalos
-                    ihalo_allprogens=find_progen_index_tree(base_halo_data=run_halodata[run],index2=ihalo,snap2=snap_master,snap1=snaps[0])
+                    ihalo_allprogens=find_progen_index_tree(base_halo_data=base_halo_data,index2=ihalo,snap2=snap_master,snap1=snaps[0])
                     # print(ihalo_allprogens)
                     ihalo_allprogen_IDs=[ihalo_allprogens[str(snap)] for snap in snaps[:-1][::-1]]
                     ihalo_suballprogen_IDs=[[] for snap in snaps[:-1][::-1]]
                     for isnap, (snap,ihalo_isnap_allprogen_IDs) in enumerate(zip(snaps[:-1][::-1],ihalo_allprogen_IDs)):
                         ihalo_isnap_suballprogen_IDs=[]
                         for ihalo_isnap_iprogen in ihalo_isnap_allprogen_IDs:
-                            ihalo_isnap_iprogen_subs=np.where(run_halodata[run][snap]['hostHaloID']==ihalo_isnap_iprogen)
-                            ihalo_isnap_iprogen_sub_IDs=run_halodata[run][snap]['ID'][ihalo_isnap_iprogen_subs]
+                            ihalo_isnap_iprogen_subs=np.where(base_halo_data[snap]['hostHaloID']==ihalo_isnap_iprogen)
+                            ihalo_isnap_iprogen_sub_IDs=base_halo_data[snap]['ID'][ihalo_isnap_iprogen_subs]
                             ihalo_isnap_suballprogen_IDs.extend(ihalo_isnap_iprogen_sub_IDs)
                         ihalo_suballprogen_IDs[isnap]=ihalo_isnap_suballprogen_IDs
 
@@ -2885,7 +2885,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
 
                     
                     for snap in snaps[:-1][::-1]:
-                        ihalo_recycledIDs_history[str(snap)][str(itype)]['itype'],ihalo_recycledIDs_history[str(snap)][str(itype)]['ihist'],x=get_particle_indices(base_halo_data=run_halodata[run],
+                        ihalo_recycledIDs_history[str(snap)][str(itype)]['itype'],ihalo_recycledIDs_history[str(snap)][str(itype)]['ihist'],x=get_particle_indices(base_halo_data=base_halo_data,
                                                                                                                                         IDs_taken=ihalo_recycledIDs,
                                                                                                                                         IDs_sorted=Part_Histories_data[str(snap)]['ParticleIDs'],
                                                                                                                                         indices_sorted={},

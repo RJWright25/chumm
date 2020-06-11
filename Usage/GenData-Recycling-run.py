@@ -36,7 +36,6 @@ run_script=chummdir+'Usage/GenData-Recycling.py'
 slurm=False
 email=True
 wall_time="0-04:00:00"
-num_processes=2
 total_mem_perprocess=8#GB
 
 # Algorithm Details
