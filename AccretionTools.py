@@ -2797,7 +2797,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
     # Here we go
     snap_master=snaps[-1]
     nhalo=len(base_halo_data[snap_master]['Mass_200crit'])
-    ihalos_valid=np.where(np.logical_and(base_halo_data[snap_master]['Mass_FOF']>mcut/10**10,base_halo_data[snap_master]['hostHaloID']<0))[0][1:]
+    ihalos_valid=np.where(np.logical_and(base_halo_data[snap_master]['Mass_200crit']>mcut/10**10,base_halo_data[snap_master]['hostHaloID']<0))[0]
 
     frac_mp={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
     frac_nmp={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
