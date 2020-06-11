@@ -2790,7 +2790,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
             logfile.write(f' \n')
             logfile.write(f'Loading part histories for snap {snap}...')
         logfile.close()
-        Part_Histories_File_snap=h5py.File(f"{accdata_path}/{run}/part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5",'r')
+        Part_Histories_File_snap=h5py.File(base_halo_data[snap]['PartHist_FilePath'],'r')
         for field in Part_Histories_fields:
             Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field].value for itype in PartTypes}
 
