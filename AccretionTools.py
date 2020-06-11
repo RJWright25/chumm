@@ -2776,7 +2776,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
 
     # Load in particle histories - data
     print(f'Retrieving & organising particle histories ...')
-    snaps=list(range(snap1,snap2))
+    snaps=list(range(snap1,snap2+1))
     run_outname=base_halo_data[snaps[-1]]['outname']
     run=run_outname
     log=f'job_logs/{run_outname}_Recycling-snap{str(snap2).zfill(3)}.log'
