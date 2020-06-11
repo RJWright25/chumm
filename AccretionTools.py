@@ -2676,7 +2676,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
         partids={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIDs'].value for itype in parttypes} for snap in [snap1,snap2]}
     except:
         print('Waiting for files to be available...')
-        for itry in range(600):
+        for itry in range(3600):
             try:
                 time.sleep(1)
                 parthistory_files={str(snap):h5py.File(base_folder+base_halo_data[snap]['PartHist_FilePath'],'r+') for snap in [snap1,snap2]}
