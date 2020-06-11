@@ -2608,7 +2608,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
 ########################### ADD PARTICLE DATA TO ACCRETION DATA ###########################
 
-def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
+def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**11):
     """
 
     add_particle_data_serial : function
@@ -2636,7 +2636,6 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
                 '1':
                 []}
 
-
     size_keys= {'Coordinates':3,
                 'Metallicity':1,
                 'Temperature':1,
@@ -2647,11 +2646,11 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
                 'ParticleIDs':1}
     
 
-
     # Load in metadata
     accfiles_all=list_dir(path)
-    accfiles=sorted([accfile_all for accfile_all in accfiles_all if (('All.hdf5' not in accfile_all) and ('recyc') not in accfile_all)])
-    accfile_ex=h5py.File(accfiles[0],'r+')
+    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path)])
+    accfiles_thisworker=[accfiles_paths[fileiidx] for fileiidx in fileidx]
+    accfile_ex=h5py.File(accfiles_thisworker[0],'r+')
     snap1=accfile_ex['Header'].attrs['snap1']
     snap2=accfile_ex['Header'].attrs['snap2']
     parttypes=[0]
@@ -2665,14 +2664,31 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
     boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
 
     #patch for testing  (particle data paths)
-    # base_halo_data[snap2]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_027_z000p101/snap_027_z000p101.0.hdf5'
-    # base_halo_data[snap1]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_026_z000p183/snap_026_z000p183.0.hdf5'
+    base_halo_data[snap2]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_027_z000p101/snap_027_z000p101.0.hdf5'
+    base_halo_data[snap1]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_026_z000p183/snap_026_z000p183.0.hdf5'
 
     # Load in particle histories
     print('Loading particle histories')
-    parthistory_files={str(snap):h5py.File(base_folder+base_halo_data[snap]['PartHist_FilePath'],'r+') for snap in [snap1,snap2]}
-    partindices={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIndex'].value for itype in parttypes} for snap in [snap1,snap2]}
-    partids={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIDs'].value for itype in parttypes} for snap in [snap1,snap2]}
+    try:
+        parthistory_files={str(snap):h5py.File(base_folder+base_halo_data[snap]['PartHist_FilePath'],'r+') for snap in [snap1,snap2]}
+        partindices={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIndex'].value for itype in parttypes} for snap in [snap1,snap2]}
+        partids={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIDs'].value for itype in parttypes} for snap in [snap1,snap2]}
+    except:
+        print('Waiting for files to be available...')
+        for itry in range(600):
+            try:
+                time.sleep(1)
+                parthistory_files={str(snap):h5py.File(base_folder+base_halo_data[snap]['PartHist_FilePath'],'r+') for snap in [snap1,snap2]}
+                partindices={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIndex'].value for itype in parttypes} for snap in [snap1,snap2]}
+                partids={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIDs'].value for itype in parttypes} for snap in [snap1,snap2]}
+                if True:
+                    print(f'Files available after {itry} sec')
+                    break
+            except:
+                continue
+    
+    for snap in [snap1,snap2]:
+        parthistory_files[str(snap)].close()
 
     # # Load in EAGLE data
     partdata_files={str(snap):read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath']) for snap in [snap1,snap2]}
@@ -2682,13 +2698,11 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
     print('Loading particle data')
     partdata={str(snap):{str(itype):{key:partdata_files[str(snap)].read_dataset(itype,key) for key in eagle_keys[str(itype)]} for itype in parttypes} for snap in [snap1,snap2]}
 
-    for ifile,accfile_path in enumerate(accfiles):
-        print(f'Starting on file {ifile+1}/{len(accfiles)} ...')
+    for ifile,accfile_path in enumerate(accfiles_thisworker):
         accfile=h5py.File(accfile_path,'r+')
         ihalo_list=sorted(accfile['Integrated']['ihalo_list'])
-
         for ihalo in ihalo_list:
-            if base_halo_data[snap2]['Mass_FOF'][ihalo]>mass_cut:
+            if base_halo_data[snap2]['Mass_FOF'][ihalo]>mcut:
                 print(f'Processing ihalo {ihalo}')
                 for itype in parttypes:
                     try:
@@ -2700,34 +2714,40 @@ def add_particle_data_serial(path=None,full_halo=False,mass_cut=10**11):
                         try:
                             del accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap1_{key}']
                             del accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}']
-                            accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{key}',data=np.zeros(shape=(ncandidates,size_keys[key]))+np.nan)
-                            accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{key}',data=np.zeros(shape=(ncandidates,size_keys[key]))+np.nan)
                         except:
-                            accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{key}',data=np.zeros(shape=(ncandidates,size_keys[key]))+np.nan)
-                            accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{key}',data=np.zeros(shape=(ncandidates,size_keys[key]))+np.nan)
-
+                            pass
+                    
                     snap1_inFOF=accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']['snap1_Particle_InFOF'].value
                     snap2_inFOF=accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']['snap2_Particle_InFOF'].value
 
-                    if full_halo:
+                    if fullhalo:
                         accreted_mask=np.where(np.ones(ncandidates))
                     else:
-                        accreted_mask=np.where(np.logical_and(snap2_inFOF==1,snap1_inFOF==0))
+                        accreted_mask=np.where(np.logical_and(snap2_inFOF,np.logical_not(snap1_inFOF)))
                     accreted_IDs=accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']['ParticleIDs'].value[accreted_mask]
 
                     #find previous types, particle indices
+                    print('Fidning particle indices')
+                    t1=time.time()
                     snap2_types,snap2_histidx,snap2_partidx=get_particle_indices(base_halo_data,accreted_IDs,IDs_sorted=partids[str(snap2)],indices_sorted=partindices[str(snap2)],types_taken=np.ones(len(accreted_IDs))*itype,snap_taken=snap1,snap_desired=snap2,return_partindices=True,verbose=False)
                     snap1_types,snap1_histidx,snap1_partidx=get_particle_indices(base_halo_data,accreted_IDs,IDs_sorted=partids[str(snap1)],indices_sorted=partindices[str(snap1)],types_taken=np.ones(len(accreted_IDs))*itype,snap_taken=snap1,snap_desired=snap1,return_partindices=True,verbose=False)
-                    
-                    for ipart,(snap2_itype,snap1_ipartidx,snap2_ipartidx) in enumerate(zip(snap2_types,snap1_partidx,snap2_partidx)):
-                        
-                        ipart_candidx=accreted_mask[0][ipart]
-                        if itype<2:
-                            for key in eagle_keys[str(itype)]:
-                                accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap1_{key}'][ipart_candidx]=partdata[str(snap1)][str(itype)][key][snap1_ipartidx]
-                                accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}'][ipart_candidx]=partdata[str(snap2)][str(snap2_itype)][key][snap2_ipartidx]
+                    t2=time.time()
+                    print(f'Found particle indices in {t2-t1} sec')
+
+                    print('Extracting particle data')
+                    t1=time.time()
+                    validmask_candidates=np.where(snap2_types==itype)
+                
+                    for key in eagle_keys[str(itype)]:
+                        if size_keys[key]==1:
+                            snap1_dset=np.zeros(ncandidates)+np.nan
                         else:
-                            continue
+                            snap1_dset=np.zeros(shape=(ncandidates,size_keys[key]))+np.nan
+                        snap1_dset[accreted_mask]=partdata[str(snap1)][str(itype)][key][(snap1_partidx,)]
+                        accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{key}',data=snap1_dset)
+                        # accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}'][accreted_mask][validmask_candidates]=partdata[str(snap2)][str(itype)][key][(snap2_partidx,)][validmask_candidates]
+                    t2=time.time()
+                    print(f'Found particle data in {t2-t1} sec')
 
                     print(f'Done with ihalo {ihalo} for itype {itype}')
             else:
