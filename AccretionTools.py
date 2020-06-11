@@ -2608,7 +2608,8 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
 ########################### ADD PARTICLE DATA TO ACCRETION DATA ###########################
 
-def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**11):
+def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
+
     """
 
     add_particle_data_serial : function
@@ -2752,3 +2753,217 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**11):
                     print(f'Done with ihalo {ihalo} for itype {itype}')
             else:
                 continue
+
+########################### ADD LAST STRUCTURE DATA TO RECYCLED DATA ###########################
+
+def add_recycling_data_serial(path=None,mcut=10**10):
+    
+    # Load in metadata
+    accfiles_all=list_dir(path)
+    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path)])
+    accfiles=accfiles_paths
+    accfile_ex=h5py.File(accfiles[0],'r+')
+    snap2=accfile_ex['Header'].attrs['snap2']
+    snap1=15
+    PartTypes=[0,1]
+
+    # Load in base halo data
+    print('Loading halo data')
+    base_folder=path.split('acc_data')[0]
+    base_folder_contents=list_dir(base_folder)
+    base_halo_data_path=[path for path in base_folder_contents if 'B2' in path][0]
+    base_halo_data=open_pickle(base_halo_data_path)
+
+    # Load in particle histories - data
+    print(f'Retrieving & organising particle histories ...')
+    snaps=list(range(snap1,snap2))
+    run_outname=run_halodata[run][snaps[-1]]['outname']
+    run=run_outname
+    log=f'job_logs/{run_outname}_Recycling-snap{str(snap2).zfill(3)}.log'
+
+    # Load in particle histories
+    Part_Histories_fields=["ParticleIDs",'HostStructure']
+    Part_Histories_data={str(snap):{} for snap in snaps}
+    for snap in snaps[::-1]:
+        print(f'Loading part histories for snap {snap}...')
+        with open(log,"a") as logfile:
+            logfile.write(f' \n')
+            logfile.write(f'Loading part histories for snap {snap}...')
+        logfile.close()
+        Part_Histories_File_snap=h5py.File(f"{accdata_path}/{run}/part_histories/PartHistory_"+str(snap).zfill(3)+"_"+run_outname+".hdf5",'r')
+        for field in Part_Histories_fields:
+            Part_Histories_data[str(snap)][field]={str(itype):Part_Histories_File_snap["PartType"+str(itype)+'/'+field].value for itype in PartTypes}
+
+    # Here we go
+    snap_master=snaps[-1]
+    nhalo=len(run_halodata[run][snap_master]['Mass_200crit'])
+    ihalos_valid=np.where(np.logical_and(run_halodata[run][snap_master]['Mass_FOF']>mcut/10**10,run_halodata[run][snap_master]['hostHaloID']<0))[0][1:]
+
+    frac_mp={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
+    frac_nmp={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
+    frac_transfer={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
+    frac_lost={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
+    n_recyc={str(itype):np.zeros(nhalo)+np.nan for itype in PartTypes}
+
+    t1=time.time()
+    acc_dir=path
+    acc_files_all=np.sort(list_dir(acc_dir))
+    acc_files=[acc_file for acc_file in acc_files_all if ('All' not in acc_file and '.hdf5' in acc_file)]
+
+    with open(log,"a") as logfile:
+        logfile.write(f' \n')
+        logfile.write(f'Starting with halo loop ... \n')
+    logfile.close()
+
+    iihalo=0
+    for ifile,acc_file in enumerate(acc_files):
+        acc_file_hdf5=h5py.File(acc_file,'r+')
+        acc_file_ihalos=acc_file_hdf5['Integrated']['ihalo_list'].value
+        for ifile_ihalo,ihalo in enumerate(acc_file_ihalos):
+            if ihalo in ihalos_valid:
+                if iihalo%1==0 or ifile_ihalo==0:
+                    print(f'[on file {ifile+1}/{len(acc_files)}]: {iihalo/len(ihalos_valid)*100:.2f}% done in total')
+                    with open(log,"a") as logfile:
+                        logfile.write(f' \n')
+                        logfile.write(f'[on file {ifile+1}/{len(acc_files)}]: {iihalo/len(ihalos_valid)*100:.2f}% done in total\n')
+                    logfile.close()
+                iihalo=iihalo+1
+                ihalo_key='ihalo_'+str(ihalo).zfill(6)
+                ihalo_ID=run_halodata[run][snap_master]['ID'][ihalo]
+                try:
+                    #main progens & subhalos
+                    ihalo_mainprogens=find_progen_index(base_halo_data=run_halodata[run],index2=ihalo,snap2=snap_master,depth=len(snaps)-1,return_all_depths=True)
+                    ihalo_mainprogen_IDs=[run_halodata[run][isnap]['ID'][ihalo_progen] for isnap,ihalo_progen in zip(snaps[:-1][::-1],ihalo_mainprogens)]
+                    ihalo_submainprogens=[np.where(ihalo_mainprogen_ID==run_halodata[run][isnap]['hostHaloID'])[0] for isnap,ihalo_mainprogen_ID in zip(snaps[:-1][::-1],ihalo_mainprogen_IDs)]
+                    ihalo_submainprogen_IDs=[[run_halodata[run][snap]['ID'][ihalo_isnap_subprogen] for ihalo_isnap_subprogen in  ihalo_isnap_subprogens] for snap,ihalo_isnap_subprogens in zip(snaps[:-1][::-1],ihalo_submainprogens)]
+
+                    #all progens & subhalos
+                    ihalo_allprogens=find_progen_index_tree(base_halo_data=run_halodata[run],index2=ihalo,snap2=snap_master,snap1=snaps[0])
+                    # print(ihalo_allprogens)
+                    ihalo_allprogen_IDs=[ihalo_allprogens[str(snap)] for snap in snaps[:-1][::-1]]
+                    ihalo_suballprogen_IDs=[[] for snap in snaps[:-1][::-1]]
+                    for isnap, (snap,ihalo_isnap_allprogen_IDs) in enumerate(zip(snaps[:-1][::-1],ihalo_allprogen_IDs)):
+                        ihalo_isnap_suballprogen_IDs=[]
+                        for ihalo_isnap_iprogen in ihalo_isnap_allprogen_IDs:
+                            ihalo_isnap_iprogen_subs=np.where(run_halodata[run][snap]['hostHaloID']==ihalo_isnap_iprogen)
+                            ihalo_isnap_iprogen_sub_IDs=run_halodata[run][snap]['ID'][ihalo_isnap_iprogen_subs]
+                            ihalo_isnap_suballprogen_IDs.extend(ihalo_isnap_iprogen_sub_IDs)
+                        ihalo_suballprogen_IDs[isnap]=ihalo_isnap_suballprogen_IDs
+
+
+                except:
+                    print(f'had to skip ihalo {ihalo}')
+                    continue
+                
+                #Retrieve particle histories
+                ihalo_recycledIDs_history={str(snap):{str(iitype):{} for iitype in PartTypes} for snap in snaps}
+                for itype in PartTypes:
+                    # print(acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}'].keys())
+                    try:
+                        snap2_inFOF=acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["snap2_Particle_InFOF"].value
+                        snap1_inFOF=acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["snap1_Particle_InFOF"].value
+                        snap1_Processed=acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["snap1_Processed"].value
+                        snap1_Structure=acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["snap1_Structure"].value
+                        npart=len(snap2_inFOF)
+                    except:
+                        print(f'had to skip ihalo {ihalo} for itype {itype}')
+                        continue
+
+                    try:
+                        del acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["last_Structure"]
+                        acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}'].create_dataset('last_Structure',data=np.zeros(npart)+np.nan)
+                    except:
+                        acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}'].create_dataset('last_Structure',data=np.zeros(npart)+np.nan)
+
+
+
+                    accreted=np.logical_and(snap2_inFOF,np.logical_not(snap1_inFOF))
+                    recycled=np.logical_and(snap1_Processed>0,snap1_Structure==-1)
+                    ihalo_idmask=np.where(np.logical_and(accreted,recycled))
+                    ihalo_recycledIDs=acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["ParticleIDs"].value[ihalo_idmask]
+                    ihalo_recycledmasses=acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["Mass"].value[ihalo_idmask]
+
+                    
+                    for snap in snaps[:-1][::-1]:
+                        ihalo_recycledIDs_history[str(snap)][str(itype)]['itype'],ihalo_recycledIDs_history[str(snap)][str(itype)]['ihist'],x=get_particle_indices(base_halo_data=run_halodata[run],
+                                                                                                                                        IDs_taken=ihalo_recycledIDs,
+                                                                                                                                        IDs_sorted=Part_Histories_data[str(snap)]['ParticleIDs'],
+                                                                                                                                        indices_sorted={},
+                                                                                                                                        types_taken=np.ones(len(ihalo_recycledIDs))*itype,
+                                                                                                                                        snap_taken=snap_master,
+                                                                                                                                        snap_desired=snap,
+                                                                                                                                        return_partindices=False,
+                                                                                                                                        verbose=False)
+                    ihalo_itype_recycled_npart=len(ihalo_recycledIDs)
+                    ihalo_itype_laststructure=np.zeros(ihalo_itype_recycled_npart)+np.nan
+                    for ipart in list(range(ihalo_itype_recycled_npart)):
+                        try:
+                            ipart_candidx=ihalo_idmask[0][ipart]
+                        except:
+                            ipart_candidx=-1
+                        for isnap,snap in enumerate(snaps[:-1][::-1]):
+                            ihalo_isnap_mainprogen=ihalo_mainprogen_IDs[isnap]
+                            ihalo_isnap_submainprogens=ihalo_submainprogen_IDs[isnap]
+
+                            ihalo_isnap_allprogens=ihalo_allprogen_IDs[isnap]
+                            ihalo_isnap_suballprogens=ihalo_suballprogen_IDs[isnap]
+
+
+                            ipart_isnap_itype_type=ihalo_recycledIDs_history[str(snap)][str(itype)]['itype'][ipart]
+                            ipart_isnap_itype_histidx=ihalo_recycledIDs_history[str(snap)][str(itype)]['ihist'][ipart]
+                            ipart_isnap_itype_host=Part_Histories_data[str(snap)]['HostStructure'][str(ipart_isnap_itype_type)][ipart_isnap_itype_histidx]
+
+                            if ipart_isnap_itype_host>0:
+                                if ipart_isnap_itype_host==ihalo_isnap_mainprogen:
+                                    ihalo_itype_laststructure[ipart]=0.0
+                                    acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["last_Structure"][ipart_candidx]=0.0
+                                elif ipart_isnap_itype_host in ihalo_isnap_submainprogens:
+                                    ihalo_itype_laststructure[ipart]=0.5
+                                    acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["last_Structure"][ipart_candidx]=0.5
+                                elif ipart_isnap_itype_host in ihalo_isnap_allprogens:
+                                    ihalo_itype_laststructure[ipart]=1.0
+                                    acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["last_Structure"][ipart_candidx]=1.0
+                                elif ipart_isnap_itype_host in ihalo_isnap_suballprogens:
+                                    ihalo_itype_laststructure[ipart]=1.5
+                                    acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["last_Structure"][ipart_candidx]=1.5
+                                else:
+                                    ihalo_itype_laststructure[ipart]=2.0
+                                    acc_file_hdf5['Particle'][ihalo_key]['Inflow'][f'PartType{itype}']["last_Structure"][ipart_candidx]=2.0
+                                break
+                            else:
+                                continue
+                    
+                    mp_mask=np.where(ihalo_itype_laststructure<0.1)
+                    nmp_mask=np.where(np.logical_and(ihalo_itype_laststructure>0.6,ihalo_itype_laststructure<1.6))
+                    transfer_mask=np.where(ihalo_itype_laststructure>1.6)
+                    lost_mask=np.where(np.logical_not(np.isfinite(ihalo_itype_laststructure)))
+                    
+                    # print(f'breakdown for ihalo {ihalo}, itype {itype}' )
+                    if ihalo_itype_recycled_npart>0:
+                        if not itype==1:
+                            frac_mp[str(itype)][ihalo]=np.sum(ihalo_recycledmasses[mp_mask])/np.sum(ihalo_recycledmasses)
+                            frac_nmp[str(itype)][ihalo]=np.sum(ihalo_recycledmasses[nmp_mask])/np.sum(ihalo_recycledmasses)
+                            frac_transfer[str(itype)][ihalo]=np.sum(ihalo_recycledmasses[transfer_mask])/np.sum(ihalo_recycledmasses)
+                            frac_lost[str(itype)][ihalo]=np.sum(ihalo_recycledmasses[lost_mask])/np.sum(ihalo_recycledmasses)
+                            n_recyc[str(itype)][ihalo]=ihalo_itype_recycled_npart
+                        else:
+                            frac_mp[str(itype)][ihalo]=np.size(mp_mask[0])/ihalo_itype_recycled_npart
+                            frac_nmp[str(itype)][ihalo]=np.size(nmp_mask[0])/ihalo_itype_recycled_npart
+                            frac_transfer[str(itype)][ihalo]=np.size(transfer_mask[0])/ihalo_itype_recycled_npart
+                            frac_lost[str(itype)][ihalo]=np.size(lost_mask[0])/ihalo_itype_recycled_npart
+                            n_recyc[str(itype)][ihalo]=ihalo_itype_recycled_npart
+                    else:
+                        continue
+                    # #0=mp,1=sat,2=else
+                    # last_structure[ipart]
+            # else:
+            #     continue
+
+    print(f'Saving to {acc_dir}recycling_breakdown.dat ...')
+    frac_all={'mp':frac_mp,'nmp':frac_nmp,'transfer':frac_transfer,'lost':frac_lost,'n':n_recyc}
+    dump_pickle(data=frac_all,path=acc_dir+'recycling_breakdown.dat')
+    print('Done saving to file')
+    t2=time.time()
+    print()
+    print(f'Took {t2-t1:.1f} sec for {len(ihalos_valid)} halos')
+
