@@ -2753,6 +2753,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                     print(f'Done with ihalo {ihalo} for itype {itype}')
             else:
                 continue
+        accfile.close()
 
 ########################### ADD LAST STRUCTURE DATA TO RECYCLED DATA ###########################
 
