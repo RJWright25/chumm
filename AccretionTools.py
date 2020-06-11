@@ -2664,8 +2664,8 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**11):
     boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
 
     #patch for testing  (particle data paths)
-    base_halo_data[snap2]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_027_z000p101/snap_027_z000p101.0.hdf5'
-    base_halo_data[snap1]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_026_z000p183/snap_026_z000p183.0.hdf5'
+    # base_halo_data[snap2]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_027_z000p101/snap_027_z000p101.0.hdf5'
+    # base_halo_data[snap1]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_026_z000p183/snap_026_z000p183.0.hdf5'
 
     # Load in particle histories
     print('Loading particle histories')
