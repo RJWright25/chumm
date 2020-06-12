@@ -2742,10 +2742,15 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                     for key in eagle_keys[str(itype)]:
                         if size_keys[key]==1:
                             snap1_dset=np.zeros(ncandidates)+np.nan
+                            snap2_dset=np.zeros(ncandidates)+np.nan
                         else:
                             snap1_dset=np.zeros(shape=(ncandidates,size_keys[key]))+np.nan
+                            snap2_dset=np.zeros(shape=(ncandidates,size_keys[key]))+np.nan
                         snap1_dset[accreted_mask]=partdata[str(snap1)][str(itype)][key][(snap1_partidx,)]
+                        snap2_dset[accreted_mask]=partdata[str(snap2)][str(itype)][key][(snap2_partidx,)]
+                        
                         accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{key}',data=snap1_dset)
+                        accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{key}',data=snap2_dset)
                         # accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}'][accreted_mask][validmask_candidates]=partdata[str(snap2)][str(itype)][key][(snap2_partidx,)][validmask_candidates]
                     t2=time.time()
                     print(f'Found particle data in {t2-t1} sec')
