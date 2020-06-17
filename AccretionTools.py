@@ -2973,3 +2973,107 @@ def add_recycling_data_serial(path=None,mcut=10**10):
     print()
     print(f'Took {t2-t1:.1f} sec for {len(ihalos_valid)} halos')
 
+
+def gen_averaged_accretion_data(base_halo_data,path=None):
+    
+    # Load in metadata
+    accfiles_all=list_dir(path)
+    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path)])
+    accfiles=accfiles_paths
+    accfile_ex=h5py.File(accfiles[0],'r+')
+    accfile_ex_ihalo_key=list(accfile_ex['Particle'].keys())[0]
+    property_keys_all=list(accfile_ex['Particle'][accfile_ex_ihalo_key]['Inflow']['PartType0'].keys())
+    property_keys=[property_key for property_key in property_keys_all if ('Structure' not in property_key and 'structure' not in property_key and 'FOF' not in property_key and 'Host' not in property_key and 'Mass' not in property_key and 'ID' not in property_key and 'Processed' not in property_key and 'Types' not in property_key and 'Velocity' not in property_key)]
+    property_keys_forfile=flatten([property_keys,['snap1_rcom','snap1_rcmbp','snap2_rcom','snap2_rcmbp']])
+
+    snap2=accfile_ex['Header'].attrs['snap2']
+    snap1=accfile_ex['Header'].attrs['snap1']
+    snap2_comtophys=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']/base_halo_data[snap2]['SimulationInfo']['h_val']
+    snap1_comtophys=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']/base_halo_data[snap1]['SimulationInfo']['h_val']
+
+    origins=['Accreted','First-infall','Recycled','Transfer','Merger','snap1_halo','snap2_halo']
+    averages=['Means','Medians']
+    print(property_keys)
+
+    nhalos=len(base_halo_data[snap2]['Mass_FOF'])
+    output_props={origin:{key:{average:np.zeros(nhalos)+np.nan for average in averages} for key in property_keys_forfile} for origin in origins}
+
+
+    for ifile,accfile_path in enumerate(accfiles_paths):
+        print(f'On file {ifile+1}/{len(accfiles_paths)} (for snap {snap2}) ...')
+        accfile=h5py.File(accfile_path,'r')
+        accfile_ihalo_keys=list(accfile['Particle'].keys())
+        nhalo_file=len(accfile_ihalo_keys)
+
+        for iihalo,ihalo_key in enumerate(accfile_ihalo_keys):
+            ihalo=int(ihalo_key.split('_')[-1])
+            if iihalo<10 or iihalo%100==0:
+                print(f'{(iihalo+1)/nhalo_file*100:.2f}% done with file {ifile+1}')
+            try:
+                ihalo_snap1=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Particle_InFOF'].value
+                ihalo_snap2=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Particle_InFOF'].value
+                ihalo_accreted=np.logical_and(np.logical_not(ihalo_snap1),ihalo_snap2)
+                ihalo_origin={}
+                ihalo_origin['snap1_halo']=ihalo_snap1;ihalo_origin['snap2_halo']=ihalo_snap2;ihalo_origin['Accreted']=ihalo_accreted
+
+                ihalo_processed=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Processed'].value
+                ihalo_structure=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Structure'].value
+                ihalo_laststructure=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['last_Structure'].value
+                
+                ihalo_origin['First-infall']=np.logical_and(ihalo_processed==0,ihalo_accreted)
+                ihalo_origin['Recycled']=np.logical_and(ihalo_accreted,ihalo_laststructure<1.8)
+                ihalo_origin['Transfer']=np.logical_and(ihalo_accreted,ihalo_laststructure==2)
+                ihalo_origin['Merger']=np.logical_and(ihalo_accreted,ihalo_structure>0)
+
+                ihalo_progen=find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap2-snap1)
+                ihalo_snap2_com=np.array([base_halo_data[snap2]['Xc'][ihalo],base_halo_data[snap2]['Yc'][ihalo],base_halo_data[snap2]['Zc'][ihalo]],ndmin=2)
+                ihalo_snap1_com=np.array([base_halo_data[snap1]['Xc'][ihalo_progen],base_halo_data[snap1]['Yc'][ihalo_progen],base_halo_data[snap1]['Zc'][ihalo_progen]],ndmin=2)
+                ihalo_snap2_cmbp=np.array([base_halo_data[snap2]['Xcmbp'][ihalo],base_halo_data[snap2]['Ycmbp'][ihalo],base_halo_data[snap2]['Zcmbp'][ihalo]],ndmin=2)
+                ihalo_snap1_cmbp=np.array([base_halo_data[snap1]['Xcmbp'][ihalo_progen],base_halo_data[snap1]['Ycmbp'][ihalo_progen],base_halo_data[snap1]['Zcmbp'][ihalo_progen]],ndmin=2)
+
+            except:
+                if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
+                    print(f'Skipping ihalo {ihalo}')
+                continue
+        
+            for origin in origins:
+                mask=np.where(ihalo_origin[origin])
+                for property_key in property_keys:
+                    if not 'Coordinates' in property_key:
+                        try:
+                            ihalo_origin_prop=accfile['Particle'][ihalo_key]['Inflow']['PartType0'][property_key].value[mask]
+                        except:
+                            if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
+                                print(f'Skipping {property_key} for ihalo {ihalo}')
+                            continue
+                        output_props[origin][property_key]['Means'][ihalo]=np.nanmean(ihalo_origin_prop)
+                        output_props[origin][property_key]['Medians'][ihalo]=np.nanmedian(ihalo_origin_prop)
+                    else:
+                        try:
+                            ihalo_origin_prop=accfile['Particle'][ihalo_key]['Inflow']['PartType0'][property_key].value[mask]
+                        except:
+                            if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
+                                print(f'Skipping {property_key} for ihalo {ihalo}')
+                            continue
+                        if 'snap1' in property_key:
+                            ihalo_rcom_coords=np.sqrt(np.sum(np.square(ihalo_origin_prop*snap1_comtophys-ihalo_snap1_com),axis=1))
+                            ihalo_rcmbp_coords=np.sqrt(np.sum(np.square(ihalo_origin_prop*snap1_comtophys-ihalo_snap1_cmbp),axis=1))
+                            output_props[origin]['snap1_rcom']['Means'][ihalo]=np.nanmean(ihalo_rcom_coords)
+                            output_props[origin]['snap1_rcom']['Medians'][ihalo]=np.nanmedian(ihalo_rcom_coords)
+                            output_props[origin]['snap1_rcmbp']['Means'][ihalo]=np.nanmean(ihalo_rcmbp_coords)
+                            output_props[origin]['snap1_rcmbp']['Medians'][ihalo]=np.nanmedian(ihalo_rcmbp_coords)
+                        else:
+                            ihalo_rcom_coords=np.sqrt(np.sum(np.square(ihalo_origin_prop*snap2_comtophys-ihalo_snap2_com),axis=1))
+                            ihalo_rcmbp_coords=np.sqrt(np.sum(np.square(ihalo_origin_prop*snap2_comtophys-ihalo_snap2_cmbp),axis=1))
+                            output_props[origin]['snap2_rcom']['Means'][ihalo]=np.nanmean(ihalo_rcom_coords)
+                            output_props[origin]['snap2_rcom']['Medians'][ihalo]=np.nanmedian(ihalo_rcom_coords)
+                            output_props[origin]['snap2_rcmbp']['Means'][ihalo]=np.nanmean(ihalo_rcmbp_coords)
+                            output_props[origin]['snap2_rcmbp']['Medians'][ihalo]=np.nanmedian(ihalo_rcmbp_coords)
+
+    dump_pickle(path=path+'aveprops.dat',data=output_props)
+
+
+
+
+   
+
