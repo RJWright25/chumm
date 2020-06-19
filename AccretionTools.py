@@ -2992,7 +2992,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     snap1_comtophys=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']/base_halo_data[snap1]['SimulationInfo']['h_val']
 
     origins=['Accreted','First-infall','Recycled','Transfer','Merger','snap1_halo','snap2_halo']
-    averages=['Means','Medians']
+    averages=['Means','Medians','Min','Max']
     print(property_keys)
 
     nhalos=len(base_halo_data[snap2]['Mass_FOF'])
@@ -3048,6 +3048,8 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                             continue
                         output_props[origin][property_key]['Means'][ihalo]=np.nanmean(ihalo_origin_prop)
                         output_props[origin][property_key]['Medians'][ihalo]=np.nanmedian(ihalo_origin_prop)
+                        output_props[origin][property_key]['Max'][ihalo]=np.nanmax(ihalo_origin_prop)
+                        output_props[origin][property_key]['Min'][ihalo]=np.nanmin(ihalo_origin_prop)
                     else:
                         try:
                             ihalo_origin_prop=accfile['Particle'][ihalo_key]['Inflow']['PartType0'][property_key].value[mask]
