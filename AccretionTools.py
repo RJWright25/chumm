@@ -2770,7 +2770,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
     accfiles=accfiles_paths
     accfile_ex=h5py.File(accfiles[0],'r+')
     snap2=accfile_ex['Header'].attrs['snap2']
-    snap1=20
+    snap1=int(np.nanmax([12,snap2-10]))
     PartTypes=[0,1]
 
     # Load in base halo data
