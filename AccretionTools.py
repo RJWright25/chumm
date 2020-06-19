@@ -3048,8 +3048,11 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                             continue
                         output_props[origin][property_key]['Means'][ihalo]=np.nanmean(ihalo_origin_prop)
                         output_props[origin][property_key]['Medians'][ihalo]=np.nanmedian(ihalo_origin_prop)
-                        output_props[origin][property_key]['Max'][ihalo]=np.nanmax(ihalo_origin_prop)
-                        output_props[origin][property_key]['Min'][ihalo]=np.nanmin(ihalo_origin_prop)
+                        try:
+                            output_props[origin][property_key]['Max'][ihalo]=np.nanmax(ihalo_origin_prop)
+                            output_props[origin][property_key]['Min'][ihalo]=np.nanmin(ihalo_origin_prop)
+                        except:
+                            pass
                     else:
                         try:
                             ihalo_origin_prop=accfile['Particle'][ihalo_key]['Inflow']['PartType0'][property_key].value[mask]
