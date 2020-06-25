@@ -2981,8 +2981,11 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path)])
     accfiles=accfiles_paths
     accfile_ex=h5py.File(accfiles[0],'r+')
-    accfile_ex_ihalo_key=list(accfile_ex['Particle'].keys())[0]
-    property_keys_all=list(accfile_ex['Particle'][accfile_ex_ihalo_key]['Inflow']['PartType0'].keys())
+    for ex_iihalo in range(100):
+        accfile_ex_ihalo_key=list(accfile_ex['Particle'].keys())[ex_iihalo]
+        property_keys_all=list(accfile_ex['Particle'][accfile_ex_ihalo_key]['Inflow']['PartType0'].keys())
+        if 'snap1_Metallicity' in property_keys_all:
+            break
     property_keys=[property_key for property_key in property_keys_all if ('Structure' not in property_key and 'structure' not in property_key and 'FOF' not in property_key and 'Host' not in property_key and 'Mass' not in property_key and 'ID' not in property_key and 'Processed' not in property_key and 'Types' not in property_key and 'Velocity' not in property_key)]
     property_keys_forfile=flatten([property_keys,['snap1_rcom','snap1_rcmbp','snap2_rcom','snap2_rcmbp']])
 
