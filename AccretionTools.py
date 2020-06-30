@@ -2994,14 +2994,14 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     snap2_comtophys=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']/base_halo_data[snap2]['SimulationInfo']['h_val']
     snap1_comtophys=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']/base_halo_data[snap1]['SimulationInfo']['h_val']
 
-    origins=['Accreted','First-infall','Recycled','Transfer','Merger','snap1_halo','snap2_halo']
+    origins=['snap1_halo','snap2_halo','Accreted','First-infall','Recycled','Transfer','Merger']
     averages=['Means','Medians','Min','Max']
     print(property_keys)
 
     nhalos=len(base_halo_data[snap2]['Mass_FOF'])
     output_props={origin:{key:{average:np.zeros(nhalos)+np.nan for average in averages} for key in property_keys_forfile} for origin in origins}
-    hist_cuts=[1,2,5,10,20,50,100]
     n_hist=100
+    hist_cuts=[1,2,5,10]
 
     for origin in origins:
         for hist_cut in hist_cuts:
@@ -3039,6 +3039,15 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 ihalo_snap1_com=np.array([base_halo_data[snap1]['Xc'][ihalo_progen],base_halo_data[snap1]['Yc'][ihalo_progen],base_halo_data[snap1]['Zc'][ihalo_progen]],ndmin=2)
                 ihalo_snap2_cmbp=np.array([base_halo_data[snap2]['Xcmbp'][ihalo],base_halo_data[snap2]['Ycmbp'][ihalo],base_halo_data[snap2]['Zcmbp'][ihalo]],ndmin=2)
                 ihalo_snap1_cmbp=np.array([base_halo_data[snap1]['Xcmbp'][ihalo_progen],base_halo_data[snap1]['Ycmbp'][ihalo_progen],base_halo_data[snap1]['Zcmbp'][ihalo_progen]],ndmin=2)
+                
+                nhist=25
+                ihalo_r200_ave=(base_halo_data[snap2]['R_200crit'][ihalo]+base_halo_data[snap1]['R_200crit'][ihalo_progen])/2
+                accreted_mask=np.where(ihalo_origin['Accreted'])
+                ihalo_snap1_accretedcomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[accreted_mask]*snap1_comtophys-ihalo_snap1_com
+                ihalo_snap2_accretedcomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[accreted_mask]*snap2_comtophys-ihalo_snap2_com
+                
+                ihalo_snap1_accretedcomxyzhist,foo=np.histogramdd(ihalo_snap1_accretedcomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
+                ihalo_snap2_accretedcomxyzhist,foo=np.histogramdd(ihalo_snap2_accretedcomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
 
             except:
                 if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
@@ -3047,6 +3056,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
         
             for origin in origins:
                 mask=np.where(ihalo_origin[origin])
+                accreted_mask=np.where(ihalo_origin['Accreted'])
                 for property_key in property_keys:
                     if not 'Coordinates' in property_key:
                         try:
@@ -3089,19 +3099,23 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 try:
                     ihalo_snap1_comxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_com
                     ihalo_snap2_comxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_com
+                    ihalo_snap1_comxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_com
+                    ihalo_snap2_comxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_com
                 except:
                     continue
 
-                nhist=100
-                ihalo_r200_ave=(base_halo_data[snap2]['R_200crit'][ihalo]+base_halo_data[snap1]['R_200crit'][ihalo_progen])/2
-
-                ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=nhist,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3)
-                ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=nhist,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3)
+                ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=nhist,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
+                ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=nhist,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
                 
-                for hist_cut in hist_cuts:
-                    output_props[origin]['snap1_ffhist'][f'hist_cut_{str(hist_cut).zfill(3)}'][ihalo]=np.sum(ihalo_snap1_comxyz_hist>=hist_cut)
-                    output_props[origin]['snap2_ffhist'][f'hist_cut_{str(hist_cut).zfill(3)}'][ihalo]=np.sum(ihalo_snap2_comxyz_hist>=hist_cut)
+                ihalo_snap1_comxyz_hist_rel=np.divide(ihalo_snap1_comxyz_hist,ihalo_snap1_accretedcomxyzhist)
+                ihalo_snap2_comxyz_hist_rel=np.divide(ihalo_snap2_comxyz_hist,ihalo_snap2_accretedcomxyzhist)
+                
+                if 'Accreted' not in origin and 'halo' not in origin:
+                    for hist_cut in hist_cuts:
+                        output_props[origin]['snap1_ffhist'][f'hist_cut_{str(hist_cut).zfill(3)}'][ihalo]=np.sum(ihalo_snap1_comxyz_hist_rel>hist_cut)
+                        output_props[origin]['snap2_ffhist'][f'hist_cut_{str(hist_cut).zfill(3)}'][ihalo]=np.sum(ihalo_snap2_comxyz_hist_rel>hist_cut)
 
+                
 
     dump_pickle(path=path+'aveprops.dat',data=output_props)
 
