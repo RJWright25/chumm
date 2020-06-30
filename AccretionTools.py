@@ -3002,7 +3002,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     output_props={origin:{key:{average:np.zeros(nhalos)+np.nan for average in averages} for key in property_keys_forfile} for origin in origins}
     
     nhist=25
-    hist_cuts_dex=[0.1,0.2,0.5,1]
+    hist_cuts_dex=[0.5,1,2,3,4]
 
     for origin in origins:
         for ihist_cut,hist_cut in enumerate(hist_cuts_dex):
@@ -3115,17 +3115,17 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=nhist,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
                 ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=nhist,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
                 
-                ihalo_snap1_comxyz_hist_accrel=np.divide(ihalo_snap1_comxyz_hist,ihalo_snap1_accretedcomxyzhist)
-                ihalo_snap2_comxyz_hist_accrel=np.divide(ihalo_snap2_comxyz_hist,ihalo_snap2_accretedcomxyzhist)
-                ihalo_snap1_comxyz_hist_halorel=np.divide(ihalo_snap1_comxyz_hist,ihalo_snap1_halocomxyzhist)
-                ihalo_snap2_comxyz_hist_halorel=np.divide(ihalo_snap2_comxyz_hist,ihalo_snap2_halocomxyzhist)
+                ihalo_snap1_comxyz_hist_accdelta=np.absolute((ihalo_snap1_comxyz_hist-ihalo_snap1_accretedcomxyzhist)/np.nanstd(ihalo_snap1_accretedcomxyzhist))
+                ihalo_snap2_comxyz_hist_accdelta=np.absolute((ihalo_snap2_comxyz_hist-ihalo_snap2_accretedcomxyzhist)/np.nanstd(ihalo_snap2_accretedcomxyzhist))
+                ihalo_snap1_comxyz_hist_halodelta=np.absolute((ihalo_snap1_comxyz_hist-ihalo_snap1_halocomxyzhist)/np.nanstd(ihalo_snap1_halocomxyzhist))
+                ihalo_snap2_comxyz_hist_halodelta=np.absolute((ihalo_snap2_comxyz_hist-ihalo_snap2_halocomxyzhist)/np.nanstd(ihalo_snap2_halocomxyzhist))
                 
                 if 'Accreted' not in origin and 'halo' not in origin:
                     for ihist_cut,hist_cut in enumerate(hist_cuts_dex):
-                        output_props[origin]['snap1_ffhist'][f'acc_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(np.logical_or(ihalo_snap1_comxyz_hist_accrel<10**(-hist_cut),ihalo_snap1_comxyz_hist_accrel>10**(hist_cut)))/nhist**3
-                        output_props[origin]['snap2_ffhist'][f'acc_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(np.logical_or(ihalo_snap2_comxyz_hist_accrel<10**(-hist_cut),ihalo_snap2_comxyz_hist_accrel>10**(hist_cut)))/nhist**3
-                        output_props[origin]['snap1_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(np.logical_or(ihalo_snap1_comxyz_hist_halorel<10**(-hist_cut),ihalo_snap1_comxyz_hist_halorel>10**(hist_cut)))/nhist**3
-                        output_props[origin]['snap2_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(np.logical_or(ihalo_snap2_comxyz_hist_halorel<10**(-hist_cut),ihalo_snap2_comxyz_hist_halorel>10**(hist_cut)))/nhist**3
+                        output_props[origin]['snap1_ffhist'][f'acc_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(ihalo_snap1_comxyz_hist_accdelta>hist_cut)/nhist**3
+                        output_props[origin]['snap2_ffhist'][f'acc_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(ihalo_snap2_comxyz_hist_accdelta>hist_cut)/nhist**3
+                        output_props[origin]['snap1_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(ihalo_snap1_comxyz_hist_halodelta>hist_cut)/nhist**3
+                        output_props[origin]['snap2_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(ihalo_snap2_comxyz_hist_halodelta>hist_cut)/nhist**3
 
                 
 
