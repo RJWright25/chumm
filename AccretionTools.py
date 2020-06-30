@@ -3009,7 +3009,8 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
             output_props[origin]['snap2_ffhist'][f'acc_cut_{str(ihist_cut).zfill(2)}']=np.zeros(nhalos)+np.nan
             output_props[origin]['snap1_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}']=np.zeros(nhalos)+np.nan
             output_props[origin]['snap2_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}']=np.zeros(nhalos)+np.nan
-
+        output_props[origin]['snap1_ffhist']['frac_zero']=np.zeros(nhalos)+np.nan
+        output_props[origin]['snap2_ffhist']['frac_zero']=np.zeros(nhalos)+np.nan
     for ifile,accfile_path in enumerate(accfiles_paths):
         print(f'On file {ifile+1}/{len(accfiles_paths)} (for snap {snap2}) ...')
         accfile=h5py.File(accfile_path,'r')
@@ -3045,18 +3046,18 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 ihalo_r200_ave=(base_halo_data[snap2]['R_200crit'][ihalo]+base_halo_data[snap1]['R_200crit'][ihalo_progen])/2
                 accreted_mask=np.where(ihalo_origin['Accreted'])
                 snap1_halomask=np.where(ihalo_origin['snap1_halo'])
-                gridsize=15#kpc
-                nhist=int(np.floor(ihalo_r200_ave*3*1000/gridsize))
+                gridsize=25#kpc
+                nhist=int(np.floor(ihalo_r200_ave*2*1000/gridsize))
 
                 ihalo_snap1_accretedcomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[accreted_mask]*snap1_comtophys-ihalo_snap1_com
                 ihalo_snap2_accretedcomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[accreted_mask]*snap2_comtophys-ihalo_snap2_com
                 ihalo_snap1_halocomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[snap1_halomask]*snap1_comtophys-ihalo_snap1_com
                 ihalo_snap2_halocomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[snap1_halomask]*snap2_comtophys-ihalo_snap2_com
                 
-                ihalo_snap1_accretedcomxyzhist,foo=np.histogramdd(ihalo_snap1_accretedcomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
-                ihalo_snap2_accretedcomxyzhist,foo=np.histogramdd(ihalo_snap2_accretedcomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
-                ihalo_snap1_halocomxyzhist,foo=np.histogramdd(ihalo_snap1_halocomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
-                ihalo_snap2_halocomxyzhist,foo=np.histogramdd(ihalo_snap2_halocomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3,density=True)
+                ihalo_snap1_accretedcomxyzhist,foo=np.histogramdd(ihalo_snap1_accretedcomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave,ihalo_r200_ave)]*3,density=True)
+                ihalo_snap2_accretedcomxyzhist,foo=np.histogramdd(ihalo_snap2_accretedcomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave,ihalo_r200_ave)]*3,density=True)
+                ihalo_snap1_halocomxyzhist,foo=np.histogramdd(ihalo_snap1_halocomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave,ihalo_r200_ave)]*3,density=True)
+                ihalo_snap2_halocomxyzhist,foo=np.histogramdd(ihalo_snap2_halocomxyz,bins=[nhist]*3,range=[(-ihalo_r200_ave,ihalo_r200_ave)]*3,density=True)
 
             except:
                 if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
@@ -3127,8 +3128,9 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                         output_props[origin]['snap2_ffhist'][f'acc_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(ihalo_snap2_comxyz_hist_accdelta>hist_cut)/nhist**3
                         output_props[origin]['snap1_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(ihalo_snap1_comxyz_hist_halodelta>hist_cut)/nhist**3
                         output_props[origin]['snap2_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}'][ihalo]=np.sum(ihalo_snap2_comxyz_hist_halodelta>hist_cut)/nhist**3
+                    output_props[origin]['snap1_ffhist']['frac_zero']=np.sum(ihalo_snap1_comxyz_hist==0)/nhist**3
+                    output_props[origin]['snap2_ffhist']['frac_zero']=np.sum(ihalo_snap2_comxyz_hist==0)/nhist**3
 
-                
 
     dump_pickle(path=path+'aveprops.dat',data=output_props)
 
