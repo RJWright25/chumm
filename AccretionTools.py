@@ -3001,7 +3001,6 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     nhalos=len(base_halo_data[snap2]['Mass_FOF'])
     output_props={origin:{key:{average:np.zeros(nhalos)+np.nan for average in averages} for key in property_keys_forfile} for origin in origins}
     
-    nhist=25
     hist_cuts_dex=[0.5,1,2,3,4]
 
     for origin in origins:
@@ -3046,7 +3045,9 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 ihalo_r200_ave=(base_halo_data[snap2]['R_200crit'][ihalo]+base_halo_data[snap1]['R_200crit'][ihalo_progen])/2
                 accreted_mask=np.where(ihalo_origin['Accreted'])
                 snap1_halomask=np.where(ihalo_origin['snap1_halo'])
-        
+                gridsize=15#kpc
+                nhist=int(np.floor(ihalo_r200_ave*3*1000/gridsize))
+
                 ihalo_snap1_accretedcomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[accreted_mask]*snap1_comtophys-ihalo_snap1_com
                 ihalo_snap2_accretedcomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[accreted_mask]*snap2_comtophys-ihalo_snap2_com
                 ihalo_snap1_halocomxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[snap1_halomask]*snap1_comtophys-ihalo_snap1_com
