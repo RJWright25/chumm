@@ -2978,7 +2978,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     
     # Load in metadata
     accfiles_all=list_dir(path)
-    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path)])
+    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path and 'ave' not in accfile_path)])
     accfiles=accfiles_paths
     accfile_ex=h5py.File(accfiles[0],'r+')
     for ex_iihalo in range(100):
@@ -2987,7 +2987,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
         if 'snap1_Metallicity' in property_keys_all:
             break
     property_keys=[property_key for property_key in property_keys_all if ('Structure' not in property_key and 'structure' not in property_key and 'FOF' not in property_key and 'Host' not in property_key and 'Mass' not in property_key and 'ID' not in property_key and 'Processed' not in property_key and 'Types' not in property_key and 'Velocity' not in property_key)]
-    property_keys_forfile=flatten([property_keys,['snap1_rcom','snap1_rcmbp','snap2_rcom','snap2_rcmbp']])
+    property_keys_forfile=flatten([property_keys,['snap1_rcom','snap1_rcmbp','snap2_rcom','snap2_rcmbp','snap1_ffhist','snap2_ffhist']])
 
     snap2=accfile_ex['Header'].attrs['snap2']
     snap1=accfile_ex['Header'].attrs['snap1']
@@ -3000,7 +3000,13 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
 
     nhalos=len(base_halo_data[snap2]['Mass_FOF'])
     output_props={origin:{key:{average:np.zeros(nhalos)+np.nan for average in averages} for key in property_keys_forfile} for origin in origins}
+    hist_cuts=[1,2,5,10,20,50,100]
+    n_hist=100
 
+    for origin in origins:
+        for hist_cut in hist_cuts:
+            output_props[origin]['snap1_ffhist'][f'hist_cut_{str(hist_cut).zfill(3)}']=np.zeros(nhalos)+np.nan
+            output_props[origin]['snap2_ffhist'][f'hist_cut_{str(hist_cut).zfill(3)}']=np.zeros(nhalos)+np.nan
 
     for ifile,accfile_path in enumerate(accfiles_paths):
         print(f'On file {ifile+1}/{len(accfiles_paths)} (for snap {snap2}) ...')
@@ -3077,6 +3083,25 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                             output_props[origin]['snap2_rcom']['Medians'][ihalo]=np.nanmedian(ihalo_rcom_coords)
                             output_props[origin]['snap2_rcmbp']['Means'][ihalo]=np.nanmean(ihalo_rcmbp_coords)
                             output_props[origin]['snap2_rcmbp']['Medians'][ihalo]=np.nanmedian(ihalo_rcmbp_coords)
+                
+                #Filling factor calcs
+                # print(f'Filling factor for ihalo {ihalo} origin {origin}')
+                try:
+                    ihalo_snap1_comxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_com
+                    ihalo_snap2_comxyz=accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_com
+                except:
+                    continue
+
+                nhist=100
+                ihalo_r200_ave=(base_halo_data[snap2]['R_200crit'][ihalo]+base_halo_data[snap1]['R_200crit'][ihalo_progen])/2
+
+                ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=nhist,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3)
+                ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=nhist,range=[(-ihalo_r200_ave*1.5,ihalo_r200_ave*1.5)]*3)
+                
+                for hist_cut in hist_cuts:
+                    output_props[origin]['snap1_ffhist'][f'hist_cut_{str(hist_cut).zfill(3)}'][ihalo]=np.sum(ihalo_snap1_comxyz_hist>=hist_cut)
+                    output_props[origin]['snap2_ffhist'][f'hist_cut_{str(hist_cut).zfill(3)}'][ihalo]=np.sum(ihalo_snap2_comxyz_hist>=hist_cut)
+
 
     dump_pickle(path=path+'aveprops.dat',data=output_props)
 
