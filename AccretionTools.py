@@ -3007,11 +3007,9 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     nhist_elevation=6
     rhist_fac=4
     rhist_gridsize=50#kpc
-    bins_azimuth=gen_bins(-np.pi,np.pi,n=nhist_azimuth)
-    bins_elevation=gen_bins(-np.pi/2,np.pi/2,n=nhist_elevation)
 
     for origin in origins:
-        for ihist_cut,hist_cut in enumerate(hist_cuts_dex):
+        for ihist_cut,hist_cut in enumerate(hist_cuts_sigma):
             output_props[origin]['snap1_ffhist'][f'acc_cut_{str(ihist_cut).zfill(2)}_all']=np.zeros(nhalos)+np.nan
             output_props[origin]['snap2_ffhist'][f'acc_cut_{str(ihist_cut).zfill(2)}_all']=np.zeros(nhalos)+np.nan
             output_props[origin]['snap1_ffhist'][f'halo_cut_{str(ihist_cut).zfill(2)}_all']=np.zeros(nhalos)+np.nan
@@ -3063,7 +3061,6 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 #radial binning: filling factor
                 ihalo_r200_ave=(base_halo_data[snap2]['R_200crit'][ihalo]+base_halo_data[snap1]['R_200crit'][ihalo_progen])/2
                 nhist_r=int(np.ceil(ihalo_r200_ave*rhist_fac*1000/rhist_gridsize))
-                bins_r=gen_bins(0,ihalo_r200_ave*rhist_fac)
 
                 ihalo_snap1_accretedcomxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[accreted_mask]*snap1_comtophys-ihalo_snap1_com)
                 ihalo_snap2_accretedcomxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[accreted_mask]*snap2_comtophys-ihalo_snap2_com)
@@ -3122,12 +3119,12 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 
                 #Filling factor calcs
                 # print(f'Filling factor for ihalo {ihalo} origin {origin}')
-                if True:
+                try:
                     ihalo_snap1_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_com)
                     ihalo_snap2_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_com)
                     ihalo_snap1_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_com)
                     ihalo_snap2_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_com)
-                else:
+                except:
                     continue
 
                 ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=True)
