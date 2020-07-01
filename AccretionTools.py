@@ -3003,8 +3003,8 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     
     # filling factor parameters
     hist_cuts_sigma=[0.5,1,2]
-    nhist_azimuth=12
-    nhist_elevation=6
+    nhist_azimuth=8
+    nhist_elevation=4
     rhist_fac=4
     rhist_gridsize=50#kpc
 
