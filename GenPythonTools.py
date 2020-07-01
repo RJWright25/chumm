@@ -327,3 +327,12 @@ def list_to_string(items,delimiter=','):
     return output
 
 
+def cart_to_sph(xyz):
+    #returns r, azimuth (-pi,pi), elevation (-pi/2,pi/2)
+    ptsnew = np.hstack((xyz, np.zeros(xyz.shape)))
+    xy = xyz[:,0]**2 + xyz[:,1]**2
+    ptsnew[:,3] = np.sqrt(xy + xyz[:,2]**2)
+    # ptsnew[:,5] = np.arctan2(np.sqrt(xy), xyz[:,2]) # for elevation angle defined from Z-axis down
+    ptsnew[:,5] = np.arctan2(xyz[:,2], np.sqrt(xy)) # for elevation angle defined from XY-plane up
+    ptsnew[:,4] = np.arctan2(xyz[:,1], xyz[:,0]) #azimuth
+    return ptsnew[:,3:]
