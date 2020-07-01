@@ -26,7 +26,6 @@ import h5py
 import astropy.units as u
 import read_eagle
 import time
-import einsteinpy
 
 from GenPythonTools import *
 from VRPythonTools import *
