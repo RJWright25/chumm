@@ -3006,12 +3006,10 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     nhist_elevation=4
     nhist_r=1
     rhist_fac=5
-    rhist_gridsize=50#kpc
 
     for origin in origins:
-        for ihist_cut,hist_cut in enumerate(hist_cuts_sigma):
-            output_props[origin]['snap1_ffhist']=[[] for ihalo in range(nhalos)]
-            output_props[origin]['snap2_ffhist']=[[] for ihalo in range(nhalos)]
+        output_props[origin]['snap1_ffhist']=[[] for ihalo in range(nhalos)]
+        output_props[origin]['snap2_ffhist']=[[] for ihalo in range(nhalos)]
     
     #iterate through each file
     for ifile,accfile_path in enumerate(accfiles_paths):
@@ -3046,6 +3044,8 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 ihalo_snap2_cmbp=np.array([base_halo_data[snap2]['Xcmbp'][ihalo],base_halo_data[snap2]['Ycmbp'][ihalo],base_halo_data[snap2]['Zcmbp'][ihalo]],ndmin=2)
                 ihalo_snap1_cmbp=np.array([base_halo_data[snap1]['Xcmbp'][ihalo_progen],base_halo_data[snap1]['Ycmbp'][ihalo_progen],base_halo_data[snap1]['Zcmbp'][ihalo_progen]],ndmin=2)
                 
+                ihalo_r200_ave=(base_halo_data[snap2]['R_200crit'][ihalo]+base_halo_data[snap1]['R_200crit'][ihalo_progen])/2
+
             except:
                 if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
                     print(f'Skipping ihalo {ihalo}')
@@ -3053,7 +3053,6 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
         
             for origin in origins:
                 mask=np.where(ihalo_origin[origin])
-                accreted_mask=np.where(ihalo_origin['Accreted'])
                 for property_key in property_keys:
                     if not 'Coordinates' in property_key:
                         try:
@@ -3092,7 +3091,6 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                             output_props[origin]['snap2_rcmbp']['Medians'][ihalo]=np.nanmedian(ihalo_rcmbp_coords)
                 
                 #Filling factor calcs
-                # print(f'Filling factor for ihalo {ihalo} origin {origin}')
                 try:
                     ihalo_snap1_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_com)
                     ihalo_snap2_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_com)
