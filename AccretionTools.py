@@ -3002,10 +3002,10 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     output_props={origin:{key:{average:np.zeros(nhalos)+np.nan for average in averages} for key in property_keys_forfile} for origin in origins}
     
     # filling factor parameters
-    nhist_azimuth=12
-    nhist_elevation=6
+    nhist_azimuth=16
+    nhist_elevation=8
     nhist_r=1
-    rhist_fac=5
+    rhist_fac=10
 
     for origin in origins:
         output_props[origin]['snap1_ffhist']=[[] for ihalo in range(nhalos)]
