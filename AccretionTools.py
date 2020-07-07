@@ -2635,7 +2635,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                 'Density',
                 'Velocity'],
                 '1':
-                []}
+                [],4:'Coordinates'}
 
     size_keys= {'Coordinates':3,
                 'Metallicity':1,
@@ -2654,7 +2654,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     accfile_ex=h5py.File(accfiles_thisworker[0],'r+')
     snap1=accfile_ex['Header'].attrs['snap1']
     snap2=accfile_ex['Header'].attrs['snap2']
-    parttypes=[0]
+    parttypes=[0,4]
 
     # Load in base halo data
     print('Loading halo data')
