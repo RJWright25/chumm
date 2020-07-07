@@ -37,7 +37,7 @@ fullhalo=bool(parser.parse_args().fullhalo)
 numproc=int(parser.parse_args().numproc)
 
 accfiles_all=list_dir(path)
-accfiles_valid=[accfile for accfile in accfiles_all if ('All' not in accfile and 'recyc' not in accfile)]
+accfiles_valid=[accfile for accfile in accfiles_all if ('All' not in accfile and 'recyc' not in accfile and 'ave' not in accfile)]
 accfiles_n=len(list_dir(accfiles_valid))
 indices=gen_mp_indices(list(range(accfiles_n)),n=numproc)
 
