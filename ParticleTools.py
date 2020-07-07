@@ -417,6 +417,15 @@ def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},t
                 search_types[str(0)]=[0]#gas particles in past can only be gas
                 search_types[str(4)]=[4,0]#star particles in past can only be star or gas
                 search_types[str(5)]=[4,0]#BH particles in past can be gas, star 
+    elif len(parttypes)==2:
+        if search_after:# if searching for particles after IDs were taken 
+                search_types[str(0)]=[0,4]#gas particles in future could be gas, star or BH
+                search_types[str(1)]=[1]#gas particles in future could be gas, star or BH
+                search_types[str(4)]=[4,5]#star particles in future could be star or BH
+        else:# if searching for particles before IDs were taken 
+                search_types[str(0)]=[0]#gas particles in past can only be gas
+                search_types[str(1)]=[0]#gas particles in past can only be gas
+                search_types[str(4)]=[4,0]#star particles in past can only be star or gas
 
     else:
         search_types={'0':[0],'1':[1],'-1':[0,1]}
