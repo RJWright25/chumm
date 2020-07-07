@@ -2652,8 +2652,8 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path and 'ave' not in accfile_path)])
     accfiles_thisworker=[accfiles_paths[fileiidx] for fileiidx in fileidx]
     accfile_ex=h5py.File(accfiles_thisworker[0],'r+')
-    snap1=int(path.split('snap')[-1][:3])-1
-    snap2=int(path.split('snap')[-1][:3])
+    snap1=int(path.split('snap_')[-1][:3])-1
+    snap2=int(path.split('snap_')[-1][:3])
     parttypes=[0,4]
 
     # Load in base halo data
