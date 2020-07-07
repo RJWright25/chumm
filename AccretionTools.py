@@ -2649,7 +2649,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
 
     # Load in metadata
     accfiles_all=list_dir(path)
-    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path)])
+    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path and 'ave' not in accfiles_path)])
     accfiles_thisworker=[accfiles_paths[fileiidx] for fileiidx in fileidx]
     accfile_ex=h5py.File(accfiles_thisworker[0],'r+')
     snap1=accfile_ex['Header'].attrs['snap1']
