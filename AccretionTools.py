@@ -2634,8 +2634,8 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                 'MaximumTemperature',
                 'Density',
                 'Velocity'],
-                '1':
-                [],4:'Coordinates'}
+                '1':[],
+                '4':'Coordinates'}
 
     size_keys= {'Coordinates':3,
                 'Metallicity':1,
