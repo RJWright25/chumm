@@ -2750,11 +2750,13 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                         snap2_dset[accreted_mask]=partdata[str(snap2)][str(itype)][key][(snap2_partidx,)]
                         
                         try:
+                            del accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap1_{key}']
+                            del accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}']
                             accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{key}',data=snap1_dset)
                             accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{key}',data=snap2_dset)
-                        except:
-                            accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap1_{key}'][:]=snap1_dset
-                            accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}'][:]=snap2_dset
+                        except: 
+                            accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap1_{key}',data=snap1_dset)
+                            accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'].create_dataset(f'snap2_{key}',data=snap2_dset)
                         # accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}'][accreted_mask][validmask_candidates]=partdata[str(snap2)][str(itype)][key][(snap2_partidx,)][validmask_candidates]
                     t2=time.time()
                     print(f'Found particle data in {t2-t1} sec')
