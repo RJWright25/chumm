@@ -2701,8 +2701,9 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
 
     for ifile,accfile_path in enumerate(accfiles_thisworker):
         accfile=h5py.File(accfile_path,'r+')
-        ihalo_list=sorted(accfile['Integrated']['ihalo_list'])
-        for ihalo in ihalo_list:
+        ihalo_keys=list(accfile['Particle'].keys())
+        for ihalo_key in ihalo_keys:
+            ihalo=int(ihalo_key.split('ihalo_')[-1])
             if base_halo_data[snap2]['Mass_FOF'][ihalo]>mcut:
                 print(f'Processing ihalo {ihalo}')
                 for itype in parttypes:
