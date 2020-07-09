@@ -3104,10 +3104,14 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
 
                 except:
                     continue
-
-                ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
-                ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
-            
+                
+                try:
+                    ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
+                    ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
+                except:
+                    ihalo_snap1_comxyz_hist=np.nan
+                    ihalo_snap2_comxyz_hist=np.nan
+                    
                 output_props[origin]['snap1_ffhist'][ihalo]=ihalo_snap1_comxyz_hist
                 output_props[origin]['snap2_ffhist'][ihalo]=ihalo_snap2_comxyz_hist
 
