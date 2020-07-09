@@ -2996,8 +2996,8 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     property_keys=[property_key for property_key in property_keys_all if ('Structure' not in property_key and 'structure' not in property_key and 'FOF' not in property_key and 'Host' not in property_key and 'Mass' not in property_key and 'ID' not in property_key and 'Processed' not in property_key and 'Types' not in property_key and 'Velocity' not in property_key)]
     property_keys_forfile=flatten([property_keys,['snap1_rcom','snap1_rcmbp','snap2_rcom','snap2_rcmbp','snap1_ffhist','snap2_ffhist']])
 
-    snap2=accfile_ex['Header'].attrs['snap2']
-    snap1=accfile_ex['Header'].attrs['snap1']
+    snap2=int(path.split('snap_')[-1][:3])
+    snap1=snap2-1
     snap2_comtophys=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']/base_halo_data[snap2]['SimulationInfo']['h_val']
     snap1_comtophys=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']/base_halo_data[snap1]['SimulationInfo']['h_val']
 

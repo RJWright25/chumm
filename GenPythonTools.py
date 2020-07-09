@@ -254,7 +254,7 @@ def rank_list(items):
     ranks=np.array(ranks)
     return ranks
 
-def list_dir(path):
+def list_dir(path,only_outer=False):
 
     """
 
@@ -276,9 +276,12 @@ def list_dir(path):
     A list of tfiles in the directory. 
 
     """
-
-    stdout=subprocess.Popen(f'find {path} -type f',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, universal_newlines=True).stdout
-    dir_list=[str(item)[:-1] for item in stdout]
+    if not only_outer:
+        stdout=subprocess.Popen(f'find {path} -type f',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, universal_newlines=True).stdout
+        dir_list=[str(item)[:-1] for item in stdout]
+    else:
+        stdout=subprocess.Popen(f'find {path} -maxdepth 1',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, universal_newlines=True).stdout
+        dir_list=[str(item)[:-1] for item in stdout]
     return dir_list
 
 def mask_wnans(array,indices):
