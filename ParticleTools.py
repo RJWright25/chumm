@@ -21,11 +21,13 @@
 
 # PREAMBLE
 import os
+import sys
+import time
 import numpy as np
 import h5py
 import astropy.units as u
+sys.append('/home/rwright/software/')
 import read_eagle
-import time
 
 from GenPythonTools import *
 from VRPythonTools import *
