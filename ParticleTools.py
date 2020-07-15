@@ -26,7 +26,7 @@ import time
 import numpy as np
 import h5py
 import astropy.units as u
-sys.append('/home/rwright/software/')
+sys.path.append('/home/rwright/software/')
 import read_eagle
 
 from GenPythonTools import *

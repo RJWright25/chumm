@@ -26,7 +26,7 @@ import sys,os,os.path,string,time,re,struct
 import math,operator
 import numpy as np
 import h5py #import hdf5 interface
-import pandas as pd
+# import pandas as pd
 from copy import deepcopy
 from collections import deque
 import itertools
