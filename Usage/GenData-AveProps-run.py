@@ -15,9 +15,10 @@
 #  | |___| (_) | (_| |  __/ | || (_) | |    | |  | | (_| | | (_) | | (_| | (_| (__| |__| | |  | | |_| | | (_| | |_| | (_) | | | | | (_) | |   | |  | | (_| \__ \__ \
 #   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
                                                                                                                                                                   
-                                                                                                                                                                  
-# GenData-PartData.py - Script to run the particle histories algorithm. 
 # Author: RUBY WRIGHT 
+
+# GenData-AveProps-run.py - Generation script to run gen_averaged_accretion_data function. Edit runtime parameters as required. 
+# Requirements: base halo data, particle histories, accretion data (with write_partdata), recycling data, accretion properties have been generated. 
 
 # Preamble
 import warnings
@@ -25,25 +26,29 @@ warnings.filterwarnings("ignore")
 import os
 import sys
 
+####################################################################################################
+########################################## RUNTIME PARS ############################################
+
+# Job details
+slurm=False #whether or not to use slurm submit
+email=False #email results y/n (if slurm)
+address='21486778@student.uwa.edu.au' #email address (if slurm)
+wall_time="0-04:00:00" #job time limit (if slurm)
+total_mem_perprocess=8 #memory required for each process (if slurm)
+
+# Algorithm Details
+snaps=[27]
+basepath='/Volumes/Ruby-Ext/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre01_post01_np12_FOFonly/'
+
+####################################################################################################
+####################################################################################################
+
 # Run Script
 if 'Users' in os.listdir('/'):
     chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
 else:
     chummdir='/home/rwright/CHUMM/'
 run_script=chummdir+'Usage/GenData-AveProps.py'
-
-# Job details
-slurm=False
-email=True
-wall_time="0-04:00:00"
-num_processes=2
-total_mem_perprocess=8#GB
-
-# Algorithm Details
-mcut=10
-fullhalo=0
-basepath='/Volumes/Ruby-Ext/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre01_post01_np12_FOFonly/'
-snaps=[27]
 
 # Submit/ run
 filename=sys.argv[0]
@@ -63,7 +68,7 @@ if slurm:
             jobfile.writelines(f"#!/bin/sh\n")
             jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
             jobfile.writelines(f"#SBATCH --nodes=1\n")
-            jobfile.writelines(f"#SBATCH --ntasks-per-node={num_processes}\n")
+            jobfile.writelines(f"#SBATCH --ntasks-per-node=1\n")
             jobfile.writelines(f"#SBATCH --mem={total_mem_perprocess*num_processes}GB\n")
             jobfile.writelines(f"#SBATCH --time={wall_time}\n")
             jobfile.writelines(f"#SBATCH --output=job_logs/{jobname}.out\n")

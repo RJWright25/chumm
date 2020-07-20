@@ -15,9 +15,9 @@
 #  | |___| (_) | (_| |  __/ | || (_) | |    | |  | | (_| | | (_) | | (_| | (_| (__| |__| | |  | | |_| | | (_| | |_| | (_) | | | | | (_) | |   | |  | | (_| \__ \__ \
 #   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
                                                                                                                                                                   
-                                                                                                                                                                  
-# GenData-PartData.py - Script to generate integrated particle histories for a given simulation.
 # Author: RUBY WRIGHT 
+                                                                                                                                                                                                                                                                                               
+# GenData-PartData.py - Generation script for particle histories. 
 
 # Preamble
 import warnings

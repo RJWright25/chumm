@@ -14,12 +14,10 @@
 #  | |    / _ \ / _` |/ _ \ |  _/ _ \| '__| |  __  |/ _` | |/ _ \   / _` |/ __/ __| |  | | |\/| | | | | |/ _` | __| |/ _ \| '_ \   / _ \|  _| | |\/| |/ _` / __/ __|
 #  | |___| (_) | (_| |  __/ | || (_) | |    | |  | | (_| | | (_) | | (_| | (_| (__| |__| | |  | | |_| | | (_| | |_| | (_) | | | | | (_) | |   | |  | | (_| \__ \__ \
 #   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
-                                                                                                                                                                  
-                                                                                                                                                                  
-# GenData-HaloData.py - Script to generate halo data from VELOCIraptor & TreeFrog outputs in a given simulation. 
+                                                                                                                                                                                                                                                                                                                            
 # Author: RUBY WRIGHT 
-
-# File must be edited before use to specity directories of particle, VELOCIraptor and TreeFrog data. 
+                                                                                                                                                                                                                                                                                               
+# GenData-HaloData.py - Generation script for base halo data. Edit file paths and padding as required. 
 
 # Preamble
 import warnings

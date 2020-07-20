@@ -15,9 +15,10 @@
 #  | |___| (_) | (_| |  __/ | || (_) | |    | |  | | (_| | | (_) | | (_| | (_| (__| |__| | |  | | |_| | | (_| | |_| | (_) | | | | | (_) | |   | |  | | (_| \__ \__ \
 #   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
                                                                                                                                                                   
-                                                                                                                                                                  
-# GenData-HaloData-run.py - Script to run the generate halo data script.
 # Author: RUBY WRIGHT 
+
+# GenData-HaloData-run.py - Generation script to run halo data functions. Edit runtime parameters as required. 
+# Requirements: GenData-HaloData.py is edited as required. 
 
 # Preamble
 import warnings
@@ -26,20 +27,28 @@ import os
 import sys
 
 # Run script
-run_script='GenData-HaloData.py'
+
+####################################################################################################
+########################################## RUNTIME PARS ############################################
 
 # Job details
-slurm=True
-email=True
-wall_time="0-04:00:00"
-num_processes=1
-total_mem=25#GB
+num_processes=1 #number of processed (from multiprocessing) to use (only for gen_detailed_halo_data)
+slurm=False #whether or not to use slurm submit
+email=False #email results y/n (if slurm)
+address='21486778@student.uwa.edu.au' #email address (if slurm)
+wall_time="0-04:00:00" #job time limit (if slurm)
+total_mem=8 #total memory required (if slurm)
 
 # Algorithm details
-gen_bhd=1
-gen_dhd=1
-sum_dhd=1
-com_dhd=1
+gen_bhd=1 #generate base halo data (with treefrog)
+gen_dhd=1 #add all VR fields and generate B3 halo data for each snap
+sum_dhd=1 #collate all B3 halo data
+com_dhd=1 #compress B3 halo data with specific fields to get B4 halo data
+
+####################################################################################################
+####################################################################################################
+
+run_script='GenData-HaloData.py'
 
 # Submit/ run
 filename=sys.argv[0]
@@ -64,7 +73,7 @@ if slurm:
         jobfile.writelines(f"#SBATCH --error=job_logs/{jobname}.err\n")
         if email:
             jobfile.writelines(f"#SBATCH --mail-type=ALL\n")
-            jobfile.writelines(f"#SBATCH --mail-user=21486778@student.uwa.edu.au\n")
+            jobfile.writelines(f"#SBATCH --mail-user={address}\n")
         jobfile.writelines(f" \n")
         jobfile.writelines(f"echo JOB START TIME\n")
         jobfile.writelines(f"date\n")
