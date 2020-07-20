@@ -30,15 +30,15 @@ import sys
 ########################################## RUNTIME PARS ############################################
 
 # Job details
-slurm=False #whether or not to use slurm submit
-email=False #email results y/n (if slurm)
-address='21486778@student.uwa.edu.au' #email address (if slurm)
-wall_time="0-04:00:00" #job time limit (if slurm)
-total_mem_perprocess=8 #memory required for each process (if slurm)
+slurm=False # whether or not to use slurm submit
+email=False # email results y/n (if slurm)
+address='21486778@student.uwa.edu.au' # email address (if slurm)
+wall_time="0-04:00:00" # job time limit (if slurm)
+total_mem=8 # total memory required (if slurm)
 
 # Algorithm Details
-snaps=[27]
-basepath='/Volumes/Ruby-Ext/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre01_post01_np12_FOFonly/'
+snaps=[27] # snaps to run calculation for
+basepath='/Volumes/Ruby-Ext/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre01_post01_np12_FOFonly/' # path with generated accretion data
 
 ####################################################################################################
 ####################################################################################################
@@ -69,13 +69,13 @@ if slurm:
             jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
             jobfile.writelines(f"#SBATCH --nodes=1\n")
             jobfile.writelines(f"#SBATCH --ntasks-per-node=1\n")
-            jobfile.writelines(f"#SBATCH --mem={total_mem_perprocess*num_processes}GB\n")
+            jobfile.writelines(f"#SBATCH --mem={total_mem}GB\n")
             jobfile.writelines(f"#SBATCH --time={wall_time}\n")
             jobfile.writelines(f"#SBATCH --output=job_logs/{jobname}.out\n")
             jobfile.writelines(f"#SBATCH --error=job_logs/{jobname}.err\n")
             if email:
                 jobfile.writelines(f"#SBATCH --mail-type=ALL\n")
-                jobfile.writelines(f"#SBATCH --mail-user=21486778@student.uwa.edu.au\n")
+                jobfile.writelines(f"#SBATCH --mail-user={address}\n")
             jobfile.writelines(f" \n")
             jobfile.writelines(f"echo JOB START TIME\n")
             jobfile.writelines(f"date\n")

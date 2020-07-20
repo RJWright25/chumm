@@ -15,9 +15,10 @@
 #  | |___| (_) | (_| |  __/ | || (_) | |    | |  | | (_| | | (_) | | (_| | (_| (__| |__| | |  | | |_| | | (_| | |_| | (_) | | | | | (_) | |   | |  | | (_| \__ \__ \
 #   \_____\___/ \__,_|\___| |_| \___/|_|    |_|  |_|\__,_|_|\___/   \__,_|\___\___|\____/|_|  |_|\__,_|_|\__,_|\__|_|\___/|_| |_|  \___/|_|   |_|  |_|\__,_|___/___/
                                                                                                                                                                   
-                                                                                                                                                                  
-# GenData-PartData.py - Script to run the particle histories algorithm. 
 # Author: RUBY WRIGHT 
+
+# GenData-Recycling-run.py - Generation script to run particle recycling tracker. Edit runtime parameters as required. 
+# Requirements: base halo data, particle histories, accretion data (with write_partdata) have been generated.
 
 # Preamble
 import warnings
@@ -25,24 +26,30 @@ warnings.filterwarnings("ignore")
 import os
 import sys
 
+####################################################################################################
+########################################## RUNTIME PARS ############################################
+
+# Job details
+slurm=False # whether or not to use slurm submit
+email=False # email results y/n (if slurm)
+address='21486778@student.uwa.edu.au' #email address (if slurm)
+wall_time="0-04:00:00" #job time limit (if slurm)
+total_mem=8 # total memory required (if slurm)
+
+# Algorithm Details
+snaps=[27] # snaps to run calculation for
+mcut=10 # mass cut for adding properties to halo (in log10 M/Msun)
+basepath='/fred/oz009/rwright/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre01_post01_np12_FOFonly/' # path with generated accretion data
+
+####################################################################################################
+####################################################################################################
+
 # Run Script
 if 'Users' in os.listdir('/'):
     chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
 else:
     chummdir='/home/rwright/CHUMM/'
 run_script=chummdir+'Usage/GenData-Recycling.py'
-
-# Job details
-slurm=True
-email=True
-wall_time="0-04:00:00"
-total_mem=25#GB
-
-# Algorithm Details
-mcut=10
-fullhalo=0
-basepath='/fred/oz009/rwright/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre01_post01_np12_FOFonly/'
-snaps=[27]
 
 # Submit/ run
 filename=sys.argv[0]
@@ -69,7 +76,7 @@ if slurm:
             jobfile.writelines(f"#SBATCH --error=job_logs/{jobname}.err\n")
             if email:
                 jobfile.writelines(f"#SBATCH --mail-type=ALL\n")
-                jobfile.writelines(f"#SBATCH --mail-user=21486778@student.uwa.edu.au\n")
+                jobfile.writelines(f"#SBATCH --mail-user={address}\n")
             jobfile.writelines(f" \n")
             jobfile.writelines(f"echo JOB START TIME\n")
             jobfile.writelines(f"date\n")

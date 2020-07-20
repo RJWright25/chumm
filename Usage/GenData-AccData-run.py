@@ -34,32 +34,30 @@ from GenPythonTools import *
 ########################################## RUNTIME PARS ############################################
 
 # Job details
-num_processes_calc=1 #number of processed (from multiprocessing) to use
-slurm=False #whether or not to use slurm submit
-email=False #email results y/n (if slurm)
+num_processes_calc=1 # number of processed (from multiprocessing) to use
+slurm=False # whether or not to use slurm submit
+email=False # email results y/n (if slurm)
 address='21486778@student.uwa.edu.au' #email address (if slurm)
-wall_time="0-04:00:00" #job time limit (if slurm)
-total_mem_perprocess=8 #memory required for each process (if slurm)
+wall_time="0-04:00:00" # job time limit (if slurm)
+total_mem_perprocess=8 # memory required for each process (if slurm)
 
 # Algorithm Details
-algorithm=1
-partdata=0
-snaps=[27]
-pre=1
-post=1
-r200_facs_in=[1]; r200_facs_in=list_to_string(r200_facs_in)
-r200_facs_out=[1]; r200_facs_out=list_to_string(r200_facs_out)
-vmax_facs_in=[0,0.125,0.25,0.375,0.5,0.75,1]; vmax_facs_in=list_to_string(vmax_facs_in)
-vmax_facs_out=[0,0.125,0.25,0.375,0.5,0.75,1]; vmax_facs_out=list_to_string(vmax_facs_out)
-gen_ad=1
-col_ad=1
-hil_lo=-1
-hil_hi=-1
-#hil_cap=50
+algorithm=1 # -1: FOF only (fast), 0: FOF + R200 (slow), 1: R200 (moderate)
+partdata=0 # write particle data output
+snaps=[27] # snaps for output
+pre=1 # depth of accretion calc (1 = adjacent snaps)
+post=1 # stability snap post-accretion
+r200_facs_in=[1]; r200_facs_in=list_to_string(r200_facs_in) # factors of r200 to run inflow calcs for (if algorithm >=0)
+r200_facs_out=[1]; r200_facs_out=list_to_string(r200_facs_out) # factors of r200 to run outflow calcs for (if algorithm >=0)
+vmax_facs_in=[0,0.125,0.25]; vmax_facs_in=list_to_string(vmax_facs_in) # factors of vmax to run inflow calcs for
+vmax_facs_out=[0,0.125,0.25]; vmax_facs_out=list_to_string(vmax_facs_out) # factors of vmax to run outflow calcs for
+gen_ad=1 # run generate accretion data script
+col_ad=1 # collate integrated outputs
+hil_lo=-1 # pick halo index range for testing (leave -1 if full run)
+hil_hi=-1 # pick halo index range for testing (leave -1 if full run)
 
 ####################################################################################################
 ####################################################################################################
-
 
 ## Identify run script
 if 'Users' in os.listdir('/'):
@@ -68,7 +66,6 @@ else:
     chummdir='/home/rwright/CHUMM/'
 sys.path.append(chummdir)
 run_script=chummdir+'Usage/GenData-AccData.py'
-
 
 # Submit/ run
 if hil_lo==-1:
@@ -115,7 +112,7 @@ if slurm:
             jobfile.writelines(f"date\n")
             jobfile.writelines(f"echo CPU DETAILS\n")
             jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script}  -algorithm {algorithm} -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi} -hil_cap {hil_cap} \n")
+            jobfile.writelines(f"python {run_script}  -algorithm {algorithm} -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi} \n")
             jobfile.writelines(f"echo JOB END TIME\n")
             jobfile.writelines(f"date\n")
         jobfile.close()
@@ -124,4 +121,4 @@ if slurm:
 else:
     # Loop through desired calcs and submit
     for snap in snaps:
-        os.system(f"python {run_script} -algorithm {algorithm} -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi} -hil_cap {hil_cap} \n")
+        os.system(f"python {run_script} -algorithm {algorithm} -partdata {partdata} -r200_facs_in {r200_facs_in} -r200_facs_out {r200_facs_out} -vmax_facs_in {vmax_facs_in} -vmax_facs_out {vmax_facs_out} -np_calc {num_processes_calc} -snap {snap} -pre {pre} -post {post} -gen_ad {gen_ad} -col_ad {col_ad} -hil_lo {hil_lo} -hil_hi {hil_hi} \n")

@@ -26,28 +26,27 @@ warnings.filterwarnings("ignore")
 import os
 import sys
 
-# Run script
-
 ####################################################################################################
 ########################################## RUNTIME PARS ############################################
 
 # Job details
-num_processes=1 #number of processed (from multiprocessing) to use (only for gen_detailed_halo_data)
-slurm=False #whether or not to use slurm submit
-email=False #email results y/n (if slurm)
-address='21486778@student.uwa.edu.au' #email address (if slurm)
-wall_time="0-04:00:00" #job time limit (if slurm)
-total_mem=8 #total memory required (if slurm)
+num_processes=1 # number of processed (from multiprocessing) to use (only for gen_detailed_halo_data)
+slurm=False # whether or not to use slurm submit
+email=False # email results y/n (if slurm)
+address='21486778@student.uwa.edu.au' # email address (if slurm)
+wall_time="0-04:00:00" # job time limit (if slurm)
+total_mem=8 # total memory required (if slurm)
 
 # Algorithm details
-gen_bhd=1 #generate base halo data (with treefrog)
-gen_dhd=1 #add all VR fields and generate B3 halo data for each snap
-sum_dhd=1 #collate all B3 halo data
-com_dhd=1 #compress B3 halo data with specific fields to get B4 halo data
+gen_bhd=1 # generate base halo data (with TreeFrog)
+gen_dhd=1 # add all VR fields and generate B3 halo data for each snap
+sum_dhd=1 # collate all B3 halo data
+com_dhd=1 # compress B3 halo data with specific fields to get B4 halo data
 
 ####################################################################################################
 ####################################################################################################
 
+# Run script
 run_script='GenData-HaloData.py'
 
 # Submit/ run

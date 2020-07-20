@@ -30,16 +30,16 @@ import sys
 ########################################## RUNTIME PARS ############################################
 
 # Job details
-num_processes=1 #number of processed (from multiprocessing) to use (only for gen_particle_history_serial)
-slurm=False #whether or not to use slurm submit
-email=False #email results y/n (if slurm)
-address='21486778@student.uwa.edu.au' #email address (if slurm)
-wall_time="0-04:00:00" #job time limit (if slurm)
-total_mem_perprocess=8 #total memory required per process (if slurm)
+num_processes=1 # number of processed (from multiprocessing) to use (only for gen_particle_history_serial)
+slurm=False # whether or not to use slurm submit
+email=False # email results y/n (if slurm)
+address='21486778@student.uwa.edu.au' # email address (if slurm)
+wall_time="0-04:00:00" # job time limit (if slurm)
+total_mem_perprocess=8 # total memory required per process (if slurm)
 
 # Algorithm Details
-gen_bph=0
-sum_bph=1
+gen_bph=1 # generate base particle histories (host for each particle, run in parallel)
+sum_bph=1 # sum base particle histories for integrated processing history of each particle
 
 ####################################################################################################
 ####################################################################################################
