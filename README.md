@@ -1,5 +1,5 @@
 # Code for Halo accUMulation of Mass [CHUMM]
-#### RUBY WRIGHT (PhD Student | ICRAR-UWA) (2019)
+#### RUBY WRIGHT (PhD Student | ICRAR-UWA) (2019-)
 
 ![](Logos/chumm_jaws.jpeg)
 
