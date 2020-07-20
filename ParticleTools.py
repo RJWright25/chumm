@@ -42,7 +42,7 @@ def gen_particle_history_serial(base_halo_data,snaps=None):
     gen_particle_history_serial : function
 	----------
 
-    Generate and save particle history data from velociraptor property and particle files.
+    Generate and save particle history data from VELOCIraptor property and particle files.
 
 	Parameters
 	----------
@@ -360,6 +360,12 @@ def get_particle_indices(base_halo_data,IDs_taken,IDs_sorted,indices_sorted={},t
 
     snap_desired : int
         The snap at which to find the indices.
+    
+    return_partindices : bool
+        Return list of indices in particle data from particle index sorted matching.
+    
+    verbose : bool
+        Print any problems/warnings. 
 
     Returns
 	----------

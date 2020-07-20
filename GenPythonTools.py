@@ -27,6 +27,17 @@ import subprocess
 from bisect import bisect_left
 
 def flatten(listoflists):
+    """
+    flatten : function
+    ------------------
+    Flatten a simple list of lists into a 1d list.
+
+    Parameters
+    ----------
+    listoflists : list of lists
+        List of lists to flatten.
+    """
+
     output=[]
     for sublist in listoflists:
         if not (type(sublist)==list or type(sublist)==np.ndarray):
@@ -39,7 +50,7 @@ def gen_mp_indices(indices,n,test=False):
     """
 
     gen_mp_indices : function
-	----------
+	-------------------------
 
     Generate list of lists of desired indices divided amongst a given amount of processes.
 
@@ -92,7 +103,7 @@ def open_pickle(path):
     """
 
     open_pickle : function
-	----------
+	----------------------
 
     Open a (binary) pickle file at the specified path, close file, return result.
 
@@ -104,8 +115,7 @@ def open_pickle(path):
 
     Returns
 	----------
-    output : pickled object
-
+    output : data structure of desired pickled object
 
     """
 
@@ -119,7 +129,7 @@ def dump_pickle(data,path):
     """
 
     dump_pickle : function
-	----------
+	----------------------
 
     Dump data to a (binary) pickle file at the specified path, close file.
 
@@ -149,7 +159,7 @@ def binary_search(items,sorted_list,algorithm=None,check_entries=False,verbose=F
     """
 
     binary_search : function
-	----------
+	------------------------
 
     Search a sorted array for the desired elements and return their expected indices in the sorted list.
     Will return np.nan if check_entries is True and the element at the expected index is not the desired item. 
@@ -225,7 +235,7 @@ def rank_list(items):
     """
 
     rank_list : function
-	----------
+	--------------------
 
     Take a list and return a list with the corresponding ranking of the element in the list. 
 
@@ -258,7 +268,7 @@ def list_dir(path,only_outer=False):
     """
 
     list_dir : function
-	----------
+	-------------------
 
     List the contents of a directory with its path.
 
@@ -266,7 +276,10 @@ def list_dir(path,only_outer=False):
 	Parameters
 	----------
     path : str
-        The path in which to list files
+        The path in which to list files.
+
+    only_outer : bool
+        Whether to only return the file objects in the current directory (if True, will not enter sub-directories).
 
     Returns
 	----------
@@ -284,6 +297,30 @@ def list_dir(path,only_outer=False):
     return dir_list
 
 def mask_wnans(array,indices):
+    """
+
+    mask_wnans : function
+	-------------------
+
+    Return the desired elements of an list or list-like object based on indices, which may include some nans. 
+
+	Parameters
+	----------
+    array : 1-d list or np.array
+        The array to extract certain elements from.
+
+    
+    indices : 1-d list or np.array
+        The desired elements to extract from array (may include nans).
+
+    Returns
+	----------
+    output_array : np.ndarray
+
+        The output - only including desired array elements. Indices requested from a nan will return a nan. 
+
+    """
+
     indices=np.array(indices)
     array=np.array(array)
     array_shape=np.shape(array)
@@ -306,14 +343,30 @@ def mask_wnans(array,indices):
                 pass
     return output_array
 
-def hdf5_struct(path):
-    """return the structure of the hdf5 file"""
-    popen=subprocess.Popen(f'h5dump -g Integrated -n {path}',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, universal_newlines=True)
-    h5dump_raw=[str(item)[:-1] for item in popen.stdout]
-    h5dump=[h5dump_dset[12:] for h5dump_dset in h5dump_raw if ('dataset' in h5dump_dset and 'Integrated' in h5dump_dset and 'ihalo_list' not in h5dump_dset)]
-    return h5dump
-
 def list_to_string(items,delimiter=','):
+    """
+
+    list_to_string : function
+	-------------------
+
+    Concetenate a list into a string object, with optional delimiter.
+
+	Parameters
+	----------
+    items : 1-d list or np.array
+        The array/list to convert to a string. 
+
+    delimiter : str
+        Optional delimiter to add between list elements.  
+
+    Returns
+	----------
+    output : string
+
+        The delimited string.
+
+    """
+
     output=''
     for iitem,item in enumerate(items):
         if iitem==0:
@@ -328,8 +381,28 @@ def list_to_string(items,delimiter=','):
         output='None'
     return output
 
-
 def cart_to_sph(xyz):
+    """
+
+    cart_to_sph : function
+	-------------------
+
+    Convert cartesian coordinates (x, y, z) to spherical coordinates (r, azimuth, elevation)
+
+	Parameters
+	----------
+    xyz : array or array-like
+        2d array of cartesian coordinates.  
+
+    Returns
+	----------
+    ptsnew : np.ndarray
+
+        2d array of corresponding cartesian coordinates (r: [0,inf], azimuth: [-pi,pi], elevation: [-pi/2,pi/2]).
+        
+    """
+
+
     #returns r, azimuth (-pi,pi), elevation (-pi/2,pi/2)
     ptsnew = np.hstack((xyz, np.zeros(xyz.shape)))
     xy = xyz[:,0]**2 + xyz[:,1]**2

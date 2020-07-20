@@ -35,7 +35,6 @@ from STFTools import *
 from ParticleTools import *
 from scipy import spatial
 
-
 ########################### GENERATE ACCRETION DATA: EAGLE (memory saving + SO compatibility) ###########################
 
 def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,vmax_facs_in=[-1],vmax_facs_out=[-1],r200_facs_in=[],r200_facs_out=[],write_partdata=False):
@@ -125,7 +124,18 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
             "snapx_R_200mean"
             "snapx_R_200crit"
 
-            Each halo group will have a vast collection of particle data written for snaps 1, 2, 3. 
+            Each halo group will have a collection of particle data written to "Inflow" and "Outflow" groups, each with "PartTypeX" groups containing datasets:
+            (for each particle identified as an inflow/outflow candidate: being in halo [FOF or R200] at snap 2 / 1 respectively)
+
+                "ParticleIDs"
+                "Mass"
+                "snap1_Structure"
+                "snap1_Processed"
+                "snap1_Particle_InFOF"
+                "snap1_Particle_InHost"
+                "snap2_Particle_InFOF"
+                "snap2_Particle_InHost"
+                "snap3_Particle_InFOF"
         
         Integrated Accretion/Outflow Data
         Group "Integrated":
@@ -181,6 +191,9 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
                                     Where [Stability] can be either 'Stable' or 'All'.
                                         'Stable' requires the outflow candidates to remain outside the halo at snap 3. 
                                         'All' has no further requirements on the outflow candidates at snap 3. 
+
+
+
 
     """
     
@@ -993,7 +1006,7 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
     output_hdf5.close()
     return None
 
-########################### GENERATE ACCRETION DATA: ALL (fof-only) ###########################
+########################### GENERATE ACCRETION DATA: ALL (fof-only: default) ###########################
 
 def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,vmax_facs_in=[-1],vmax_facs_out=[-1],write_partdata=False):
     
@@ -1072,7 +1085,19 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
             "snapx_R_200mean"
             "snapx_R_200crit"
 
-            Each halo group will have a vast collection of particle data written for snaps 1, 2, 3. 
+            Each halo group will have a collection of particle data written to "Inflow" and "Outflow" groups, each with "PartTypeX" groups containing datasets:
+            (for each particle identified as an inflow/outflow candidate: being in halo [FOF] at snap 2 / 1 respectively)
+
+                "ParticleIDs"
+                "Mass"
+                "snap1_Structure"
+                "snap1_Processed"
+                "snap1_Particle_InFOF"
+                "snap1_Particle_InHost"
+                "snap2_Particle_InFOF"
+                "snap2_Particle_InHost"
+                "snap3_Particle_InFOF"
+        
         
         Integrated Accretion/Outflow Data
         Group "Integrated":
@@ -1973,10 +1998,152 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     output_hdf5.close()
     return None
 
-########################### GENERATE ACCRETION DATA: ALL (r200) ###########################
+########################### GENERATE ACCRETION DATA: ALL (r200: extension) ###########################
 
 def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_depth=1,post_depth=1,vmax_facs_in=[-1],vmax_facs_out=[-1],r200_facs_in=[],r200_facs_out=[],write_partdata=False):
+    """
+
+    gen_accretion_data_r200 : function
+	----------
+
+    Generate and save accretion rates for each particle type by comparing particle lists from VELOCIraptor FOF outputs and particle data.
+
+    ** note: particle histories, base_halo_data and halo particle data must have been generated as per gen_particle_history_serial (this file),
+            gen_base_halo_data in STFTools.py
+
+	Parameters
+	----------
+    base_halo_data : list of dictionaries
+        The minimal halo data list of dictionaries previously generated ("B1" is sufficient)
+
+    snap : int
+        The index in the base_halo_data for which to calculate accretion rates (should be actual snap index)
+        We will retrieve particle data based on the flags at this index
     
+    halo_index_list : dict
+        "iprocess": int
+        "indices: list of int
+        List of the halo indices for which to calculate accretion rates. If 'None',
+        find for all halos in the base_halo_data dictionary at the desired snapshot. 
+
+    pre_depth : int
+        How many snaps to skip back to when comparing particle lists.
+        Initial snap for calculation will be snap-pre_depth. 
+
+    pre_depth : int
+        How many snaps to skip back to when comparing particle lists.
+        Initial snap (s1) for calculation will be s1=snap-pre_depth, and we will check particle histories at s1.
+
+    vmax_facs_in : list of float
+        List of the factors of vmax to cut inflow particles at. 
+
+    vmax_facs_out : list of float.
+        List of the factors of vmax to cut outflow particles at. 
+        If empty, no outflow calculations are performed. 
+
+    write_partdata : bool 
+        Flag indicating whether to write accretion/outflow particle data to file (in halo groups).
+        (In addition to integrated data)
+
+	Returns
+	----------
+    FOF_AccretionData_snap{snap2}_pre{pre_depth}_post{post_depth}_px.hdf5: hdf5 file with datasets
+        Header contains attributes:
+            "snap1"
+            "snap2"
+            "snap3"
+            "snap1_LookbackTime"
+            "snap2_LookbackTime"
+            "snap3_LookbackTime"
+            "ave_LookbackTime" (snap 1 -> snap 2)
+            "delta_LookbackTime" (snap 1 -> snap 2)
+            "snap1_z"
+            "snap2_z"
+            "snap3_z"
+            "ave_z (snap 1 -> snap 2)
+
+        If particle data is output:
+        Group "Particle":
+            There is a group for each halo: ihalo_xxxxxx
+
+            Each halo group with attributes:
+            "snapx_com"
+            "snapx_cminpot"
+            "snapx_cmbp"
+            "snapx_vmax"
+            "snapx_v"
+            "snapx_M_200crit"
+            "snapx_R_200mean"
+            "snapx_R_200crit"
+
+            Each halo group will have a collection of particle data written to "Inflow" and "Outflow" groups, each with "PartTypeX" groups containing datasets:
+            (for each particle identified as an inflow/outflow candidate: being in halo [R200] at snap 2 / 1 respectively)
+
+                "ParticleIDs"
+                "Mass"
+                "snap1_Structure"
+                "snap1_Processed"
+                "snap1_Particle_InFOF"
+                "snap1_Particle_InHost"
+                "snap2_Particle_InFOF"
+                "snap2_Particle_InHost"
+                "snap3_Particle_InFOF"
+        
+        
+        Integrated Accretion/Outflow Data
+        Group "Integrated":
+
+            Inflow:
+                For each particle type /PartTypeX/:
+                    For each group definition:
+                        'FOF-haloscale' : the inflow as calculated from new particles to the full FOF (only for field halos or halos with substructure).
+                        'FOF-subhaloscale: the inflow as calculated from new particles to the relevant substructure (can be (i) the host halo of a FOF with substructure or (ii) a substructure halo).
+                        
+                        Note: particles 'new to' a halo are those which were not present in the relevant halo definition at snap 1, but were at snap 2.
+                        (their type taken at snap 1, before inflow). 
+
+                        For each vmax_facx: 
+                            The mass of accretion to each halo is cut to particle satisfying certain, user defined inflow velocity cuts (factors of the halo's vmax).
+                            
+                            For each of the following particle histories:
+                                'Total' : No selection based on particle history.
+                                'Processed' : Only particles which have existed in a halo prior to accretion (snap 1).
+                                'Unprocessed' : Only particles which have not existed in a halo prior to accretion (snap 1). 
+
+                                We have the following datasets...
+                                    [Stability]_GrossDelta[M/N]_In: The [mass(msun)/particle count] of selected inflow candidates of all origins. 
+                                    [Stability]_FieldDelta[M/N]_In: The [mass(msun)/particle count] of selected inflow candidates from the field (at snap 1). 
+                                    [Stability]_TransferDelta[M/N]_In: The [mass(msun)/particle count] of selected inflow candidates from other halos (at snap 1). 
+
+                                    Where [Stability] can be either 'Stable' or 'All'.
+                                        'Stable' requires the inflow candidates to remain in the halo at snap 3. 
+                                        'All' has no further requirements on the inflow candidates at snap 3. 
+
+
+
+            Outflow: 
+                For each particle type /PartTypeX/:
+                    For each group definition:
+                        'FOF-haloscale' : the outflow as calculated from outgoing particles from the full FOF (only for field halos or halos with substructure).
+                        'FOF-subhaloscale: the outflow as calculated from outgoing particles from the relevant substructure (can be (i) the host halo of a FOF with substructure or (ii) a substructure halo).
+                        
+                        Note: particles 'outgoing from' a halo are those which were present in the relevant halo definition at snap 1, but were not at snap 2.
+                        (their type taken at snap 2, post outflow). 
+                            
+                        For each vmax_facx: 
+                            The mass of outflow to each halo is cut to particle satisfying certain, user defined outflow velocity cuts (factors of the halo's vmax).
+                            
+                            For each of the following particle histories:
+                                'Total' : No selection based on particle history.
+
+                                We have the following datasets...
+                                    [Stability]_GrossDelta[M/N]_In: The [mass(msun)/particle count] of selected outflow candidates, regardless of destination.
+
+                                    Where [Stability] can be either 'Stable' or 'All'.
+                                        'Stable' requires the outflow candidates to remain outside the halo at snap 3. 
+                                        'All' has no further requirements on the outflow candidates at snap 3. 
+
+    """
     t1_init=time.time()
     t1_io=time.time()
 
@@ -2406,8 +2573,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
         
 
         # This catches any exceptions for a given halo and prevents the code from crashing 
-        if True:     
-            # try:
+        try:     
             ########################################################################################################################################
             ###################################################### ihalo PRE-PROCESSING ############################################################
             ########################################################################################################################################
@@ -2505,7 +2671,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
                 progress_file.close()
         
         # Some other error in the main halo loop
-        else: 
+        except: 
             print(f'Skipping ihalo {ihalo_s2} - dont have the reason')
             with open(fname_log,"a") as progress_file:
                 progress_file.write(f"Skipping ihalo {ihalo_s2} - unknown reason ({iihalo+1} out of {num_halos_thisprocess} for this process - {(iihalo+1)/num_halos_thisprocess*100:.2f}% done)\n")
@@ -2616,18 +2782,26 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     add_particle_data_serial : function
 	----------
 
-    Add particle data to detailed outputs.
+    Add particle data to detailed hdf5 outputs (from gen_accretion_data_xxx - with particle data written).
 
 	Parameters
 	----------
-    base_halo_data : list of dictionaries
-        The minimal halo data list of dictionaries previously generated ("B1" is sufficient)
 
     path : str
-        The file to process.   
+        The directory with files to process.   
+    
+    file_idx : list of int
+        List indicating which files to process (used for multiprocessing).
+    
+    fullhalo : bool
+        Flag indicating whether to add full halo particle data or just for accreted particles. 
+
+    mcut : float
+        Minimum halo mass to run script for (omits lower mass haloes).
 
     """
 
+    # Keys to extract for each PartType
     eagle_keys={'0':
                 ['Coordinates',
                 'Metallicity',
@@ -2638,6 +2812,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                 '1':['Coordinates'],
                 '4':['Coordinates']}
 
+    # Size of each dataset
     size_keys= {'Coordinates':3,
                 'Metallicity':1,
                 'Temperature':1,
@@ -2664,10 +2839,6 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     base_halo_data_path=[path for path in base_folder_contents if 'B4' in path][0]
     base_halo_data=open_pickle(base_halo_data_path)
     boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
-
-    #patch for testing  (particle data paths)
-    # base_halo_data[snap2]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_027_z000p101/snap_027_z000p101.0.hdf5'
-    # base_halo_data[snap1]['Part_FilePath']=base_folder+'sim_data/snapshots/snapshot_026_z000p183/snap_026_z000p183.0.hdf5'
 
     # Load in particle histories
     print('Loading particle histories')
@@ -2730,7 +2901,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                     accreted_IDs=accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']['ParticleIDs'].value[accreted_mask]
 
                     #find previous types, particle indices
-                    print('Fidning particle indices')
+                    print('Finding particle indices')
                     t1=time.time()
                     snap2_types,snap2_histidx,snap2_partidx=get_particle_indices(base_halo_data,accreted_IDs,IDs_sorted=partids[str(snap2)],indices_sorted=partindices[str(snap2)],types_taken=np.ones(len(accreted_IDs))*itype,snap_taken=snap1,snap_desired=snap2,return_partindices=True,verbose=False)
                     snap1_types,snap1_histidx,snap1_partidx=get_particle_indices(base_halo_data,accreted_IDs,IDs_sorted=partids[str(snap1)],indices_sorted=partindices[str(snap1)],types_taken=np.ones(len(accreted_IDs))*itype,snap_taken=snap1,snap_desired=snap1,return_partindices=True,verbose=False)
@@ -2772,9 +2943,42 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
 
 def add_recycling_data_serial(path=None,mcut=10**10):
     
+    """
+
+    add_recycling_data_serial : function
+	----------
+
+    Identify particles which have been processed but are smoothly accreted, and find the last structure they were processed by. 
+    Allows delineation between recycled and transfer particles.
+
+	Parameters
+	----------
+
+    path : str
+        The directory with files to process.   
+    
+
+    mcut : float
+        Minimum halo mass to run script for (omits lower mass haloes).
+
+
+    Returns 
+    ----------
+
+    recycling_breakdown.dat: pickled data-structure (at path).
+        Has keys: 'mp' (main progenitor);
+                  'nmp' (non-main progenitor); 
+                  'transfer' (un-related structure); 
+                  'lost' (not found in search up to given snap); 
+                  'n': number of recycled particles
+
+        Each of the above which has PartType key 'itype', and datasets correspond to fractions of mass contributed by each of the first 4 keys.
+        
+    """
+
     # Load in metadata
     accfiles_all=list_dir(path)
-    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path)])
+    accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path and 'aveprop' not in accfile_path)])
     accfiles=accfiles_paths
     accfile_ex=h5py.File(accfiles[0],'r+')
     snap2=accfile_ex['Header'].attrs['snap2']
@@ -2981,9 +3185,44 @@ def add_recycling_data_serial(path=None,mcut=10**10):
     print()
     print(f'Took {t2-t1:.1f} sec for {len(ihalos_valid)} halos')
 
+########################### FIND AVERAGED ACCERTION PROPERTIES ###########################
 
 def gen_averaged_accretion_data(base_halo_data,path=None):
     
+    """
+
+    gen_averaged_accretion_data : function
+	----------
+
+    Iterates through physical properties of gas particles from add_particle_data_serial, and determines min/max/median/mean values of accreted particles.
+    This is done on a halo-to-halo basis, and for each inflow mode individually. 
+    Also computes covering histograms.
+
+	Parameters
+	----------
+
+    path : str
+        The directory with files to process.   
+
+
+    Returns 
+    ----------
+
+    aveprops.dat: pickled data-structure (at path).
+        Has keys for each subset of particles:
+            'snap1_halo': gas particles which were part of the halo at snap 1
+            'snap2_halo': gas particles which were part of the halo at snap 2
+            'First-infall': first-infall accreted gas particles
+            'Recycled': recycled accreted gas particles
+            'Transfer': transferred accreted gas particles
+            'Merger': merger origin accreted gas particles
+
+        Each of the above has keys for each physical property saved from add_particle_data_serial, and 'snap1_ffhist', 'snap2_ffhist'.
+        Each of the property keys has values saved for 'Mean', 'Median', 'Min', 'Max'.
+                    
+    """
+
+
     # Load in metadata
     accfiles_all=list_dir(path)
     accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path and 'ave' not in accfile_path)])
