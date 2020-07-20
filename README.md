@@ -29,11 +29,8 @@ keys for relevant halo properties. This object is saved to file in pickle/binary
 of these also contains pointers to the particle/VELOCIraptor/TreeFrog data which is used upstream.
 
 The 'B1' file contains the minimal basic halo data required for accretion calculation (saves memory at runtime).
-
 The 'B2' file contains the minimal basic halo data required for accretion calculation, as well as detailed TreeFrog data.
-
 The 'B3' file contains all available halo data from VELOCIraptor and TreeFrog, to be used for data processing. 
-
 The 'B4' file contains a specified subset of all available halo data from VELOCIraptor and TreeFrog, to be used for data processing. 
 
 ### Step 2: Generate particle histories
