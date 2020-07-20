@@ -27,6 +27,7 @@ import h5py
 import pickle
 import astropy.units as u
 import time
+
 sys.path.append('/home/rwright/software/')
 import read_eagle
 
@@ -770,7 +771,6 @@ def compress_detailed_halo_data(detailed_halo_data,fields=None):
 
 def find_progen_index(base_halo_data,index2,snap2,depth,return_all_depths=False): ### given halo index2 at snap 2, find progenitor index at snap1=snap2-depth
     
- 
     """
 
     find_progen_index : function
@@ -799,6 +799,7 @@ def find_progen_index(base_halo_data,index2,snap2,depth,return_all_depths=False)
         The index of the best matched halo at the desired snap. 
 
 	"""
+
     index_depth=[]
     padding=np.sum([len(base_halo_data[isnap])<5 for isnap in range(len(base_halo_data))])
     index_idepth=index2
@@ -823,11 +824,9 @@ def find_progen_index(base_halo_data,index2,snap2,depth,return_all_depths=False)
     else:
         return index_idepth
 
-
-########################### FIND ALL PROGENITOR AT DEPTH ###########################
+########################### FIND ALL PROGENITORS AT DEPTH ###########################
 
 def find_progen_index_tree(base_halo_data,index2,snap2,snap1): 
-    ### given halo index2 at snap 2, find progenitors up to snap1
  
     """
 
@@ -858,6 +857,7 @@ def find_progen_index_tree(base_halo_data,index2,snap2,snap1):
         {'27':[id1,id2,id3,...],'26':[progens of id1,id2,id3,...],...}
 
 	"""
+
     snaps=list(range(snap1,snap2))[::-1]
     progentree={str(snap):[] for snap in snaps}
     
@@ -881,11 +881,6 @@ def find_progen_index_tree(base_halo_data,index2,snap2,snap1):
             progentree[str(snap)]=new_progens
     
     return progentree
-
-
-
-
-    
 
 ########################### FIND DESCENDANT AT DEPTH ###########################
 
@@ -938,6 +933,27 @@ def find_descen_index(base_halo_data,index2,snap2,depth): ### given halo index2 
 ########################### GENERATE LIST of PROGENITORS ###########################
 
 def gen_progen_lists(base_halo_data):
+
+    """
+
+    gen_progen_lists : function
+	----------
+
+    Retrieve a list of progenitors for each halo at each snap. 
+
+	Parameters
+    ----------
+
+    base_halo_data : list of dictionaries
+        The halo data dictionaries for the relevant snapshots.
+
+    Returns
+    ----------
+    base_halo_data : dictionary
+        Updated halo data dictionaries for the relevant snapshots, with 'Progens' field.
+
+	"""
+
     for snap in range(len(base_halo_data)-1):
         print(f'Retrieving progenitors for snap {snap}')
 
@@ -958,6 +974,40 @@ def gen_progen_lists(base_halo_data):
 ########################### GET FOF PARTICLE LISTS into DICTIONARY ###########################
 
 def get_FOF_particle_lists(base_halo_data,snap,halo_index_list=None):
+    """ 
+
+    get_FOF_particle_lists : function
+	----------
+
+    Retrieve FOF particles lists for a given snap.
+
+	Parameters
+    ----------
+
+    base_halo_data : list of dictionaries
+        The halo data dictionaries for the relevant snapshots.
+
+    snap : int
+        The snap to retrieve FOF data for. 
+
+    halo_index_list : list or list-like
+        The list of halo indices to return FOF particle lists for. 
+
+    Returns
+    ----------
+    part_data_temp_FOF_trunc : dictionary
+
+        Data structure with FOF particle lists.
+        Includes keys for:
+            'Npart'
+            'Npart_unbound'
+            'Particle_IDs'
+            'Particle_Types'
+            'Particle_Bound'
+        Each of which has keys for each halo index requested, 'ihalo_xxxxxx'.
+
+	"""
+
 
     keys_FOF=["Npart","Npart_unbound",'Particle_IDs','Particle_Types',"Particle_Bound"]
     num_tot_halos=len(base_halo_data[snap]['ID'])
