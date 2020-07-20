@@ -38,10 +38,7 @@ of these also contains pointers to the particle/VELOCIraptor/TreeFrog data which
 Secondly, use the GenData-PartData-run.py script (with command line arguments) to generate particle histories.
 
 In order to calculate accretion rates of various types, CHUMM must track the histories of particles across simulation time
-to determine which particles have been processed in a halo environment, and which are primordial. This is done in a 2-step manner,
-first sorting and indexing particles and recording their host structure (from VELOCIraptor, of -1 if not part of structure) which 
-can be done for each snap individually. Subsequently, these histories are integrated in serial over each snapshot to add a counter 
-for each particle indicating how many snaps in the past (including the current snap) the particle has been part of structure. 
+to determine which particles have been processed in a halo environment, and which are primordial. 
 
 CHUMM saves this data in the form of a hdf5 file, with a group for each particle type datasets outlined in ParticleTools.py.
 
