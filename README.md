@@ -57,6 +57,6 @@ CHUMM saves accretion data in the form of a hdf5 file, with specific data struct
 
 The user can further post-process accretion particle data to:
 
-(i) Track back and save recycled particles to their last structure (GenData-Recycling-run.py)
-(ii) Add additional particle properties from raw particle data to accretion outputs (GenData-Properties-run.py)
-(iii) Average and save accreted particle properties (requires i and ii, GenData-AveProps.py)
+1. Track back and save recycled particles to their last structure (GenData-Recycling-run.py)
+2. Add additional particle properties from raw particle data to accretion outputs (GenData-Properties-run.py)
+3. Average and save accreted particle properties (requires 1. and 2., GenData-AveProps.py)
