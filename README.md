@@ -56,4 +56,4 @@ The user can further post-process accretion particle data to:
 
 1. Track back and save recycled particles to their last structure (GenData-Recycling-run.py)
 2. Add additional particle properties from raw particle data to accretion outputs (GenData-Properties-run.py)
-3. Average and save accreted particle properties (requires 1. and 2., GenData-AveProps.py)
+3. Average and save accreted particle properties (requires 1. and 2., GenData-AveProps-run.py)
