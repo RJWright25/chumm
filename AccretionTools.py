@@ -2844,7 +2844,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
                 iihalo=iihalo+1
                 ihalo_key='ihalo_'+str(ihalo).zfill(6)
                 ihalo_ID=base_halo_data[snap_master]['ID'][ihalo]
-                if True:
+                try:
                     #main progens & subhalos
                     ihalo_mainprogens=find_progen_index(base_halo_data=base_halo_data,index2=ihalo,snap2=snap_master,depth=len(snaps)-1,return_all_depths=True)
                     ihalo_mainprogen_IDs=[base_halo_data[isnap]['ID'][ihalo_progen] for isnap,ihalo_progen in zip(snaps[:-1][::-1],ihalo_mainprogens)]
@@ -2865,7 +2865,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
                         ihalo_suballprogen_IDs[isnap]=ihalo_isnap_suballprogen_IDs
 
 
-                else:
+                except:
                     print(f'had to skip ihalo {ihalo}')
                     continue
                 
