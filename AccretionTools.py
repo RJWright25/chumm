@@ -2837,7 +2837,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     print('Loading halo data')
     base_folder=path.split('acc_data')[0]
     base_folder_contents=list_dir(base_folder)
-    base_halo_data_path=[path for path in base_folder_contents if 'B4' in path][0]
+    base_halo_data_path=[path for path in base_folder_contents if 'B4' in path and 'tar' not in path][0]
     base_halo_data=open_pickle(base_halo_data_path)
     boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
 
