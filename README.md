@@ -47,7 +47,7 @@ CHUMM saves this data in the form of a hdf5 file, with a group for each particle
 Thirdly, use the GenData-AccData-run.py script to generate accretion data for a given snap. All outputs are in hdf5 format. 
 Particle data can be output for each accretion candidate particle with the write_partdata flag, which is needed for further post-processing.
 Otherwise, only integrated accretion rates are saved. 
-
+ 
 CHUMM saves accretion data in the form of a hdf5 file, with specific data structures and algorithms outlined in AccretionTools.py.
 
 ### Step 4: Post-processing 

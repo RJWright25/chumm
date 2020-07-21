@@ -17,7 +17,7 @@
                                                                                                                                                                   
 # Author: RUBY WRIGHT 
 
-# GenData-PartData-run.py - Generation script to run particle properties function. Edit runtime parameters as required. 
+# GenData-Properties-run.py - Generation script to run particle properties function. Edit runtime parameters as required. 
 # Requirements: base halo data, particle histories, accretion data (with write_partdata) have been generated.
 
 # Preamble
