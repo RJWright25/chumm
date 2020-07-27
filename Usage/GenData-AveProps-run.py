@@ -38,7 +38,8 @@ total_mem=8 # total memory required (if slurm)
 
 # Algorithm Details
 snaps=[27] # snaps to run calculation for
-basepath='/Volumes/Ruby-Ext/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre01_post01_np12_FOFonly/' # path with generated accretion data
+rundir=os.getcwd()
+basepath=f'{rundir}/acc_data/pre01_post01_np04_FOFonly/' # path with generated accretion data
 
 ####################################################################################################
 ####################################################################################################
