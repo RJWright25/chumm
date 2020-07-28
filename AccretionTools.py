@@ -2724,7 +2724,8 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
         os.system(f"rm -rf {outname}")
     outfile=h5py.File(outname,'w')
     outfile_int=outfile.create_group('Integrated')
-
+    outfile_int.create_group('Inflow')
+    
     # Carry over header
     print('Carring over header ...')
     outfile.create_group('Header')
@@ -2778,7 +2779,6 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     for integrated_dataset in integrated_datasets_list:
         if 'ihalo' not in integrated_dataset:
             print(integrated_dataset)
-            print(hdf5_struct(outname))
             outfile[integrated_dataset][:]=collated_datasets[integrated_dataset]
 
     t2_dsets=time.time()
