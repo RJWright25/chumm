@@ -2751,6 +2751,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
                     pass
             else:
                 try:
+                    print(outfile_intinf[running_group].keys())
                     outfile_intinf[running_group].create_group(group)
                     print(f'Created {group} in {running_group}')
                 except:
