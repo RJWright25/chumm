@@ -2753,6 +2753,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
             else:
                 if True:
                     outfile['Integrated']['Inflow'][running_group].create_group(group)
+                    print(list(outfile['Integrated']['Inflow'].keys()))
                     print(f'Created {group} in {running_group}')
                 else:
                     print(f'Couldnt create {group} in {running_group}')
