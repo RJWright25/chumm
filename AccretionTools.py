@@ -2736,6 +2736,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     t1_init=time.time()
     total_num_halos=len(base_halo_data[snap]["ID"])
     for integrated_dataset in integrated_datasets_list:
+        print(integrated_dataset)
         groups=integrated_dataset.split('/')[1:-1]
         running_group=''
         for igroup,group in enumerate(groups):
@@ -2755,6 +2756,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
             running_group=running_group+'/'+group
         outfile[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
+    
     t2_init=time.time()
     print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
 
