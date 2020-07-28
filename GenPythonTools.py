@@ -24,6 +24,7 @@ import numpy as np
 import pickle as pickle
 import os
 import subprocess
+import h5py 
 from bisect import bisect_left
 
 def flatten(listoflists):
@@ -411,3 +412,17 @@ def cart_to_sph(xyz):
     ptsnew[:,5] = np.arctan2(xyz[:,2], np.sqrt(xy)) # for elevation angle defined from XY-plane up
     ptsnew[:,4] = np.arctan2(xyz[:,1], xyz[:,0]) #azimuth
     return ptsnew[:,3:]
+
+def hdf5_struct(path=fname):
+    dsets=[]
+    out=subprocess.Popen([f'h5ls','-r' ,f'{fname}/Integrated'],stdout=subprocess.PIPE)
+    output,err=out.communicate()
+    output=output.decode("utf-8") 
+    output=output.split('\n')
+    for key in output:
+        if 'Dataset' in key:
+            outkey=key.split('Dataset')[0]
+            outkey=outkey.strip()
+            dsets.append(outkey)
+    print(dsets)
+    return dsets
