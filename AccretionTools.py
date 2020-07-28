@@ -2776,6 +2776,8 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     t2_init=time.time()
     print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
 
+    print(hdf5_struct(outname))
+
     # Copy over datasets to correct indices
     print('Copying over datasets ...')
     t1_dsets=time.time()
