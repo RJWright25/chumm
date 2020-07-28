@@ -2725,7 +2725,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     outfile=h5py.File(outname,'w')
     outfile_int=outfile.create_group('Integrated')
     outfile_int.create_group('Inflow')
-    
+
     # Carry over header
     print('Carring over header ...')
     outfile.create_group('Header')
@@ -2748,12 +2748,12 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
                 except:
                     pass
             else:
-                try:
+                if True:
                     outfile[running_group].create_group(group)
                     group_attrs=list(h5py.File(accfnames[-1])[running_group].attrs)
                     for attr in group_attrs:
                         outfile[running_group].attrs.create(attr,data=h5py.File(accfnames[-1])[running_group].attrs[attr])
-                except:
+                else:
                     print(f'Couldnt create {group} in {running_group}')
                     pass
 
