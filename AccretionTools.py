@@ -2763,7 +2763,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
             print(running_group)
             print(list(outfile_intinf[running_group].keys()))
             outfile_intinf[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
-    
+        
     t2_init=time.time()
     print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
 
