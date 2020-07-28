@@ -2740,7 +2740,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     for integrated_dataset in integrated_datasets_list:
         integrated_dataset=integrated_dataset.split('Inflow/')[-1]
         print(integrated_dataset)
-        groups=integrated_dataset.split('/')[1:-1]
+        groups=integrated_dataset.split('/')[0:-1]
         running_group=''
         for igroup,group in enumerate(groups):
             if igroup==0:
