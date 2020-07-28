@@ -2755,7 +2755,8 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
                     pass
 
             running_group=running_group+'/'+group
-        outfile[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
+        if not 'ihalo' in integrated_dataset:
+            outfile[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
     
     t2_init=time.time()
     print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
