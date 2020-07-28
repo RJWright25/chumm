@@ -2740,11 +2740,12 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     for integrated_dataset in integrated_datasets_list:
         print(integrated_dataset)
         groups=integrated_dataset.split('/')[1:-1]
-        running_group='Integrated'
+        running_group=''
         for igroup,group in enumerate(groups):
             if igroup==0:
                 try:
                     outfile.create_group(group)
+                    print(f'Created {group}')
                 except:
                     pass
             else:
