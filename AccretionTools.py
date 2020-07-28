@@ -2764,6 +2764,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     collated_datasets={dataset:np.zeros(total_num_halos)+np.nan for dataset in integrated_datasets_list}
 
     for accfname in accfnames:
+        print(accfname)
         accfile=h5py.File(accfname,'r')
         accfile_ihalo_list=accfile['Integrated']['ihalo_list'].value.astype(int)
         for integrated_dataset in integrated_datasets_list:
