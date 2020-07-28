@@ -38,7 +38,7 @@ from VRPythonTools import *
 
 ########################### CREATE BASE HALO DATA ###########################
 
-def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filetype,tf_filelist,add_descen=False,numsnaps=None,outname='',temporal_idval=10**12):
+def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filetype,tf_filelist,add_descen=False,add_progen=True,numsnaps=None,outname='',temporal_idval=10**12):
     
     """
 
@@ -267,7 +267,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
                     print(f'Could not add descendants for snap {halo_data_snap["Snap"]}')
 
     # Now add progenitor links
-    gen_progen_lists(halo_data_output)
+    if add_progen:
+        gen_progen_lists(halo_data_output)
 
     # Now save all the data (with detailed TreeFrog fields) as "B2"
     print('Saving B2 halo data to file (contains detailed TreeFrog data)')

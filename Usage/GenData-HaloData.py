@@ -52,12 +52,15 @@ parser.add_argument('-sum_dhd', type=int, default=0,
                     help='sum detailed halo data')
 parser.add_argument('-com_dhd', type=int, default=0,
                     help='compress detailed halo data')
+parser.add_argument('-add_progen', type=int, default=0,
+                    help='add full progenitor lists')
 
 n_processes = parser.parse_args().np
 gen_bhd=bool(parser.parse_args().gen_bhd)
 gen_dhd=bool(parser.parse_args().gen_dhd)
 sum_dhd=bool(parser.parse_args().sum_dhd)
 com_dhd=bool(parser.parse_args().com_dhd)
+add_progen=bool(parser.parse_args().add_progen)
 
 run_name=os.getcwd().split('/')[-1]# takes the run name from the folder
 
@@ -113,7 +116,7 @@ if gen_bhd:
     print(np.array(tffiles_final))
     
     print(f'Generating base halo data for {len(np.array(tffiles_final))} snaps...')
-    gen_base_halo_data(numsnaps=numsnaps,partdata_filelist=pfiles_final,partdata_filetype=partdata_filetype,vr_filelist=vrfiles_final,vr_filetype=2,tf_filelist=tffiles_final,outname=run_name,temporal_idval=10**12)
+    gen_base_halo_data(numsnaps=numsnaps,partdata_filelist=pfiles_final,partdata_filetype=partdata_filetype,add_progen=add_progen,vr_filelist=vrfiles_final,vr_filetype=2,tf_filelist=tffiles_final,outname=run_name,temporal_idval=10**12)
     base_halo_data=open_pickle('B2_HaloData_'+run_name+'.dat')
 
 else:

@@ -42,6 +42,7 @@ gen_bhd=1 # generate base halo data (with TreeFrog)
 gen_dhd=1 # add all VR fields and generate B3 halo data for each snap
 sum_dhd=1 # collate all B3 halo data
 com_dhd=1 # compress B3 halo data with specific fields to get B4 halo data
+add_progen=0 # compress B3 halo data with specific fields to get B4 halo data
 
 ####################################################################################################
 ####################################################################################################
@@ -78,11 +79,11 @@ if slurm:
         jobfile.writelines(f"date\n")
         jobfile.writelines(f"echo CPU DETAILS\n")
         jobfile.writelines(f"lscpu\n")
-        jobfile.writelines(f"python {run_script} -np {num_processes} -gen_bhd {gen_bhd} -gen_dhd {gen_dhd} -sum_dhd {sum_dhd} -com_dhd {com_dhd} \n")
+        jobfile.writelines(f"python {run_script} -np {num_processes} -gen_bhd {gen_bhd} -gen_dhd {gen_dhd} -sum_dhd {sum_dhd} -com_dhd {com_dhd} -add_progen {add_progen}\n")
         jobfile.writelines(f"echo JOB END TIME\n")
         jobfile.writelines(f"date\n")
     jobfile.close()
     os.system(f"sbatch {jobscriptfilepath}")
 
 else:
-    os.system(f"python {run_script} -np {num_processes} -gen_bhd {gen_bhd} -gen_dhd {gen_dhd} -sum_dhd {sum_dhd} -com_dhd {com_dhd}  \n")
+    os.system(f"python {run_script} -np {num_processes} -gen_bhd {gen_bhd} -gen_dhd {gen_dhd} -sum_dhd {sum_dhd} -com_dhd {com_dhd} -add_progen {add_progen} \n")
