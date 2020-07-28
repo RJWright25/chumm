@@ -280,7 +280,7 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
         halo_data_file.close()
 
     # Now save all the data (with detailed TreeFrog fields removed) as "B1" (saves memory for accretion calculations)
-    fields_to_keep=['Count','Snap','Structuretype','numSubStruct','ID','hostHaloID','Tail','Head','VR_FilePath','VR_FileType','Part_FilePath','Part_FileType','PartHist_FilePath','UnitInfo','SimulationInfo','outname','Xc','Yc','Zc','Xcminpot','Ycminpot','Zcminpot','VXc','VYc','VZc','R_200crit','R_200mean','Mass_200crit','Vmax']
+    fields_to_keep=['Count','Snap','Structuretype','numSubStruct','ID','hostHaloID','Tail','Head','VR_FilePath','VR_FileType','Part_FilePath','Part_FileType','PartHist_FilePath','UnitInfo','SimulationInfo','outname','Xc','Yc','Zc','Xcminpot','Ycminpot','Zcminpot','VXc','VYc','VZc','R_200crit','R_200mean','Mass_200crit','Vmax','cNFW']
     halo_data_all_truncated=[]
     for snap,halo_data_snap in enumerate(halo_data_output):
         if have_halo_data[snap]:
