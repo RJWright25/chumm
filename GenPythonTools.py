@@ -413,7 +413,7 @@ def cart_to_sph(xyz):
     ptsnew[:,4] = np.arctan2(xyz[:,1], xyz[:,0]) #azimuth
     return ptsnew[:,3:]
 
-def hdf5_struct(path=fname):
+def hdf5_struct(fname):
     dsets=[]
     out=subprocess.Popen([f'h5ls','-r' ,f'{fname}/Integrated'],stdout=subprocess.PIPE)
     output,err=out.communicate()
