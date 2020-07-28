@@ -2713,7 +2713,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
     # Read in the hdf5 data structure of outputs
     allfnames=os.listdir(path)
-    accfnames=[path+fname for fname in allfnames if ('AccretionData' in fname and 'All' not in fname)]
+    accfnames=[path+fname for fname in allfnames if ('AccretionData' in fname and 'All' not in fname and '.hdf5' in fname)]
 
     integrated_datasets_list=np.array(hdf5_struct(accfnames[-1]))
     print(f'Total num datasets: {len(integrated_datasets_list)}')
