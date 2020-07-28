@@ -29,6 +29,7 @@ import time
 
 sys.path.append('/home/rwright/software/')
 import read_eagle
+from read_eagle import EagleSnapshot
 
 from GenPythonTools import *
 from VRPythonTools import *
@@ -602,7 +603,7 @@ def gen_accretion_data_eagle(base_halo_data,snap=None,halo_index_list=None,pre_d
 
                 #Get cube outputs for each snap
                 for snap in snaps:
-                    ihalo_EAGLE_snap=read_eagle.EagleSnapshot(Part_Data_FilePaths[str(snap)])
+                    ihalo_EAGLE_snap=EagleSnapshot(Part_Data_FilePaths[str(snap)])
                     ihalo_EAGLE_snap.select_region(xmin=ihalo_com_comoving[str(snap)][0][0]-ihalo_cuberadius_comoving[str(snap)],xmax=ihalo_com_comoving[str(snap)][0][0]+ihalo_cuberadius_comoving[str(snap)],
                                                 ymin=ihalo_com_comoving[str(snap)][0][1]-ihalo_cuberadius_comoving[str(snap)],ymax=ihalo_com_comoving[str(snap)][0][1]+ihalo_cuberadius_comoving[str(snap)],
                                                 zmin=ihalo_com_comoving[str(snap)][0][2]-ihalo_cuberadius_comoving[str(snap)],zmax=ihalo_com_comoving[str(snap)][0][2]+ihalo_cuberadius_comoving[str(snap)])
@@ -1383,7 +1384,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
 
     for snap in snaps:
         if SimType=='EAGLE':
-            EAGLE_snap=read_eagle.EagleSnapshot(Part_Data_FilePaths[str(snap)])
+            EAGLE_snap=EagleSnapshot(Part_Data_FilePaths[str(snap)])
             EAGLE_snap.select_region(xmin=0,xmax=BoxSize,
                                      ymin=0,ymax=BoxSize,
                                      zmin=0,zmax=BoxSize)
@@ -2366,7 +2367,7 @@ def gen_accretion_data_r200(base_halo_data,snap=None,halo_index_list=None,pre_de
         Part_Data_Full={str(snap):{field:{} for field in Part_Data_fields[str(snap)]} for snap in snaps}
         for snap in snaps:
             if SimType=='EAGLE':
-                EAGLE_snap=read_eagle.EagleSnapshot(Part_Data_FilePaths[str(snap)])
+                EAGLE_snap=EagleSnapshot(Part_Data_FilePaths[str(snap)])
                 EAGLE_snap.select_region(xmin=0,xmax=BoxSize,
                                         ymin=0,ymax=BoxSize,
                                         zmin=0,zmax=BoxSize)
@@ -2865,7 +2866,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
         parthistory_files[str(snap)].close()
 
     # # Load in EAGLE data
-    partdata_files={str(snap):read_eagle.EagleSnapshot(base_halo_data[snap]['Part_FilePath']) for snap in [snap1,snap2]}
+    partdata_files={str(snap):EagleSnapshot(base_halo_data[snap]['Part_FilePath']) for snap in [snap1,snap2]}
     for snap in [snap1,snap2]:
         partdata_files[str(snap)].select_region(xmin=-0.1,xmax=boxsize+0.1,ymin=-0.1,ymax=boxsize+0.1,zmin=-0.1,zmax=boxsize+0.1)
         
