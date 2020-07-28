@@ -2724,7 +2724,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
         os.system(f"rm -rf {outname}")
     outfile=h5py.File(outname,'w')
     outfile_int=outfile.create_group('Integrated')
-    outfile_int.create_group('Inflow')
+    outfile_intinf=outfile_int.create_group('Inflow')
 
     # Carry over header
     print('Carring over header ...')
@@ -2738,22 +2738,23 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     t1_init=time.time()
     total_num_halos=len(base_halo_data[snap]["ID"])
     for integrated_dataset in integrated_datasets_list:
+        integrated_dataset=integrated_dataset.split('Inflow/')[-1]
         print(integrated_dataset)
         groups=integrated_dataset.split('/')[1:-1]
         running_group=''
         for igroup,group in enumerate(groups):
             if igroup==0:
                 try:
-                    outfile.create_group(group)
+                    outfile_intinf.create_group(group)
                     print(f'Created {group}')
                 except:
                     pass
             else:
                 try:
-                    outfile[running_group].create_group(group)
+                    outfile_intinf[running_group].create_group(group)
                     group_attrs=list(h5py.File(accfnames[-1])[running_group].attrs)
                     for attr in group_attrs:
-                        outfile[running_group].attrs.create(attr,data=h5py.File(accfnames[-1])[running_group].attrs[attr])
+                        outfile_intinf[running_group].attrs.create(attr,data=h5py.File(accfnames[-1])[running_group].attrs[attr])
                     print(f'Created {group} in {running_group}')
                 except:
                     print(f'Couldnt create {group} in {running_group}')
@@ -2761,7 +2762,9 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
 
             running_group=running_group+'/'+group
         if not 'ihalo' in integrated_dataset:
-            outfile[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
+            print(running_group)
+            print(list(outfile_intinf[running_group].keys()))
+            outfile_intinf[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
     
     t2_init=time.time()
     print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
