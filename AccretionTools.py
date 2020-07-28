@@ -2759,8 +2759,10 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
                 else:
                     print(f'Couldnt create {group} in {running_group}')
                     pass
-
+            
+            print(running_group)
             running_group=running_group+'/'+group
+            print(running_group)
         if not 'ihalo' in integrated_dataset:
             print(running_group)
             print(list(outfile_intinf[running_group].keys()))
