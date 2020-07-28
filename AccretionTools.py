@@ -2748,12 +2748,13 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
                 except:
                     pass
             else:
-                if True:
+                try:
                     outfile[running_group].create_group(group)
                     group_attrs=list(h5py.File(accfnames[-1])[running_group].attrs)
                     for attr in group_attrs:
                         outfile[running_group].attrs.create(attr,data=h5py.File(accfnames[-1])[running_group].attrs[attr])
-                else:
+                    print(f'Created {group} in {running_group}')
+                except:
                     print(f'Couldnt create {group} in {running_group}')
                     pass
 
