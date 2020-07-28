@@ -2774,7 +2774,8 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
             collated_datasets[integrated_dataset][(accfile_ihalo_list,)]=accfile_dset_val
 
     for integrated_dataset in integrated_datasets_list:
-        outfile[integrated_dataset][:]=collated_datasets[integrated_dataset]
+        if 'ihalo' not in integrated_dataset:
+            outfile[integrated_dataset][:]=collated_datasets[integrated_dataset]
 
     t2_dsets=time.time()
     print(f'Done copying over datasets in {t2_dsets-t1_dsets:.2f} sec')
