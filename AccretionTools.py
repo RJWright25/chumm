@@ -2983,7 +2983,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
     accfiles_paths=sorted([accfile_path for accfile_path in accfiles_all if ('All' not in accfile_path and 'recyc' not in accfile_path and 'aveprop' not in accfile_path)])
     accfiles=accfiles_paths
     accfile_ex=h5py.File(accfiles[0],'r+')
-    snap2=accfile_ex['Header'].attrs['snap2']
+    snap2=int(accfiles[0].split('snap_')[-1][:3])
     snap1=int(np.nanmax([10,snap2-10]))
     PartTypes=[0,1]
 
@@ -3042,8 +3042,9 @@ def add_recycling_data_serial(path=None,mcut=10**10):
     iihalo=0
     for ifile,acc_file in enumerate(acc_files):
         acc_file_hdf5=h5py.File(acc_file,'r+')
-        acc_file_ihalos=acc_file_hdf5['Integrated']['ihalo_list'].value
-        for ifile_ihalo,ihalo in enumerate(acc_file_ihalos):
+        acc_file_ihalo_keys=list(acc_file_hdf5['Particle'].keys())
+        for ifile_ihalo,ihalo_key in enumerate(acc_file_ihalo_keys):
+            ihalo=int(ihalo_key.split('_')[-1])
             if ihalo in ihalos_valid:
                 if iihalo%1==0 or ifile_ihalo==0:
                     print(f'[on file {ifile+1}/{len(acc_files)}]: {iihalo/len(ihalos_valid)*100:.2f}% done in total')
@@ -3052,7 +3053,6 @@ def add_recycling_data_serial(path=None,mcut=10**10):
                         logfile.write(f'[on file {ifile+1}/{len(acc_files)}]: {iihalo/len(ihalos_valid)*100:.2f}% done in total\n')
                     logfile.close()
                 iihalo=iihalo+1
-                ihalo_key='ihalo_'+str(ihalo).zfill(6)
                 ihalo_ID=base_halo_data[snap_master]['ID'][ihalo]
                 try:
                     #main progens & subhalos
