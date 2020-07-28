@@ -2738,40 +2738,41 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     t1_init=time.time()
     total_num_halos=len(base_halo_data[snap]["ID"])
     for integrated_dataset in integrated_datasets_list:
-        integrated_dataset=integrated_dataset.split('Inflow/')[-1]
-        print(integrated_dataset)
-        groups=integrated_dataset.split('/')[0:-1]
-        running_group=''
-        for igroup,group in enumerate(groups):
-            print(f'Creating {group}...')
-            if igroup==0:
-                try:
-                    outfile_intinf.create_group(group)
-                    print(f'Created {group}')
-                except:
-                    pass
-            else:
-                if True:
-                    print('running group is ',running_group)
-                    keys=list(outfile['Integrated']['Inflow'][running_group].keys())
-                    if group not in keys:
-                        outfile['Integrated']['Inflow'][running_group].create_group(group)
-                        print(f'Created {group} in {running_group}')
-                    else:
-                        print(f'Didnt need to create {group}')
+        if 'ihalo' not in integrated_dataset:
+            integrated_dataset=integrated_dataset.split('Inflow/')[-1]
+            print(integrated_dataset)
+            groups=integrated_dataset.split('/')[0:-1]
+            running_group=''
+            for igroup,group in enumerate(groups):
+                print(f'Creating {group}...')
+                if igroup==0:
+                    try:
+                        outfile_intinf.create_group(group)
+                        print(f'Created {group}')
+                    except:
+                        pass
                 else:
-                    print(f'Couldnt create {group} in {running_group}')
-                    pass
-            
-            print('old running group ',running_group)
-            running_group=running_group+'/'+group
-            print('new running group ',running_group)
-            if running_group.startswith('/'):
-                running_group=running_group[1:]
-        if not 'ihalo' in integrated_dataset:
-            print(running_group)
-            print(list(outfile_intinf[running_group].keys()))
-            outfile_intinf[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
+                    if True:
+                        print('running group is ',running_group)
+                        keys=list(outfile['Integrated']['Inflow'][running_group].keys())
+                        if group not in keys:
+                            outfile['Integrated']['Inflow'][running_group].create_group(group)
+                            print(f'Created {group} in {running_group}')
+                        else:
+                            print(f'Didnt need to create {group}')
+                    else:
+                        print(f'Couldnt create {group} in {running_group}')
+                        pass
+                
+                print('old running group ',running_group)
+                running_group=running_group+'/'+group
+                print('new running group ',running_group)
+                if running_group.startswith('/'):
+                    running_group=running_group[1:]
+            if not 'ihalo' in integrated_dataset:
+                print(running_group)
+                print(list(outfile_intinf[running_group].keys()))
+                outfile_intinf[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
         
     t2_init=time.time()
     print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
