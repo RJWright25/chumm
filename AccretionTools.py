@@ -2743,6 +2743,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
         groups=integrated_dataset.split('/')[0:-1]
         running_group=''
         for igroup,group in enumerate(groups):
+            print(f'Creating {group}...')
             if igroup==0:
                 try:
                     outfile_intinf.create_group(group)
