@@ -2763,6 +2763,8 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
             print('old running group ',running_group)
             running_group=running_group+'/'+group
             print('new running group ',running_group)
+            if running_group.startswith('/')
+                running_group=running_group[1:]
         if not 'ihalo' in integrated_dataset:
             print(running_group)
             print(list(outfile_intinf[running_group].keys()))
