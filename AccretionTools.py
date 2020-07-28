@@ -2776,7 +2776,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     for integrated_dataset in integrated_datasets_list:
         if 'ihalo' not in integrated_dataset:
             print(integrated_dataset)
-            print(outfile[integrated_dataset].value)
+            print(hdf5_struct(outname))
             outfile[integrated_dataset][:]=collated_datasets[integrated_dataset]
 
     t2_dsets=time.time()
