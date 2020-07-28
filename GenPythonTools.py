@@ -423,6 +423,6 @@ def hdf5_struct(fname):
         if 'Dataset' in key:
             outkey=key.split('Dataset')[0]
             outkey=outkey.strip()
-            dsets.append(outkey)
+            dsets.append('Integrated'+outkey)
     print(dsets)
     return dsets
