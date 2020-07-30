@@ -414,8 +414,18 @@ def cart_to_sph(xyz):
     return ptsnew[:,3:]
 
 def hdf5_struct(fname):
+    outer_level_keys=list(h5py.File(fname).keys())
+    if 'Particle' in outer_level_keys:
+        only_int=True
+    else:
+        only_int=False
+
     dsets=[]
-    out=subprocess.Popen([f'h5ls','-r' ,f'{fname}/Integrated'],stdout=subprocess.PIPE)
+    if only_int:
+        out=subprocess.Popen([f'h5ls','-r' ,f'{fname}/Integrated'],stdout=subprocess.PIPE)
+    else:
+        out=subprocess.Popen([f'h5ls','-r' ,f'{fname}'],stdout=subprocess.PIPE)
+
     output,err=out.communicate()
     output=output.decode("utf-8") 
     output=output.split('\n')
@@ -423,6 +433,8 @@ def hdf5_struct(fname):
         if 'Dataset' in key:
             outkey=key.split('Dataset')[0]
             outkey=outkey.strip()
-            dsets.append('Integrated'+outkey)
-    print(dsets)
+            if only_int:
+                dsets.append('Integrated'+outkey)
+            else:
+                dsets.append(outkey)
     return dsets

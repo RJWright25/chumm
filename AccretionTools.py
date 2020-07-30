@@ -2723,8 +2723,6 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     if os.path.exists(outname):
         os.system(f"rm -rf {outname}")
     outfile=h5py.File(outname,'w')
-    outfile_int=outfile.create_group('Integrated')
-    outfile_intinf=outfile_int.create_group('Inflow')
 
     # Carry over header
     print('Carring over header ...')
@@ -2739,66 +2737,41 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
     total_num_halos=len(base_halo_data[snap]["ID"])
     for integrated_dataset in integrated_datasets_list:
         if 'ihalo' not in integrated_dataset:
-            integrated_dataset=integrated_dataset.split('Inflow/')[-1]
-            print(integrated_dataset)
-            groups=integrated_dataset.split('/')[0:-1]
+            groups=integrated_dataset.split('/')[:-1]
             running_group=''
-            for igroup,group in enumerate(groups):
-                print(f'Creating {group}...')
-                if igroup==0:
-                    try:
-                        outfile_intinf.create_group(group)
-                        print(f'Created {group}')
-                    except:
-                        pass
-                else:
-                    if True:
-                        print('running group is ',running_group)
-                        keys=list(outfile['Integrated']['Inflow'][running_group].keys())
-                        if group not in keys:
-                            outfile['Integrated']['Inflow'][running_group].create_group(group)
-                            print(f'Created {group} in {running_group}')
-                        else:
-                            print(f'Didnt need to create {group}')
-                    else:
-                        print(f'Couldnt create {group} in {running_group}')
-                        pass
-                
-                print('old running group ',running_group)
+            for group in groups:
+                try:
+                    outfile.create_group(running_group+'/'+group)
+                    print(f'Created {running_group}/{group}')
+                except:
+                    print(f'Couldnt create {running_group}/{group}')
                 running_group=running_group+'/'+group
-                print('new running group ',running_group)
-                if running_group.startswith('/'):
-                    running_group=running_group[1:]
-            if not 'ihalo' in integrated_dataset:
-                print(f'creating {integrated_dataset}')
-                outfile_intinf[running_group].create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan,dtype=np.float32)
-        
+            
+            outfile.create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan)
+
     t2_init=time.time()
     print(f'Done initialising datasets in {t2_init-t1_init:.2f} sec')
     
-    outfile.close()
-    print(hdf5_struct(outname))
-    outfile=h5py.File(outname,'r+')
 
-    # # Copy over datasets to correct indices
-    # print('Copying over datasets ...')
-    # t1_dsets=time.time()
-    # collated_datasets={dataset:np.zeros(total_num_halos)+np.nan for dataset in integrated_datasets_list}
+    # Copy over datasets to correct indices
+    print('Copying over datasets ...')
+    t1_dsets=time.time()
+    collated_datasets={dataset:np.zeros(total_num_halos)+np.nan for dataset in integrated_datasets_list}
 
-    # for accfname in accfnames:
-    #     accfile=h5py.File(accfname,'r')
-    #     accfile_ihalo_list=accfile['Integrated']['ihalo_list'].value.astype(int)
-    #     for integrated_dataset in integrated_datasets_list:
-    #         accfile_dset_val=accfile[integrated_dataset].value
-    #         collated_datasets[integrated_dataset][(accfile_ihalo_list,)]=accfile_dset_val
+    for accfname in accfnames:
+        accfile=h5py.File(accfname,'r')
+        accfile_ihalo_list=accfile['Integrated']['ihalo_list'].value.astype(int)
+        for integrated_dataset in integrated_datasets_list:
+            accfile_dset_val=accfile[integrated_dataset].value
+            collated_datasets[integrated_dataset][(accfile_ihalo_list,)]=accfile_dset_val
 
-    # for integrated_dataset in integrated_datasets_list:
-    #     if 'ihalo' not in integrated_dataset:
-    #         print(integrated_dataset)
-    #         outfile[integrated_dataset][:]=collated_datasets[integrated_dataset]
+    for integrated_dataset in integrated_datasets_list:
+        if 'ihalo' not in integrated_dataset:
+            print(integrated_dataset)
+            outfile[integrated_dataset][:]=collated_datasets[integrated_dataset]
 
-    # t2_dsets=time.time()
-    # print(f'Done copying over datasets in {t2_dsets-t1_dsets:.2f} sec')
+    t2_dsets=time.time()
+    print(f'Done copying over datasets in {t2_dsets-t1_dsets:.2f} sec')
 
 ########################### ADD PARTICLE DATA TO ACCRETION DATA ###########################
 
