@@ -2742,9 +2742,9 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
             for group in groups:
                 try:
                     outfile.create_group(running_group+'/'+group)
-                    print(f'Created {running_group}/{group}')
+                    # print(f'Created {running_group}/{group}')
                 except:
-                    print(f'Couldnt create {running_group}/{group}')
+                    # print(f'Couldnt create {running_group}/{group}')
                 running_group=running_group+'/'+group
             
             outfile.create_dataset(integrated_dataset,data=np.zeros(total_num_halos)+np.nan)
