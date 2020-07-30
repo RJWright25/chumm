@@ -2744,6 +2744,7 @@ def postprocess_accretion_data_serial(base_halo_data,path=None):
                     outfile.create_group(running_group+'/'+group)
                     # print(f'Created {running_group}/{group}')
                 except:
+                    pass
                     # print(f'Couldnt create {running_group}/{group}')
                 running_group=running_group+'/'+group
             
