@@ -2982,7 +2982,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
     accfiles=accfiles_paths
     accfile_ex=h5py.File(accfiles[0],'r+')
     snap2=int(accfiles[0].split('snap_')[-1][:3])
-    snap1=int(np.nanmax([10,snap2-10]))
+    snap1=snap2-2
     PartTypes=[0,1]
 
     # Load in base halo data
@@ -3052,7 +3052,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
                     logfile.close()
                 iihalo=iihalo+1
                 ihalo_ID=base_halo_data[snap_master]['ID'][ihalo]
-                try:
+                if True:
                     #main progens & subhalos
                     ihalo_mainprogens=find_progen_index(base_halo_data=base_halo_data,index2=ihalo,snap2=snap_master,depth=len(snaps)-1,return_all_depths=True)
                     ihalo_mainprogen_IDs=[base_halo_data[isnap]['ID'][ihalo_progen] for isnap,ihalo_progen in zip(snaps[:-1][::-1],ihalo_mainprogens)]
@@ -3073,7 +3073,7 @@ def add_recycling_data_serial(path=None,mcut=10**10):
                         ihalo_suballprogen_IDs[isnap]=ihalo_isnap_suballprogen_IDs
 
 
-                except:
+                else:
                     print(f'had to skip ihalo {ihalo}')
                     continue
                 
