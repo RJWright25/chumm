@@ -208,7 +208,6 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     BuildTemporalHeadTailDescendant(no_tf_files,halo_tree,halo_data_counts,halo_data_all,iverbose=1,TEMPORALHALOIDVAL=temporal_idval)
     
 
-
     print('Finished assembling descendent tree using VR python tools')
     print('Adding timesteps & filepath information')
     
