@@ -2830,7 +2830,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     accfile_ex=h5py.File(accfiles_thisworker[0],'r+')
     snap1=int(path.split('snap_')[-1][:3])-1
     snap2=int(path.split('snap_')[-1][:3])
-    parttypes=[0,4]
+    parttypes=[0,1,4]
 
     # Load in base halo data
     print('Loading halo data')
