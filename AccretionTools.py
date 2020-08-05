@@ -3385,8 +3385,3 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
 
     dump_pickle(path=path+'aveprops.dat',data=output_props)
 
-
-
-
-   
-
