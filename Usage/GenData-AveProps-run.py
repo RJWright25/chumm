@@ -48,7 +48,7 @@ basepath=f'{rundir}/acc_data/pre01_post01_np04_FOFonly/' # path with generated a
 if 'Users' in os.listdir('/'):
     chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
 else:
-    chummdir='/home/rwright/CHUMM/'
+    chummdir='/home/rwright/Software/CHUMM/'
 run_script=chummdir+'Usage/GenData-AveProps.py'
 
 # Submit/ run

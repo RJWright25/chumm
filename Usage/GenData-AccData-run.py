@@ -27,7 +27,7 @@ import os
 import sys
 
 sys.path.append('/Users/ruby/Documents/GitHub/CHUMM/')
-sys.path.append('/home/rwright/CHUMM/')
+sys.path.append('/home/rwright/Software/CHUMM/')
 from GenPythonTools import *
 
 ####################################################################################################

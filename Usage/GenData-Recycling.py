@@ -29,7 +29,7 @@ import os
 import sys
 import argparse
 
-sys.path.append('/home/rwright/CHUMM/') # may need to specify
+sys.path.append('/home/rwright/Software/CHUMM/') # may need to specify
 sys.path.append('/Users/ruby/Documents/GitHub/CHUMM/') # may need to specify
 from STFTools import *
 from AccretionTools import *
