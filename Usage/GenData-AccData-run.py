@@ -85,11 +85,16 @@ else:
 
 if slurm:
     for snap in snaps:
-        if not fofonly:
+        if algorithm==0:
             if test:
                 jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}_test'
             else:
                 jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}'
+        elif algorithm==1:
+            if test:
+                jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}_R200only_test'
+            else:
+                jobname=(filename.split('-')[1]).split('_')[0]+'-'+runname+f'_pre{str(pre).zfill(2)}_post{str(post).zfill(2)}_snap{str(snap).zfill(3)}_np{str(num_processes_calc).zfill(3)}_R200only'
 
         else:
             if test:
