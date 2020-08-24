@@ -48,7 +48,6 @@ add_progen=0 # compress B3 halo data with specific fields to get B4 halo data
 ####################################################################################################
 
 # Run script
-sys.path.append('/home/rwright/software/read_eagle/build/lib/python3.7/site-packages/')
 run_script='GenData-HaloData.py'
 
 # Submit/ run
