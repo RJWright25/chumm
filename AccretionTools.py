@@ -2830,18 +2830,18 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     accfile_ex=h5py.File(accfiles_thisworker[0],'r+')
     snap1=int(path.split('snap_')[-1][:3])-1
     snap2=int(path.split('snap_')[-1][:3])
-    parttypes=[0,1,4]#include dm
+    parttypes=[0,1,4]
 
     # Load in base halo data
-    print('Loading halo data')
+    print('Loading halo data ...')
     base_folder=path.split('acc_data')[0]
     base_folder_contents=list_dir(base_folder)
-    base_halo_data_path=[path for path in base_folder_contents if 'B4' in path and 'tar' not in path][0]
+    base_halo_data_path=[path for path in base_folder_contents if 'B1' in path and 'tar' not in path][0]
     base_halo_data=open_pickle(base_halo_data_path)
     boxsize=base_halo_data[snap1]['SimulationInfo']['BoxSize_Comoving']
 
     # Load in particle histories
-    print('Loading particle histories')
+    print('Loading particle histories ...')
     try:
         parthistory_files={str(snap):h5py.File(base_folder+base_halo_data[snap]['PartHist_FilePath'],'r+') for snap in [snap1,snap2]}
         partindices={str(snap):{str(itype):parthistory_files[str(snap)][f'PartType{itype}']['ParticleIndex'].value for itype in parttypes} for snap in [snap1,snap2]}
@@ -2864,11 +2864,13 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
         parthistory_files[str(snap)].close()
 
     # # Load in EAGLE data
+    print('Slicing particle data ...')
+
     partdata_files={str(snap):EagleSnapshot(base_halo_data[snap]['Part_FilePath']) for snap in [snap1,snap2]}
     for snap in [snap1,snap2]:
         partdata_files[str(snap)].select_region(xmin=-0.1,xmax=boxsize+0.1,ymin=-0.1,ymax=boxsize+0.1,zmin=-0.1,zmax=boxsize+0.1)
         
-    print('Loading particle data')
+    print('Loading particle data ...')
     partdata={str(snap):{str(itype):{key:partdata_files[str(snap)].read_dataset(itype,key) for key in eagle_keys[str(itype)]} for itype in parttypes} for snap in [snap1,snap2]}
 
     for ifile,accfile_path in enumerate(accfiles_thisworker):
@@ -2876,12 +2878,14 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
         ihalo_keys=list(accfile['Particle'].keys())
         for ihalo_key in ihalo_keys:
             ihalo=int(ihalo_key.split('ihalo_')[-1])
-            if base_halo_data[snap2]['Mass_FOF'][ihalo]>mcut:
+            if base_halo_data[snap2]['Mass_200crit'][ihalo]*10**10>mcut:
                 print(f'Processing ihalo {ihalo}')
                 for itype in parttypes:
+                    print(f'Processing itype {itype} for ihalo {ihalo}')
                     try:
                         ncandidates=len(accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']["ParticleIDs"])
                     except:
+                        print(f'Had to skip itype {itype} for ihalo {ihalo}')
                         continue
 
                     for key in eagle_keys[str(itype)]:
@@ -3245,7 +3249,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
     snap2_comtophys=base_halo_data[snap2]['SimulationInfo']['ScaleFactor']/base_halo_data[snap2]['SimulationInfo']['h_val']
     snap1_comtophys=base_halo_data[snap1]['SimulationInfo']['ScaleFactor']/base_halo_data[snap1]['SimulationInfo']['h_val']
 
-    origins=['snap1_halo','snap2_halo','Accreted','First-infall','Recycled','Transfer','Merger']
+    origins=['snap1_halo','snap2_halo','Accreted','First-infall','Recycled','Transfer','Merger','Pre-processed']
     averages=['Means','Medians','Min','Max']
     print(property_keys)
 
@@ -3298,11 +3302,13 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 ihalo_origin['Recycled']=np.logical_and(ihalo_accreted,ihalo_laststructure<1.8)
                 ihalo_origin['Transfer']=np.logical_and(ihalo_accreted,ihalo_laststructure==2)
                 ihalo_origin['Merger']=np.logical_and(ihalo_accreted,ihalo_structure>0)
+                ihalo_origin['Pre-processed']=np.logical_and.reduce([ihalo_accreted,ihalo_structure==0,ihalo_processed>0])
 
                 ihalo_origin['First-infall_DM']=np.logical_and(ihalo_processed_DM==0,ihalo_accreted_DM)
                 ihalo_origin['Recycled_DM']=np.logical_and(ihalo_accreted_DM,ihalo_laststructure_DM<1.8)
                 ihalo_origin['Transfer_DM']=np.logical_and(ihalo_accreted_DM,ihalo_laststructure_DM==2)
                 ihalo_origin['Merger_DM']=np.logical_and(ihalo_accreted_DM,ihalo_structure_DM>0)
+                ihalo_origin['Pre-processed_DM']=np.logical_and.reduce([ihalo_accreted_DM,ihalo_structure_DM==0,ihalo_processed_DM>0])
 
                 ihalo_progen=find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap2-snap1)
                 ihalo_snap2_com=np.array([base_halo_data[snap2]['Xc'][ihalo],base_halo_data[snap2]['Yc'][ihalo],base_halo_data[snap2]['Zc'][ihalo]],ndmin=2)
@@ -3359,10 +3365,10 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 
                 #Filling factor calcs
                 try:
-                    ihalo_snap1_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_com)
-                    ihalo_snap2_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_com)
-                    ihalo_snap1_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap1_Coordinates'].value[mask_DM]*snap1_comtophys-ihalo_snap1_com)
-                    ihalo_snap2_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap2_Coordinates'].value[mask_DM]*snap2_comtophys-ihalo_snap2_com)
+                    ihalo_snap1_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_cmbp)
+                    ihalo_snap2_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_cmbp)
+                    ihalo_snap1_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap1_Coordinates'].value[mask_DM]*snap1_comtophys-ihalo_snap1_cmbp)
+                    ihalo_snap2_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap2_Coordinates'].value[mask_DM]*snap2_comtophys-ihalo_snap2_cmbp)
 
                 except:
                     continue
@@ -3370,11 +3376,15 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 try:
                     ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
                     ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
+                except:
+                    print(f'Couldnt obtain gas histograms for ihalo {ihalo}')
+                    ihalo_snap1_comxyz_hist=np.nan
+                    ihalo_snap2_comxyz_hist=np.nan
+                try:
                     ihalo_snap1_comxyz_hist_DM,foo=np.histogramdd(ihalo_snap1_comxyz_DM,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
                     ihalo_snap2_comxyz_hist_DM,foo=np.histogramdd(ihalo_snap2_comxyz_DM,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
                 except:
-                    ihalo_snap1_comxyz_hist=np.nan
-                    ihalo_snap2_comxyz_hist=np.nan
+                    print(f'Couldnt obtain gas histograms for itype {ihalo}')
                     ihalo_snap1_comxyz_hist_DM=np.nan
                     ihalo_snap2_comxyz_hist_DM=np.nan
 
