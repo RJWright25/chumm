@@ -3302,13 +3302,13 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                 ihalo_origin['Recycled']=np.logical_and(ihalo_accreted,ihalo_laststructure<1.8)
                 ihalo_origin['Transfer']=np.logical_and(ihalo_accreted,ihalo_laststructure==2)
                 ihalo_origin['Merger']=np.logical_and(ihalo_accreted,ihalo_structure>0)
-                ihalo_origin['Pre-processed']=np.logical_and.reduce([ihalo_accreted,ihalo_structure==0,ihalo_processed>0])
+                ihalo_origin['Pre-processed']=np.logical_or(ihalo_origin['Transfer'],ihalo_origin['Recycled'])
 
                 ihalo_origin['First-infall_DM']=np.logical_and(ihalo_processed_DM==0,ihalo_accreted_DM)
                 ihalo_origin['Recycled_DM']=np.logical_and(ihalo_accreted_DM,ihalo_laststructure_DM<1.8)
                 ihalo_origin['Transfer_DM']=np.logical_and(ihalo_accreted_DM,ihalo_laststructure_DM==2)
                 ihalo_origin['Merger_DM']=np.logical_and(ihalo_accreted_DM,ihalo_structure_DM>0)
-                ihalo_origin['Pre-processed_DM']=np.logical_and.reduce([ihalo_accreted_DM,ihalo_structure_DM==0,ihalo_processed_DM>0])
+                ihalo_origin['Pre-processed_DM']=np.logical_or(ihalo_origin['Transfer_DM'],ihalo_origin['Recycled_DM'])
 
                 ihalo_progen=find_progen_index(base_halo_data,index2=ihalo,snap2=snap2,depth=snap2-snap1)
                 ihalo_snap2_com=np.array([base_halo_data[snap2]['Xc'][ihalo],base_halo_data[snap2]['Yc'][ihalo],base_halo_data[snap2]['Zc'][ihalo]],ndmin=2)
@@ -3332,8 +3332,8 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                             ihalo_origin_prop=accfile['Particle'][ihalo_key]['Inflow']['PartType0'][property_key].value[mask]
                         except:
                             if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
-                                print(f'Skipping {property_key} for ihalo {ihalo}')
-                            continue
+                                print(f'Skipping ihalo {ihalo} (no {property_key})')
+                            break
                         output_props[origin][property_key]['Means'][ihalo]=np.nanmean(ihalo_origin_prop)
                         output_props[origin][property_key]['Medians'][ihalo]=np.nanmedian(ihalo_origin_prop)
                         try:
@@ -3346,7 +3346,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                             ihalo_origin_prop=accfile['Particle'][ihalo_key]['Inflow']['PartType0'][property_key].value[mask]
                         except:
                             if base_halo_data[snap2]['Mass_FOF'][ihalo]>10**10:
-                                print(f'Skipping {property_key} for ihalo {ihalo}')
+                                print(f'Skipping ihalo {ihalo} (no {property_key})')
                             continue
                         if 'snap1' in property_key:
                             ihalo_rcom_coords=np.sqrt(np.sum(np.square(ihalo_origin_prop*snap1_comtophys-ihalo_snap1_com),axis=1))
@@ -3371,16 +3371,17 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                     ihalo_snap2_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap2_Coordinates'].value[mask_DM]*snap2_comtophys-ihalo_snap2_cmbp)
 
                 except:
-                    print(f'Had to skip ihalo {ihalo} (no coordinates - mass ~ {base_halo_data[snap2]['Mass_200crit'][ihalo]*10**10:.2e})')
-                    continue
+                    if base_halo_data[snap2]['Mass_FOF'][ihalo]>=10**10:
+                        print(f"Had to skip ihalo {ihalo} (no coordinates - mass ~ {base_halo_data[snap2]['Mass_FOF'][ihalo]:.2e} Msun)")
+                    break
                 
                 try:
                     ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
                     ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
                 except:
                     print(f'Couldnt obtain gas histograms for ihalo {ihalo}')
-                    ihalo_snap1_comxyz_hist=np.nan
-                    ihalo_snap2_comxyz_hist=np.nan
+                    ihalo_snap1_comxyz_hist=np.nan+np.zeros(np.shape(ihalo_snap1_comxyz))
+                    ihalo_snap2_comxyz_hist=np.nan+np.zeros(np.shape(ihalo_snap1_comxyz))
                 try:
                     ihalo_snap1_comxyz_hist_DM,foo=np.histogramdd(ihalo_snap1_comxyz_DM,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
                     ihalo_snap2_comxyz_hist_DM,foo=np.histogramdd(ihalo_snap2_comxyz_DM,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
