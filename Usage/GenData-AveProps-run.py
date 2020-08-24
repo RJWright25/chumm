@@ -45,6 +45,7 @@ basepath=f'{rundir}/acc_data/pre01_post01_np04_FOFonly/' # path with generated a
 ####################################################################################################
 
 # Run Script
+sys.path.append('/home/rwright/software/read_eagle/build/lib/python3.7/site-packages/')
 if 'Users' in os.listdir('/'):
     chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
 else:

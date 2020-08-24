@@ -65,6 +65,7 @@ if 'Users' in os.listdir('/'):
 else:
     chummdir='/home/rwright/CHUMM/'
 sys.path.append(chummdir)
+sys.path.append('/home/rwright/software/read_eagle/build/lib/python3.7/site-packages/')
 run_script=chummdir+'Usage/GenData-AccData.py'
 
 # Submit/ run
