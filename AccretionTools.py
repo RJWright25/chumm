@@ -3364,13 +3364,13 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                             output_props[origin]['snap2_rcmbp']['Medians'][ihalo]=np.nanmedian(ihalo_rcmbp_coords)
                 
                 #Filling factor calcs
-                try:
+                if True:
                     ihalo_snap1_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_cmbp)
                     ihalo_snap2_comxyz=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_cmbp)
                     ihalo_snap1_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap1_Coordinates'].value[mask_DM]*snap1_comtophys-ihalo_snap1_cmbp)
                     ihalo_snap2_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap2_Coordinates'].value[mask_DM]*snap2_comtophys-ihalo_snap2_cmbp)
 
-                except:
+                else:
                     print(f'Couldnt extract coordinates for ihalo {ihalo}')
                     continue
                 
@@ -3389,10 +3389,12 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                     ihalo_snap1_comxyz_hist_DM=np.nan
                     ihalo_snap2_comxyz_hist_DM=np.nan
 
+                print(ihalo_snap1_comxyz_hist)
+                print(ihalo_snap1_comxyz_hist_DM)
                 output_props[origin]['snap1_ffhist'][ihalo]=ihalo_snap1_comxyz_hist
                 output_props[origin]['snap2_ffhist'][ihalo]=ihalo_snap2_comxyz_hist
-                output_props[origin]['snap1_ffhist_DM'][ihalo]=ihalo_snap1_comxyz_hist
-                output_props[origin]['snap2_ffhist_DM'][ihalo]=ihalo_snap2_comxyz_hist
+                output_props[origin]['snap1_ffhist_DM'][ihalo]=ihalo_snap1_comxyz_hist_DM
+                output_props[origin]['snap2_ffhist_DM'][ihalo]=ihalo_snap2_comxyz_hist_DM
 
     dump_pickle(path=path+'aveprops.dat',data=output_props)
 
