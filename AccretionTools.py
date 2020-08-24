@@ -3371,6 +3371,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                     ihalo_snap2_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap2_Coordinates'].value[mask_DM]*snap2_comtophys-ihalo_snap2_cmbp)
 
                 except:
+                    print(f'Couldnt extract coordinates for ihalo {ihalo}')
                     continue
                 
                 try:
