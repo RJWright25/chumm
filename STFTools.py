@@ -733,6 +733,8 @@ def compress_detailed_halo_data(detailed_halo_data,fields=None):
     "Epot",
     "SFR_gas",
     "Zmet_gas",
+    "Zmet_gas_sf",
+    "Zmet_gas_nsf",
     "q",
     "q_gas",
     "q_star",
