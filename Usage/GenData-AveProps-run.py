@@ -51,7 +51,6 @@ else:
     chummdir='/home/rwright/Software/CHUMM/'
 
 run_script=chummdir+'Usage/GenData-AveProps.py'
-sys.path.append('/home/rwright/Software/read_eagle/build/lib/python3.7/site-packages/')
 
 # Submit/ run
 filename=sys.argv[0]
