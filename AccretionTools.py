@@ -3371,7 +3371,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                     ihalo_snap2_comxyz_DM=cart_to_sph(accfile['Particle'][ihalo_key]['Inflow']['PartType1']['snap2_Coordinates'].value[mask_DM]*snap2_comtophys-ihalo_snap2_cmbp)
 
                 except:
-                    print(f'Had to skip ihalo {ihalo} (no coordinates)')
+                    print(f'Had to skip ihalo {ihalo} (no coordinates - mass ~ {base_halo_data[snap2]['Mass_200crit'][ihalo]*10**10:.2e})')
                     continue
                 
                 try:
@@ -3385,7 +3385,7 @@ def gen_averaged_accretion_data(base_halo_data,path=None):
                     ihalo_snap1_comxyz_hist_DM,foo=np.histogramdd(ihalo_snap1_comxyz_DM,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
                     ihalo_snap2_comxyz_hist_DM,foo=np.histogramdd(ihalo_snap2_comxyz_DM,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
                 except:
-                    print(f'Couldnt obtain gas histograms for itype {ihalo}')
+                    print(f'Couldnt obtain DM histograms for itype {ihalo}')
                     ihalo_snap1_comxyz_hist_DM=np.nan
                     ihalo_snap2_comxyz_hist_DM=np.nan
 
