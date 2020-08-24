@@ -28,7 +28,7 @@ import pickle
 import astropy.units as u
 import time
 
-sys.path.append('/home/rwright/software/read_eagle/build/lib/python3.7/site-packages/')
+sys.path.append('/home/rwright/Software/read_eagle/build/lib/python3.7/site-packages/')
 import read_eagle
 
 from astropy.cosmology import FlatLambdaCDM,z_at_value

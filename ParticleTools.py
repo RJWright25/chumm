@@ -27,7 +27,7 @@ import numpy as np
 import h5py
 import astropy.units as u
 
-sys.path.append('/home/rwright/software/read_eagle/build/lib/python3.7/site-packages/')
+sys.path.append('/home/rwright/Software/read_eagle/build/lib/python3.7/site-packages/')
 import read_eagle
 
 from GenPythonTools import *
