@@ -2871,7 +2871,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
         partdata_files[str(snap)].select_region(xmin=-0.1,xmax=boxsize+0.1,ymin=-0.1,ymax=boxsize+0.1,zmin=-0.1,zmax=boxsize+0.1)
         
     print('Loading particle data ...')
-    partdata={str(snap):{str(itype):{key:partdata_files[str(snap)].read_dataset(itype,key) for key in eagle_keys[str(itype)]} for itype in parttypes} for snap in [snap1,snap2]}
+    partdata={str(snap):{str(itype):{key:partdata_files[str(snap)].read_dataset(itype,key) for key in eagle_keys[itype]} for itype in parttypes} for snap in [snap1,snap2]}
     print(partdata.keys())
     for ifile,accfile_path in enumerate(accfiles_thisworker):
         accfile=h5py.File(accfile_path,'r+')
