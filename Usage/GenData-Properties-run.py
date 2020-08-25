@@ -39,13 +39,28 @@ total_mem_perprocess=8 # memory required for each process (if slurm)
 
 # Algorithm Details
 snaps=[27] # snaps to run calculation for
+props={0:
+        [
+        'StarFormationRate',
+        'ElementAbundances',
+        ],
+       1:
+        [
+        ],
+        4:
+        [
+        ]
+       }
 mcut=10 # mass cut for adding properties to halo (in log10 M/Msun)
 fullhalo=0 # include data for full halo (1) or only accreted particles (0)
 basepath='/Volumes/Ruby-Ext/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre01_post01_np12_FOFonly/' # path with generated accretion data
 
 ####################################################################################################
 ####################################################################################################
-
+sys.path.append('/home/rwright/Software/CHUMM/') # may need to specify
+sys.path.append('/Users/ruby/Documents/GitHub/CHUMM/') # may need to specify
+from GenPythonTools import dump_pickle
+dump_pickle(path='job_logs/props.dat',data=props)
 
 # Run Script
 if 'Users' in os.listdir('/'):

@@ -2802,25 +2802,15 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     """
 
     # Keys to extract for each PartType
-    eagle_keys={'0':
-                [
-                # 'Coordinates',
-                # 'Metallicity',
-                # 'Temperature',
-                # 'MaximumTemperature',
-                'StarFormationRate',
-                # 'Density',
-                'ElementAbundance',
-                # 'Velocity'
-                ],
-                '1':[],
-                '4':[]
-                }
+    eagle_keys=open_pickle('job_logs/props.dat')
 
     # Size of each dataset
     size_keys= {'Coordinates':3,
                 'Metallicity':1,
                 'Temperature':1,
+                'StarFormationRate':1,
+                'ElementAbundance/Hydrogen':1,
+                'ElementAbundance/Oxygen':1,
                 'MaximumTemperature':1,
                 'Density':1,
                 'StarFormationRate':1,
@@ -2835,7 +2825,12 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     accfile_ex=h5py.File(accfiles_thisworker[0],'r+')
     snap1=int(path.split('snap_')[-1][:3])-1
     snap2=int(path.split('snap_')[-1][:3])
-    parttypes=[0,1,4]
+
+    parttypes=[]
+    for key in list(eagle_keys.keys()):
+        if len(list(eagle_keys[key]))>0:
+            parttypes.append(key)
+    print(f'Using parttypes {parttypes}')
 
     # Load in base halo data
     print('Loading halo data ...')
