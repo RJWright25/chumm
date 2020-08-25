@@ -2803,14 +2803,19 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
 
     # Keys to extract for each PartType
     eagle_keys={'0':
-                ['Coordinates',
-                'Metallicity',
-                'Temperature',
-                'MaximumTemperature',
-                'Density',
-                'Velocity'],
-                '1':['Coordinates'],
-                '4':['Coordinates']}
+                [
+                # 'Coordinates',
+                # 'Metallicity',
+                # 'Temperature',
+                # 'MaximumTemperature',
+                'StarFormationRate',
+                # 'Density',
+                'ElementAbundance',
+                # 'Velocity'
+                ],
+                '1':[],
+                '4':[]
+                }
 
     # Size of each dataset
     size_keys= {'Coordinates':3,
@@ -2872,7 +2877,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
         
     print('Loading particle data ...')
     partdata={str(snap):{str(itype):{key:partdata_files[str(snap)].read_dataset(itype,key) for key in eagle_keys[str(itype)]} for itype in parttypes} for snap in [snap1,snap2]}
-
+    print(partdata.keys())
     for ifile,accfile_path in enumerate(accfiles_thisworker):
         accfile=h5py.File(accfile_path,'r+')
         ihalo_keys=list(accfile['Particle'].keys())
