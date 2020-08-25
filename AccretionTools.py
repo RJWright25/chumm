@@ -2807,6 +2807,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
     # Size of each dataset
     size_keys= {'Coordinates':3,
                 'Metallicity':1,
+                'Mass':1,
                 'Temperature':1,
                 'StarFormationRate':1,
                 'ElementAbundance/Hydrogen':1,
