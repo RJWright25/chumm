@@ -2888,7 +2888,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                         print(f'Had to skip itype {itype} for ihalo {ihalo}')
                         continue
 
-                    for key in eagle_keys[str(itype)]:
+                    for key in eagle_keys[itype]:
                         try:
                             del accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap1_{key}']
                             del accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}']
@@ -2916,7 +2916,7 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                     t1=time.time()
                     validmask_candidates=np.where(snap2_types==itype)
                 
-                    for key in eagle_keys[str(itype)]:
+                    for key in eagle_keys[itype]:
                         if size_keys[key]==1:
                             snap1_dset=np.zeros(ncandidates)+np.nan
                             snap2_dset=np.zeros(ncandidates)+np.nan
