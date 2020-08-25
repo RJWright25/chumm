@@ -2895,10 +2895,13 @@ def add_particle_data_serial(path=None,fileidx=[],fullhalo=False,mcut=10**10):
                             del accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}'][f'snap2_{key}']
                         except:
                             pass
+                    try:
+                        snap1_inFOF=accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']['snap1_Particle_InFOF'].value
+                        snap2_inFOF=accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']['snap2_Particle_InFOF'].value
+                    except:
+                        print(f'Had to skip itype {itype} for ihalo {ihalo}')
+                        continue
                     
-                    snap1_inFOF=accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']['snap1_Particle_InFOF'].value
-                    snap2_inFOF=accfile['Particle'][f'ihalo_{str(ihalo).zfill(6)}']['Inflow'][f'PartType{itype}']['snap2_Particle_InFOF'].value
-
                     if fullhalo:
                         accreted_mask=np.where(np.ones(ncandidates))
                     else:
