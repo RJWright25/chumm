@@ -51,7 +51,7 @@ basepath='/Volumes/Ruby-Ext/Accretion_Processing/EAGLE_L25N376-REF/acc_data/pre0
 if 'Users' in os.listdir('/'):
     chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
 else:
-    chummdir='/home/rwright/CHUMM/'
+    chummdir='/home/rwright/Software/CHUMM/'
     
 run_script=chummdir+'Usage/GenData-Properties.py'
 
