@@ -136,7 +136,7 @@ if True:
     if halo_index_list_lo==-1:
         test=False
         halo_index_list_massordered=np.argsort(base_halo_data[snap]["Mass_200crit"])
-        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered,n=n_processes,test=test)
+        halo_index_lists=gen_mp_indices(indices=halo_index_list_massordered[::-1],n=n_processes,test=test)
     else:
         test=True
         halo_index_list=list(range(halo_index_list_lo,halo_index_list_hi))
