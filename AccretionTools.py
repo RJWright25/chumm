@@ -1522,9 +1522,9 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     ####################################################################################################################################################################################
 
     print('Finding valid haloes ...')
-    valid_ihalos=np.where(base_halo_data[snap2]['Mass_200crit']>1)[0]
-    nhalo_valid=len(valid_ihalos)
-    valid_ihalos=set(valid_ihalos)
+    valid_iihalos=np.where(base_halo_data[snap2]['Mass_200crit'][halo_index_list_snap2,]>1)[0]
+    nhalo_valid_thisprocess=len(valid_iihalos)
+    valid_iihalos=set(valid_iihalos)
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo (index at snap 2)
         
         # If needed, create group for this halo in output file
@@ -1575,8 +1575,8 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
             progress_file.close()
             
             # This catches any halos for which we can't find a progenitor/descendant 
-            if ihalo_tracked and ihalo in valid_ihalos:
-                print(f'{iihalo/nhalo_valid*100:.1f} % done with valid halos')
+            if ihalo_tracked and iihalo in valid_iihalos:
+                print(f'{iihalo/nhalo_valid_thisprocess*100:.1f} % done with valid halos')
                 ### GRAB HALO METADATA ###
                 ihalo_metadata={}
                 for isnap,snap in enumerate(snaps):
