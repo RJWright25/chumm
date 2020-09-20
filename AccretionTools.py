@@ -1571,8 +1571,10 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
             progress_file.close()
             
             # This catches any halos for which we can't find a progenitor/descendant 
-            nhalo_valid=np.nansum(base_halo_data[snap2]['Mass_200crit']>10**9.25/10**10)
-            if ihalo_tracked and base_halo_data[snap2]['Mass_200crit'][ihalo_s2]>10**9.25/10**10:
+            nhalo_valid=np.nansum(base_halo_data[snap2]['Mass_200crit']>10**10/10**10)
+            print(ihalo_tracked)
+            print(base_halo_data[snap2]['Mass_200crit'][ihalo_s2])
+            if ihalo_tracked and base_halo_data[snap2]['Mass_200crit'][ihalo_s2]>10**10/10**10:
                 print(f'{iihalo/nhalo_valid*100:.1f} % done with valid halos')
                 ### GRAB HALO METADATA ###
                 ihalo_metadata={}
