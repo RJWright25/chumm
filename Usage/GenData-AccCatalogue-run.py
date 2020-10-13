@@ -37,9 +37,9 @@ wall_time="0-04:00:00" # job time limit (if slurm)
 total_mem=8 # total memory required (if slurm)
 
 # Algorithm Details
-snaps=[27] # snaps to run calculation for
 rundir=os.getcwd()
 basepath=f'{rundir}/acc_data/pre01_post01_np04_FOFonly/' # path with generated accretion data
+recycling=0 # whether to include recycling
 
 ####################################################################################################
 ####################################################################################################
@@ -50,47 +50,45 @@ if 'Users' in os.listdir('/'):
 else:
     chummdir='/home/rwright/Software/CHUMM/'
 
-run_script=chummdir+'Usage/GenData-AveProps.py'
+run_script=chummdir+'Usage/GenData-AccCatalogue.py'
 
 # Submit/ run
 filename=sys.argv[0]
 runcwd=os.getcwd()
-runname=runcwd.split('-')[-1]
+runname=runcwd.split('_')[-1][:3]+'-'+runcwd.split('-')[-1]
 if not os.path.exists('job_logs'):
     os.mkdir('job_logs')
 
 if slurm:
-    for snap in snaps:
-        path_full=basepath+f'snap_{str(snap).zfill(3)}/'
-        jobname=f'{runname}-aveprops_snap{str(snap).zfill(3)}'
-        jobscriptfilepath=f'job_logs/submit-{jobname}.slurm'
-        if os.path.exists(jobscriptfilepath):
-            os.remove(jobscriptfilepath)
-        with open(jobscriptfilepath,"w") as jobfile:
-            jobfile.writelines(f"#!/bin/sh\n")
-            jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
-            jobfile.writelines(f"#SBATCH --nodes=1\n")
-            jobfile.writelines(f"#SBATCH --ntasks-per-node=1\n")
-            jobfile.writelines(f"#SBATCH --mem={total_mem}GB\n")
-            jobfile.writelines(f"#SBATCH --time={wall_time}\n")
-            jobfile.writelines(f"#SBATCH --output=job_logs/{jobname}.out\n")
-            jobfile.writelines(f"#SBATCH --error=job_logs/{jobname}.err\n")
-            if email:
-                jobfile.writelines(f"#SBATCH --mail-type=ALL\n")
-                jobfile.writelines(f"#SBATCH --mail-user={address}\n")
-            jobfile.writelines(f" \n")
-            jobfile.writelines(f"echo JOB START TIME\n")
-            jobfile.writelines(f"date\n")
-            jobfile.writelines(f"echo CPU DETAILS\n")
-            jobfile.writelines(f"lscpu\n")
-            jobfile.writelines(f"python {run_script} -path {path_full} \n")
-            jobfile.writelines(f"echo JOB END TIME\n")
-            jobfile.writelines(f"date\n")
-        jobfile.close()
-        os.system(f"sbatch {jobscriptfilepath}")
+    path_full=basepath
+    jobname=f'{runname}-catalogue'
+    jobscriptfilepath=f'job_logs/submit-{jobname}.slurm'
+    if os.path.exists(jobscriptfilepath):
+        os.remove(jobscriptfilepath)
+    with open(jobscriptfilepath,"w") as jobfile:
+        jobfile.writelines(f"#!/bin/sh\n")
+        jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
+        jobfile.writelines(f"#SBATCH --nodes=1\n")
+        jobfile.writelines(f"#SBATCH --ntasks-per-node=1\n")
+        jobfile.writelines(f"#SBATCH --mem={total_mem}GB\n")
+        jobfile.writelines(f"#SBATCH --time={wall_time}\n")
+        jobfile.writelines(f"#SBATCH --output=job_logs/{jobname}.out\n")
+        jobfile.writelines(f"#SBATCH --error=job_logs/{jobname}.err\n")
+        if email:
+            jobfile.writelines(f"#SBATCH --mail-type=ALL\n")
+            jobfile.writelines(f"#SBATCH --mail-user={address}\n")
+        jobfile.writelines(f" \n")
+        jobfile.writelines(f"echo JOB START TIME\n")
+        jobfile.writelines(f"date\n")
+        jobfile.writelines(f"echo CPU DETAILS\n")
+        jobfile.writelines(f"lscpu\n")
+        jobfile.writelines(f"python {run_script} -path {path_full} -recycling {recycling} \n")
+        jobfile.writelines(f"echo JOB END TIME\n")
+        jobfile.writelines(f"date\n")
+    jobfile.close()
+    os.system(f"sbatch {jobscriptfilepath}")
 
 else:
-    for snap in snaps:
-        path_full=basepath+f'snap_{str(snap).zfill(3)}/'
-        os.system(f"python {run_script} -path {path_full} ")
+    path_full=basepath
+    os.system(f"python {run_script} -path {path_full} -recycling {recycling}")
 

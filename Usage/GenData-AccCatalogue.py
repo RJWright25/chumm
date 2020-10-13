@@ -36,6 +36,7 @@ from AccretionTools import *
 from ParticleTools import *
 from VRPythonTools import *
 from GenPythonTools import *
+from ProcessingTools import *
 from multiprocessing import Process, cpu_count
 
 
@@ -45,9 +46,11 @@ if True:
     parser=argparse.ArgumentParser()
     parser.add_argument('-path',type=str, default=None,
                         help='Folder to analyse')
+    parser.add_argument('-recycling',type=int, default=0,
+                        help='Whether to include recycling/transfer breakdown')
 
 path=parser.parse_args().path
-run_name=os.getcwd().split('/')[-1] #Grab simulation name from folder name
-base_halo_data=open_pickle(f'B4_HaloData_{run_name}.dat')#*
+recyc=parser.parse_args().recycling
 
-gen_averaged_accretion_data(base_halo_data=base_halo_data,path=path)
+gen_base_accretion_catalogue(path=path,recycling=bool(recyc))
+append_accretion_catalogue(path=path)

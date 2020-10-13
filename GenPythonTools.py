@@ -414,6 +414,7 @@ def cart_to_sph(xyz):
     return ptsnew[:,3:]
 
 def hdf5_struct(fname):
+
     outer_level_keys=list(h5py.File(fname).keys())
     if 'Particle' in outer_level_keys:
         only_int=True
@@ -438,3 +439,19 @@ def hdf5_struct(fname):
             else:
                 dsets.append(outkey)
     return dsets
+
+def gen_bins(lo,hi,n,log=False,symlog=False):
+    bin_output=dict()
+    bin_output['edges']=np.linspace(lo,hi,n+1)
+    bin_output['size']=bin_output['edges'][1]-bin_output['edges'][0]
+    bin_output['mid']=(bin_output['edges']+bin_output['size']/2)[:n]
+    bin_output['width']=np.array([bin_output['edges'][ibin+1]-bin_output['edges'][ibin] for ibin in range(n)])
+
+    if log:
+        bin_output['edges']=10**bin_output['edges']
+        bin_output['mid']=10**bin_output['mid']
+        if symlog:
+            bin_output['edges']=np.array(flatten([-bin_output['edges'][::-1],bin_output['edges']]))
+            bin_output['mid']=[bin_output['edges'][i+1]*0.5+bin_output['edges'][i]*0.5 for i in range(len(bin_output['edges'])-1)]
+            
+    return bin_output

@@ -73,7 +73,7 @@ run_script=chummdir+'Usage/GenData-Properties.py'
 # Submit/ run
 filename=sys.argv[0]
 runcwd=os.getcwd()
-runname=runcwd.split('-')[-1]
+runname=runcwd.split('_')[-1][:3]+'-'+runcwd.split('-')[-1]
 if not os.path.exists('job_logs'):
     os.mkdir('job_logs')
 
