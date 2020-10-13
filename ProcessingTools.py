@@ -48,7 +48,7 @@ def gen_base_accretion_catalogue(path='',recycling=False):
 
     snaps=list(range(12,28))
 
-    testfile=h5py.File(path+f'/snap_{str(snaps[-1]).zfill(3)}/AccretionData_pre01_post01_snap{str(snaps[-1]).zfill(3)}_All.hdf5','r')
+    testfile=h5py.File(path+f'/snap_{str(snaps[-2]).zfill(3)}/AccretionData_pre01_post01_snap{str(snaps[-1]).zfill(3)}_All.hdf5','r')
     parttype_keys=list(testfile['Integrated']['Inflow'].keys())
     parttypes=[int(parttype_key.split('Type')[-1]) for parttype_key in parttype_keys]
     run_barparttypes=[parttype for parttype in parttypes if parttype in [0,4,5]]
