@@ -336,14 +336,14 @@ def append_accretion_catalogue(path=''):
                     expectedpercell=npart_acc*binned_solidangle_frac
                     occupied_cells=np.where(ihalo_snap1_comxyz_hist>0.1*expectedpercell)
                     occupied_angle=np.sum(binned_solidangle[occupied_cells])
-                    accdata[snap][0][origin+'_ffill_s1']=occupied_angle/(4*np.pi)
+                    accdata[snap][0][origin+'_ffill_s1'][ihalo]=occupied_angle/(4*np.pi)
 
                     #snap 2
                     npart_acc=np.sum(ihalo_snap2_comxyz_hist)
                     expectedpercell=npart_acc*binned_solidangle_frac
                     occupied_cells=np.where(ihalo_snap2_comxyz_hist>0.1*expectedpercell)
                     occupied_angle=np.sum(binned_solidangle[occupied_cells])
-                    accdata[snap][0][origin+'_ffill_s2']=occupied_angle/(4*np.pi)
+                    accdata[snap][0][origin+'_ffill_s2'][ihalo]=occupied_angle/(4*np.pi)
             
                 except:
                     print(f'No coordinates for ihalo {ihalo}')
