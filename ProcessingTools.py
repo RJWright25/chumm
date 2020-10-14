@@ -46,7 +46,7 @@ def gen_base_accretion_catalogue(path='',recycling=False):
         path=path[:-1]
     outname=run_short+'_AccData.dat'
 
-    snaps=list(range(12,28))
+    snaps=[26]
 
     testfile=h5py.File(path+f'/snap_{str(snaps[-2]).zfill(3)}/AccretionData_pre01_post01_snap{str(snaps[-2]).zfill(3)}_All.hdf5','r')
     parttype_keys=list(testfile['Integrated']['Inflow'].keys())
