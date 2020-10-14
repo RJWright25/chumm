@@ -320,7 +320,8 @@ def append_accretion_catalogue(path=''):
                 accdata[snap][0][origin+'_avetemp_s1'][ihalo]=np.nansum(origin_temp_s1*origin_masses)/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_avetemp_s2'][ihalo]=np.nansum(origin_temp*origin_masses)/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_nacc'][ihalo]=len(origin_temp)
-
+                if 'Hot' in origin or 'Cold' in origin:
+                    accdata[snap][0][origin][ihalo]=np.nansum(origin_masses)
 
             ## filling factors
             for origin in origins:
