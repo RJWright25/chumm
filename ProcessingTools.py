@@ -164,13 +164,13 @@ def append_accretion_catalogue(path=''):
     print(snaps)
 
     # filling factor parameters
-    nhist_azimuth=16
-    nhist_elevation=8
+    nhist_azimuth=10
+    nhist_elevation=5
     nhist_r=1
     rhist_fac=10
-    phi_bins=gen_bins(-np.pi,np.pi,n=16)
-    theta_bins=gen_bins(-np.pi/2,np.pi/2,n=8)
-    binned_solidangle=np.zeros((1,16,8))
+    phi_bins=gen_bins(-np.pi,np.pi,n=nhist_azimuth)
+    theta_bins=gen_bins(-np.pi/2,np.pi/2,n=nhist_elevation)
+    binned_solidangle=np.zeros((1,nhist_azimuth,nhist_elevation))
     for itheta in range(len(theta_bins['mid'])):
         theta_lo=theta_bins['edges'][itheta]
         theta_hi=theta_bins['edges'][itheta+1]
