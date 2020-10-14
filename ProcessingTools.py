@@ -347,7 +347,6 @@ def append_accretion_catalogue(path=''):
             
                 except:
                     print(f'No coordinates for ihalo {ihalo}')
-                    raise
 
     dump_pickle(path=outname,data=accdata)
 
