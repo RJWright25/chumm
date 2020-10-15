@@ -214,7 +214,7 @@ def append_accretion_catalogue(path='',fillfac=True):
             accdata[snap][0][origin+'_f1p00']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_fhot_s2']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_fhot_s1']=np.zeros(nhalo)+np.nan
-            
+
             props=['temp','dens','met']
             for prop in props:
                 for snapstr in ['s1','s2']:
@@ -308,7 +308,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 accdata[snap][0][origin+'_Metals'][ihalo]=metmass
                 origin_finalradii=snap2_radii[masks[origin]]
 
-                origin_propvals={}
+                origin_propvals={prop:{} for prop in props}
                 for prop in props:
                     for snapstr in ['s1','s2']:
                         origin_propvals[prop][snapstr]=propvals[prop][snapstr][masks[origin]]
