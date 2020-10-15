@@ -332,7 +332,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 accdata[snap][0][origin+'_fhot_s1'][ihalo]=np.nansum(origin_masses[mask_hot_s1])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_nacc'][ihalo]=len(origin_finalradii)
                 if 'Hot' in origin or 'Cold' in origin:
-                    accdata[snap][0][origin][ihalo]=np.nansum(origin_masses)
+                    accdata[snap][0]['Total'][ihalo]=np.nansum(origin_masses)
 
                 #averaging quantities
                 for prop in props:
