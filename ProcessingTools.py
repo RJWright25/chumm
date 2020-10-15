@@ -216,6 +216,8 @@ def append_accretion_catalogue(path='',fillfac=True):
             accdata[snap][0][origin+'_fhot_s1']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_avetemp_s1']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_avetemp_s2']=np.zeros(nhalo)+np.nan
+            accdata[snap][0][origin+'_avedens_s1']=np.zeros(nhalo)+np.nan
+            accdata[snap][0][origin+'_avedens_s2']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_nacc']=np.zeros(nhalo)+np.nan
 
             if fillfac:
@@ -283,6 +285,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                 snap2_radii=np.sqrt(np.sum(np.square(ihalo_group['Inflow']['PartType0']['snap2_Coordinates'].value*snap2_comovingfac-ihalo_cmbp),axis=1))
                 temp_post=ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value
                 temp_pre=ihalo_group['Inflow']['PartType0']['snap1_Temperature'].value
+                dens_post=ihalo_group['Inflow']['PartType0']['snap2_Density'].value
+                dens_pre=ihalo_group['Inflow']['PartType0']['snap1_Density'].value
             except:
                 print('Couldnt get temp')
                 accdata_file.close()
@@ -296,8 +300,10 @@ def append_accretion_catalogue(path='',fillfac=True):
                 accdata[snap][0][origin+'_Metals'][ihalo]=metmass
 
                 origin_finalradii=snap2_radii[masks[origin]]
-                origin_temp=temp_post[masks[origin]]
+                origin_temp_s2=temp_post[masks[origin]]
                 origin_temp_s1=temp_pre[masks[origin]]
+                origin_dens_s2=dens_post[masks[origin]]
+                origin_dens_s1=dens_pre[masks[origin]]
 
                 mask_f0p05=np.where(origin_finalradii<0.05*ihalo_r200)
                 mask_f0p10=np.where(origin_finalradii<0.10*ihalo_r200)
@@ -317,14 +323,16 @@ def append_accretion_catalogue(path='',fillfac=True):
                 accdata[snap][0][origin+'_fhot_s2'][ihalo]=np.nansum(origin_masses[mask_hot_s2])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_fhot_s1'][ihalo]=np.nansum(origin_masses[mask_hot_s1])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_avetemp_s1'][ihalo]=np.nansum(origin_temp_s1*origin_masses)/np.nansum(origin_masses)
-                accdata[snap][0][origin+'_avetemp_s2'][ihalo]=np.nansum(origin_temp*origin_masses)/np.nansum(origin_masses)
+                accdata[snap][0][origin+'_avetemp_s2'][ihalo]=np.nansum(origin_temp_s2*origin_masses)/np.nansum(origin_masses)
+                accdata[snap][0][origin+'_avedens_s1'][ihalo]=np.nansum(origin_dens_s1*origin_masses)/np.nansum(origin_masses)
+                accdata[snap][0][origin+'_avedens_s2'][ihalo]=np.nansum(origin_dens_s2*origin_masses)/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_nacc'][ihalo]=len(origin_temp)
                 
                 if 'Hot' in origin or 'Cold' in origin:
                     accdata[snap][0][origin][ihalo]=np.nansum(origin_masses)
-
+            
+            ## filling factors
             if fillfac:
-                ## filling factors
                 for origin in origins:
                     mask=masks[origin]
                     try:
