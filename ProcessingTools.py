@@ -117,7 +117,7 @@ def gen_base_accretion_catalogue(path='',recycling=False):
 
 # ########################### FIND AVERAGED ACCRETION PROPERTIES ###########################
 
-def append_accretion_catalogue(path=''):
+def append_accretion_catalogue(path='',fillfac=True):
     
     """
 
@@ -196,16 +196,13 @@ def append_accretion_catalogue(path=''):
         snap1_comtophys=halodata[snap1]['SimulationInfo']['ScaleFactor']/halodata[snap1]['SimulationInfo']['h_val']
 
         origins_fromcat=list(accdata[snap][0].keys())
+
         if 'Recycled' in origins_fromcat:
             origins=['Total','First-infall','Pre-processed','Merger','Recycled','Transfer']
         else:
             origins=['Total','First-infall','Pre-processed','Merger']
 
         origins.extend(['Hot','Cold'])
-
-        for key in origins_fromcat:
-            if key not in origins:
-                del accdata[snap][0][key]
 
         for origin in origins:
             accdata[snap][0][origin+'_Metals']=np.zeros(nhalo)+np.nan
@@ -219,9 +216,11 @@ def append_accretion_catalogue(path=''):
             accdata[snap][0][origin+'_fhot_s1']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_avetemp_s1']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_avetemp_s2']=np.zeros(nhalo)+np.nan
-            accdata[snap][0][origin+'_ffill_s1']=np.zeros(nhalo)+np.nan
-            accdata[snap][0][origin+'_ffill_s2']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_nacc']=np.zeros(nhalo)+np.nan
+
+            if fillfac:
+                accdata[snap][0][origin+'_ffill_s1']=np.zeros(nhalo)+np.nan
+                accdata[snap][0][origin+'_ffill_s2']=np.zeros(nhalo)+np.nan
 
         snap1_fac=halodata[snap-1]['SimulationInfo']['ScaleFactor']/halodata[snap-1]['SimulationInfo']['h_val']
         iihalo=-1
@@ -320,34 +319,36 @@ def append_accretion_catalogue(path=''):
                 accdata[snap][0][origin+'_avetemp_s1'][ihalo]=np.nansum(origin_temp_s1*origin_masses)/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_avetemp_s2'][ihalo]=np.nansum(origin_temp*origin_masses)/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_nacc'][ihalo]=len(origin_temp)
+                
                 if 'Hot' in origin or 'Cold' in origin:
                     accdata[snap][0][origin][ihalo]=np.nansum(origin_masses)
 
-            ## filling factors
-            for origin in origins:
-                mask=masks[origin]
-                try:
-                    ihalo_snap1_comxyz=cart_to_sph(ihalo_group['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_cmbp)
-                    ihalo_snap2_comxyz=cart_to_sph(ihalo_group['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_cmbp)
-                    ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
-                    ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
+            if fillfac:
+                ## filling factors
+                for origin in origins:
+                    mask=masks[origin]
+                    try:
+                        ihalo_snap1_comxyz=cart_to_sph(ihalo_group['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_cmbp)
+                        ihalo_snap2_comxyz=cart_to_sph(ihalo_group['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_cmbp)
+                        ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
+                        ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
 
-                    #snap 1
-                    npart_acc=np.sum(ihalo_snap1_comxyz_hist)
-                    expectedpercell=npart_acc*binned_solidangle_frac
-                    occupied_cells=np.where(ihalo_snap1_comxyz_hist>0.1*expectedpercell)
-                    occupied_angle=np.sum(binned_solidangle[occupied_cells])
-                    accdata[snap][0][origin+'_ffill_s1'][ihalo]=occupied_angle/(4*np.pi)
+                        #snap 1
+                        npart_acc=np.sum(ihalo_snap1_comxyz_hist)
+                        expectedpercell=npart_acc*binned_solidangle_frac
+                        occupied_cells=np.where(ihalo_snap1_comxyz_hist>0.1*expectedpercell)
+                        occupied_angle=np.sum(binned_solidangle[occupied_cells])
+                        accdata[snap][0][origin+'_ffill_s1'][ihalo]=occupied_angle/(4*np.pi)
 
-                    #snap 2
-                    npart_acc=np.sum(ihalo_snap2_comxyz_hist)
-                    expectedpercell=npart_acc*binned_solidangle_frac
-                    occupied_cells=np.where(ihalo_snap2_comxyz_hist>0.1*expectedpercell)
-                    occupied_angle=np.sum(binned_solidangle[occupied_cells])
-                    accdata[snap][0][origin+'_ffill_s2'][ihalo]=occupied_angle/(4*np.pi)
-            
-                except:
-                    print(f'No coordinates for ihalo {ihalo}')
+                        #snap 2
+                        npart_acc=np.sum(ihalo_snap2_comxyz_hist)
+                        expectedpercell=npart_acc*binned_solidangle_frac
+                        occupied_cells=np.where(ihalo_snap2_comxyz_hist>0.1*expectedpercell)
+                        occupied_angle=np.sum(binned_solidangle[occupied_cells])
+                        accdata[snap][0][origin+'_ffill_s2'][ihalo]=occupied_angle/(4*np.pi)
+                
+                    except:
+                        print(f'No coordinates for ihalo {ihalo}')
 
     dump_pickle(path=outname,data=accdata)
 

@@ -46,11 +46,19 @@ if True:
     parser=argparse.ArgumentParser()
     parser.add_argument('-path',type=str, default=None,
                         help='Folder to analyse')
+    parser.add_argument('-base',type=int, default=1,
+                        help='Whether to run base accretion catalogue generation')
     parser.add_argument('-recycling',type=int, default=0,
                         help='Whether to include recycling/transfer breakdown')
+    parser.add_argument('-fillfac',type=int, default=0,
+                        help='Whether to re-calculate filling factors')
 
 path=parser.parse_args().path
 recyc=parser.parse_args().recycling
+base=parser.parse_args().base
+fillfac=parser.parse_args().fillfac
 
-gen_base_accretion_catalogue(path=path,recycling=bool(recyc))
-append_accretion_catalogue(path=path)
+if base:
+    gen_base_accretion_catalogue(path=path,recycling=bool(recyc))
+
+append_accretion_catalogue(path=path,fillfac=bool(fillfac))

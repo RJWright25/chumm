@@ -40,6 +40,8 @@ total_mem=8 # total memory required (if slurm)
 rundir=os.getcwd()
 basepath=f'{rundir}/acc_data/pre01_post01_np04_FOFonly/' # path with generated accretion data
 recycling=0 # whether to include recycling
+base=0 # whether to run base algorithm
+fillfac=0 # whether to include new ffac calcs
 
 ####################################################################################################
 ####################################################################################################
@@ -82,7 +84,7 @@ if slurm:
         jobfile.writelines(f"date\n")
         jobfile.writelines(f"echo CPU DETAILS\n")
         jobfile.writelines(f"lscpu\n")
-        jobfile.writelines(f"python {run_script} -path {path_full} -recycling {recycling} \n")
+        jobfile.writelines(f"python {run_script} -path {path_full} -recycling {recycling} -base {base} -fillfac {fillfac}\n")
         jobfile.writelines(f"echo JOB END TIME\n")
         jobfile.writelines(f"date\n")
     jobfile.close()
@@ -90,5 +92,5 @@ if slurm:
 
 else:
     path_full=basepath
-    os.system(f"python {run_script} -path {path_full} -recycling {recycling}")
+    os.system(f"python {run_script} -path {path_full} -recycling {recycling} -base {base} -fillfac {fillfac}")
 
