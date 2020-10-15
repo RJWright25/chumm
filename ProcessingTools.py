@@ -214,9 +214,8 @@ def append_accretion_catalogue(path='',fillfac=True):
             accdata[snap][0][origin+'_f1p00']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_fhot_s2']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_fhot_s1']=np.zeros(nhalo)+np.nan
-
+            
             props=['temp','dens','met']
-
             for prop in props:
                 for snapstr in ['s1','s2']:
                     for ave in ['ave','med','lop','hip','fzero']:
@@ -302,13 +301,11 @@ def append_accretion_catalogue(path='',fillfac=True):
                 accdata_file.close()
                 continue
 
-
             for origin in origins:
                 origin_masses=masses[masks[origin]]
                 origin_mets=mets[masks[origin]]
                 metmass=np.nansum(origin_masses*origin_mets)
                 accdata[snap][0][origin+'_Metals'][ihalo]=metmass
-
                 origin_finalradii=snap2_radii[masks[origin]]
 
                 origin_propvals={}
@@ -322,8 +319,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                 mask_f0p25=np.where(origin_finalradii<0.25*ihalo_r200)
                 mask_f0p50=np.where(origin_finalradii<0.50*ihalo_r200)
                 mask_f1p00=np.where(origin_finalradii<ihalo_r200)
-                mask_hot_s1=np.where(origin_temp_s1>10**5.5)
-                mask_hot_s2=np.where(origin_temp>10**5.5)
+                mask_hot_s1=np.where(origin_propvals['temp']['s1']>10**5.5)
+                mask_hot_s2=np.where(origin_propvals['temp']['s2']>10**5.5)
 
                 accdata[snap][0][origin+'_f0p05'][ihalo]=np.nansum(origin_masses[mask_f0p05])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_f0p10'][ihalo]=np.nansum(origin_masses[mask_f0p10])/np.nansum(origin_masses)
