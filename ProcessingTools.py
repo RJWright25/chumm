@@ -330,7 +330,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 accdata[snap][0][origin+'_f1p00'][ihalo]=np.nansum(origin_masses[mask_f1p00])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_fhot_s2'][ihalo]=np.nansum(origin_masses[mask_hot_s2])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_fhot_s1'][ihalo]=np.nansum(origin_masses[mask_hot_s1])/np.nansum(origin_masses)
-                accdata[snap][0][origin+'_nacc'][ihalo]=len(origin_temp)
+                accdata[snap][0][origin+'_nacc'][ihalo]=len(origin_finalradii)
                 if 'Hot' in origin or 'Cold' in origin:
                     accdata[snap][0][origin][ihalo]=np.nansum(origin_masses)
 
