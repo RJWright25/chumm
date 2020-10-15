@@ -337,17 +337,21 @@ def append_accretion_catalogue(path='',fillfac=True):
                 #averaging quantities
                 for prop in props:
                     for snapstr in ['s1','s2']:
-                        #weighted mean
-                        accdata[snap][0][origin+f'_ave{prop}_{snapstr}'][ihalo]=np.nansum(origin_propvals[prop][snapstr]*origin_masses)/np.nansum(origin_masses)
-                        #weigthed median
-                        accdata[snap][0][origin+f'_med{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.5)
-                        #weigthed percentiles
-                        accdata[snap][0][origin+f'_lop{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.16)
-                        accdata[snap][0][origin+f'_hip{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.84)
-                        #frac zero
-                        zeromask=np.where(origin_propvals[prop][snapstr]==0)
-                        accdata[snap][0][origin+f'_fzero{prop}_{snapstr}'][ihalo]=np.nansum(origin_masses[zeromask])/np.nansum(origin_masses)
-                
+
+                        try:
+                            #weighted mean
+                            accdata[snap][0][origin+f'_ave{prop}_{snapstr}'][ihalo]=np.nansum(origin_propvals[prop][snapstr]*origin_masses)/np.nansum(origin_masses)
+                            #weigthed median
+                            accdata[snap][0][origin+f'_med{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.5)
+                            #weigthed percentiles
+                            accdata[snap][0][origin+f'_lop{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.16)
+                            accdata[snap][0][origin+f'_hip{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.84)
+                            #frac zero
+                            zeromask=np.where(origin_propvals[prop][snapstr]==0)
+                            accdata[snap][0][origin+f'_fzero{prop}_{snapstr}'][ihalo]=np.nansum(origin_masses[zeromask])/np.nansum(origin_masses)
+                        except:
+                            print(f'No particles for {origin} to ihalo {ihalo}')
+                            
             ## filling factors
             if fillfac:
                 for origin in origins:
