@@ -347,7 +347,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                                 accdata[snap][0][origin+f'_hip{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.84)
                                 #frac zero
                                 zeromask=np.where(origin_propvals[prop][snapstr]==0)
-                            accdata[snap][0][origin+f'_fzero{prop}_{snapstr}'][ihalo]=np.nansum(origin_masses[zeromask])/np.nansum(origin_masses)
+                                accdata[snap][0][origin+f'_fzero{prop}_{snapstr}'][ihalo]=np.nansum(origin_masses[zeromask])/np.nansum(origin_masses)
                 except:
                     print(f'No particles for {origin} to ihalo {ihalo}')
 
