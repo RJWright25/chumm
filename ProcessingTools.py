@@ -316,7 +316,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 origin_propvals={prop:{} for prop in props}
                 for prop in props:
                     for snapstr in ['s1','s2']:
-                        origin_propvals[prop][snapstr]=propvals[prop][snapstr][masks[origin]]
+                        origin_propvals[prop][snapstr]=np.log10(propvals[prop][snapstr][masks[origin]]+1e-8)
 
                 mask_f0p05=np.where(origin_finalradii<0.05*ihalo_r200)
                 mask_f0p10=np.where(origin_finalradii<0.10*ihalo_r200)
@@ -324,8 +324,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                 mask_f0p25=np.where(origin_finalradii<0.25*ihalo_r200)
                 mask_f0p50=np.where(origin_finalradii<0.50*ihalo_r200)
                 mask_f1p00=np.where(origin_finalradii<ihalo_r200)
-                mask_hot_s1=np.where(origin_propvals['temp']['s1']>10**5.5)
-                mask_hot_s2=np.where(origin_propvals['temp']['s2']>10**5.5)
+                mask_hot_s1=np.where(origin_propvals['temp']['s1']>5.5)
+                mask_hot_s2=np.where(origin_propvals['temp']['s2']>5.5)
 
                 accdata[snap][0][origin+'_f0p05'][ihalo]=np.nansum(origin_masses[mask_f0p05])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_f0p10'][ihalo]=np.nansum(origin_masses[mask_f0p10])/np.nansum(origin_masses)
