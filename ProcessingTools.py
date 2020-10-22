@@ -214,6 +214,8 @@ def append_accretion_catalogue(path='',fillfac=True):
             accdata[snap][0][origin+'_f1p00']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_fhot_s2']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_fhot_s1']=np.zeros(nhalo)+np.nan
+            accdata[snap][0][origin+'_ffi']=np.zeros(nhalo)+np.nan
+            accdata[snap][0][origin+'_fpp']=np.zeros(nhalo)+np.nan
             
             if 'Cold' in origin or 'Hot' in origin:
                 accdata[snap][0][origin]=np.zeros(nhalo)+np.nan
@@ -312,6 +314,11 @@ def append_accretion_catalogue(path='',fillfac=True):
                 metmass=np.nansum(origin_masses*origin_mets)
                 accdata[snap][0][origin+'_Metals'][ihalo]=metmass
                 origin_finalradii=snap2_radii[masks[origin]]
+                origin_processed=(ihalo_group['Inflow']['PartType0']['snap1_Processed'].value)[masks[origin]]
+                origin_snap1struc=(ihalo_group['Inflow']['PartType0']['snap1_Structure'].value)[masks[origin]]
+
+                origin_preprocessed_mask=np.where(np.logical_and(origin_processed>0,origin_snap1struc==-1))
+                origin_pristine_mask=np.where(origin_processed==0)
 
                 origin_propvals={prop:{} for prop in props}
                 for prop in props:
@@ -335,6 +342,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                 accdata[snap][0][origin+'_f1p00'][ihalo]=np.nansum(origin_masses[mask_f1p00])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_fhot_s2'][ihalo]=np.nansum(origin_masses[mask_hot_s2])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_fhot_s1'][ihalo]=np.nansum(origin_masses[mask_hot_s1])/np.nansum(origin_masses)
+                accdata[snap][0][origin+'_ffi'][ihalo]=np.nansum(origin_masses[origin_pristine_mask])/np.nansum(origin_masses)
+                accdata[snap][0][origin+'_fpp'][ihalo]=np.nansum(origin_masses[origin_preprocessed_mask])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_nacc'][ihalo]=len(origin_finalradii)
 
                 if 'Hot' in origin or 'Cold' in origin:
