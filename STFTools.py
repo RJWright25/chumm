@@ -690,6 +690,7 @@ def compress_detailed_halo_data(detailed_halo_data,fields=None):
     "Aperture_mass_star_30_kpc",
     "Aperture_mass_star_50_kpc",
     "Aperture_mass_star_5_kpc",
+    "Aperture_rhalfmass_star_50_kpc",
     "R_HalfMass",
     "R_HalfMass_gas",
     "R_HalfMass_gas_nsf",
