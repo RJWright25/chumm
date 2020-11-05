@@ -180,8 +180,10 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		fieldnames.remove("Num_of_files")
 		fieldnames.remove("Num_of_groups")
 		fieldnames.remove("Total_num_of_groups")
-		print(fieldnames)
-		fieldtype=[halofile[fieldname].dtype for fieldname in fieldnames]
+		fieldtype=[]
+		fieldname in fieldnames:
+			print(fieldname)
+			fieldtype.append(halofile[fieldname].dtype)
 		#if the desiredfields argument is passed only these fieds are loaded
 		if (len(desiredfields)>0):
 			if (iverbose):print("Loading subset of all fields in property file ", len(desiredfields), " instead of ", len(fieldnames))
