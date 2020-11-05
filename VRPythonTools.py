@@ -259,6 +259,7 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		siminfo=open(siminfoname,'r')
 		catalog['SimulationInfo']=dict()
 		for l in siminfo:
+			print(l)
 			d=l.strip().split(' : ')
 			catalog['SimulationInfo'][d[0]]=float(d[1])
 		siminfo.close()
