@@ -259,7 +259,6 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		siminfo=open(siminfoname,'r')
 		catalog['SimulationInfo']=dict()
 		for l in siminfo:
-			print(l)
 			d=l.strip().split(' : ')
 			try:
 				result=d[1].split(' # ')[0]
@@ -273,9 +272,13 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		unitinfo=open(unitinfoname,'r')
 		catalog['UnitInfo']=dict()
 		for l in unitinfo:
-			print(l)
 			d=l.strip().split(' : ')
-			catalog['UnitInfo'][d[0]]=float(d[1])
+			try:
+				result=d[1].split(' # ')[0]
+			except:
+				print(f'Not including {d[0]}')
+				continue
+			catalog['UnitInfo'][d[0]]=float(result)
 		unitinfo.close()
 
 	if (iverbose): print("done reading properties file ",time.clock()-start)
