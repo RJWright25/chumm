@@ -181,7 +181,7 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		fieldnames.remove("Num_of_groups")
 		fieldnames.remove("Total_num_of_groups")
 		fieldtype=[]
-		fieldname in fieldnames:
+		for fieldname in fieldnames:
 			print(fieldname)
 			fieldtype.append(halofile[fieldname].dtype)
 		#if the desiredfields argument is passed only these fieds are loaded
