@@ -261,7 +261,12 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		for l in siminfo:
 			print(l)
 			d=l.strip().split(' : ')
-			catalog['SimulationInfo'][d[0]]=float(d[1])
+			try:
+				result=d[1].split(' # ')[0]
+			except:
+				print(f'Not including {d[0]}')
+				continue
+			catalog['SimulationInfo'][d[0]]=float(result)
 		siminfo.close()
 	if (iunitinfo):
 		unitinfoname=basefilename+".units"
