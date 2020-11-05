@@ -182,7 +182,6 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		fieldnames.remove("Total_num_of_groups")
 		fieldnames.remove("Configuration")
 		fieldnames.remove("SimulationInfo")
-		fieldnames.remove("SimulationInfo")
 		fieldtype=[]
 		for fieldname in fieldnames:
 			print(fieldname)
