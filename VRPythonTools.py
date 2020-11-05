@@ -185,7 +185,6 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		fieldnames.remove("UnitInfo")
 		fieldtype=[]
 		for fieldname in fieldnames:
-			print(fieldname)
 			fieldtype.append(halofile[fieldname].dtype)
 		#if the desiredfields argument is passed only these fieds are loaded
 		if (len(desiredfields)>0):
@@ -268,6 +267,7 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 		unitinfo=open(unitinfoname,'r')
 		catalog['UnitInfo']=dict()
 		for l in unitinfo:
+			print(l)
 			d=l.strip().split(' : ')
 			catalog['UnitInfo'][d[0]]=float(d[1])
 		unitinfo.close()
