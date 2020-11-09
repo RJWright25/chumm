@@ -168,8 +168,8 @@ def append_accretion_catalogue(path='',fillfac=True):
     nhist_elevation=5
     nhist_r=1
     rhist_fac=10
-    phi_bins=gen_bins(-np.pi,np.pi,n=nhist_azimuth)
-    theta_bins=gen_bins(-np.pi/2,np.pi/2,n=nhist_elevation)
+    phi_bins=gen_bins(-np.pi,np.pi,n=nhist_azimuth)#phi=azimuth
+    theta_bins=gen_bins(-np.pi/2,np.pi/2,n=nhist_elevation) #theta=elevation
     binned_solidangle=np.zeros((1,nhist_azimuth,nhist_elevation))
     for itheta in range(len(theta_bins['mid'])):
         theta_lo=theta_bins['edges'][itheta]
@@ -178,9 +178,9 @@ def append_accretion_catalogue(path='',fillfac=True):
         delta_theta=theta_hi-theta_lo
         for iphi in range(len(phi_bins['mid'])):
             delta_phi=phi_bins['width'][0]
-            omega=np.cos(theta_mid)*delta_theta*delta_phi
+            omega=(np.sin(theta_hi)-np.sin(theta_lo))*(delta_phi)
             binned_solidangle[0,iphi,itheta]=omega
-        binned_solidangle_frac=binned_solidangle/(4*np.pi)
+    binned_solidangle_frac=binned_solidangle/(4*np.pi)
 
 
     for snap in snaps:
