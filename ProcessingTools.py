@@ -323,7 +323,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 origin_propvals={prop:{} for prop in props}
                 for prop in props:
                     for snapstr in ['s1','s2']:
-                        origin_propvals[prop][snapstr]=np.log10(propvals[prop][snapstr][masks[origin]]+1e-8)
+                        origin_propvals[prop][snapstr]=np.log10(propvals[prop][snapstr][masks[origin]]+1e-10)
 
                 mask_f0p05=np.where(origin_finalradii<0.05*ihalo_r200)
                 mask_f0p10=np.where(origin_finalradii<0.10*ihalo_r200)
