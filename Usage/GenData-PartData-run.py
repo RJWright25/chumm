@@ -30,12 +30,12 @@ import sys
 ########################################## RUNTIME PARS ############################################
 
 # Job details
-num_processes=1 # number of processed (from multiprocessing) to use (only for gen_particle_history_serial)
+num_processes=4 # number of processed (from multiprocessing) to use (only for gen_particle_history_serial)
 slurm=False # whether or not to use slurm submit
-email=False # email results y/n (if slurm)
+email=True # email results y/n (if slurm)
 address='21486778@student.uwa.edu.au' # email address (if slurm)
-wall_time="0-04:00:00" # job time limit (if slurm)
-total_mem_perprocess=8 # total memory required per process (if slurm)
+wall_time="0-24:00:00" # job time limit (if slurm)
+total_mem_perprocess=40 # total memory required per process (if slurm)
 
 # Algorithm Details
 gen_bph=1 # generate base particle histories (host for each particle, run in parallel)
@@ -48,7 +48,7 @@ sum_bph=1 # sum base particle histories for integrated processing history of eac
 if 'Users' in os.listdir('/'):
     chummdir='/Users/ruby/Documents/GitHub/CHUMM/'
 else:
-    chummdir='/home/rwright/CHUMM/'
+    chummdir='/home/rwright/Software/CHUMM/'
 
 run_script=chummdir+'Usage/GenData-PartData.py'
 
@@ -88,5 +88,5 @@ if slurm:
     os.system(f"sbatch {jobscriptfilepath}")
 
 else:
-    os.system(f"python {run_script} -np {num_processes} -gen_bph {gen_bph} - sum_bph {sum_bph}\n")
+    os.system(f"python {run_script} -np {num_processes} -gen_bph {gen_bph} -sum_bph {sum_bph}\n")
 
