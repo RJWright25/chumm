@@ -213,8 +213,8 @@ def gen_base_halo_data(partdata_filelist,partdata_filetype,vr_filelist,vr_filety
     
     # Adding timesteps and filepath information
     first_true_index=np.where(have_halo_data)[0][0]#finding first valid snap index to extract simulation data 
-    H0=halo_data_all[first_true_index]['SimulationInfo']['h_val']*halo_data_all[first_true_index]['SimulationInfo']['Hubble_unit']#extract hubble constant
-    Om0=halo_data_all[first_true_index]['SimulationInfo']['Omega_Lambda']#extract omega_lambda
+    H0=halo_data_all[-1]['SimulationInfo']['h_val']*halo_data_all[-1]['SimulationInfo']['Hubble_unit']#extract hubble constant
+    Om0=halo_data_all[-1]['SimulationInfo']['Omega_Lambda']#extract omega_lambda
     cosmo=FlatLambdaCDM(H0=H0,Om0=Om0)
 
     # Now tidy up and add extra details for output. 
