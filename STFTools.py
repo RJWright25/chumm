@@ -1031,6 +1031,7 @@ def get_FOF_particle_lists(base_halo_data,snap,halo_index_list=None):
 
     except: #if we can't load particle data
         print('Couldnt get FOF particle data for snap = ',snap)
+        raise
         return None
     halo_index_list_keys=list(part_data_temp_FOF['Npart'].keys())
     halo_index_list_indices=[int(halo_index_list_key) for halo_index_list_key in halo_index_list_keys]
