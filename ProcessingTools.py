@@ -57,7 +57,14 @@ def gen_base_accretion_catalogue(path='',recycling=False):
 
     run_rawaccdata={}
     run_recycdata={}
-    run_intaccdata={}
+    try:
+        print('Using existing catalogue')
+        run_intaccdata=open_pickle(outname)
+        
+    except:
+        print('Creating new catalogue')
+        run_intaccdata={}
+        run_intaccdata={snap:{itype:{} for itype in parttypes} for snap in snaps}
 
     #initialise raw data file objects
     run_rawaccdata={}
@@ -74,7 +81,6 @@ def gen_base_accretion_catalogue(path='',recycling=False):
             continue
     snaps=snaps_recorded
     # load and categorise accretion data
-    run_intaccdata={snap:{itype:{} for itype in parttypes} for snap in snaps}
     for snap in snaps:
         print(f'Generating base accretion catalogue for snap {snap}')
         for itype in parttypes:
