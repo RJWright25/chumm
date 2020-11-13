@@ -323,7 +323,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 origin_propvals={prop:{} for prop in props}
                 for prop in props:
                     for snapstr in ['s1','s2']:
-                        origin_propvals[prop][snapstr]=np.log10(propvals[prop][snapstr][masks[origin]]+1e-10)
+                        origin_propvals[prop][snapstr]=propvals[prop][snapstr][masks[origin]]
 
                 mask_f0p05=np.where(origin_finalradii<0.05*ihalo_r200)
                 mask_f0p10=np.where(origin_finalradii<0.10*ihalo_r200)
@@ -354,12 +354,15 @@ def append_accretion_catalogue(path='',fillfac=True):
                     for prop in props:
                         for snapstr in ['s1','s2']:
                                 #weighted mean
-                                accdata[snap][0][origin+f'_ave{prop}_{snapstr}'][ihalo]=np.nansum(origin_propvals[prop][snapstr]*origin_masses)/np.nansum(origin_masses)
+                                if prop=='met':
+                                    accdata[snap][0][origin+f'_ave{prop}_{snapstr}'][ihalo]=np.log10(np.nansum(origin_propvals[prop][snapstr]*origin_masses)/np.nansum(origin_masses)+1e-10)
+                                else:
+                                    accdata[snap][0][origin+f'_ave{prop}_{snapstr}'][ihalo]=np.nansum(np.log10(origin_propvals[prop][snapstr])*origin_masses)/np.nansum(origin_masses)
                                 #weigthed median
-                                accdata[snap][0][origin+f'_med{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.5)
+                                accdata[snap][0][origin+f'_med{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]), weights=origin_masses, quantile=0.5)
                                 #weigthed percentiles
-                                accdata[snap][0][origin+f'_lop{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.16)
-                                accdata[snap][0][origin+f'_hip{prop}_{snapstr}'][ihalo]=quantile_1D(data=origin_propvals[prop][snapstr], weights=origin_masses, quantile=0.84)
+                                accdata[snap][0][origin+f'_lop{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]), weights=origin_masses, quantile=0.16)
+                                accdata[snap][0][origin+f'_hip{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]), weights=origin_masses, quantile=0.84)
                                 #frac zero
                                 zeromask=np.where(origin_propvals[prop][snapstr]==0)
                                 accdata[snap][0][origin+f'_fzero{prop}_{snapstr}'][ihalo]=np.nansum(origin_masses[zeromask])/np.nansum(origin_masses)
