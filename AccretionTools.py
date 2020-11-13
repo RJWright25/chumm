@@ -1522,7 +1522,7 @@ def gen_accretion_data_fof(base_halo_data,snap=None,halo_index_list=None,pre_dep
     ####################################################################################################################################################################################
 
     print('Finding valid haloes ...')
-    valid_iihalos=np.where(base_halo_data[snap2]['Mass_200crit'][halo_index_list_snap2,]>0.1)[0]
+    valid_iihalos=np.where(base_halo_data[snap2]['Mass_200crit'][halo_index_list_snap2,]>1)[0]
     nhalo_valid_thisprocess=len(valid_iihalos)
     valid_iihalos=set(valid_iihalos)
     for iihalo,ihalo_s2 in enumerate(halo_index_list_snap2):# for each halo (index at snap 2)
