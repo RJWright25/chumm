@@ -361,12 +361,12 @@ def append_accretion_catalogue(path='',fillfac=True):
                         for snapstr in ['s1','s2']:
                                 #LOG SPACE
                                 #weighted mean
-                                accdata[snap][0][origin+f'_logave{prop}_{snapstr}'][ihalo]=np.nansum(np.log10(origin_propvals[prop][snapstr])*origin_masses)/np.nansum(origin_masses)
+                                accdata[snap][0][origin+f'_logave{prop}_{snapstr}'][ihalo]=np.nansum(np.log10(origin_propvals[prop][snapstr]+1e-10)*origin_masses)/np.nansum(origin_masses)
                                 #weigthed median
-                                accdata[snap][0][origin+f'_logmed{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]), weights=origin_masses, quantile=0.5)
+                                accdata[snap][0][origin+f'_logmed{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]+1e-10), weights=origin_masses, quantile=0.5)
                                 #weigthed percentiles
-                                accdata[snap][0][origin+f'_loglop{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]), weights=origin_masses, quantile=0.16)
-                                accdata[snap][0][origin+f'_loghip{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]), weights=origin_masses, quantile=0.84)
+                                accdata[snap][0][origin+f'_loglop{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]+1e-10), weights=origin_masses, quantile=0.16)
+                                accdata[snap][0][origin+f'_loghip{prop}_{snapstr}'][ihalo]=quantile_1D(data=np.log10(origin_propvals[prop][snapstr]+1e-10), weights=origin_masses, quantile=0.84)
                                 #LINEAR SPACE
                                 #weighted mean
                                 accdata[snap][0][origin+f'_ave{prop}_{snapstr}'][ihalo]=np.nansum(origin_propvals[prop][snapstr]*origin_masses)/np.nansum(origin_masses)
