@@ -166,7 +166,7 @@ def append_accretion_catalogue(path='',fillfac=True):
     accdata=open_pickle(outname)
     print('Done loading halo & accretion data ...')
 
-    snaps=list(accdata.keys())
+    snaps=sorted(list(accdata.keys()))
     print(snaps)
 
     # filling factor parameters
