@@ -191,8 +191,8 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 			fieldnames_trunc=[]
 			for fieldname in fieldnames:
 				try:
-					fieldnames_trunc.append(fieldname)
 					fieldtype.append(halofile[fieldname].dtype)
+					fieldnames_trunc.append(fieldname)
 				except:
 					continue
 		else:
@@ -202,11 +202,13 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 			fieldnames_trunc=[]
 			for fieldname in fieldnames:
 				try:
-					fieldnames_trunc.append(fieldname)
 					fieldtype.append(halofile[fieldname].dtype)
+					fieldnames_trunc.append(fieldname)
 				except:
 					continue
+
 		fieldnames=fieldnames_trunc
+
 		halofile.close()
 
 	#allocate memory that will store the halo dictionary
