@@ -271,6 +271,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 
             #halo data
             ihalo_progen=find_progen_index(halodata,index2=ihalo,snap2=snap2,depth=snap2-snap1)
+            print(ihalo_progen)
             if not ihalo_progen>=0:
                 print(f'Couldnt find ihalo {ihalo} progenitor')
                 continue
