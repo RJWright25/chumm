@@ -189,7 +189,7 @@ def append_accretion_catalogue(path='',fillfac=True):
     binned_solidangle_frac=binned_solidangle/(4*np.pi)
 
 
-    for snap in list(range(12,28)):
+    for snap in snaps:
         valid_ihalo=np.where(halodata[snap]['Mass_FOF']>10**10)[0]
         nhalo=len(halodata[snap]['Mass_FOF'])
         accdata_filepaths=list_dir(path+f'/snap_{str(snap).zfill(3)}')
