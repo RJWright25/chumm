@@ -189,7 +189,7 @@ def append_accretion_catalogue(path='',fillfac=True):
     binned_solidangle_frac=binned_solidangle/(4*np.pi)
 
 
-    for snap in [15,26]:
+    for snap in list(range(12,28)):
         valid_ihalo=np.where(halodata[snap]['Mass_FOF']>10**10)[0]
         nhalo=len(halodata[snap]['Mass_FOF'])
         accdata_filepaths=list_dir(path+f'/snap_{str(snap).zfill(3)}')
@@ -338,8 +338,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                 mask_f0p25=np.where(origin_finalradii<0.25*ihalo_r200)
                 mask_f0p50=np.where(origin_finalradii<0.50*ihalo_r200)
                 mask_f1p00=np.where(origin_finalradii<ihalo_r200)
-                mask_hot_s1=np.where(origin_propvals['temp']['s1']>5.5)
-                mask_hot_s2=np.where(origin_propvals['temp']['s2']>5.5)
+                mask_hot_s1=np.where(origin_propvals['temp']['s1']>10**5.5)
+                mask_hot_s2=np.where(origin_propvals['temp']['s2']>10**5.5)
 
                 accdata[snap][0][origin+'_f0p05'][ihalo]=np.nansum(origin_masses[mask_f0p05])/np.nansum(origin_masses)
                 accdata[snap][0][origin+'_f0p10'][ihalo]=np.nansum(origin_masses[mask_f0p10])/np.nansum(origin_masses)
