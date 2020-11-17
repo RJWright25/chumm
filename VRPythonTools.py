@@ -188,6 +188,7 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 			pass
 		fieldtype=[]
 		for fieldname in fieldnames:
+			print(fieldname)
 			fieldtype.append(halofile[fieldname].dtype)
 		#if the desiredfields argument is passed only these fieds are loaded
 		if (len(desiredfields)>0):
