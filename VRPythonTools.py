@@ -188,17 +188,25 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 			pass
 		if len(desiredfields)==0:
 			fieldtype=[]
+			fieldnames_trunc=[]
 			for fieldname in fieldnames:
-				print(fieldname)
-				fieldtype.append(halofile[fieldname].dtype)
+				try:
+					fieldnames_trunc.append(fieldname)
+					fieldtype.append(halofile[fieldname].dtype)
+				except:
+					continue
 		else:
 			if (iverbose):print("Loading subset of all fields in property file ", len(desiredfields), " instead of ", len(fieldnames))
 			fieldnames=desiredfields
 			fieldtype=[]
+			fieldnames_trunc=[]
 			for fieldname in fieldnames:
-				print(fieldname)
-				fieldtype.append(halofile[fieldname].dtype)
-
+				try:
+					fieldnames_trunc.append(fieldname)
+					fieldtype.append(halofile[fieldname].dtype)
+				except:
+					continue
+		fieldnames=fieldnames_trunc
 		halofile.close()
 
 	#allocate memory that will store the halo dictionary
