@@ -196,6 +196,7 @@ def ReadPropertyFile(basefilename,ibinary=0,iseparatesubfiles=0,iverbose=0, desi
 			fieldnames=desiredfields
 			fieldtype=[]
 			for fieldname in fieldnames:
+				print(fieldname)
 				fieldtype.append(halofile[fieldname].dtype)
 
 		halofile.close()
