@@ -386,8 +386,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                                 zeromask=np.where(origin_propvals[prop][snapstr]==0)
                                 accdata[snap][0][origin+f'_fzero{prop}_{snapstr}'][ihalo]=np.nansum(origin_masses[zeromask])/np.nansum(origin_masses)
                 except:
-                    print(ihalo_group['Inflow']['PartType0']['snap1_Processed'].value)
-                    print(ihalo_group['Inflow']['PartType0']['snap1_Structure'].value)
+                    print(np.array(ihalo_group['Inflow']['PartType0']['snap1_Processed'].value))
+                    print(np.array(ihalo_group['Inflow']['PartType0']['snap1_Structure'].value))
                     print(f'No particles for {origin} to ihalo {ihalo}')
                     raise
                     
