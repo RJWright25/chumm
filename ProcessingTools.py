@@ -388,6 +388,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 except:
                     print(np.array(ihalo_group['Inflow']['PartType0']['snap1_Processed'].value))
                     print(np.array(ihalo_group['Inflow']['PartType0']['snap1_Structure'].value))
+                    print(f'max processing = {np.nanmax(np.array(ihalo_group['Inflow']['PartType0']['snap1_Processed'].value))}')
                     print(f'No particles for {origin} to ihalo {ihalo}')
                     raise
                     
