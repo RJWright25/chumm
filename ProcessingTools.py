@@ -387,7 +387,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                                 accdata[snap][0][origin+f'_fzero{prop}_{snapstr}'][ihalo]=np.nansum(origin_masses[zeromask])/np.nansum(origin_masses)
                 except:
                     print(f'No particles for {origin} to ihalo {ihalo}')
-
+                    raise
+                    
 
             ## filling factors
             if fillfac:
