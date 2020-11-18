@@ -190,7 +190,11 @@ def append_accretion_catalogue(path='',fillfac=True):
 
 
     for snap in snaps:
-        valid_ihalo=np.where(halodata[snap]['Mass_FOF']>10**10)[0]
+        try:
+            valid_ihalo=np.where(halodata[snap]['Mass_FOF']>10**10)[0]
+        except:
+            print(f'Skipping snap {snap} ...')
+            continue
         nhalo=len(halodata[snap]['Mass_FOF'])
         accdata_filepaths=list_dir(path+f'/snap_{str(snap).zfill(3)}')
         accdata_filepaths_truncated=[path for path in accdata_filepaths if '.hdf5' in path and 'All' not in path]
