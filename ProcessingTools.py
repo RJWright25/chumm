@@ -192,18 +192,19 @@ def append_accretion_catalogue(path='',fillfac=True):
     for snap in snaps:
         try:
             valid_ihalo=np.where(halodata[snap]['Mass_FOF']>10**10)[0]
+            nhalo=len(halodata[snap]['Mass_FOF'])
+            accdata_filepaths=list_dir(path+f'/snap_{str(snap).zfill(3)}')
+            accdata_filepaths_truncated=[path for path in accdata_filepaths if '.hdf5' in path and 'All' not in path]
+            keys=list(accdata[snap][0].keys())
+            snap2_comovingfac=halodata[snap]['SimulationInfo']['ScaleFactor']/halodata[snap]['SimulationInfo']['h_val']
+            snap2=int(snap)
+            snap1=snap2-1
+            snap2_comtophys=halodata[snap2]['SimulationInfo']['ScaleFactor']/halodata[snap2]['SimulationInfo']['h_val']
+            snap1_comtophys=halodata[snap1]['SimulationInfo']['ScaleFactor']/halodata[snap1]['SimulationInfo']['h_val']
         except:
             print(f'Skipping snap {snap} ...')
             continue
-        nhalo=len(halodata[snap]['Mass_FOF'])
-        accdata_filepaths=list_dir(path+f'/snap_{str(snap).zfill(3)}')
-        accdata_filepaths_truncated=[path for path in accdata_filepaths if '.hdf5' in path and 'All' not in path]
-        keys=list(accdata[snap][0].keys())
-        snap2_comovingfac=halodata[snap]['SimulationInfo']['ScaleFactor']/halodata[snap]['SimulationInfo']['h_val']
-        snap2=int(snap)
-        snap1=snap2-1
-        snap2_comtophys=halodata[snap2]['SimulationInfo']['ScaleFactor']/halodata[snap2]['SimulationInfo']['h_val']
-        snap1_comtophys=halodata[snap1]['SimulationInfo']['ScaleFactor']/halodata[snap1]['SimulationInfo']['h_val']
+
 
         origins_fromcat=list(accdata[snap][0].keys())
 
