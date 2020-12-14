@@ -417,8 +417,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                             occupied_angle=np.sum(binned_solidangle[occupied_cells])
                             accdata[snap][0][origin+'_ffill_s2'][ihalo]=occupied_angle/(4*np.pi)
                 
-                    except:
-                        print(f'No coordinates for ihalo {ihalo}')
+                        except:
+                            print(f'No coordinates for ihalo {ihalo}')
 
     dump_pickle(path=outname,data=accdata)
 
