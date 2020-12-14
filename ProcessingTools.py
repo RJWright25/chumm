@@ -191,7 +191,7 @@ def append_accretion_catalogue(path='',fillfac=True):
 
     for snap in snaps:
         try:
-            valid_ihalo=np.where(halodata[snap]['Mass_FOF']>10**10)[0]
+            valid_ihalo=np.where(halodata[snap]['Mass_FOF']>10**9)[0]
             nhalo=len(halodata[snap]['Mass_FOF'])
             accdata_filepaths=list_dir(path+f'/snap_{str(snap).zfill(3)}')
             accdata_filepaths_truncated=[path for path in accdata_filepaths if '.hdf5' in path and 'All' not in path]
@@ -394,27 +394,28 @@ def append_accretion_catalogue(path='',fillfac=True):
 
             ## filling factors
             if fillfac:
-                for origin in origins:
-                    mask=masks[origin]
-                    try:
-                        ihalo_snap1_comxyz=cart_to_sph(ihalo_group['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_cmbp)
-                        ihalo_snap2_comxyz=cart_to_sph(ihalo_group['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_cmbp)
-                        ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
-                        ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
+                if halodata[snap]['Mass_FOF'][ihalo]>10**11:
+                    for origin in origins:
+                        mask=masks[origin]
+                        try:
+                            ihalo_snap1_comxyz=cart_to_sph(ihalo_group['Inflow']['PartType0']['snap1_Coordinates'].value[mask]*snap1_comtophys-ihalo_snap1_cmbp)
+                            ihalo_snap2_comxyz=cart_to_sph(ihalo_group['Inflow']['PartType0']['snap2_Coordinates'].value[mask]*snap2_comtophys-ihalo_snap2_cmbp)
+                            ihalo_snap1_comxyz_hist,foo=np.histogramdd(ihalo_snap1_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
+                            ihalo_snap2_comxyz_hist,foo=np.histogramdd(ihalo_snap2_comxyz,bins=[nhist_r,nhist_azimuth,nhist_elevation],range=[(0,ihalo_r200_ave*rhist_fac),(-np.pi,np.pi),(-np.pi/2,np.pi/2)],density=False)
 
-                        #snap 1
-                        npart_acc=np.sum(ihalo_snap1_comxyz_hist)
-                        expectedpercell=npart_acc*binned_solidangle_frac
-                        occupied_cells=np.where(ihalo_snap1_comxyz_hist>0.1*expectedpercell)
-                        occupied_angle=np.sum(binned_solidangle[occupied_cells])
-                        accdata[snap][0][origin+'_ffill_s1'][ihalo]=occupied_angle/(4*np.pi)
+                            #snap 1
+                            npart_acc=np.sum(ihalo_snap1_comxyz_hist)
+                            expectedpercell=npart_acc*binned_solidangle_frac
+                            occupied_cells=np.where(ihalo_snap1_comxyz_hist>0.1*expectedpercell)
+                            occupied_angle=np.sum(binned_solidangle[occupied_cells])
+                            accdata[snap][0][origin+'_ffill_s1'][ihalo]=occupied_angle/(4*np.pi)
 
-                        #snap 2
-                        npart_acc=np.sum(ihalo_snap2_comxyz_hist)
-                        expectedpercell=npart_acc*binned_solidangle_frac
-                        occupied_cells=np.where(ihalo_snap2_comxyz_hist>0.1*expectedpercell)
-                        occupied_angle=np.sum(binned_solidangle[occupied_cells])
-                        accdata[snap][0][origin+'_ffill_s2'][ihalo]=occupied_angle/(4*np.pi)
+                            #snap 2
+                            npart_acc=np.sum(ihalo_snap2_comxyz_hist)
+                            expectedpercell=npart_acc*binned_solidangle_frac
+                            occupied_cells=np.where(ihalo_snap2_comxyz_hist>0.1*expectedpercell)
+                            occupied_angle=np.sum(binned_solidangle[occupied_cells])
+                            accdata[snap][0][origin+'_ffill_s2'][ihalo]=occupied_angle/(4*np.pi)
                 
                     except:
                         print(f'No coordinates for ihalo {ihalo}')
