@@ -213,7 +213,7 @@ def append_accretion_catalogue(path='',fillfac=True):
         else:
             origins=['Total','First-infall','Pre-processed','Merger']
 
-        origins.extend(['Hot','Cold'])
+        origins.extend(['Hot','Cold','Hot-NM','Cold-NM'])
 
         for origin in origins:
             accdata[snap][0][origin+'_Metals']=np.zeros(nhalo)+np.nan
@@ -297,6 +297,9 @@ def append_accretion_catalogue(path='',fillfac=True):
                 masks['Pre-processed']=np.where(np.logical_and.reduce([ihalo_group['Inflow']['PartType0']['snap1_Structure'].value==-1,ihalo_group['Inflow']['PartType0']['snap1_Processed'].value>0]))
                 masks['Hot']=np.where(np.logical_and(accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value>=10**5.5))
                 masks['Cold']=np.where(np.logical_and(accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value<10**5.5))
+                masks['Hot-NM']=np.where(np.logical_and.reduce([accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value>10**5.5,ihalo_group['Inflow']['PartType0']['snap1_Structure']==-1]))
+                masks['Cold-NM']=np.where(np.logical_and.reduce([accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value<10**5.5,ihalo_group['Inflow']['PartType0']['snap1_Structure']==-1]))
+            
             except:
                 accdata_file.close()
                 continue
