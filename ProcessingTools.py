@@ -170,8 +170,8 @@ def append_accretion_catalogue(path='',fillfac=True):
     print(snaps)
 
     # filling factor parameters
-    nhist_azimuth=10
-    nhist_elevation=5
+    nhist_azimuth=12
+    nhist_elevation=6
     nhist_r=1
     rhist_fac=10
     phi_bins=gen_bins(-np.pi,np.pi,n=nhist_azimuth)#phi=azimuth
