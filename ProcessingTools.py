@@ -297,8 +297,8 @@ def append_accretion_catalogue(path='',fillfac=True):
                 masks['Pre-processed']=np.where(np.logical_and.reduce([ihalo_group['Inflow']['PartType0']['snap1_Structure'].value==-1,ihalo_group['Inflow']['PartType0']['snap1_Processed'].value>0]))
                 masks['Hot']=np.where(np.logical_and(accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value>=10**5.5))
                 masks['Cold']=np.where(np.logical_and(accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value<10**5.5))
-                masks['Hot-NM']=np.where(np.logical_and.reduce([accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value>10**5.5,ihalo_group['Inflow']['PartType0']['snap1_Structure']==-1]))
-                masks['Cold-NM']=np.where(np.logical_and.reduce([accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value<10**5.5,ihalo_group['Inflow']['PartType0']['snap1_Structure']==-1]))
+                masks['Hot-NM']=np.where(np.logical_and.reduce([accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value>10**5.5,ihalo_group['Inflow']['PartType0']['snap1_Structure'].value==-1]))
+                masks['Cold-NM']=np.where(np.logical_and.reduce([accreted,ihalo_group['Inflow']['PartType0']['snap2_Temperature'].value<10**5.5,ihalo_group['Inflow']['PartType0']['snap1_Structure'].value==-1]))
             
             except:
                 accdata_file.close()
