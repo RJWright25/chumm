@@ -216,6 +216,7 @@ def append_accretion_catalogue(path='',fillfac=True):
         origins.extend(['Hot','Cold','Hot-NM','Cold-NM'])
 
         for origin in origins:
+            print('Initialising ',origin)
             accdata[snap][0][origin+'_Metals']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_f0p05']=np.zeros(nhalo)+np.nan
             accdata[snap][0][origin+'_f0p10']=np.zeros(nhalo)+np.nan
@@ -322,7 +323,7 @@ def append_accretion_catalogue(path='',fillfac=True):
                 print('Couldnt get vals')
                 accdata_file.close()
                 continue
-
+    
             for origin in origins:
                 origin_masses=masses[masks[origin]]
                 origin_mets=mets[masks[origin]]
