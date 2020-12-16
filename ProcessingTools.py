@@ -230,6 +230,7 @@ def append_accretion_catalogue(path='',fillfac=True):
             accdata[snap][0][origin+'_fpp']=np.zeros(nhalo)+np.nan
             
             if 'Cold' in origin or 'Hot' in origin:
+                print(f'Adding {origin} total mass flux')
                 accdata[snap][0][origin]=np.zeros(nhalo)+np.nan
                 accdata[snap][0][origin]=np.zeros(nhalo)+np.nan
 
