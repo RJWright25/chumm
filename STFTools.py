@@ -739,7 +739,13 @@ def compress_detailed_halo_data(detailed_halo_data,fields=None):
     "q",
     "q_gas",
     "q_star",
-    "s"
+    "s",
+    "VXc",
+    "VYc",
+    "VZc",
+    "VXc_gas",
+    "VYc_gas",
+    "VZc_gas"
     ]
 
     if fields==None:
