@@ -1,9 +1,10 @@
 # Code for Halo accUMulation of Mass [CHUMM]
-#### RUBY WRIGHT (PhD Student | ICRAR-UWA) (2019-)
+#### Ruby Wright (2018)
 
 ![](Logos/chumm_jaws.jpeg)
 
-Tools to calculate accretion rates to halos in cosmological galaxy formation simulations.
+Tools to calculate accretion rates to haloes in cosmological galaxy formation simulations, using VELOCIraptor and TreeFrog.
+Used for Wright+20 (https://arxiv.org/abs/2006.00924) and Wright+21 (https://arxiv.org/abs/2102.10913.pdf), no longer in use. 
 
 ## USAGE
 
